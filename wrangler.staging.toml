@@ -1,0 +1,22 @@
+# Staging-konfigurasjon — OE/VIN Pinpoint (Fase 1–3).
+# Deployes KUN til workers.dev (ingen custom domains / ingen DNS-endringer).
+# Bruk: wrangler deploy --config wrangler.staging.toml
+name = "finnbilglass-frontrute-staging"
+main = "src/index.ts"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# ── D1 staging (resolver-data + prisliste-kopi) ─────────────────
+[[d1_databases]]
+binding = "FINNBILGLASS_DB"
+database_name = "finnbilglass-db-staging"
+database_id = "6c8c3eeb-e4bb-41c7-831f-25e5a735717c"
+
+[vars]
+ENVIRONMENT = "staging"
+
+# ── Statisk frontend (samme public/) ────────────────────────────
+[assets]
+directory = "./public"
+binding = "ASSETS"

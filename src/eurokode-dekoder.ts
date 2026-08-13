@@ -1,5 +1,7 @@
-/** Eurokode-dekoder — strukturell parsing (SGG-standarden, verifisert mot Autoglass-prisliste).
+/** Eurokode-dekoder — strukturell parsing (Autoglass-standarden, verifisert mot prisliste).
  *  Oppbygging: [katalogkode (siffer)][posisjon (A=front/B=bak/L-R=dør/F=ventil)][egenskaper][versjon]
+ *  Bokstavsemantikk (Tom 2026-08-13): M = regnsensor, S = solar, C = coated, A = antenne,
+ *  H = oppvarmet, EL = elektrisk. Fargetone: GY/GN/GG/BL/BZ/CL.
  */
 
 const POSISJON: Record<string, string> = {
@@ -37,14 +39,15 @@ export function dekodeEurokode(kode: string | null | undefined): Dekodet {
   const posBokstav = rest.charAt(0);
   const posisjon = POSISJON[posBokstav] ?? null;
 
-  // Egenskapsdel = ALT etter posisjonsbokstaven (posisjonsbokstaven er ikke egenskap)
+  // Egenskapsdel = ALT etter posisjonsbokstaven (posisjonsbokstaven er ikke egenskap).
+  // Semantikk per Tom (2026-08-13): M = regnsensor, S = solar. S betyr IKKE sensor.
   const eg = rest.slice(1);
   const egenskaper: string[] = [];
   if (/C/.test(eg)) egenskaper.push('coated');    // C/CS = coating
-  if (/S/.test(eg)) egenskaper.push('sensor');    // S = sensorgel/sensor
+  if (/S/.test(eg)) egenskaper.push('solar');     // S = solar (solbeskyttende glass)
   if (/A/.test(eg)) egenskaper.push('antenne');   // A = antenne i glasset
   if (/EL/.test(eg)) egenskaper.push('elektrisk');
-  if (/M/.test(eg)) egenskaper.push('sensorgel'); // M = sensortape/gel-type
+  if (/M/.test(eg)) egenskaper.push('sensor');    // M = regnsensor
   if (/H/.test(eg)) egenskaper.push('oppvarmet'); // H = varmetråder
 
   const fargetone = FARGETONE.find((f) => f.re.test(eg))?.farge ?? null;

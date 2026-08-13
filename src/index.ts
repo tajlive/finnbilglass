@@ -1,9 +1,12 @@
-/** Finnbilglass Worker — frontrute-matcher API.
+/** Finnbilglass Worker — frontrute-matcher API + statisk frontend.
  *  POST /api/frontrute  {merke, modell, aar, profil} → glass
  *  GET  /health
+ *  Alt annet (/, styles.css, app.js, index.html) → [assets] public/
  */
 import type { Env } from './types';
 import { matchFrontrute, type BilInput } from './matcher';
+import { resolveFrontrute } from './vin-resolver';
+import { svvLookup } from './svv';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +19,17 @@ function json(data: unknown, status = 200): Response {
     status,
     headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
+}
+
+/** IP + geolokalisering gratis fra Cloudflare (request.cf) — ingen ekstern API. */
+function geoAv(request: Request) {
+  const cf = (request as unknown as { cf?: { country?: string; city?: string; asOrganization?: string } }).cf;
+  return {
+    ip: request.headers.get('CF-Connecting-IP') ?? null,
+    land: cf?.country ?? null,
+    by: cf?.city ?? null,
+    asn: cf?.asOrganization ?? null,
+  };
 }
 
 function validateBil(body: unknown): BilInput | string {
@@ -46,23 +60,6 @@ export default {
 
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
 
-    // Mini-landingsside (apex/www inntil Pages-frontenden er klar)
-    if (method === 'GET' && (path === '/' || path === '')) {
-      const html = `<!doctype html><html lang="no"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Finnbilglass — kommer snart</title>
-<style>body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
-.box{text-align:center;max-width:34rem;padding:2rem}
-h1{font-size:2.2rem;margin:0 0 .5rem}h1 span{color:#38bdf8}
-p{color:#94a3b8;line-height:1.6}.badge{display:inline-block;background:#1e293b;border:1px solid #334155;border-radius:999px;padding:.35rem 1rem;font-size:.85rem;margin-top:1.2rem}</style></head>
-<body><div class="box">
-<h1>Finn<span>bilglass</span></h1>
-<p>Bilglass til ekte pris — uten forsikring. Vi bygger nettsiden. Sjekk API-et: <code>/api/frontrute</code></p>
-<div class="badge">Åpner etter beta</div>
-</div></body></html>`;
-      return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', ...CORS_HEADERS } });
-    }
-
     if (method === 'GET' && path === '/health') {
       const count = await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM autoglass_prisliste').first<{ n: number }>();
       return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: count?.n ?? 0 });
@@ -78,14 +75,81 @@ p{color:#94a3b8;line-height:1.6}.badge{display:inline-block;background:#1e293b;b
       const bil = validateBil(body);
       if (typeof bil === 'string') return json({ ok: false, error: bil }, 400);
       try {
+        // Resolver først (PINPOINT/VERIFY). FALLBACK → eksisterende tekstmatcher (uendret).
+        const resolver = await resolveFrontrute(env, bil);
+        if (resolver.utfall !== 'FALLBACK') {
+          return json({
+            ok: true,
+            ...resolver,
+            pinpoint: resolver.utfall === 'PINPOINT',
+            anbefaling: resolver.utfall === 'PINPOINT'
+              ? { varenr: resolver.varenr, varenavn: resolver.varenavn, pris: resolver.pris, listepris: resolver.listepris, eurokode: resolver.eurokode }
+              : null,
+            meta: { resolver: true, grunn: resolver.grunn },
+          });
+        }
         const resultat = await matchFrontrute(env, bil);
-        return json({ ok: true, ...resultat });
+        return json({ ok: true, ...resultat, meta: { ...resultat.meta, resolver: false } });
       } catch (e) {
         console.error('matchFrontrute feilet:', e);
         return json({ ok: false, error: 'Intern feil' }, 500);
       }
     }
 
-    return json({ ok: false, error: `Ukjent rute: ${method} ${path}`, ruter: ['POST /api/frontrute', 'GET /health'] }, 404);
+    if (method === 'POST' && path === '/api/regnr') {
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: 'Ugyldig JSON' }, 400);
+      }
+      const regnr = (body as Record<string, unknown>)?.regnr;
+      if (typeof regnr !== 'string' || !regnr.trim()) return json({ ok: false, error: 'regnr påkrevd' }, 400);
+      const ren = regnr.trim();
+      const norm = ren.toUpperCase().replace(/[\s\-–—.]+/g, '');
+      let lagret = false;
+      try {
+        await env.FINNBILGLASS_DB.prepare(
+          'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
+        ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
+        lagret = true;
+      } catch (e) {
+        console.error('regnr-lagring feilet:', e);
+      }
+      // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
+      try {
+        const g = geoAv(request);
+        await env.FINNBILGLASS_DB.prepare(
+          'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
+      } catch (e) {
+        console.error('søkelogg feilet:', e);
+      }
+      // SVV-oppslag: kjennemerke → bil. Null ved feil/ukjent — frontend faller til manuell.
+      let bil = null;
+      let resolver = null;
+      try {
+        bil = await svvLookup(norm, env.SVV_API_KEY);
+      } catch (e) {
+        console.error('SVV-oppslag feilet:', e);
+      }
+      // OE/VIN-pinpoint: SVV-bil → resolver (PINPOINT/VERIFY/FALLBACK) — aldri blokkerende.
+      if (bil) {
+        try {
+          resolver = await resolveFrontrute(env, {
+            merke: bil.merke,
+            modell: bil.modell ?? undefined,
+            aar: bil.aar ?? undefined,
+            vin: bil.vin ?? undefined,
+          });
+        } catch (e) {
+          console.error('Resolver feilet:', e);
+        }
+      }
+      return json({ ok: true, lagret, bil, resolver });
+    }
+
+    // Alt annet (/, index.html, styles.css, app.js, …) → statiske assets fra public/
+    return env.ASSETS.fetch(request);
   },
 };
