@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finnbilglass — bilglass til ekte pris</title>
+<meta name="description" content="Finn riktig frontrute til din bil — uten forsikring. Ekte priser, direkte fra lager.">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/svg+xml" href="ikon.svg">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="logo">
+      <svg class="logo-ikon" viewBox="0 0 28 28" width="26" height="26" aria-hidden="true" focusable="false">
+        <path d="M7 6.2 C7 4.4 8.4 3.2 10.2 3.2 H17.8 C19.6 3.2 21 4.4 21 6.2 L19.4 19.4 C19.2 21.1 17.9 22.4 16.2 22.7 L11.8 22.7 C10.1 22.4 8.8 21.1 8.6 19.4 Z" fill="none" stroke-width="2.4" stroke-linejoin="round"/>
+      </svg>
+      <span class="logo-tekst">finn<span>bilglass</span></span>
+    </div>
+    <span class="beta">Åpner etter beta</span>
+  </header>
+
+  <!-- 1: start -->
+  <section id="screen-start" class="screen">
+    <h1>Bilglass til ekte pris — uten forsikring</h1>
+    <p class="sub">Skriv inn kjennemerket, så finner vi riktig glass til din bil.</p>
+    <form id="form-regnr" class="search">
+      <input id="input-regnr" type="text" placeholder="F.eks. SU18018" autocomplete="off" maxlength="10" autocapitalize="characters">
+      <button type="submit">Finn glass</button>
+    </form>
+    <button id="btn-manual" class="link">Fyll inn bilen manuelt</button>
+    <p class="note">Vi slår opp bilen din direkte hos Statens vegvesen. Finner vi den ikke, fyller du inn bilen manuelt.</p>
+  </section>
+
+  <!-- 2: manuell bil -->
+  <section id="screen-manual" class="screen hidden">
+    <h2>Hvilken bil?</h2>
+    <form id="form-manual" class="stack">
+      <label>Merke<input id="m-merke" type="text" placeholder="VW" required></label>
+      <label>Modell<input id="m-modell" type="text" placeholder="Transporter T5" required></label>
+      <label>Årsmodell<input id="m-aar" type="number" placeholder="2003" min="1950" max="2030" required></label>
+      <button type="submit">Neste</button>
+    </form>
+    <button class="link" data-tilbake="start">← Tilbake</button>
+  </section>
+
+  <!-- 3: bekreft bil -->
+  <section id="screen-bekreft" class="screen hidden">
+    <h2>Stemmer dette?</h2>
+    <div id="bekreft-bil" class="bilkort"></div>
+    <div id="bekreft-regnr" class="note regnr-note hidden"></div>
+    <div class="rad">
+      <button id="btn-bekreft-ja" class="prim">Ja, det stemmer</button>
+      <button id="btn-bekreft-nei" class="sek">Nei</button>
+    </div>
+  </section>
+
+  <!-- 4: glassvalg -->
+  <section id="screen-glass" class="screen hidden">
+    <h2>Hvilket glass trenger du?</h2>
+    <div class="glassvalg">
+      <button class="glassopt aktiv" data-type="front">Frontrute</button>
+      <button class="glassopt" disabled title="Kommer snart">Bakrute</button>
+      <button class="glassopt" disabled title="Kommer snart">Siderute</button>
+      <button class="glassopt" disabled title="Kommer snart">Dørrute</button>
+    </div>
+    <button class="link" data-tilbake="bekreft">← Tilbake</button>
+  </section>
+
+  <!-- 5: utstyrs-spørsmål -->
+  <section id="screen-spm" class="screen hidden">
+    <div class="framgang"><span id="spm-teller">1/4</span></div>
+    <h2 id="spm-tittel"></h2>
+    <p id="spm-hjelp" class="hjelp"></p>
+    <div class="svar" id="spm-svar"></div>
+    <button id="btn-vetikke" class="link hidden">Vet ikke</button>
+  </section>
+
+  <!-- 6: resultat -->
+  <section id="screen-resultat" class="screen hidden">
+    <div class="resultat-header">
+      <span class="sjekk">✓</span>
+      <h2>Vi fant glasset ditt</h2>
+    </div>
+    <div id="resultat-status" class="note status hidden"></div>
+    <div id="resultat-kort" class="varekort"></div>
+    <div id="resultat-regnr" class="note regnr-note hidden"></div>
+    <div id="resultat-alt" class="alternativer"></div>
+    <div class="prislinje">
+      <span class="prislbl">Pris inkl. mva</span>
+      <span id="resultat-pris" class="pris"></span>
+    </div>
+    <p class="note">Montering (frontrute) og frakt tilkommer. Glasset sendes direkte fra lager — eller du kan velge et av våre avtale-verksteder.</p>
+    <button id="btn-bestill" class="prim" disabled title="Åpner etter beta">Bestill glass — åpner etter beta</button>
+    <button class="link" data-tilbake="spm">← Nytt søk</button>
+  </section>
+
+  <!-- 7: ingen treff / feil -->
+  <section id="screen-tomt" class="screen hidden">
+    <h2 id="tomt-tittel">Fant ingen treff</h2>
+    <p class="sub" id="tomt-tekst">Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss så hjelper vi deg manuelt.</p>
+    <button class="link" data-tilbake="start">← Nytt søk</button>
+  </section>
+
+  <footer>
+    <p>Finnbilglass — bilglass til ekte pris. Levert fra lager i Oslo og Stockholm.</p>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

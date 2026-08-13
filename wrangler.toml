@@ -17,6 +17,11 @@ database_id = "ac35018c-0d43-4742-adf8-d881b7274684"
 [vars]
 ENVIRONMENT = "production"
 
+# ── Statisk frontend (prototype public/) ──────────────────────
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
 # ── Custom domains (opprettes av wrangler ved deploy) ──────────
 # apex + www serverer landingsside inntil Pages-frontenden tar over; api = matcher
 [[routes]]

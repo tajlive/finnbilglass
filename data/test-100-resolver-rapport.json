@@ -1,0 +1,1114 @@
+{
+  "generert": "2026-08-13T16:09:19.192Z",
+  "base": "https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev",
+  "total": 110,
+  "fordeling": {
+    "correct_pinpoint": 12,
+    "wrong_pinpoint": 0,
+    "verify": 73,
+    "fallback": 25
+  },
+  "apiFeil": 0,
+  "detaljer": [
+    {
+      "regnr": "AE13412",
+      "klasse": "verify",
+      "bil": "VW GOLF 2006",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EJ18765",
+      "klasse": "verify",
+      "bil": "HYUNDAI KONA 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 4,
+      "bekreftet": null
+    },
+    {
+      "regnr": "LH90120",
+      "klasse": "fallback",
+      "bil": "VW CARAVELLE TDI 2000",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "NF73296",
+      "klasse": "fallback",
+      "bil": "BMW 116I 2015",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HB80142",
+      "klasse": "fallback",
+      "bil": "BMW 320D 2008",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DR94262",
+      "klasse": "fallback",
+      "bil": "DANGEL PROACE 4X4 2021",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "ED63427",
+      "klasse": "fallback",
+      "bil": "POLESTAR POLESTAR 2 2022",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "ED45082",
+      "klasse": "verify",
+      "bil": "NISSAN NISSAN LEAF 40KWH 2021",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 17 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EB11166",
+      "klasse": "correct_pinpoint",
+      "bil": "AUDI AUDI E-TRON 2019",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "8646AGAC (8490 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "BR58010",
+      "klasse": "verify",
+      "bil": "AUDI A5 2008",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 16 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "FT61245",
+      "klasse": "verify",
+      "bil": "VW TRANSPORTER 2018",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 7 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "AA78283",
+      "klasse": "correct_pinpoint",
+      "bil": "PEUGEOT EXPERT 2025",
+      "utfall": "PINPOINT",
+      "grunn": "L2 (glass_catalog): entydig treff (1 kandidat)",
+      "treff": "27943GN (? kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "NH12612",
+      "klasse": "fallback",
+      "bil": "ISUZU N/A 2021",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EK42721",
+      "klasse": "fallback",
+      "bil": "BMW I I3 2017",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EK70880",
+      "klasse": "verify",
+      "bil": "KIA SOUL 2017",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 18 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "CV89013",
+      "klasse": "verify",
+      "bil": "MAZDA MAZDA CX-3 2018",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 21 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "ED82258",
+      "klasse": "verify",
+      "bil": "BMW IX XDRIVE50 2022",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "ED75058",
+      "klasse": "verify",
+      "bil": "KIA NIRO 2022",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 7 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BC51543",
+      "klasse": "fallback",
+      "bil": "FORD GRANADA 2,3 L 1983",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "KJ65178",
+      "klasse": "fallback",
+      "bil": "TOYOTA TOYOTA HILUX 2025",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "PR22999",
+      "klasse": "verify",
+      "bil": "MAZDA MAZDA CX-5 2014",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 15 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DS29473",
+      "klasse": "fallback",
+      "bil": "LOTUS ELETRE 2026",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DN65751",
+      "klasse": "verify",
+      "bil": "BMW X5 XDRIVE30D 2011",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 23 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "CF91159",
+      "klasse": "verify",
+      "bil": "VOLVO V60 TWIN ENGINE 2017",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 21 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EF97795",
+      "klasse": "verify",
+      "bil": "CUPRA BORN 150 KW 58/62 KWH 2023",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 2 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 2,
+      "bekreftet": null
+    },
+    {
+      "regnr": "ED72189",
+      "klasse": "verify",
+      "bil": "PORSCHE TAYCAN 4 2022",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 2 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 2,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EP70168",
+      "klasse": "fallback",
+      "bil": "BMW I4 M60 XDRIVE 2025",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DP72082",
+      "klasse": "fallback",
+      "bil": "VOLVO XC60 2015",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "CV52478",
+      "klasse": "fallback",
+      "bil": "BMW 318D 2008",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DP10946",
+      "klasse": "verify",
+      "bil": "MITSUBISHI MITSUBISHI PAJERO 2012",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 4,
+      "bekreftet": null
+    },
+    {
+      "regnr": "SD82842",
+      "klasse": "verify",
+      "bil": "VOLVO XC60 2016",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 11 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "RK29593",
+      "klasse": "verify",
+      "bil": "PEUGEOT 207 2011",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BS66728",
+      "klasse": "verify",
+      "bil": "VOLVO V60 PLUG IN HYBRID 2013",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 18 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DS30473",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA RAV4 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "RH69811",
+      "klasse": "fallback",
+      "bil": "MITSUBISHI L200 1999",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DR56170",
+      "klasse": "verify",
+      "bil": "JAGUAR JAGUAR XF 2018",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 11 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BS35162",
+      "klasse": "fallback",
+      "bil": "LAND ROVER RANGE ROVER EVOQUE 2011",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "NV63526",
+      "klasse": "verify",
+      "bil": "MITSUBISHI MITSUBISHI ASX 2011",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "SV45016",
+      "klasse": "fallback",
+      "bil": "KIA CEE'D 2013",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EN30654",
+      "klasse": "fallback",
+      "bil": "NISSAN NISSAN ARIYA 2025",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "RK10863",
+      "klasse": "verify",
+      "bil": "MITSUBISHI OUTLANDER 2009",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DN40465",
+      "klasse": "verify",
+      "bil": "VW GOLF 2010",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DK84265",
+      "klasse": "verify",
+      "bil": "VW TOUAREG 2004",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 7 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BU23751",
+      "klasse": "correct_pinpoint",
+      "bil": "VW CADDY 2021",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "8659AGSC (3990 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "LJ37142",
+      "klasse": "correct_pinpoint",
+      "bil": "VW GOLF PLUS 2009",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "2811GY (3990 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "EE64697",
+      "klasse": "verify",
+      "bil": "VW ID.4 GTX 220 KW 2022",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EF94275",
+      "klasse": "correct_pinpoint",
+      "bil": "VW ID.4 PRO 4MOTION 195 KW 2023",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "8668ACKC (8490 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "KT88849",
+      "klasse": "correct_pinpoint",
+      "bil": "VW GOLF SPORTSVAN 2014",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "3252GYM (3990 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "NF54252",
+      "klasse": "verify",
+      "bil": "VW CADDY 2012",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 18 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "TV92229",
+      "klasse": "verify",
+      "bil": "VW TOURAN 2017",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 24 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "JV35505",
+      "klasse": "verify",
+      "bil": "VW CADDY 2023",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 25 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "PA22490",
+      "klasse": "correct_pinpoint",
+      "bil": "VW ID.4 GTX 220 KW 2023",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "8668ACKC (8490 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "EP30980",
+      "klasse": "verify",
+      "bil": "VW ID.4 GTX 220 KW 2025",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "ZH53613",
+      "klasse": "verify",
+      "bil": "VW CADDY 2018",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 23 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EF93501",
+      "klasse": "correct_pinpoint",
+      "bil": "VW ID.5 PRO 150 KW 2023",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "8668ACKC (8490 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "PP80006",
+      "klasse": "correct_pinpoint",
+      "bil": "VW PASSAT 2008",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "2875GYM (5490 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "DR81380",
+      "klasse": "verify",
+      "bil": "VW CADDY 2020",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EF97598",
+      "klasse": "correct_pinpoint",
+      "bil": "VW ID.5 PRO 150 KW 2023",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "8668ACKC (8490 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "JV16591",
+      "klasse": "verify",
+      "bil": "VW TOURAN 2012",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EB85560",
+      "klasse": "verify",
+      "bil": "VW ID.3 PRO 150 KW 2020",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HB70073",
+      "klasse": "fallback",
+      "bil": "VW TRANSPORTER O. CARAVELLE 2008",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "YT69432",
+      "klasse": "correct_pinpoint",
+      "bil": "VW PASSAT 2012",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "2875GNM2 (5490 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "CF56285",
+      "klasse": "verify",
+      "bil": "VW PASSAT 2010",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "SV22710",
+      "klasse": "verify",
+      "bil": "VW CADDY 2012",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 18 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "KJ36006",
+      "klasse": "verify",
+      "bil": "VW AMAROK 2018",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DS19610",
+      "klasse": "verify",
+      "bil": "VW CADDY 2022",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 25 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DP53541",
+      "klasse": "correct_pinpoint",
+      "bil": "VW GOLF 2014",
+      "utfall": "PINPOINT",
+      "grunn": "L1 (ground_truth): entydig treff (1 kandidat)",
+      "treff": "3252GYM (3990 kr)",
+      "antallKandidater": 1,
+      "bekreftet": true
+    },
+    {
+      "regnr": "DR15345",
+      "klasse": "verify",
+      "bil": "VW TRANSPORTER 2016",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 7 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HF27481",
+      "klasse": "verify",
+      "bil": "VW GOLF 2016",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 11 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "KT97177",
+      "klasse": "verify",
+      "bil": "VW CRAFTER 2018",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 12 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EP11031",
+      "klasse": "verify",
+      "bil": "VW ID. BUZZ GTX LR 250 KW 2025",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EL69859",
+      "klasse": "verify",
+      "bil": "VW GOLF 2015",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 11 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EC68253",
+      "klasse": "verify",
+      "bil": "VW ID.3 PRO 150 KW 2021",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "PP81833",
+      "klasse": "fallback",
+      "bil": "VW TRANSPORTER 2009",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "UX62558",
+      "klasse": "verify",
+      "bil": "VW TIGUAN 2013",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 13 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DL94988",
+      "klasse": "verify",
+      "bil": "VW CADDY 2008",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 14 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EN71317",
+      "klasse": "verify",
+      "bil": "VW ID.4 PRO 4MOTION 210KW 2025",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EK19551",
+      "klasse": "verify",
+      "bil": "VW GOLF 2016",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 11 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EN74501",
+      "klasse": "verify",
+      "bil": "VW ID.7 TOURER GTX 2025",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "PR55317",
+      "klasse": "verify",
+      "bil": "VW TRANSPORTER 2019",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 7 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EN67708",
+      "klasse": "verify",
+      "bil": "VW ID.7 TOURER GTX 2025",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "SD28674",
+      "klasse": "fallback",
+      "bil": "VW TRANSPORTER W.W. CARAVELLE 2005",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EJ17848",
+      "klasse": "verify",
+      "bil": "VW ID.4 PRO 4MOTION 210KW 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BR51758",
+      "klasse": "verify",
+      "bil": "VW EOS 2007",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 4,
+      "bekreftet": null
+    },
+    {
+      "regnr": "ST30377",
+      "klasse": "fallback",
+      "bil": "TOYOTA CAMRY 1999",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BU37204",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA COROLLA 2023",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "UF91402",
+      "klasse": "verify",
+      "bil": "TOYOTA C-HR 2021",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DS30475",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA RAV4 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "YE93661",
+      "klasse": "verify",
+      "bil": "TOYOTA PRIUS PLUS 2013",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 24 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "KJ63240",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA RAV4 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BU42163",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA YARIS 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 14 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "TV71715",
+      "klasse": "verify",
+      "bil": "TOYOTA RAV4 2005",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 5 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 5,
+      "bekreftet": null
+    },
+    {
+      "regnr": "DL66882",
+      "klasse": "verify",
+      "bil": "TOYOTA RAV4 2007",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 5 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 5,
+      "bekreftet": null
+    },
+    {
+      "regnr": "RK41592",
+      "klasse": "verify",
+      "bil": "TOYOTA AYGO 2012",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 7 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK19201",
+      "klasse": "fallback",
+      "bil": "TOYOTA TOYOTA BZ4X 2025",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BU36370",
+      "klasse": "verify",
+      "bil": "TOYOTA COROLLA 2023",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BR67700",
+      "klasse": "fallback",
+      "bil": "TOYOTA LAND CRUISER 2008",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK18792",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK18819",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA RAV4 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "KZ59186",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA YARIS 2011",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK17847",
+      "klasse": "verify",
+      "bil": "TOYOTA RAV4 2023",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "BU28171",
+      "klasse": "fallback",
+      "bil": "TOYOTA LAND CRUISER (150 SERIES) 2021",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK18786",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA RAV4 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK18815",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA RAV4 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 3,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK18782",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK18798",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK18790",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "HK18789",
+      "klasse": "verify",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    },
+    {
+      "regnr": "EH58246",
+      "klasse": "fallback",
+      "bil": "TOYOTA PROACE 2025",
+      "utfall": "FALLBACK",
+      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "treff": null,
+      "antallKandidater": 0,
+      "bekreftet": null
+    },
+    {
+      "regnr": "RJ91986",
+      "klasse": "verify",
+      "bil": "TOYOTA YARIS 2008",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 10 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 6,
+      "bekreftet": null
+    }
+  ]
+}
