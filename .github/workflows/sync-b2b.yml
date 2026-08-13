@@ -1,0 +1,40 @@
+name: Sync B2B → FinnBilGlass staging
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 4 * * 0"  # Søndag 06:45 CET (etter fbg-sync-dump kl 06:30)
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Last ned B2B-sync-artifact (fra autoglassgrossisten)
+        env:
+          GH_TOKEN: ${{ secrets.TAJLIVE_PAT }}
+        run: |
+          RUN_ID=$(gh api repos/tajlive/autoglassgrossisten/actions/artifacts --jq '.artifacts[] | select(.name=="b2b-catalog-sync" and .expired==false) | .id' | head -1)
+          if [ -z "$RUN_ID" ]; then echo "❌ Ingen b2b-catalog-sync artifact funnet"; exit 1; fi
+          mkdir -p /tmp/b2b-artifact
+          gh api "repos/tajlive/autoglassgrossisten/actions/artifacts/$RUN_ID/zip" > /tmp/b2b-artifact.zip
+          cd /tmp/b2b-artifact && unzip -o ../b2b-artifact.zip
+          echo "Artifact $RUN_ID lastet ned:"
+          ls -la /tmp/b2b-artifact/
+
+      - name: Importer til finnbilglass-db-staging (idempotent)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          D1_DATABASE: finnbilglass-db-staging
+          ARTIFACT_DIR: /tmp/b2b-artifact
+        run: node scripts/sync-b2b-import.mjs
+
+      - name: Verifiser counts
+        run: |
+          GLASS=$(node -e "console.log(process.env.GLASS)") 2>/dev/null || true
+          echo "Sync fullført — se rapport over"
