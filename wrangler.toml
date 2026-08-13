@@ -1,0 +1,35 @@
+name = "finnbilglass-frontrute"
+main = "src/index.ts"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# ── D1 (glass-katalog: 29 627 rader, autoglass_prisliste) ─────
+[[d1_databases]]
+binding = "FINNBILGLASS_DB"
+database_name = "finnbilglass-db"
+database_id = "ac35018c-0d43-4742-adf8-d881b7274684"
+
+# ── Secrets (IKKE i denne filen — bruk wrangler secret put): ──
+#    wrangler secret put SVV_API_KEY   (kjennemerke → bil, kommende)
+#    wrangler secret put CRON_SECRET
+
+[vars]
+ENVIRONMENT = "production"
+
+# ── Custom domains (opprettes av wrangler ved deploy) ──────────
+# apex + www serverer landingsside inntil Pages-frontenden tar over; api = matcher
+[[routes]]
+pattern = "finnbilglass.no"
+custom_domain = true
+zone_name = "finnbilglass.no"
+
+[[routes]]
+pattern = "www.finnbilglass.no"
+custom_domain = true
+zone_name = "finnbilglass.no"
+
+[[routes]]
+pattern = "api.finnbilglass.no"
+custom_domain = true
+zone_name = "finnbilglass.no"
