@@ -88,13 +88,13 @@ if (!bil) {
   process.exit(1);
 }
 
-// Steg 1: kandidater fra D1 — primær-nøkkelord (alle må matche) + sekundær (minst én)
+// Steg 1: seed-kandidater fra D1 — primær-nøkkelord (alle må matche) + sekundær (minst én)
 // Autoglass-varenavn er inkonsistente (noen har T5, andre ikke) → årstall + modell-variant som OR
 const primaer = bil.nokkelord ?? [bil.merke];
 const sekundaer = [bil.modell, bil.aar ? String(bil.aar) : null].filter(Boolean);
 const likePrim = primaer.map((k) => `varenavn LIKE '%${k.toUpperCase().replace(/'/g, "''")}%'`).join(' AND ');
 const likeSek = sekundaer.map((k) => `varenavn LIKE '%${k.toUpperCase().replace(/'/g, "''")}%'`).join(' OR ');
-const rader = await d1(`
+const seed = await d1(`
   SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
   FROM autoglass_prisliste
   WHERE rad_type='glass'
@@ -104,8 +104,39 @@ const rader = await d1(`
     AND (${likeSek})
   ORDER BY pris
 `);
-// Sikkerhetsfilter i JS: posisjon må være frontrute (eurokode-dekoder) ELLER FRONT i navn
-const kandidater = (rader ?? []).filter((r) => {
+
+// Steg 2: katalogkode-utvidelse (Toms regel, verifisert 87,6 % ren):
+// katalogkoden (ledende siffer) identifiserer modellen → hent ALLE varianter med samme kode.
+const katalogkoder = new Set();
+for (const r of seed ?? []) {
+  const m = (r.eurokode ?? '').match(/^(\d{3,5})/);
+  if (m) katalogkoder.add(m[1]);
+}
+
+let utvidet = seed ?? [];
+if (katalogkoder.size) {
+  const globs = [...katalogkoder].map((k) => `eurokode LIKE '${k}%'`).join(' OR ');
+  const ekstra = await d1(`
+    SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
+    FROM autoglass_prisliste
+    WHERE rad_type='glass' AND (${globs})
+  `);
+  utvidet = [...(seed ?? []), ...(ekstra ?? [])];
+}
+
+// Steg 3: dedupe + kollisjonsvalidering — varenavn må bekrefte bilen (merke + sekundær)
+const sett = new Map();
+for (const r of utvidet) {
+  const n = (r.varenavn ?? '').toUpperCase();
+  const okMerke = primaer.every((k) => n.includes(k.toUpperCase()));
+  const okSek = sekundaer.length === 0 || sekundaer.some((k) => n.includes(k.toUpperCase()));
+  if (!(okMerke && okSek)) continue; // kollisjons-skjerm: feil bil i katalogkode-gruppen
+  sett.set(r.varenr, r);
+}
+const rader = [...sett.values()];
+
+// Steg 4: frontrute-filter (posisjon A via dekoder ELLER FRONT i navn)
+const kandidater = rader.filter((r) => {
   const dek = dekodeEurokode(r.eurokode);
   return dek.posisjon === 'frontrute' || /FRONT/.test(r.varenavn ?? '');
 });
@@ -115,9 +146,9 @@ for (const r of kandidater) {
   console.log(`  ${r.varenr} | ${String(r.pris).padStart(7)} kr | ${r.eurokode ?? '-'} | ${(r.varenavn ?? '').slice(0, 50)} | ${(r.kommentar ?? '').slice(0, 45)}`);
 }
 
-// Steg 2: score
+// Steg 5: score kun frontrute-kandidatene
 const profil = bil.profil ?? {};
-const vurdert = (rader ?? []).map((r) => ({ vare: r, ...scoreKandidat(r, profil) }));
+const vurdert = kandidater.map((r) => ({ vare: r, ...scoreKandidat(r, profil) }));
 vurdert.sort((a, b) => b.score - a.score);
 
 console.log(`\nUtstyrsprofil: ${JSON.stringify(profil)}`);
