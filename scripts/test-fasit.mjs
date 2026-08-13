@@ -2,15 +2,15 @@
 /**
  * Fasit-tester for OE/VIN-pinpoint (mot staging-worker).
  *
- *   SU18018 → PINPOINT, varenr 2525CSGYA   (HARD regresjonstest, Tom 2026-08-13)
- *   AJ95429 → VERIFY                        (tvetydig datagrunnlag → aldri tving PINPOINT)
+ *   SU18018 → PINPOINT, eurokode 8579ACSGYAVZ1B (HARD regresjonstest, Tom 2026-08-13)
+ *   AJ95429 → VERIFY                           (tvetydig datagrunnlag → aldri tving PINPOINT)
  *
  * Bruk:
  *   node scripts/test-fasit.mjs                      # staging
  *   BASE_URL=... node scripts/test-fasit.mjs         # annen base
  * Exit 0 = alle krav møtt; exit 1 = krav brutt (feilfasit / forventet-FALLBACK).
  */
-const BASE = process.env.BASE_URL ?? 'https://finnbilglass-frontrute-staging.klarpakke.workers.dev';
+const BASE = process.env.BASE_URL ?? 'https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev';
 
 async function sok(regnr) {
   const r = await fetch(`${BASE}/api/regnr`, {
@@ -23,10 +23,10 @@ async function sok(regnr) {
 
 const FA_SIT = [
   {
-    navn: 'SU18018 → 2525CSGYA (hard regresjon)',
+    navn: 'SU18018 → 8579ACSGYAVZ1B (hard regresjon)',
     regnr: 'SU18018',
-    krav: (res) => res?.utfall === 'PINPOINT' && (res.varenr === '2525CSGYA' || res.eurokode === '8579ACSGYAVZ1B'),
-    beskriv: 'PINPOINT med varenr 2525CSGYA (VW Transporter T5 frontrute)',
+    krav: (res) => res?.utfall === 'PINPOINT' && res.eurokode === '8579ACSGYAVZ1B',
+    beskriv: 'PINPOINT med eurokode 8579ACSGYAVZ1B (VW Transporter T5 frontrute)',
   },
   {
     navn: 'AJ95429 → VERIFY (tvetydig → aldri tving PINPOINT)',
