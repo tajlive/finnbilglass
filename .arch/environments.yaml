@@ -4,5 +4,7 @@ environments:
     url: http://localhost:3000
     secrets_store: .env.local
   prod:
-    url: "<TODO>"
-    worker: "<TODO>"
+    url: https://finnbilglass.pages.dev
+    custom_domain: https://finnbilglass.no  # aktiv når NS-peking er gjort i Domeneshop
+    worker: "<TODO: opprettes med API-kode>"
+    d1: finnbilglass-db (ac35018c-0d43-4742-adf8-d881b7274684)

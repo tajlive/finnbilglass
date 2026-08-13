@@ -9,11 +9,19 @@ repository:
 domain:
   name: finnbilglass.no
   registrar: domeneshop
+  cloudflare_zone_id: b72021700d0e30173f387fb244b5f268
+  nameservers:
+    - haley.ns.cloudflare.com
+    - zac.ns.cloudflare.com
+  status: pending  # NS-peking fra Domeneshop gjenstår (manuell aksjon)
 runtime:
   cloudflare: true
+  account_id: 80d5b1d56a3e907150ba7348b6182894  # KLARPAKKE (Toms egen account)
+  pages_project: finnbilglass
+  pages_subdomain: finnbilglass.pages.dev
 database:
-  provider: d1  # <TODO: bekreftes — antatt, gitt CF-stack og glass-katalog gjenbruk>
-  project_id: "<TODO>"
+  provider: d1
+  project_id: ac35018c-0d43-4742-adf8-d881b7274684  # finnbilglass-db
 management:
   linear:
     team: "<TODO: team-key>"
