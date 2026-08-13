@@ -24,7 +24,7 @@ database:
   project_id: ac35018c-0d43-4742-adf8-d881b7274684  # finnbilglass-db
 management:
   linear:
-    team: "<TODO: team-key>"
+    team: "ARC"
 sources_of_truth:
   work: linear
   code: github
