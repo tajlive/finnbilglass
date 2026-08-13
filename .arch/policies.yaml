@@ -1,0 +1,13 @@
+# Arch policies — finnbilglass
+git:
+  workflow: [Issue, Branch, Implementation, Tests, Commit, CI, Review, Main, Deploy]
+  main_protection: "ingen push til main uten: grønne tester + Linear-issue + commit-referanse"
+linear:
+  sso: "Linear er ENESTE oppgavekilde"
+  gate_ready_for_tom_to_approved: "kun Tom"
+secrets:
+  standard: "secret://finnbilglass/<miljø>/<tjeneste>/<nøkkel>"
+  agent_kan_ikke: [eksponere, skrive uten godkjenning]
+knowledge_governance:
+  prinsipp: "Arch lærer av systemet, men endrer aldri sikkerhetsgrenser automatisk"
+  agent_kan_aldri_automatisk: [endre risk-regler, aktivere trading, endre secrets, endre tilgangsnivå]

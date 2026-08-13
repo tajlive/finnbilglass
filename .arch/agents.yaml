@@ -1,0 +1,16 @@
+# Arch agent-roller — finnbilglass
+hermes:
+  role: "Chief Architect + Operations"
+  responsibility: [arkitektur, kode, Linear, CI, testing, overvåkning, dokumentasjon]
+  not_allowed:
+    - endre produksjonshemmeligheter
+    - godkjenne egne risikofylte endringer
+    - flytte Linear-issues Ready for Tom → Approved (kun Tom)
+codex:
+  role: "Senior Software Engineer"
+  used_for: [store refaktoreringer, komplekse implementasjoner, ytelsesarbeid]
+kimi:
+  role: "Research Analyst"
+  used_for: [undersøkelser, dokumentasjon, markedsanalyser]
+linear_gates:
+  tom_only: ["Ready for Tom → Approved"]

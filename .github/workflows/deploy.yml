@@ -1,0 +1,37 @@
+# CI/CD — finnbilglass (generisk mal, tilpass etter stack)
+# Gates: test → deploy → smoke → auto-rollback. Ingen prod-deploy uten grønne gates.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  test-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: secret-scan (grep + allowlist) — arv secret-audit.mjs fra Arch
+
+  deploy:
+    needs: [test-gate, security-check]
+    runs-on: ubuntu-latest
+    # TODO: wrangler deploy / platform-deploy. Alert via Linear fingerprint-dedup.
+
+  smoke:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    # TODO: health + landing + i18n-nøkkel-sjekk. Ved feil → auto-rollback → Linear prio 2/1.

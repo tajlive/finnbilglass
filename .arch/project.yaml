@@ -1,0 +1,23 @@
+# Arch Control Plane — finnbilglass (scaffoldet 2026-08-13)
+project:
+  name: finnbilglass
+  owner: arch
+  description: "Salg av bilglass til privatpersoner uten forsikringsdekning (B2C)."
+repository:
+  github: "tajlive/finnbilglass"
+  default_branch: main
+domain:
+  name: finnbilglass.no
+  registrar: domeneshop
+runtime:
+  cloudflare: true
+database:
+  provider: d1  # <TODO: bekreftes — antatt, gitt CF-stack og glass-katalog gjenbruk>
+  project_id: "<TODO>"
+management:
+  linear:
+    team: "<TODO: team-key>"
+sources_of_truth:
+  work: linear
+  code: github
+  data: d1
