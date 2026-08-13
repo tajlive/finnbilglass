@@ -1,0 +1,131 @@
+#!/usr/bin/env node
+// Frontrute-matcher — POC: finn riktig frontrute for en bil.
+//
+// Kjede: bil (kjennemerke→SVV eller manuell) → D1-kandidater → eurokode-dekoder
+//        → score mot bilens utstyrsprofil → 1 riktig vare.
+//
+// Eksempel (SU18018-fasit): VW T5 2003, sensor+antenne, ikke coated → 2525GYA (9 980 kr)
+import fs from 'node:fs';
+import { dekodeEurokode } from './eurokode-dekoder.mjs';
+
+const DB_ID = 'ac35018c-0d43-4742-adf8-d881b7274684';
+
+function readEnvLocal(file) {
+  const env = {};
+  for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (!m) continue;
+    let v = m[2].trim();
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+    env[m[1]] = v;
+  }
+  return env;
+}
+const env = readEnvLocal('/Users/taj/klarpakke/.env.local');
+const ACCOUNT = env.CLOUDFLARE_ACCOUNT_ID;
+const TOKEN = env.CLOUDFLARE_API_TOKEN;
+
+async function d1(sql) {
+  const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/d1/database/${DB_ID}/query`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sql }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(`D1-feil: ${JSON.stringify(json.errors).slice(0, 300)}`);
+  return json.result?.[0]?.results ?? null;
+}
+
+// --- varenavn → ekstra attributter (Autoglass sine forkortelser) ---
+function navnAttributter(varenavn, kommentar) {
+  const s = `${varenavn ?? ''} ${kommentar ?? ''}`.toUpperCase();
+  const att = new Set();
+  if (/COATED|COATING|CSGY/.test(s)) att.add('coated');
+  if (/INNK|INNKAPSLET/.test(s)) att.add('innkapslet');
+  if (/ANT|ANTENNE/.test(s)) att.add('antenne');
+  if (/SENSOR/.test(s)) att.add('sensor');
+  if (/S1C|SENSORTAPE|SENSORGEL|NB S1|HUSK S1/.test(s)) att.add('sensorgel');
+  if (/OPPVARMET|EL-|ELEKTRISK/.test(s)) att.add('oppvarmet');
+  if (/MAX ?5\d%/.test(s)) att.add('sotet-5x');
+  return att;
+}
+
+// --- scorer kandidat mot bilens utstyrsprofil ---
+// profil: { coated: bool|undefined, sensor, antenne, sensorgel, innkapslet, fargetone }
+function scoreKandidat(vare, profil) {
+  const dek = dekodeEurokode(vare.eurokode);
+  const att = navnAttributter(vare.varenavn, vare.kommentar);
+  let score = 0;
+  const feil = [];
+
+  // Dekoder-attributter (strukturelle)
+  const har = (a) => att.has(a) || dek.egenskaper.includes(a);
+  const kryss = (navn, kandidatHar) => {
+    if (profil[navn] === undefined) return; // ukjent — ikke straff
+    if (profil[navn] === true && kandidatHar) score += 3;
+    else if (profil[navn] === false && !kandidatHar) score += 2;
+    else { score -= 4; feil.push(`${navn}: bil ${profil[navn]}, vare ${kandidatHar}`); }
+  };
+  kryss('coated', har('coated'));
+  kryss('sensor', har('sensor'));
+  kryss('antenne', har('antenne'));
+  kryss('sensorgel', har('sensorgel'));
+  kryss('innkapslet', har('innkapslet'));
+
+  // Fargetone (myk match)
+  if (profil.fargetone && dek.fargetone) {
+    if (dek.fargetone.includes(profil.fargetone)) score += 2;
+    else { score -= 2; feil.push(`fargetone: bil ${profil.fargetone}, vare ${dek.fargetone}`); }
+  }
+  return { score, feil, att, dek };
+}
+
+// --- main ---
+const [,, bilArg] = process.argv;
+const bil = bilArg ? JSON.parse(bilArg) : null;
+if (!bil) {
+  console.error('Bruk: node frontrute-matcher.mjs \'{"merke":"VW","modell":"T5","aar":2003,"profil":{"sensor":true,"antenne":true,"coated":false}}\'');
+  process.exit(1);
+}
+
+// Steg 1: kandidater fra D1 — primær-nøkkelord (alle må matche) + sekundær (minst én)
+// Autoglass-varenavn er inkonsistente (noen har T5, andre ikke) → årstall + modell-variant som OR
+const primaer = bil.nokkelord ?? [bil.merke];
+const sekundaer = [bil.modell, bil.aar ? String(bil.aar) : null].filter(Boolean);
+const likePrim = primaer.map((k) => `varenavn LIKE '%${k.toUpperCase().replace(/'/g, "''")}%'`).join(' AND ');
+const likeSek = sekundaer.map((k) => `varenavn LIKE '%${k.toUpperCase().replace(/'/g, "''")}%'`).join(' OR ');
+const rader = await d1(`
+  SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
+  FROM autoglass_prisliste
+  WHERE rad_type='glass'
+    AND (varenavn LIKE '%FRONTRUTE%' OR varenavn LIKE '%FRONT%'
+         OR eurokode GLOB '[0-9][0-9][0-9]A*' OR eurokode GLOB '[0-9][0-9][0-9][0-9]A*' OR eurokode GLOB '[0-9][0-9][0-9][0-9][0-9]A*')
+    AND ${likePrim}
+    AND (${likeSek})
+  ORDER BY pris
+`);
+// Sikkerhetsfilter i JS: posisjon må være frontrute (eurokode-dekoder) ELLER FRONT i navn
+const kandidater = (rader ?? []).filter((r) => {
+  const dek = dekodeEurokode(r.eurokode);
+  return dek.posisjon === 'frontrute' || /FRONT/.test(r.varenavn ?? '');
+});
+
+console.log(`Kandidater (${kandidater.length}):`);
+for (const r of kandidater) {
+  console.log(`  ${r.varenr} | ${String(r.pris).padStart(7)} kr | ${r.eurokode ?? '-'} | ${(r.varenavn ?? '').slice(0, 50)} | ${(r.kommentar ?? '').slice(0, 45)}`);
+}
+
+// Steg 2: score
+const profil = bil.profil ?? {};
+const vurdert = (rader ?? []).map((r) => ({ vare: r, ...scoreKandidat(r, profil) }));
+vurdert.sort((a, b) => b.score - a.score);
+
+console.log(`\nUtstyrsprofil: ${JSON.stringify(profil)}`);
+console.log('\nRangering:');
+for (const v of vurdert) {
+  const badge = v.feil.length === 0 ? '✔' : '✘';
+  console.log(`  ${badge} ${v.vare.varenr} | score ${v.score} | ${v.vare.pris} kr`);
+  for (const f of v.feil) console.log(`       ! ${f}`);
+}
+const beste = vurdert[0];
+console.log(`\n=> ANBEFALING: ${beste?.vare.varenr} — ${beste?.vare.pris} kr (${beste?.vare.varenavn?.slice(0, 60)})`);
