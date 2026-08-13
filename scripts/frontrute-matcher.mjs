@@ -7,6 +7,7 @@
 // Eksempel (SU18018-fasit): VW T5 2003, sensor+antenne, ikke coated → 2525GYA (9 980 kr)
 import fs from 'node:fs';
 import { dekodeEurokode } from './eurokode-dekoder.mjs';
+import { parseAar, matcherAar } from './aar-parser.mjs';
 
 const DB_ID = 'ac35018c-0d43-4742-adf8-d881b7274684';
 
@@ -52,11 +53,22 @@ function navnAttributter(varenavn, kommentar) {
 
 // --- scorer kandidat mot bilens utstyrsprofil ---
 // profil: { coated: bool|undefined, sensor, antenne, sensorgel, innkapslet, fargetone }
-function scoreKandidat(vare, profil) {
+// bilAar: årsmodell — gir avstands-straff (skiller generasjoner som deler katalogkode)
+function scoreKandidat(vare, profil, bilAar) {
   const dek = dekodeEurokode(vare.eurokode);
   const att = navnAttributter(vare.varenavn, vare.kommentar);
   let score = 0;
   const feil = [];
+
+  // Årstall-avstand (straff for åpne intervall som "2003-" når bilen er 2016)
+  if (bilAar != null) {
+    const a = parseAar(vare.varenavn);
+    if (a && isFinite(a.start)) {
+      const avstand = Math.abs(bilAar - a.start);
+      score -= Math.min(avstand / 5, 6); // max -6
+      if (avstand > 8) feil.push(`årsmodell: bil ${bilAar}, vare starter ${a.start}`);
+    }
+  }
 
   // Dekoder-attributter (strukturelle)
   const har = (a) => att.has(a) || dek.egenskaper.includes(a);
@@ -136,19 +148,27 @@ for (const r of utvidet) {
 const rader = [...sett.values()];
 
 // Steg 4: frontrute-filter (posisjon A via dekoder ELLER FRONT i navn)
-const kandidater = rader.filter((r) => {
+const front = rader.filter((r) => {
   const dek = dekodeEurokode(r.eurokode);
   return dek.posisjon === 'frontrute' || /FRONT/.test(r.varenavn ?? '');
 });
+
+// Steg 5: årstall-hardfilter — samme katalogkode spenner ofte flere generasjoner
+// (8579 = T5 2003- OG T6 16- OG 2022-). Bilens år må ligge i varenavnets intervall.
+const kandidater = bil.aar != null
+  ? front.filter((r) => matcherAar(parseAar(r.varenavn), bil.aar))
+  : front;
+const aarEkskludert = front.length - kandidater.length;
+if (aarEkskludert > 0) console.log(`(Årstall-filter: ${aarEkskludert} av ${front.length} ekskludert — utenfor ${bil.aar})`);
 
 console.log(`Kandidater (${kandidater.length}):`);
 for (const r of kandidater) {
   console.log(`  ${r.varenr} | ${String(r.pris).padStart(7)} kr | ${r.eurokode ?? '-'} | ${(r.varenavn ?? '').slice(0, 50)} | ${(r.kommentar ?? '').slice(0, 45)}`);
 }
 
-// Steg 5: score kun frontrute-kandidatene
+// Steg 6: score kun frontrute-kandidatene
 const profil = bil.profil ?? {};
-const vurdert = kandidater.map((r) => ({ vare: r, ...scoreKandidat(r, profil) }));
+const vurdert = kandidater.map((r) => ({ vare: r, ...scoreKandidat(r, profil, bil.aar) }));
 vurdert.sort((a, b) => b.score - a.score);
 
 console.log(`\nUtstyrsprofil: ${JSON.stringify(profil)}`);
