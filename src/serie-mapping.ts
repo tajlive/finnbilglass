@@ -200,6 +200,8 @@ const BMW_SERIER: Record<string, SerieDef[]> = {
   I4: [{ kode: 'G26', start: 2021, slutt: 2035 }],
   I5: [{ kode: 'G60', start: 2023, slutt: 2035 }],
   IX: [{ kode: 'I20', start: 2021, slutt: 2035 }],
+  IX1: [{ kode: 'U11', start: 2022, slutt: 2035 }],
+  IX3: [{ kode: 'G08', start: 2021, slutt: 2035 }],
 };
 
 /** Finn serie-def for et (klasse, år). */
@@ -234,14 +236,17 @@ function mercedesKlasse(modell: string): string | null {
 /** SVV-modell-streng → BMW-serie-nøkkel. */
 function bmwSerie(modell: string): string | null {
   const m = (modell || '').toUpperCase().replace(/\s+/g, ' ').trim();
-  const i = m.match(/^(I3|I4|I5|IX)\b/);
+  const i = m.match(/^(I3|I4|I5|IX1|IX2|IX3|IX)\b/);
   if (i) return i[1];
   const x = m.match(/^(X1|X2|X3|X4|X5|X6)\b/);
   if (x) return x[1];
   const z = m.match(/^(Z3|Z4)\b/);
   if (z) return z[1];
-  // «525D», «116I», «318D», «730D», «225XE», «540D», «M3», «M5»…
-  const tall = m.match(/^(\d)\d{1,2}/);
+  // «M 550D» / «M550D» — M-prefiks-strip (katalog bruker «550D»)
+  const mpre = m.match(/^M\s*(\d)/);
+  if (mpre) return mpre[1];
+  // «525D», «116I», «318D», «730D», «225XE», «540D», «3 SERIE», «5 SERIEN»…
+  const tall = m.match(/^(\d)(?:\d{1,2})?/);
   if (tall) return tall[1];
   const mserie = m.match(/^(M\d)\b/);
   if (mserie) return mserie[1].replace('M', '').slice(0, 1); // M3 → 3, M5 → 5
@@ -257,12 +262,14 @@ export function serieKey(merke: string, modell: string, aar: number | null): str
   if (m === 'MERCEDES' || m === 'MERCEDES-BENZ' || m === 'MERCEDES BENZ') {
     const klasse = mercedesKlasse(modell);
     if (!klasse) return null;
-    return iVindu(MERCEDES_KLASSER[klasse], aar);
+    const k = iVindu(MERCEDES_KLASSER[klasse], aar);
+    return k ? k.split('/')[0].split('-')[0] : null; // kanonisk form
   }
   if (m === 'BMW') {
     const serie = bmwSerie(modell);
     if (!serie) return null;
-    return iVindu(BMW_SERIER[serie], aar);
+    const k = iVindu(BMW_SERIER[serie], aar);
+    return k ? k.split('/')[0].split('-')[0] : null; // kanonisk form
   }
   return null;
 }
@@ -270,17 +277,23 @@ export function serieKey(merke: string, modell: string, aar: number | null): str
 /** Normaliserer GT/katalog-modell-strenger fra prislisten til serie-kode-form.
  *  Kanonisk form: første kode («F10/11» → «F10», «W907/W910» → «W907»). */
 const kanonisk = (kode: string): string => kode.split('/')[0].split('-')[0];
+// Karosseri-søsken → samme serie (E87 er 5-dørs E81; F31 er stv. F30 osv.)
+const KAROSSERI_ALIAS: Record<string, string> = {
+  E87: 'E81', E88: 'E81', E91: 'E90', E92: 'E90', E93: 'E90',
+  F11: 'F10', F31: 'F30', G21: 'G20', G31: 'G30', F21: 'F20', F13: 'F12', F33: 'F32', F36: 'F32',
+  E61: 'E60', E66: 'E65', F02: 'F01', G12: 'G11',
+};
 export function normaliserKatalogModell(modell: string): string | null {
   const m = (modell || '').toUpperCase();
   // Mercedes: «W204 STV», «M KLASSE W164», «GL X164», «CLK W209 CAB», «R-CLASS W251»
   const w = m.match(/\b([WXCR]\d{3}(?:\/\d{3})?)\b/);
-  if (w) return kanonisk(w[1]);
+  if (w) return KAROSSERI_ALIAS[kanonisk(w[1])] ?? kanonisk(w[1]);
   // BMW: «SERIEN E39», «SERIE E46», «COMPACT E36», «CABRIOLET E36»
   const e = m.match(/\b([EFG]\d{2}(?:\/\d{2})?)\b/);
-  if (e) return kanonisk(e[1]);
+  if (e) return KAROSSERI_ALIAS[kanonisk(e[1])] ?? kanonisk(e[1]);
   // «G460», «X164»-lignende allerede fanget over; «I01» osv.
   const i = m.match(/\b(I\d{2})\b/);
-  if (i) return kanonisk(i[1]);
+  if (i) return KAROSSERI_ALIAS[kanonisk(i[1])] ?? kanonisk(i[1]);
   return null;
 }
 
