@@ -278,10 +278,12 @@ export function serieKey(merke: string, modell: string, aar: number | null): str
  *  Kanonisk form: første kode («F10/11» → «F10», «W907/W910» → «W907»). */
 const kanonisk = (kode: string): string => kode.split('/')[0].split('-')[0];
 // Karosseri-søsken → samme serie (E87 er 5-dørs E81; F31 er stv. F30 osv.)
+// + katalog-W/R-bytter (prislisten bruker W170 for SLK; offisiell kode = R170)
 const KAROSSERI_ALIAS: Record<string, string> = {
   E87: 'E81', E88: 'E81', E91: 'E90', E92: 'E90', E93: 'E90',
   F11: 'F10', F31: 'F30', G21: 'G20', G31: 'G30', F21: 'F20', F13: 'F12', F33: 'F32', F36: 'F32',
   E61: 'E60', E66: 'E65', F02: 'F01', G12: 'G11',
+  W129: 'R129', W170: 'R170', W230: 'R230',
 };
 export function normaliserKatalogModell(modell: string): string | null {
   const m = (modell || '').toUpperCase();

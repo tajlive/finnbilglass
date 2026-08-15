@@ -55,7 +55,7 @@ async function main() {
   for (let i = 0; i < rader.length; i += B) {
     const batchNo = i / B;
     if (batchNo < startBatch) continue;
-    const chunk = rader.slice(i, i + B).join(',\n');
+    const chunk = rader.slice(i, i + B).join(',\n').replace(/,\s*$/, '');
     const stmt = `${hdr}${chunk}`;
     const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACC}/d1/database/${dbId}/query`, {
       method: 'POST',
