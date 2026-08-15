@@ -105,7 +105,9 @@ function parseVarenavn(varenavn, merke) {
   // Multi-kode-rader («W638/W639/W640 VITO») kanoniseres IKKE til første kode —
   // serien må velges fra årvinduet via serieKey.
   if (serieKode && /[WXCR]\d{3}\/[WXCR]\d{3}\/[WXCR]\d{3}/.test(modell.toUpperCase())) serieKode = null;
-  if (!serieKode) {
+  if (serieKode) {
+    modell = serieKode;
+  } else {
     const v = vinduTekst ? parseAarVindu(vinduTekst) : null;
     const sk = serieKey(merke, modell.replace(/[WXCR]\d{3}(?:\/[WXCR]?\d{3})*/g, '').trim(), v?.start ?? null);
     if (sk) modell = sk;
