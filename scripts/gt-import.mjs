@@ -37,9 +37,10 @@ async function main() {
   const token = env('CLOUDFLARE_API_TOKEN');
 
   const sql = readFileSync('/Users/taj/finnbilglass/data/gt-ekspansjon/gt-generert.sql', 'utf8');
-  // SQL-format: én INSERT-setning med mange tuple-rader
-  const nl = sql.indexOf('\n');
-  const hdr = sql.slice(0, nl + 1); // «INSERT OR IGNORE ... VALUES\n»
+  // SQL-format: kommentarlinje + én INSERT-setning med mange tuple-rader
+  const insIdx = sql.indexOf('INSERT');
+  const nl = sql.indexOf('\n', insIdx);
+  const hdr = sql.slice(insIdx, nl + 1); // «INSERT OR IGNORE ... VALUES\n»
   const rader = sql.slice(nl + 1).split('\n').filter((l) => l.startsWith('('));
   console.log(`${target}: ${rader.length} GT-rader i ${Math.ceil(rader.length / 200)} batcher`);
 
