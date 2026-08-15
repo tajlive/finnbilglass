@@ -141,7 +141,11 @@ async function main() {
   const perMerkeModell = {};
   let frontruteRader = 0, ekskludert = 0, utenVindu = 0;
   for (const r of rader) {
-    const merke = (r.varenavn.split(/\s+/)[0] ?? '').toUpperCase();
+    let merke = (r.varenavn.split(/\s+/)[0] ?? '').toUpperCase();
+    // «3 SERIES SAL G20» → BMW (serie-nummer som første token)
+    if (/^\d$/.test(merke) && /^SERIE/.test(r.varenavn.split(/\s+/)[1] ?? '')) merke = 'BMW';
+    // «RANGE ROVER ...» → LAND ROVER (SVV-navn)
+    if (merke === 'RANGE' && /^ROVER/.test(r.varenavn.split(/\s+/)[1] ?? '')) merke = 'LAND ROVER';
     if (!merkeSett.has(merke)) continue;
     if (!erFrontrute(r.varenavn, r.varenr)) { ekskludert++; continue; }
     frontruteRader++;
