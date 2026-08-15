@@ -193,7 +193,7 @@ async function gtEurokoderSett(env: Env, make: string, model: string, aar: numbe
   const rows = await env.FINNBILGLASS_DB.prepare(
     `SELECT model, frontrute_eurocode FROM ground_truth
      WHERE make = ? AND year = ?
-     LIMIT 30`
+     ORDER BY model LIMIT 200`
   ).bind(make, aar).all<{ model: string; frontrute_eurocode: string }>();
   const eksakt = (r: { model: string }) => r.model.toUpperCase() === model;
   const sortert = [...(rows.results ?? [])].sort((a, b) => (eksakt(b) ? 1 : 0) - (eksakt(a) ? 1 : 0));
@@ -218,7 +218,7 @@ async function lagGroundTruth(env: Env, make: string, model: string, aar: number
   const rows = await env.FINNBILGLASS_DB.prepare(
     `SELECT model, frontrute_eurocode, confidence FROM ground_truth
      WHERE make = ? AND year = ?
-     ORDER BY confidence DESC LIMIT 30`
+     ORDER BY confidence DESC, model ASC LIMIT 200`
   ).bind(make, aar).all<{ model: string; frontrute_eurocode: string; confidence: number }>();
   const unike = new Map<string, ResolverKandidat>();
   const eksakt = (r: { model: string }) => r.model.toUpperCase() === model;

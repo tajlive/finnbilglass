@@ -70,10 +70,9 @@ const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE'
 function erFrontrute(varenavn, varenr) {
   const n = varenavn.toUpperCase();
   if (IKKE_FRONTRUTE.some((k) => n.includes(k))) return false;
-  // Side-glass-mønster: L/R direkte etter 4-sifret prefiks (8103LGAR5, 9684LGSH5)
-  if (/^\d{4}[LR]/.test(varenr ?? '')) return false;
-  // 4-sifret prefiks + fargekoder med L/R i 5. posisjon (8103LGAR5 = venstre siderute)
-  if (/^\d{4}[LR][A-Z]/.test(varenr ?? '')) return false;
+  // Side-glass-mønster: L/R direkte etter 4- ELLER 5-sifret prefiks
+  // (8103LGAR5 = 4-sifret, 26270LFWXBYN = 5-sifret prefiks)
+  if (/^\d{4,5}[LR]/.test(varenr ?? '')) return false;
   return true; // uten side/bak-markør = frontrute-kandidat (FR/WS/uten markør)
 }
 
@@ -90,6 +89,9 @@ function parseVarenavn(varenavn, merke) {
   const vindu = vinduTekst ? parseAarVindu(vinduTekst) : null;
   // Modell-tokens: hode minus merke
   const utenMerke = hode.replace(new RegExp(`^${merke.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i'), '');
+  // Samle-rader med «/» («CIVIC/ ROVER») = ULIKE biler på én rad → ekskluder (falsk GT-kilde).
+  // «+»-rader («V70+S60») deler glass ifølge katalogen → beholdes.
+  if (utenMerke.includes('/')) return null;
   const ord = utenMerke.split(/\s+/).filter((o) => o && !MODELL_STOPP.includes(o));
   // Tall-tokens: behold 1-2-sifrede («MODEL 3», «A 80»); fjern ≥3-sifrede («200», «308»)
   // bare når andre ord finnes — ellers behold (modell-navnet ER tallet).
@@ -152,7 +154,7 @@ async function main() {
     if (!erFrontrute(r.varenavn, r.varenr)) { ekskludert++; continue; }
     frontruteRader++;
     const p = parseVarenavn(r.varenavn, merke);
-    if (!p.vindu || p.vindu.start == null) { utenVindu++; continue; }
+    if (!p || !p.vindu || p.vindu.start == null) { utenVindu++; continue; }
     if (!p.modell) { utenVindu++; continue; }
     perMerkeModell[merke] ??= {};
     perMerkeModell[merke][p.modell] ??= [];
@@ -162,18 +164,54 @@ async function main() {
     });
   }
 
+  // ── SVV-levetid: maks registreringsår per (merke, modell) fra verifiserte SVV-data.
+  //    Brukes for å cappe åpne årvinduer — «C5 05-» må IKKE få GT-rader for 2023 (fantombil). ──
+  const svvLevetid = new Map();
+  {
+    const files = ['/Users/taj/finnbilglass/data/hull-kart-resultater.ndjson', '/Users/taj/finnbilglass/data/finn-modeller/svv-verifisert.ndjson'];
+    const keyAv = (make, model, aar) => {
+      const sk = serieKey(make, model, aar);
+      const base = sk ?? String(model ?? '').toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter(Boolean).sort().join('~');
+      return `${String(make ?? '').toUpperCase().replace(/[^A-Z]/g, '')}|${base}`;
+    };
+    for (const fil of files) {
+      if (!existsSync(fil)) continue;
+      for (const linje of readFileSync(fil, 'utf8').split('\n')) {
+        if (!linje.trim()) continue;
+        try {
+          const b = JSON.parse(linje);
+          const make = b.make ?? b.merke ?? null;
+          const model = b.model ?? b.modell ?? null;
+          const aar = b.year ?? b.aar ?? (b.registrertAr ? Number(b.registrertAr) : null);
+          if (!make || !model || !aar) continue;
+          const k = keyAv(make, model, aar);
+          if (!svvLevetid.has(k) || svvLevetid.get(k) < aar) svvLevetid.set(k, aar);
+        } catch { /* ugyldig linje */ }
+      }
+    }
+  }
+  const levetidCap = (merke, modell, start) => {
+    const sk = serieKey(merke, modell, start);
+    const base = sk ?? String(modell ?? '').toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter(Boolean).sort().join('~');
+    const k = `${merke.replace(/[^A-Z]/g, '')}|${base}`;
+    const maks = svvLevetid.get(k);
+    if (maks && maks >= start) return Math.min(maks + 2, 2026); // margin for nye modeller
+    return Math.min(start + 12, 2026); // fallback: 12-års cap, aldri fantom-år
+  };
+
   // ── Ekspandér til (make, model, year) → varenr-sett ──
   const gtRader = new Map(); // key: make|model|year|varenr
   const konfliktInfo = {};
   for (const [merke, modeller] of Object.entries(perMerkeModell)) {
     for (const [modell, varianter] of Object.entries(modeller)) {
-      // Generasjonsslutt: eksplisitt slutt, ellers neste start for samme modell − 1
+      // Generasjonsslutt: eksplisitt slutt, ellers neste start for samme modell − 1,
+      // capet av SVV-levetid (ingen fantom-rader for utgåtte modeller)
       const starter = [...new Set(varianter.map((v) => v.start))].sort((a, b) => a - b);
       for (const v of varianter) {
         let slutt = v.end;
         if (slutt == null) {
           const neste = starter.find((s) => s > v.start);
-          slutt = neste ? neste - 1 : 2026;
+          slutt = neste ? neste - 1 : levetidCap(merke, modell, v.start);
         }
         if (slutt < v.start) slutt = v.start;
         for (let yr = v.start; yr <= slutt; yr++) {
