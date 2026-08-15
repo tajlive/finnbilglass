@@ -30,15 +30,17 @@ function parseArgs() {
 // ── Årvindu-parsing ──
 // «14-JUNI16» → {start:2014, end:2016} · «JULI16-» → {start:2016} · «03/23-» → {start:2023}
 // «18-21» → {start:2018, end:2021} · «22-» → {start:2022} · «NOV21-» → {start:2021}
-// År-tolkning XX: ≥60 → 19XX (Gelandewagen 79- = 1979), ellers 20XX (12- = 2012).
+// År-tolkning: XX ∈ [50,59] eller ≥60 → 19XX (53-57 = 1953-57, 79- = 1979); XX < 50 → 20XX.
+// Slutt-år: YY < XX og start ≥ 1950 → 2000+YY («95-06» = 1995-2006); ellers startens århundre.
 const MND = ['JAN', 'FEB', 'MAR', 'APR', 'MAI', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OKT', 'OCT', 'NOV', 'DES', 'DEC'];
-const tilAar = (xx) => (xx >= 60 ? 1900 + xx : 2000 + xx);
+const tilStart = (xx) => (xx >= 50 ? 1900 + xx : 2000 + xx);
+const tilSlutt = (yy, start) => (start >= 1950 && yy < start - 1900 ? 2000 + yy : start >= 1950 ? 1900 + yy : 2000 + yy);
 function parseAarVindu(s) {
   const t = s.trim();
   // Eksplisitt vindu: «14-JUNI16», «18-21», «18-20», «2003-2008»
   let m = t.match(/(\d{2})\s*-\s*(\d{2})$/);
   if (m) {
-    const a = tilAar(parseInt(m[1], 10)), b = tilAar(parseInt(m[2], 10));
+    const a = tilStart(parseInt(m[1], 10)), b = tilSlutt(parseInt(m[2], 10), a);
     if (b < a) return null;
     return { start: a, end: b };
   }
@@ -50,16 +52,16 @@ function parseAarVindu(s) {
   }
   // «14-JUNI16» (med måned i slutt)
   m = t.match(/(\d{2})\s*-\s*(JAN|FEB|MAR|APR|MAI|MAY|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DES)(\d{2})$/);
-  if (m) return { start: tilAar(parseInt(m[1], 10)), end: tilAar(parseInt(m[3], 10)) };
+  if (m) return { start: tilStart(parseInt(m[1], 10)), end: tilSlutt(parseInt(m[3], 10), tilStart(parseInt(m[1], 10))) };
   // Åpen start med måned: «JULI16-», «NOV21-», «JUNI16-», «03/23-», «22-»
   m = t.match(/(JAN|FEB|MAR|APR|MAI|MAY|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DES|JUNI|JULI)(\d{2})\s*-\s*$/);
-  if (m) return { start: tilAar(parseInt(m[2], 10)), end: null };
+  if (m) return { start: tilStart(parseInt(m[2], 10)), end: null };
   m = t.match(/(\d{1,2})\/(\d{2})\s*-\s*$/);
-  if (m) return { start: tilAar(parseInt(m[2], 10)), end: null };
+  if (m) return { start: tilStart(parseInt(m[2], 10)), end: null };
   m = t.match(/^(\d{2})\s*-\s*$/);
-  if (m) return { start: tilAar(parseInt(m[1], 10)), end: null };
+  if (m) return { start: tilStart(parseInt(m[1], 10)), end: null };
   m = t.match(/(\d{2})\s*-\s*$/);
-  if (m) return { start: tilAar(parseInt(m[1], 10)), end: null };
+  if (m) return { start: tilStart(parseInt(m[1], 10)), end: null };
   return null;
 }
 
@@ -88,15 +90,24 @@ function parseVarenavn(varenavn, merke) {
   const vindu = vinduTekst ? parseAarVindu(vinduTekst) : null;
   // Modell-tokens: hode minus merke
   const utenMerke = hode.replace(new RegExp(`^${merke.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i'), '');
-  const ord = utenMerke.split(/\s+/).filter((o) => o && !MODELL_STOPP.includes(o) && !/^\d/.test(o));
-  let modell = ord.join(' ');
+  const ord = utenMerke.split(/\s+/).filter((o) => o && !MODELL_STOPP.includes(o));
+  // Tall-tokens: behold 1-2-sifrede («MODEL 3», «A 80»); fjern ≥3-sifrede («200», «308»)
+  // bare når andre ord finnes — ellers behold (modell-navnet ER tallet).
+  let filtert;
+  const ikkeTall = ord.filter((o) => !/^\d+$/.test(o));
+  const tall = ord.filter((o) => /^\d+$/.test(o));
+  const storeTall = tall.filter((o) => o.length >= 3);
+  if (storeTall.length && ikkeTall.length) filtert = [...ikkeTall, ...tall.filter((o) => o.length <= 2)];
+  else filtert = ord;
+  let modell = filtert.join(' ');
   // Serie-normalisering: «W204 STV» → «W204», «SERIEN E39» → «E39» (matcher serieKey i resolveren)
-  const serieKode = normaliserKatalogModell(modell);
-  if (serieKode) modell = serieKode;
-  // For Mercedes-rader uten W-kode i navnet: «VIANO/VITO» med vindu 2003-2014 → W639
+  let serieKode = normaliserKatalogModell(modell);
+  // Multi-kode-rader («W638/W639/W640 VITO») kanoniseres IKKE til første kode —
+  // serien må velges fra årvinduet via serieKey.
+  if (serieKode && /[WXCR]\d{3}\/[WXCR]\d{3}\/[WXCR]\d{3}/.test(modell.toUpperCase())) serieKode = null;
   if (!serieKode) {
     const v = vinduTekst ? parseAarVindu(vinduTekst) : null;
-    const sk = serieKey(merke, modell, v?.start ?? null);
+    const sk = serieKey(merke, modell.replace(/[WXCR]\d{3}(?:\/[WXCR]?\d{3})*/g, '').trim(), v?.start ?? null);
     if (sk) modell = sk;
   }
   const utstyr = (vinduTekst.split(/\d{2}\s*-\s*|-/).slice(1).join(' ') + ' ' + (hode.match(/FR|WS|EL|CL|COATED|AKU|AKO|SENS|PLAID|JUNIPER|4MATIC|AMG/g)?.join(' ') ?? '')).toUpperCase();
