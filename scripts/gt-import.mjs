@@ -41,7 +41,8 @@ async function main() {
   const insIdx = sql.indexOf('INSERT');
   const nl = sql.indexOf('\n', insIdx);
   const hdr = sql.slice(insIdx, nl + 1); // «INSERT OR IGNORE ... VALUES\n»
-  const rader = sql.slice(nl + 1).split('\n').filter((l) => l.startsWith('('));
+  const rader = sql.slice(nl + 1).split('\n').filter((l) => l.startsWith('('))
+    .map((l) => l.replace(/,\s*$/, '')); // strip radens trailing komma — join legger til eget
   console.log(`${target}: ${rader.length} GT-rader i ${Math.ceil(rader.length / 200)} batcher`);
 
   if (dry) return;
