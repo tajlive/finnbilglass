@@ -62,6 +62,17 @@ const MERCEDES_KLASSER: Record<string, SerieDef[]> = {
     { kode: 'W208', start: 1997, slutt: 2003 },
     { kode: 'W209', start: 2003, slutt: 2010 },
   ],
+  // «CLA 180» → CLA
+  CLA: [
+    { kode: 'W117', start: 2013, slutt: 2019 },
+    { kode: 'W118', start: 2019, slutt: 2035 },
+  ],
+  // «300 D» / «300 E» (eldre W123/W124/W210-æra)
+  '300': [
+    { kode: 'W123', start: 1976, slutt: 1985 },
+    { kode: 'W124', start: 1986, slutt: 1995 },
+    { kode: 'W210', start: 1996, slutt: 2002 },
+  ],
   // «CLS 350» → CLS
   CLS: [
     { kode: 'W219', start: 2004, slutt: 2010 },
@@ -132,6 +143,8 @@ const MERCEDES_KLASSER: Record<string, SerieDef[]> = {
   EQE: [{ kode: 'W295', start: 2022, slutt: 2035 }],
   EQS: [{ kode: 'W297', start: 2021, slutt: 2035 }],
   EQC: [{ kode: 'W293', start: 2019, slutt: 2024 }],
+  EQA: [{ kode: 'H243', start: 2021, slutt: 2035 }],
+  EQB: [{ kode: 'X243', start: 2021, slutt: 2035 }],
 };
 
 // ── BMW: serie (tall-prefiks eller modell-navn) → E/F/G-koder ──
@@ -201,18 +214,20 @@ function iVindu(defs: SerieDef[] | undefined, aar: number | null): string | null
 /** SVV-modell-streng → Mercedes-klasse-prefiks. */
 function mercedesKlasse(modell: string): string | null {
   const m = (modell || '').toUpperCase().replace(/\s+/g, ' ').trim();
-  // «190 E 2.O» spesialfall
-  if (/^190\b/.test(m)) return '190';
-  // EQ-serien: «EQE 350 4MATIC»
-  const eq = m.match(/^(EQE|EQS|EQC)\b/);
+  const ren = m.replace(/^AMG\s+/, ''); // «AMG A 45» → «A 45»
+  // «190 E 2.O» spesialfall; «300 D» → W123/W124/W210-æra
+  if (/^190\b/.test(ren)) return '190';
+  if (/^300\b/.test(ren)) return '300';
+  // EQ-serien: «EQE 350 4MATIC», «EQA 250», «EQB 300»
+  const eq = ren.match(/^(EQE|EQS|EQC|EQA|EQB)\b/);
   if (eq) return eq[1];
   // «G 350», «G 500», «GELANDEWAGEN» — men unngå «GL»/«GLC»/«GLA»/«GLE»/«GLS»/«GLK»
-  if (/^(GLC|GLA|GLE|GLS|GLK)\b/.test(m)) return m.split(' ')[0];
-  if (/^GL\b/.test(m)) return 'GL';
-  if (/^G\b/.test(m)) return 'G';
-  if (/^GELAND\w*\b/i.test(m)) return 'G';
-  if (/^R\b/.test(m) && /\d/.test(m)) return 'R'; // «R 350» (R-klasse) — kun med tall
-  const klasse = m.match(/^(C|E|S|A|B|CLK|CLS|SL|SLK|SLC|ML|VIANO|VITO|SPRINTER)\b/);
+  if (/^(GLC|GLA|GLE|GLS|GLK)\b/.test(ren)) return ren.split(' ')[0];
+  if (/^GL\b/.test(ren)) return 'GL';
+  if (/^G\b/.test(ren)) return 'G';
+  if (/^GELAND\w*\b/i.test(ren)) return 'G';
+  if (/^R\b/.test(ren) && /\d/.test(ren)) return 'R'; // «R 350» (R-klasse) — kun med tall
+  const klasse = ren.match(/^(C|E|S|A|B|CLA|CLK|CLS|SL|SLK|SLC|ML|VIANO|VITO|SPRINTER)\b/);
   return klasse ? klasse[1] : null;
 }
 
