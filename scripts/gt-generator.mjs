@@ -60,6 +60,9 @@ function parseAarVindu(s) {
   if (m) return { start: tilStart(parseInt(m[2], 10)), end: null };
   m = t.match(/^(\d{2})\s*-\s*$/);
   if (m) return { start: tilStart(parseInt(m[1], 10)), end: null };
+  // «2003-» — åpent 4-sifret vindu
+  m = t.match(/^(\d{4})\s*-\s*$/);
+  if (m) return { start: parseInt(m[1], 10), end: null };
   m = t.match(/(\d{2})\s*-\s*$/);
   if (m) return { start: tilStart(parseInt(m[1], 10)), end: null };
   return null;
@@ -82,7 +85,7 @@ const MODELL_STOPP = ['2D', '3D', '4D', '5D', 'SED', 'SEDAN', 'SUV', 'COUPE', 'K
 function parseVarenavn(varenavn, merke) {
   const n = varenavn.replace(/\s+/g, ' ').trim();
   // Årvindu-markør: finn første årvindu-mønster og del navnet der
-  const deler = n.split(/(?=\b(?:JAN|FEB|MAR|APR|MAI|MAY|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DES|JUNI|JULI)?\d{1,2}\s*(?:\/|-))/i);
+  const deler = n.split(/(?=\b(?:JAN|FEB|MAR|APR|MAI|MAY|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DES|JUNI|JULI)?(?:\d{4}|\d{1,2})\s*(?:\/|-))/i);
   const hode = deler[0]?.trim() ?? n;
   const vinduTekst = deler.slice(1).join(' ').trim();
   // Vindu kan være en del av «18-21 FR AKU» — parse fra start av vindu-teksten
@@ -202,15 +205,30 @@ async function main() {
   // ── Ekspandér til (make, model, year) → varenr-sett ──
   const gtRader = new Map(); // key: make|model|year|varenr
   const konfliktInfo = {};
+  // Familie-deteksjon: to varianter er «samme modellfamilie» hvis minst ett modell-ord
+  // (≥4 tegn) har prefiks-overlapp — «TRANSPORTER»↔«TRANSPORTE+MULTIVAN» ✓,
+  // «MODEL S»↔«MODEL 3» ✗ (S/3 <4 tegn). Brukes for generasjons-capp av åpne vinduer.
+  const ordAv = (m) => String(m ?? '').toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter((o) => o.length >= 4);
+  const familieOverlapp = (a, b) => {
+    const A = ordAv(a), B = ordAv(b);
+    return A.some((x) => B.some((y) => x.startsWith(y) || y.startsWith(x)));
+  };
   for (const [merke, modeller] of Object.entries(perMerkeModell)) {
+    const alleVarianter = Object.entries(modeller).flatMap(([modell, varianter]) =>
+      varianter.map((v) => ({ ...v, modell })));
     for (const [modell, varianter] of Object.entries(modeller)) {
-      // Generasjonsslutt: eksplisitt slutt, ellers neste start for samme modell − 1,
+      // Generasjonsslutt: eksplisitt slutt, ellers neste start i FAMILIEN − 1,
       // capet av SVV-levetid (ingen fantom-rader for utgåtte modeller)
       const starter = [...new Set(varianter.map((v) => v.start))].sort((a, b) => a - b);
       for (const v of varianter) {
         let slutt = v.end;
         if (slutt == null) {
-          const neste = starter.find((s) => s > v.start);
+          const egenNeste = starter.find((s) => s > v.start);
+          const familieNeste = alleVarianter
+            .filter((fv) => familieOverlapp(fv.modell, modell) && fv.start > v.start)
+            .map((fv) => fv.start)
+            .sort((a, b) => a - b)[0];
+          const neste = [egenNeste, familieNeste].filter((n) => n != null).sort((a, b) => a - b)[0];
           slutt = neste ? neste - 1 : levetidCap(merke, modell, v.start);
         }
         if (slutt < v.start) slutt = v.start;
