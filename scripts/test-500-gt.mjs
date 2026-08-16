@@ -163,6 +163,7 @@ async function main() {
 
     if (utfall === 'PINPOINT') {
       const treff = g.koder.includes(valgtVarenr) || g.koder.includes(valgtEuro)
+        || g.koder.some((k) => baseTreff(valgtEuro, k) || baseTreff(valgtVarenr, k))
         || g.gtKoder.some((k) => baseTreff(valgtEuro, k) || baseTreff(valgtVarenr, k));
       if (!treff) fordeling.wrong_pinpoint++;
       else if (g.gtKoder.length > 1) fordeling.pinpoint_aggressiv++;
@@ -199,7 +200,10 @@ async function main() {
   console.log('\n=== TEST-500-GT (fasit, variant-bevisst) ===');
   console.log(JSON.stringify(rapport, null, 2));
   console.log('\nHARDE FALSKE PINPOINT:');
-  detaljer.filter((d) => d.klasse === 'PINPOINT' && !(d.gyldigeKoder.includes(d.valgtVarenr) || d.gyldigeKoder.includes(d.valgtEuro))).slice(0, 12)
+  detaljer.filter((d) => d.klasse === 'PINPOINT' && !(
+    d.gyldigeKoder.includes(d.valgtVarenr) || d.gyldigeKoder.includes(d.valgtEuro)
+    || d.gyldigeKoder.some((k) => baseTreff(d.valgtEuro, k) || baseTreff(d.valgtVarenr, k))))
+    .slice(0, 12)
     .forEach((d) => console.log(`  ${d.make} ${d.model} ${d.year}: valgt=${d.valgtVarenr || d.valgtEuro} gyldige=${d.gyldigeKoder.join(',')}`));
   console.log('\nAGGRESSIVE PINPOINT (flere koder):');
   detaljer.filter((d) => d.klasse === 'PINPOINT' && d.koderAntall > 1).slice(0, 8)

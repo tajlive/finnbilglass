@@ -65,17 +65,29 @@ function parseAarVindu(s) {
   if (m) return { start: parseInt(m[1], 10), end: null };
   m = t.match(/(\d{2})\s*-\s*$/);
   if (m) return { start: tilStart(parseInt(m[1], 10)), end: null };
+  // Bare år uten bindestrek («75», «2003») — katalog-skrivefeil (814GB «75 FR+GB»).
+  m = t.match(/^(\d{2})$/);
+  if (m) return { start: tilStart(parseInt(m[1], 10)), end: null };
+  m = t.match(/^(\d{4})$/);
+  if (m) return { start: parseInt(m[1], 10), end: null };
   return null;
 }
 
 // ── Frontrute-klassifisering ──
-const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE', 'SUNROOF', 'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT'];
-function erFrontrute(varenavn, varenr) {
+const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE', 'SUNROOF', 'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT',
+  'ALLE MOD', 'ALL MODELS', 'DOBBELTHYTTE', 'DOUBLE CAB'];
+function erFrontrute(varenavn, varenr, eurokode) {
   const n = varenavn.toUpperCase();
   if (IKKE_FRONTRUTE.some((k) => n.includes(k))) return false;
   // Side-glass-mønster: L/R direkte etter 4- ELLER 5-sifret prefiks
   // (8103LGAR5 = 4-sifret, 26270LFWXBYN = 5-sifret prefiks)
   if (/^\d{4,5}[LR]/.test(varenr ?? '')) return false;
+  // Eurokode-posisjonssjekk: 4-5 sifre + glass-posisjon A=front, L/R=side, B=bak.
+  // Fanger sideruter varenr-mønsteret overser («27733GN»=5439LGSV3RD, «26501GN»=8579LGSP4RD)
+  // og bakruter uten navne-markør («21416YP TRANSPORTER 91-»=8537BYPV).
+  const ek = String(eurokode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const mm = ek.match(/^(\d{4,5})([A-Z])/);
+  if (mm && /[LRB]/.test(mm[2])) return false;
   return true; // uten side/bak-markør = frontrute-kandidat (FR/WS/uten markør)
 }
 
@@ -85,16 +97,34 @@ const MODELL_STOPP = ['2D', '3D', '4D', '5D', 'SED', 'SEDAN', 'SUV', 'COUPE', 'K
 function parseVarenavn(varenavn, merke) {
   const n = varenavn.replace(/\s+/g, ' ').trim();
   // Årvindu-markør: finn første årvindu-mønster og del navnet der
-  const deler = n.split(/(?=\b(?:JAN|FEB|MAR|APR|MAI|MAY|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DES|JUNI|JULI)?(?:\d{4}|\d{1,2})\s*(?:\/|-))/i);
+  let deler = n.split(/(?=\b(?:JAN|FEB|MAR|APR|MAI|MAY|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DES|JUNI|JULI)?(?:\d{4}|\d{1,2})\s*(?:\/|-))/i);
+  // Katalog-skrivefeil: åpent vindu uten bindestrek («75 FR+GB», 814GB) —
+  // splitt på år etterfulgt av utstyrsord.
+  if (deler.length === 1) {
+    deler = n.split(/(?=\b\d{2,4}\s+(?:FR|GB|GY|GN|AKU|WS|LDW|HUD|EL|CL|CAM|SENS|ACO|PYNT|FARGE|SOTET|GRØNN|GRONN)\b)/i);
+  }
   const hode = deler[0]?.trim() ?? n;
   const vinduTekst = deler.slice(1).join(' ').trim();
-  // Vindu kan være en del av «18-21 FR AKU» — parse fra start av vindu-teksten
-  const vindu = vinduTekst ? parseAarVindu(vinduTekst) : null;
+  // Vindu kan være en del av «18-21 FR AKU» — parse fra start av vindu-teksten.
+  // Fallback: strip utstyrssuffiks («FR AKU,», «LDW», «HUD») og parse igjen —
+  // «18-22 FR AKU,» og «23- FR AKU, LDW» gir ellers null (regexene krever vindu på slutten).
+  let vindu = vinduTekst ? parseAarVindu(vinduTekst) : null;
+  if (!vindu) {
+    const kjerne = vinduTekst?.split(/\s+(?=[A-ZÆØÅ]{2})/)[0];
+    vindu = kjerne ? parseAarVindu(kjerne) : null;
+  }
   // Modell-tokens: hode minus merke
   const utenMerke = hode.replace(new RegExp(`^${merke.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i'), '');
   // Samle-rader med «/» («CIVIC/ ROVER») = ULIKE biler på én rad → ekskluder (falsk GT-kilde).
   // «+»-rader («V70+S60») deler glass ifølge katalogen → beholdes.
   if (utenMerke.includes('/')) return null;
+  // Bindestrek-modell-lister («924-944-968», «T82-145», «C180-300») = flere modeller
+  // på én rad → ekskluder (falsk GT-kilde; fasit: PORSCHE 924+944 1992 ≠ 1608GGA).
+  if (/\d\s*[-–—]\s*\d/.test(utenMerke)) return null;
+  // MM/YY-start («10/08-», «5/88-91») kan ikke representeres med år-granularitet
+  // i GT → ekskluder (fasit: BMW X6 2008 ≠ 2969GYCM «10/08-»).
+  // NB: split-regexen deler «10/08-» i «10/» + «08-» → tillat mellomrom rundt «/».
+  if (/^\s*\d{1,2}\s*\/\s*\d{2}/.test(vinduTekst)) return null;
   const ord = utenMerke.split(/\s+/).filter((o) => o && !MODELL_STOPP.includes(o));
   // Tall-tokens: behold 1-2-sifrede («MODEL 3», «A 80»); fjern ≥3-sifrede («200», «308»)
   // bare når andre ord finnes — ellers behold (modell-navnet ER tallet).
@@ -154,7 +184,7 @@ async function main() {
     // «RANGE ROVER ...» → LAND ROVER (SVV-navn)
     if (merke === 'RANGE' && /^ROVER/.test(r.varenavn.split(/\s+/)[1] ?? '')) merke = 'LAND ROVER';
     if (!merkeSett.has(merke)) continue;
-    if (!erFrontrute(r.varenavn, r.varenr)) { ekskludert++; continue; }
+    if (!erFrontrute(r.varenavn, r.varenr, r.eurokode)) { ekskludert++; continue; }
     frontruteRader++;
     const p = parseVarenavn(r.varenavn, merke);
     if (!p || !p.vindu || p.vindu.start == null) { utenVindu++; continue; }
