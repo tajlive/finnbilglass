@@ -43,12 +43,25 @@ export function aliasMerke(merke: string): string {
 }
 
 export async function svvLookup(regnrNorm: string, apiKey: string | undefined): Promise<SvvBil | null> {
+  return svvOppslag('kjennemerke', regnrNorm, apiKey);
+}
+
+/** VIN-oppslag (understellsnummer) — brukes som backup når kjennemerke ikke gir treff. */
+export async function svvLookupVin(vin: string, apiKey: string | undefined): Promise<SvvBil | null> {
+  return svvOppslag('understellsnummer', vin, apiKey);
+}
+
+async function svvOppslag(
+  param: 'kjennemerke' | 'understellsnummer',
+  verdi: string,
+  apiKey: string | undefined
+): Promise<SvvBil | null> {
   if (!apiKey) return null;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 15000);
   try {
     const res = await fetch(
-      `https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?kjennemerke=${encodeURIComponent(regnrNorm)}`,
+      `https://akfell-datautlevering.atlas.vegvesen.no/enkeltoppslag/kjoretoydata?${param}=${encodeURIComponent(verdi)}`,
       {
         signal: ctrl.signal,
         headers: {
@@ -59,6 +72,7 @@ export async function svvLookup(regnrNorm: string, apiKey: string | undefined): 
       }
     );
     if (!res.ok) return null;
+    if (res.status === 204) return null; // ingen treff (tom body)
     const data = (await res.json()) as {
       kjoretoydataListe?: Array<{
         kjoretoyId?: { understellsnummer?: string };

@@ -51,7 +51,7 @@ Staging versjon: `ef7700dd-f82a-4a17-82a8-440c5e49b920`.
 
 Datastatus staging:
 
-- `autoglass_prisliste`: 29 627
+- `glass_prisliste`: 29 627
 - `ground_truth`: 2 008
 - `glass_catalog`: 33 215
 - `oe_eurocode_mapping`: 341

@@ -20,10 +20,14 @@
 
   function show(id) {
     document.querySelectorAll('.screen').forEach(function (s) { s.classList.add('hidden'); });
-    if (id === 'start') state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null };
+    if (id === 'start') {
+      state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null };
+      $('btn-vin-fallback').classList.add('hidden');
+      $('start-feil').classList.add('hidden');
+    }
     var el = $('screen-' + id);
     if (el) el.classList.remove('hidden');
-    if (id === 'resultat') visVerify();
+    if (id === 'resultat') $('verify-seksjon').classList.add('hidden'); // 43R = kun når kunden selv ber om det
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -120,7 +124,8 @@
           renderBekreftDet();
           show('bekreft');
         } else {
-          visStartFeil('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at kjennemerket er riktig, eller ta bilde av det.');
+          visStartFeil('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at kjennemerket er riktig — eller søk med chassisnummeret (VIN).');
+          $('btn-vin-fallback').classList.remove('hidden');
         }
         visRegnr();
       })
@@ -165,8 +170,9 @@
             renderBekreftDet();
             show('bekreft');
           } else if (d && d.ok && !d.funnet) {
-            visStartFeil('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen. Prøv å skrive kjennemerket manuelt.');
+            visStartFeil('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen. Prøv å skrive kjennemerket manuelt — eller søk med chassisnummeret (VIN).');
             $('input-regnr').value = formatRegnr(d.regnr);
+            $('btn-vin-fallback').classList.remove('hidden');
           } else if (d && d.error) {
             visStartFeil(d.error);
           } else {
@@ -184,6 +190,67 @@
     el.textContent = msg;
     el.classList.remove('hidden');
   }
+
+  // Felles: fyll state fra SVV-bil + resolver → vis bekreft-skjermen.
+  function settBilFraSvv(bil, resolver, regnr) {
+    state.regnr = regnr ? formatRegnr(regnr) : '';
+    state.merke = bil.merke;
+    state.modell = bil.modell;
+    state.aar = bil.aar;
+    state.vin = bil.vin || null;
+    state.forstegangsregistrert = bil.forstegangsregistrert || null;
+    state.import = !!bil.import;
+    state.importLand = bil.importLand || null;
+    state.resolver = resolver || null;
+    $('bekreft-merkelbl').textContent = state.merke;
+    $('bekreft-navn').textContent = state.modell + (state.aar ? ' · ' + state.aar : '');
+    renderBekreftDet();
+    visRegnr();
+    show('bekreft');
+  }
+
+  // 1c. VIN-backup: kjennemerke fant ikke bilen i SVV → chassisnummer-oppslag.
+  function vinFeil(msg) {
+    var el = $('vin-feil');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+  $('btn-vin-fallback').addEventListener('click', function () {
+    $('vin-feil').classList.add('hidden');
+    $('input-vin').value = '';
+    show('vin');
+    setTimeout(function () { $('input-vin').focus(); }, 50);
+  });
+  $('input-vin').addEventListener('input', function () {
+    var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 17);
+    if (this.value !== v) this.value = v;
+  });
+  $('form-vin').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var raw = $('input-vin').value.trim();
+    if (!raw) return;
+    var btn = this.querySelector('button');
+    var orgTekst = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Søker etter bilen…';
+    fetch('/api/vin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vin: raw })
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.bil && d.bil.merke) {
+          settBilFraSvv(d.bil, d.resolver || null, '');
+        } else if (d && d.error) {
+          vinFeil(d.error);
+        } else {
+          vinFeil('Fant ikke bilen på dette chassisnummeret. Sjekk at nummeret er riktig — eller ta bilde av kjennemerket i stedet.');
+        }
+      })
+      .catch(function () { vinFeil('Noe gikk galt. Prøv igjen, eller ta bilde av kjennemerket.'); })
+      .finally(function () { btn.disabled = false; btn.textContent = orgTekst; });
+  });
 
   // 3. Bekreft → videre. Logikk (aldri spør om ting som ikke skiller kandidatene):
   //    PINPOINT  → ETT entydig glass → 0 spørsmål, direkte til resultat.
@@ -369,6 +436,7 @@
 
   function renderResultat(data) {
     visRegnr();
+    $('tilbehor-seksjon').classList.remove('hidden');
     var a = data && data.anbefaling;
     if (!a) {
       tomtVis('Fant ingen treff', 'Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss så hjelper vi deg manuelt.');
@@ -518,6 +586,10 @@
     }
   }
 
+  $('btn-apne-verify').addEventListener('click', function () {
+    visVerify();
+    $('verify-seksjon').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   $('btn-verify-foto').addEventListener('click', function () { $('verify-fil').click(); });
   $('verify-fil').addEventListener('change', function () {
     var fil = this.files && this.files[0];

@@ -11,7 +11,7 @@ const q = (query, variables) => {
 const body = `AUTOGLASSGROSSISTEN ER NÅ KOBLET SAMMEN MED FINNBILGLASS — automatisk B2B→B2C-datakjede:
 
 ARKITEKTUR:
-- Workflow A «fbg-sync-dump» (tajlive/autoglassgrossisten, søndag 06:30 CET + dispatch): dumper glass_catalog + autoglass_prisliste fra B2B-prod-D1 (glass-catalog-db) → GitHub-artifact «b2b-catalog-sync».
+- Workflow A «fbg-sync-dump» (tajlive/autoglassgrossisten, søndag 06:30 CET + dispatch): dumper glass_catalog + glass_prisliste fra B2B-prod-D1 (glass-catalog-db) → GitHub-artifact «b2b-catalog-sync».
 - Workflow B «sync-b2b.yml» (tajlive/finnbilglass, søndag 06:45 CET + dispatch): laster artifact (TAJLIVE_PAT-secret) → scripts/sync-b2b-import.mjs → idempotent INSERT OR IGNORE (batch 400) via CF D1 REST → finnbilglass-db-staging.
 - Migrasjon 0006: UNIQUE(eurocode) på glass_catalog + UNIQUE(varenr,varenavn) på prisliste + ktype_matches-tabell.
 

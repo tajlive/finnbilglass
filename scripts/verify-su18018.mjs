@@ -33,7 +33,7 @@ async function d1(sql) {
 console.log('=== SU18018-testsett (VW T5 2003, fasit = 2525GYA) ===');
 const q = await d1(`
   SELECT varenr, varenavn, kommentar, pris, eurokode, rad_type
-  FROM autoglass_prisliste
+  FROM glass_prisliste
   WHERE varenr IN ('2525GYA','2525CSGYA','2525GY') OR varenavn LIKE '%TRANSPORTER%FRONTRUTE%' OR varenavn LIKE '%T5%FRONTRUTE%'
   ORDER BY varenr
 `);
@@ -42,13 +42,13 @@ for (const r of q ?? []) {
 }
 
 console.log('\n=== Frontrute-varianter totalt (rad_type=glass, FRONTRUTE/FRONT i navn) ===');
-const c = await d1(`SELECT COUNT(*) AS n FROM autoglass_prisliste WHERE rad_type='glass' AND (varenavn LIKE '%FRONTRUTE%' OR varenavn LIKE '%FRONT%')`);
+const c = await d1(`SELECT COUNT(*) AS n FROM glass_prisliste WHERE rad_type='glass' AND (varenavn LIKE '%FRONTRUTE%' OR varenavn LIKE '%FRONT%')`);
 console.log(c?.[0]?.n);
 
 console.log('\n=== Topp 10 merker etter varenr-prefiks (frontruter) ===');
 const brands = await d1(`
   SELECT substr(varenavn, 1, instr(varenavn || ' ', ' ') - 1) AS merke, COUNT(*) AS n
-  FROM autoglass_prisliste
+  FROM glass_prisliste
   WHERE rad_type='glass' AND (varenavn LIKE '%FRONTRUTE%' OR varenavn LIKE '%FRONT%')
   GROUP BY merke ORDER BY n DESC LIMIT 10
 `);

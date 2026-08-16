@@ -8,7 +8,7 @@ workers_dev = true
 [ai]
 binding = "AI"
 
-# ── D1 (glass-katalog: 29 627 rader, autoglass_prisliste) ─────
+# ── D1 (glass-katalog: 29 627 rader, glass_prisliste) ─────
 [[d1_databases]]
 binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db"

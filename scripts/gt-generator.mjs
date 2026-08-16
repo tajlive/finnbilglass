@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * GT-generator: oversetter autoglass_prisliste (Autoglass' egen salgsliste = fasit)
+ * GT-generator: oversetter glass_prisliste (Autoglass' egen salgsliste = fasit)
  * til ground_truth-rader (make, model, year) → frontrute-varenr.
  *
  * Doktrine (G1): GT er verifisert fasit. Prislisten er Autoglass' operative katalog
@@ -300,7 +300,7 @@ async function main() {
 
   // ── SQL + rapport ──
   const sql = [
-    "-- GT-generert fra autoglass_prisliste (source=gt-auto-prisliste) — 2026-08-15",
+    "-- GT-generert fra glass_prisliste (source=gt-auto-prisliste) — 2026-08-15",
     "INSERT OR IGNORE INTO ground_truth (make, model, year, frontrute_eurocode, verified_by, confidence, source) VALUES",
   ];
   const linjer = [];

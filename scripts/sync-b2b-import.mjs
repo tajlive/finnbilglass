@@ -80,14 +80,14 @@ async function main() {
   const g = await importer(dbUuid, 'glass_catalog',
     ['eurocode', 'brand', 'model', 'year_from', 'year_to', 'category', 'rain_sensor', 'antenna', 'hud', 'camera', 'adas', 'description', 'ktype'],
     glass, ['eurocode']);
-  const p = await importer(dbUuid, 'autoglass_prisliste',
+  const p = await importer(dbUuid, 'glass_prisliste',
     ['varenr', 'varenavn', 'pris', 'eurokode', 'rad_type'],
     prisliste, ['varenr', 'varenavn']);
   const k = await importer(dbUuid, 'ktype_matches',
     ['ktype', 'eurocode', 'count'],
     ktype, ['ktype', 'eurocode']);
 
-  const tot = await d1(dbUuid, "SELECT (SELECT COUNT(*) FROM glass_catalog) AS glass, (SELECT COUNT(*) FROM autoglass_prisliste) AS pris, (SELECT COUNT(*) FROM ktype_matches) AS ktype");
+  const tot = await d1(dbUuid, "SELECT (SELECT COUNT(*) FROM glass_catalog) AS glass, (SELECT COUNT(*) FROM glass_prisliste) AS pris, (SELECT COUNT(*) FROM ktype_matches) AS ktype");
   const res = tot.result?.[0]?.results?.[0] ?? {};
   console.log(JSON.stringify({ glass: g, prisliste: p, ktype: k, totaler: res }, null, 2));
 }

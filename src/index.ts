@@ -7,7 +7,7 @@ import type { Env } from './types';
 import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
 import { resolverModus } from './kill-switch';
-import { svvLookup } from './svv';
+import { svvLookup, svvLookupVin } from './svv';
 import { lesSkilt } from './les-skilt';
 import {
   resolveImageObservations,
@@ -151,7 +151,7 @@ export default {
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
 
     if (method === 'GET' && path === '/health') {
-      const count = await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM autoglass_prisliste').first<{ n: number }>();
+      const count = await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM glass_prisliste').first<{ n: number }>();
       return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: count?.n ?? 0 });
     }
 
@@ -249,6 +249,40 @@ export default {
         }
       }
       return json({ ok: true, lagret, bil, resolver });
+    }
+
+    if (method === 'POST' && path === '/api/vin') {
+      // Backup-oppslag: kjennemerke fant ikke bilen i SVV → prøv understellsnummer (VIN).
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: 'Ugyldig JSON' }, 400);
+      }
+      const vin = (body as Record<string, unknown>)?.vin;
+      if (typeof vin !== 'string' || !vin.trim()) return json({ ok: false, error: 'vin påkrevd' }, 400);
+      const ren = vin.trim().toUpperCase().replace(/[\s\-–—.]+/g, '');
+      if (ren.length < 11 || ren.length > 17) return json({ ok: false, error: 'Ugyldig chassisnummer' }, 400);
+      let bil = null;
+      let resolver = null;
+      try {
+        bil = await svvLookupVin(ren, env.SVV_API_KEY);
+      } catch (e) {
+        console.error('SVV VIN-oppslag feilet:', e);
+      }
+      if (bil) {
+        try {
+          resolver = await resolveFrontrute(env, {
+            merke: bil.merke,
+            modell: bil.modell ?? undefined,
+            aar: bil.aar ?? undefined,
+            vin: bil.vin ?? ren,
+          });
+        } catch (e) {
+          console.error('Resolver feilet (VIN):', e);
+        }
+      }
+      return json({ ok: true, bil, resolver });
     }
 
     if (method === 'POST' && path === '/api/les-skilt') {
@@ -413,7 +447,7 @@ export default {
           if (varenrListe.length > 0) {
             const placeholders = varenrListe.map(() => '?').join(',');
             const { results: prisResult } = await env.FINNBILGLASS_DB.prepare(
-              `SELECT varenr, varenavn, pris FROM autoglass_prisliste
+              `SELECT varenr, varenavn, pris FROM glass_prisliste
                WHERE rad_type = 'glass' AND varenr IN (${placeholders})`
             ).bind(...varenrListe).all();
             const prisMap = new Map<string, { varenavn: string | null; pris: number | null }>();
@@ -545,7 +579,22 @@ export default {
       }
     }
 
+    // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
+    const STATISKE_SIDER = ['/bilglass-uten-forsikring', '/personvern', '/om-oss'];
+    if (method === 'GET' && STATISKE_SIDER.includes(path)) {
+      const html = await env.ASSETS.fetch(new Request(url.origin + path + '.html'));
+      if (html.ok) return html;
+    }
+
     // Alt annet (/, index.html, styles.css, app.js, …) → statiske assets fra public/
-    return env.ASSETS.fetch(request);
+    const asset = await env.ASSETS.fetch(request);
+    // Pen 404 for HTML-navigasjon (ukjente sider) — assets gir ellers tom 404
+    if (asset.status === 404 && (request.headers.get('Accept') || '').includes('text/html')) {
+      const notFound = await env.ASSETS.fetch(new Request(url.origin + '/404'));
+      if (notFound.ok) {
+        return new Response(notFound.body, { status: 404, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
+    }
+    return asset;
   },
 };

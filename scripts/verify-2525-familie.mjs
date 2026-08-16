@@ -28,7 +28,7 @@ async function d1(sql) {
 }
 const rows = await d1(`
   SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
-  FROM autoglass_prisliste
+  FROM glass_prisliste
   WHERE varenr LIKE '2525%' OR varenavn LIKE '%TRANSPORT%T5%' OR varenavn LIKE '%TRANSPORTER 2003%'
   ORDER BY varenr
 `);

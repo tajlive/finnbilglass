@@ -30,7 +30,7 @@ async function d1(sql) {
 }
 
 const rader = await d1(`
-  SELECT varenr, varenavn, eurokode FROM autoglass_prisliste
+  SELECT varenr, varenavn, eurokode FROM glass_prisliste
   WHERE rad_type='glass' AND eurokode IS NOT NULL AND eurokode != ''
 `);
 

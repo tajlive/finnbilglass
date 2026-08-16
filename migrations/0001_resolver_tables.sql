@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS resolver_meta (
 
 -- Verifiserte kjøretøy → frontrute-kode (auto-glass.no, fra B2B ground_truth).
 -- Verdier i frontrute_eurocode er auto-glass.no-artikkelnr som finnes i
--- autoglass_prisliste.varenr (92 % dekning verifisert 2026-08-13).
+-- glass_prisliste.varenr (92 % dekning verifisert 2026-08-13).
 CREATE TABLE IF NOT EXISTS ground_truth (
   make TEXT NOT NULL,
   model TEXT NOT NULL,

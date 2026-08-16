@@ -14,6 +14,30 @@
 <meta property="og:url" content="https://finnbilglass.no/">
 <meta property="og:locale" content="nb_NO">
 
+<!-- Strukturert data (Schema.org) — hjelper AI-assistenter og søk å forstå tilbudet -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "Finnbilglass",
+      "url": "https://finnbilglass.no/",
+      "description": "Finn riktig bilglass til din bil — uten forsikring. Ekte priser, levert over hele Norge."
+    },
+    {
+      "@type": "OnlineStore",
+      "name": "Finnbilglass",
+      "url": "https://finnbilglass.no/",
+      "areaServed": "NO",
+      "priceRange": "3 990–8 490 kr",
+      "telephone": "+4740408241",
+      "email": "support@finnbilglass.no"
+    }
+  ]
+}
+</script>
+
 <!-- Font: Inter Tight — selvhostet via Google Fonts (byttes til lokal ved GDPR-revisjon) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,11 +56,9 @@
       <circle cx="12" cy="13" r="3"/>
     </symbol>
     <symbol id="ikon-skilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2" y="6" width="20" height="12" rx="2"/>
-      <path d="M6 10.5h2.5"/>
-      <path d="M6 14h6"/>
-      <path d="M16.5 10.5v4"/>
-      <circle cx="19" cy="12.5" r="0.5" fill="currentColor"/>
+      <rect x="2.5" y="5" width="19" height="14" rx="2"/>
+      <rect x="4" y="6.5" width="4.2" height="11" rx="0.8" opacity="0.18"/>
+      <path d="M10 9.5h6.5M10 12.5h6.5M10 15.5h4"/>
     </symbol>
     <symbol id="ikon-sjekk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
@@ -52,6 +74,32 @@
     <symbol id="ikon-skjold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
       <path d="m9 12 2 2 4-4"/>
+    </symbol>
+    <symbol id="ikon-frontrute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 6.2C7 4.4 8.4 3.2 10.2 3.2h3.6C15.6 3.2 17 4.4 17 6.2l-1.6 13.2c-.2 1.7-1.5 3-3.2 3.3l-2.4.4c-1.7-.3-3-1.6-3.2-3.3z"/>
+      <path d="M9 5.5 9.8 19M15 5.5 14.2 19"/>
+    </symbol>
+    <symbol id="ikon-lim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 14l6-6 6 6-1.5 4.5A2 2 0 0 1 12.6 20h-1.2a2 2 0 0 1-1.9-1.5z"/>
+      <path d="M10 8l1-3h6l-1 3"/>
+      <path d="M12 20v2.5"/>
+    </symbol>
+    <symbol id="ikon-verktoy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+    </symbol>
+    <symbol id="ikon-frakt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+      <path d="M15 18h-5"/>
+      <path d="M15 8h4l3 4v5a1 1 0 0 1-1 1h-2"/>
+      <circle cx="7" cy="18" r="2"/>
+      <circle cx="17" cy="18" r="2"/>
+    </symbol>
+    <symbol id="ikon-telefon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+    </symbol>
+    <symbol id="ikon-epost" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="2"/>
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
     </symbol>
   </svg>
 
@@ -70,7 +118,12 @@
   <section id="screen-start" class="screen" aria-label="Søk etter bilglass">
     <div class="hero-stripe" aria-hidden="true"></div>
     <h1>Bilglass til ekte pris — uten forsikring</h1>
-    <p class="sub">Skriv inn kjennemerket — eller ta bilde av det — så finner vi riktig glass til bilen din.</p>
+    <p class="sub">Ta bilde av kjennemerket, så finner vi riktig glass til bilen din — på sekunder.</p>
+    <button id="btn-foto-regnr" class="foto-prim" type="button">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-kamera"/></svg>
+      Ta bilde av kjennemerket
+    </button>
+    <div class="eller" aria-hidden="true"><span>eller skriv kjennemerket</span></div>
     <form id="form-regnr" class="search" novalidate aria-label="Kjennemerke-søk">
       <input
         id="input-regnr"
@@ -91,12 +144,12 @@
         Finn glass
       </button>
     </form>
-    <button id="btn-foto-regnr" class="link foto-link" type="button">
-      <svg class="ikon" aria-hidden="true"><use href="#ikon-skilt"/></svg>
-      Ta bilde av kjennemerket
-    </button>
     <input id="regnr-fil" type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1">
     <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
+    <button id="btn-vin-fallback" class="link vin-fallback hidden" type="button">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>
+      Søk med chassisnummer (VIN) i stedet
+    </button>
     <p class="svv-badge" aria-label="Vi bruker Statens vegvesen for å identifisere bilen din">
       Oppslag via Statens vegvesen
     </p>
@@ -159,8 +212,37 @@
       <span id="resultat-prislbl" class="prislbl">Pris inkl. mva</span>
       <span id="resultat-pris" class="pris" aria-label="Pris" aria-live="polite"></span>
     </div>
+    <div id="tilbehor-seksjon" class="tilbehor hidden" aria-label="Tilbehør til monteringen">
+      <h3>Trenger du tilbehør til monteringen?</h3>
+      <p class="note">Velg det du trenger — prisen legges til i bestillingen.</p>
+      <label class="tilbehor-valg">
+        <input type="checkbox" value="lim">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-lim"/></svg>
+        <span>Lim</span>
+      </label>
+      <label class="tilbehor-valg">
+        <input type="checkbox" value="klips">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-verktoy"/></svg>
+        <span>Klips / festeklips</span>
+      </label>
+      <label class="tilbehor-valg">
+        <input type="checkbox" value="pyntelist">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-frontrute"/></svg>
+        <span>Pynteliste</span>
+      </label>
+      <label class="tilbehor-valg">
+        <input type="checkbox" value="sensorgel">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-lim"/></svg>
+        <span>Sensorgel / sensorfeste</span>
+      </label>
+      <p class="note note-tilbehor">Tilbehørspriser vises når beta åpner.</p>
+    </div>
+    <button id="btn-apne-verify" class="link" type="button">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>
+      Verifiser glasset med 43R-nummeret (valgfritt)
+    </button>
     <div id="verify-seksjon" class="verify hidden" aria-label="Verifiser glasset med 43R-nummer">
-      <h3>Vil du være 100 % sikker på at du får riktig glass?</h3>
+      <h3>Verifiser med 43R-nummeret</h3>
       <p class="verify-hjelp">Hvert glass har et nummer inni glasset, nederst i hjørnet på førersiden (f.eks. 43R-004592). Sett et hvitt ark på innsiden bak merket, og ta bilde fra utsiden — da blir nummeret lett å lese. Bildet brukes kun til å lese nummeret og slettes umiddelbart.</p>
       <div class="verify-knapper">
         <button id="btn-verify-foto" class="sek" type="button">
@@ -188,9 +270,9 @@
         </div>
       </div>
     </div>
-    <p class="note">Glasset sendes direkte til deg — eller til et av våre avtaleverksteder for montering. Montering og frakt tilkommer.</p>
+    <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Glasset sendes direkte til deg — eller til et av våre avtaleverksteder for montering. Montering og frakt tilkommer.</p>
     <button id="btn-bestill" class="prim" type="button" disabled title="Åpner etter beta" aria-disabled="true">
-      Bestill glass — åpner etter beta
+      Bestill glass + tilbehør — åpner etter beta
     </button>
     <button class="link" type="button" data-tilbake="spm">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
@@ -208,8 +290,50 @@
     </button>
   </section>
 
+  <!-- Skjerm 1b: VIN-backup (når kjennemerke ikke finnes i SVV) -->
+  <section id="screen-vin" class="screen hidden" aria-label="Søk med chassisnummer">
+    <h2>Søk med chassisnummer (VIN)</h2>
+    <p class="sub">Chassisnummeret står i vognkortet og nederst i frontruten, på førersiden. Det er 17 tegn med bokstaver og tall.</p>
+    <form id="form-vin" class="search" novalidate aria-label="Chassisnummer-søk">
+      <input
+        id="input-vin"
+        type="text"
+        inputmode="text"
+        placeholder="F.eks. WV2ZZZ7HZ5H123456"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+        autocorrect="off"
+        enterkeyhint="go"
+        maxlength="17"
+        aria-label="Chassisnummer (VIN)"
+        required
+      >
+      <button type="submit" aria-label="Finn glass">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-sok"/></svg>
+        Finn glass
+      </button>
+    </form>
+    <p id="vin-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
+    <button class="link" type="button" data-tilbake="start">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
+      Tilbake
+    </button>
+  </section>
+
   <footer role="contentinfo">
-    <p>Finnbilglass — bilglass til ekte pris. Leveres over hele Norge.</p>
+    <div class="footer-kontakt">
+      <h4>Spørsmål? Vi hjelper deg.</h4>
+      <a href="tel:+4740408241" class="kontakt-rad">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-telefon"/></svg>
+        <span>40 40 82 41</span>
+      </a>
+      <a href="mailto:support@finnbilglass.no" class="kontakt-rad">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-epost"/></svg>
+        <span>support@finnbilglass.no</span>
+      </a>
+    </div>
+    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass — bilglass til ekte pris. Leveres over hele Norge.</p>
   </footer>
 
 </div><!-- /.wrap -->

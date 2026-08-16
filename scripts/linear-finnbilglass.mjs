@@ -35,7 +35,7 @@ const mainDesc = `Oppdrag (Tom 2026-08-13): OE/VIN-pinpoint for finnbilglass.no 
 
 ### Importerte radtall (staging, verifisert)
 - ground_truth: 2 008 · glass_catalog: 33 215 · oe_eurocode_mapping: 341 · ktype_registry: 833 · vin_ktype_map: 0 (lokal modus)
-- autoglass_prisliste: 29 627 (kopiert fra prod til staging)
+- glass_prisliste: 29 627 (kopiert fra prod til staging)
 
 ### Fasit-tester: 2 FEIL funnet (og patchet, IKKE verifisert ennå)
 1. AJ95429 → feil PINPOINT 5392AGNM (W213 E-klasse): GT-match via substring «CLA»⊂«CLASS». Fiks: ordbasert matching.

@@ -9,4 +9,4 @@ CREATE TABLE IF NOT EXISTS ktype_matches (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_glass_catalog_eurocode ON glass_catalog(eurocode);
-CREATE UNIQUE INDEX IF NOT EXISTS uq_prisliste_varenr_navn ON autoglass_prisliste(varenr, varenavn);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_prisliste_varenr_navn ON glass_prisliste(varenr, varenavn);

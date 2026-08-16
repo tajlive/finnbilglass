@@ -108,7 +108,7 @@ const likePrim = primaer.map((k) => `varenavn LIKE '%${k.toUpperCase().replace(/
 const likeSek = sekundaer.map((k) => `varenavn LIKE '%${k.toUpperCase().replace(/'/g, "''")}%'`).join(' OR ');
 const seed = await d1(`
   SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
-  FROM autoglass_prisliste
+  FROM glass_prisliste
   WHERE rad_type='glass'
     AND (varenavn LIKE '%FRONTRUTE%' OR varenavn LIKE '%FRONT%'
          OR eurokode GLOB '[0-9][0-9][0-9]A*' OR eurokode GLOB '[0-9][0-9][0-9][0-9]A*' OR eurokode GLOB '[0-9][0-9][0-9][0-9][0-9]A*')
@@ -130,7 +130,7 @@ if (katalogkoder.size) {
   const globs = [...katalogkoder].map((k) => `eurokode LIKE '${k}%'`).join(' OR ');
   const ekstra = await d1(`
     SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
-    FROM autoglass_prisliste
+    FROM glass_prisliste
     WHERE rad_type='glass' AND (${globs})
   `);
   utvidet = [...(seed ?? []), ...(ekstra ?? [])];

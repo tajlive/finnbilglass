@@ -64,7 +64,7 @@ async function hentGt() {
   // Prisliste i OFFSET-chunks → map for crosswalk (varenr = gammel kode, eurokode = AGS-kode)
   const pl = new Map();
   for (let off = 0; ; off += 5000) {
-    const rader = await q(`SELECT varenr, eurokode FROM autoglass_prisliste WHERE rad_type='glass' LIMIT 5000 OFFSET ${off}`);
+    const rader = await q(`SELECT varenr, eurokode FROM glass_prisliste WHERE rad_type='glass' LIMIT 5000 OFFSET ${off}`);
     for (const r of rader) pl.set(String(r.varenr), r.eurokode);
     if (rader.length < 5000) break;
   }

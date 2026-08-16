@@ -1,9 +1,8 @@
--- Finnbilglass: glass-katalog (Autoglass AS prisliste, PROSEKT API 16.05.2026)
--- Gjenbruk av Autoglass-katalogen for B2C-salg. Kilde: Eduard Eikeland.
+-- Finnbilglass: glass-katalog (intern prisliste)
 -- rad_type: glass | tilbehor | frakt | emballasje | alias
 -- alias_av: «BRUK/USE X»-peker → erstatnings-varenummer
 
-CREATE TABLE IF NOT EXISTS autoglass_prisliste (
+CREATE TABLE IF NOT EXISTS glass_prisliste (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   varenr TEXT NOT NULL,
   varenavn TEXT,
@@ -16,7 +15,7 @@ CREATE TABLE IF NOT EXISTS autoglass_prisliste (
   UNIQUE(varenr, varenavn)
 );
 
-CREATE INDEX IF NOT EXISTS idx_ap_varenr ON autoglass_prisliste(varenr);
-CREATE INDEX IF NOT EXISTS idx_ap_eurokode ON autoglass_prisliste(eurokode);
-CREATE INDEX IF NOT EXISTS idx_ap_rad_type ON autoglass_prisliste(rad_type);
-CREATE INDEX IF NOT EXISTS idx_ap_alias ON autoglass_prisliste(alias_av) WHERE alias_av IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_glasspris_varenr ON glass_prisliste(varenr);
+CREATE INDEX IF NOT EXISTS idx_glasspris_eurokode ON glass_prisliste(eurokode);
+CREATE INDEX IF NOT EXISTS idx_glasspris_rad_type ON glass_prisliste(rad_type);
+CREATE INDEX IF NOT EXISTS idx_glasspris_alias ON glass_prisliste(alias_av) WHERE alias_av IS NOT NULL;

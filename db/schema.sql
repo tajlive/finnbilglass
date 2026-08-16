@@ -1,5 +1,5 @@
 -- Finnbilglass D1-schema (MVP v1) — finnbilglass-db
--- Drop-ship marketplace: kunde → finnbilglass.no → Autoglass AS (grossist) → kunde/verksted
+-- Drop-ship: kunde → finnbilglass.no → leverandør → kunde/verksted
 
 -- Avtale-verksteder (fastprisavtale for skifte av bilglass)
 CREATE TABLE IF NOT EXISTS montorer (
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS ordre (
   bil_merke TEXT,
   bil_modell TEXT,
   bil_arsmodell TEXT,
-  varenummer TEXT NOT NULL,            -- glass (Autoglass varenummer)
+  varenummer TEXT NOT NULL,            -- glass (varenummer)
   glass_pris_eks_mva INTEGER,
   tilbehor JSON,                       -- [{varenummer, navn, pris_eks_mva}]
   frakt_pris INTEGER,
@@ -35,8 +35,8 @@ CREATE TABLE IF NOT EXISTS ordre (
   leverings_adresse TEXT,
   betalings_status TEXT NOT NULL DEFAULT 'venter',  -- venter | betalt | refundert
   betalings_metode TEXT,               -- vipps | klarna | kort
-  ordre_status TEXT NOT NULL DEFAULT 'mottatt',     -- mottatt | til_autoglass | sendt | levert | avbrutt
-  autoglass_ref TEXT,                  -- referanse fra Autoglass B2B-flyt (1B)
+  ordre_status TEXT NOT NULL DEFAULT 'mottatt',     -- mottatt | til_leverandor | sendt | levert | avbrutt
+  leverandor_ref TEXT,                 -- intern leverandør-referanse
   sporingsnummer TEXT,
   skade_sjekk INTEGER NOT NULL DEFAULT 0,           -- 1 = glass sjekket ved levering (før signering)
   opprettet TIMESTAMP DEFAULT CURRENT_TIMESTAMP

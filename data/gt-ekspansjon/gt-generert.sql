@@ -1,4 +1,4 @@
--- GT-generert fra autoglass_prisliste (source=gt-auto-prisliste) — 2026-08-15
+-- GT-generert fra glass_prisliste (source=gt-auto-prisliste) — 2026-08-15
 INSERT OR IGNORE INTO ground_truth (make, model, year, frontrute_eurocode, verified_by, confidence, source) VALUES
 ('ALFA', '90', 1985, '1392BZ', 'gt-auto-prisliste', 0.80, 'gt-auto-prisliste'),
 ('ALFA', '90', 1986, '1392BZ', 'gt-auto-prisliste', 0.80, 'gt-auto-prisliste'),

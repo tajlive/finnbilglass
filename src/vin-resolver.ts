@@ -172,7 +172,7 @@ function erFrontrute(varenavn: string | null, varenr: string, dek: Dekodet): boo
  *  (bak/side/dør/takglass) og OEM-delnummer uten FRONTR-markør returnerer null. */
 async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | null> {
   const r = await env.FINNBILGLASS_DB.prepare(
-    `SELECT varenr, varenavn, pris, eurokode FROM autoglass_prisliste
+    `SELECT varenr, varenavn, pris, eurokode FROM glass_prisliste
      WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
   ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>();
   if (!r) return null;

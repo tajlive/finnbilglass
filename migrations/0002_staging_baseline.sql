@@ -3,12 +3,12 @@
 -- ----------------------------------------------------------------------------
 -- Staging-DB (finnbilglass-db-staging) trenger samme basis-tabeller som prod
 -- for at Worker-koden skal kunne kjøre uendret:
---   autoglass_prisliste (pris-SSoT; data importeres repeterbart fra prod-eksport)
+--   glass_prisliste (pris-SSoT; data importeres repeterbart fra prod-eksport)
 --   regnr_logg / sok_logg (søkelogging)
 -- Prod-data migreres IKKE hit automatisk — kun via eksplisitt import-script.
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS autoglass_prisliste (
+CREATE TABLE IF NOT EXISTS glass_prisliste (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   varenr TEXT NOT NULL,
   varenavn TEXT,

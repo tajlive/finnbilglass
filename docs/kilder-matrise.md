@@ -11,7 +11,7 @@
 | C | TecAlliance TecDoc (Catalogue/Web Service/Data Package/VIS) | **Lisensiert datasett + API** | Ja (12,8M artikler, 724M linkages) | **Ja (OE)** | **Ja** | **Ja (VIN/VRM VIS)** | Ja | Via produsentavtale | Kontinuerlig (cloud 24/7) | **Ja — offisiell** | LAV-MED (kontraktsstyrt) | Årlig lisens (forhandles) | LAV-MED (integrasjon) | **GO (strategisk primærkilde — krever kjøp)** |
 | D | Lokal B2B glass_catalog (Pilkington-dump) | Egen dump/eksport | **Ja — målt: 33 215 rader** | Via oe_eurocode_mapping — målt: 341 rader | Delvis — 833 ktype_registry; vin_ktype_map = 0 lokal (B2B-token, KLA-299) | Nei lokal (token) | **Ja — målt: rain_sensor/antenna/hud/camera/adas-flagg** | Nei | Ved ny eksport fra B2B | Eksport-skript | LAV — samme eierskap (Autoglass) | 0 (allerede i hus) | LAV | **GO — primærkilde NÅ** |
 | E | ground_truth (B2B) | Fasit-seed | Ja — målt: 2 008 rader | Nei | Nei | Nei | Nei | Nei | Manuelt vedlikehold | Eksport | LAV | 0 | LAV | **GO (L1)** |
-| F | autoglass_prisliste | Egen prisliste | Ja — målt: 29 628 linjer eksportert | Nei | Nei | Nei | Nei | Nei | Egen | Eksport | Ingen (eget data) | 0 | LAV | **GO — eneste priskilde** |
+| F | glass_prisliste | Egen prisliste | Ja — målt: 29 628 linjer eksportert | Nei | Nei | Nei | Nei | Nei | Egen | Eksport | Ingen (eget data) | 0 | LAV | **GO — eneste priskilde** |
 
 ## 2. GO/NO-GO
 

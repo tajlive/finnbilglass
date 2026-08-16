@@ -165,7 +165,7 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
   const sekParams = seedOrd.map((k) => `%${likePrefiks(k)}%`);
 
   const seedSql = `SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
-    FROM autoglass_prisliste
+    FROM glass_prisliste
     WHERE rad_type='glass' AND ${frontGlob} AND ${likePrim} AND (${likeSek})
     ORDER BY pris`;
   const seed = await env.FINNBILGLASS_DB.prepare(seedSql)
@@ -188,7 +188,7 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
     const params = batch.map((k) => `${k}%`);
     const ekstra = await env.FINNBILGLASS_DB.prepare(
       `SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
-       FROM autoglass_prisliste WHERE rad_type='glass' AND (${globs})`
+       FROM glass_prisliste WHERE rad_type='glass' AND (${globs})`
     ).bind(...params).all<Kandidat>();
     alle = [...alle, ...(ekstra.results ?? [])];
   }

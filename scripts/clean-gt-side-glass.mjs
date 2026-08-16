@@ -34,7 +34,7 @@ function d1(sql) {
 
 // 1) Alle glass-rader → oppslag både på varenr og eurokode (GT-kolonnen
 //    «frontrute_eurocode» inneholder VARENR, men b2b-seed kan ha eurokode).
-const glassRes = d1(`SELECT varenr, eurokode, varenavn FROM autoglass_prisliste WHERE rad_type='glass'`);
+const glassRes = d1(`SELECT varenr, eurokode, varenavn FROM glass_prisliste WHERE rad_type='glass'`);
 const glass = glassRes[0].results ?? [];
 const byVarenr = new Map();
 const byEuro = new Map();

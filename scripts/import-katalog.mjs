@@ -59,10 +59,10 @@ for (const f of files) {
 
 // --- 3. verifiser ---
 console.log('3/3 Verifiserer ...');
-const count = await d1('SELECT COUNT(*) AS n FROM autoglass_prisliste');
-const byType = await d1(`SELECT rad_type, COUNT(*) AS n FROM autoglass_prisliste GROUP BY rad_type ORDER BY n DESC`);
-const front = await d1(`SELECT COUNT(*) AS n FROM autoglass_prisliste WHERE rad_type='glass' AND (varenavn LIKE '%FRONTRUTE%' OR varenavn LIKE '%FRONT%')`);
-const euro = await d1(`SELECT COUNT(*) AS n FROM autoglass_prisliste WHERE rad_type='glass' AND eurokode IS NOT NULL AND eurokode != ''`);
+const count = await d1('SELECT COUNT(*) AS n FROM glass_prisliste');
+const byType = await d1(`SELECT rad_type, COUNT(*) AS n FROM glass_prisliste GROUP BY rad_type ORDER BY n DESC`);
+const front = await d1(`SELECT COUNT(*) AS n FROM glass_prisliste WHERE rad_type='glass' AND (varenavn LIKE '%FRONTRUTE%' OR varenavn LIKE '%FRONT%')`);
+const euro = await d1(`SELECT COUNT(*) AS n FROM glass_prisliste WHERE rad_type='glass' AND eurokode IS NOT NULL AND eurokode != ''`);
 console.log(`Totalt: ${count?.[0]?.n ?? '?'} rader`);
 for (const row of byType ?? []) console.log(`  ${row.rad_type}: ${row.n}`);
 console.log(`Frontrute-varianter (FRONTRUTE/FRONT i navn): ${front?.[0]?.n ?? '?'}`);
