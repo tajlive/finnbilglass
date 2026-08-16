@@ -8,6 +8,7 @@ import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
 import { resolverModus } from './kill-switch';
 import { svvLookup } from './svv';
+import { lesSkilt } from './les-skilt';
 import {
   resolveImageObservations,
   observationToSignals,
@@ -248,6 +249,54 @@ export default {
         }
       }
       return json({ ok: true, lagret, bil, resolver });
+    }
+
+    if (method === 'POST' && path === '/api/les-skilt') {
+      // Foto av kjennemerket → AI leser skiltet → SVV gir hele bilen.
+      // Erstatter «Fyll inn bilen manuelt»: privatkunder skal ikke gjette merke/modell/år.
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: 'Ugyldig JSON' }, 400);
+      }
+      const imageRaw = (body as Record<string, unknown>)?.image;
+      if (typeof imageRaw !== 'string' || imageRaw.length < 100 || !imageRaw.startsWith('data:image/')) {
+        return json({ ok: false, error: 'image må være dataURL (data:image/jpeg|png|webp;base64,...)' }, 400);
+      }
+      if (imageRaw.length > 7_000_000) {
+        return json({ ok: false, error: 'Bildet er for stort (maks ~5 MB)' }, 413);
+      }
+      try {
+        const lest = await lesSkilt(env.AI, imageRaw);
+        if (!lest.regnr) {
+          return json({ ok: false, error: 'Kunne ikke lese kjennemerket i bildet. Prøv igjen i bedre lys, eller skriv det inn manuelt.', lest: { confidence: lest.confidence } }, 422);
+        }
+        // Samme SVV+resolver-sekvens som /api/regnr.
+        let bil = null;
+        let resolver = null;
+        try {
+          bil = await svvLookup(lest.regnr, env.SVV_API_KEY);
+        } catch (e) {
+          console.error('SVV-oppslag feilet:', e);
+        }
+        if (bil) {
+          try {
+            resolver = await resolveFrontrute(env, {
+              merke: bil.merke,
+              modell: bil.modell ?? undefined,
+              aar: bil.aar ?? undefined,
+              vin: bil.vin ?? undefined,
+            });
+          } catch (e) {
+            console.error('Resolver feilet:', e);
+          }
+        }
+        return json({ ok: true, regnr: lest.regnr, lest: { confidence: lest.confidence, raatekst: lest.raatekst.slice(0, 120) }, funnet: !!bil, bil, resolver });
+      } catch (e) {
+        console.error('les-skilt feilet:', e);
+        return json({ ok: false, error: 'Intern feil' }, 500);
+      }
     }
 
     if (method === 'POST' && path === '/api/image-resolver') {

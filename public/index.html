@@ -25,6 +25,36 @@
 <body>
 <div class="wrap">
 
+  <!-- SVG-ikonbibliotek (lucide-stil: stroke 2, runde ender) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="ikon-kamera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+      <circle cx="12" cy="13" r="3"/>
+    </symbol>
+    <symbol id="ikon-skilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="6" width="20" height="12" rx="2"/>
+      <path d="M6 10.5h2.5"/>
+      <path d="M6 14h6"/>
+      <path d="M16.5 10.5v4"/>
+      <circle cx="19" cy="12.5" r="0.5" fill="currentColor"/>
+    </symbol>
+    <symbol id="ikon-sjekk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <path d="m9 11 3 3L22 4"/>
+    </symbol>
+    <symbol id="ikon-tilbake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m15 18-6-6 6-6"/>
+    </symbol>
+    <symbol id="ikon-sok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/>
+      <path d="m21 21-4.3-4.3"/>
+    </symbol>
+    <symbol id="ikon-skjold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+      <path d="m9 12 2 2 4-4"/>
+    </symbol>
+  </svg>
+
   <!-- HEADER -->
   <header class="top" role="banner">
     <div class="logo" role="img" aria-label="Finnbilglass">
@@ -40,7 +70,7 @@
   <section id="screen-start" class="screen" aria-label="Søk etter bilglass">
     <div class="hero-stripe" aria-hidden="true"></div>
     <h1>Bilglass til ekte pris — uten forsikring</h1>
-    <p class="sub">Skriv inn kjennemerket, så finner vi riktig glass til bilen din.</p>
+    <p class="sub">Skriv inn kjennemerket — eller ta bilde av det — så finner vi riktig glass til bilen din.</p>
     <form id="form-regnr" class="search" novalidate aria-label="Kjennemerke-søk">
       <input
         id="input-regnr"
@@ -56,33 +86,20 @@
         aria-label="Kjennemerke"
         required
       >
-      <button type="submit" aria-label="Finn glass">Finn glass</button>
+      <button type="submit" aria-label="Finn glass">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-sok"/></svg>
+        Finn glass
+      </button>
     </form>
-    <button id="btn-manual" class="link" type="button">Fyll inn bilen manuelt</button>
+    <button id="btn-foto-regnr" class="link foto-link" type="button">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-skilt"/></svg>
+      Ta bilde av kjennemerket
+    </button>
+    <input id="regnr-fil" type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1">
+    <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
     <p class="svv-badge" aria-label="Vi bruker Statens vegvesen for å identifisere bilen din">
       Oppslag via Statens vegvesen
     </p>
-  </section>
-
-  <!-- Skjerm 2: Manuell bil -->
-  <section id="screen-manual" class="screen hidden" aria-label="Fyll inn bil manuelt">
-    <h2>Hvilken bil?</h2>
-    <form id="form-manual" class="stack" novalidate aria-label="Bildata manuell innfylling">
-      <label for="m-merke">
-        Merke
-        <input id="m-merke" type="text" placeholder="VW" autocomplete="off" required aria-required="true">
-      </label>
-      <label for="m-modell">
-        Modell
-        <input id="m-modell" type="text" placeholder="Transporter T5" autocomplete="off" required aria-required="true">
-      </label>
-      <label for="m-aar">
-        Årsmodell
-        <input id="m-aar" type="number" inputmode="numeric" placeholder="2003" min="1950" max="2030" required aria-required="true">
-      </label>
-      <button type="submit" class="prim">Neste</button>
-    </form>
-    <button class="link" type="button" data-tilbake="start">← Tilbake</button>
   </section>
 
   <!-- Skjerm 3: Bekreft bil -->
@@ -110,7 +127,10 @@
       <button class="glassopt" type="button" disabled title="Kommer snart" aria-disabled="true">Siderute</button>
       <button class="glassopt" type="button" disabled title="Kommer snart" aria-disabled="true">Dørrute</button>
     </div>
-    <button class="link" type="button" data-tilbake="bekreft">← Tilbake</button>
+    <button class="link" type="button" data-tilbake="bekreft">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
+      Tilbake
+    </button>
   </section>
 
   <!-- Skjerm 5: Utstyrsspørsmål -->
@@ -128,7 +148,7 @@
   <!-- Skjerm 6: Resultat -->
   <section id="screen-resultat" class="screen hidden" aria-label="Funnet bilglass" aria-live="polite">
     <div class="resultat-header">
-      <span class="sjekk" aria-hidden="true">✓</span>
+      <span class="sjekk" aria-hidden="true"><svg class="ikon" aria-hidden="true"><use href="#ikon-sjekk"/></svg></span>
       <h2>Vi fant glasset ditt</h2>
     </div>
     <div id="resultat-status" class="note status hidden" role="status" aria-live="polite"></div>
@@ -143,7 +163,10 @@
       <h3>Vil du være 100 % sikker på at du får riktig glass?</h3>
       <p class="verify-hjelp">Hvert glass har et nummer inni glasset, nederst i hjørnet på førersiden (f.eks. 43R-004592). Sett et hvitt ark på innsiden bak merket, og ta bilde fra utsiden — da blir nummeret lett å lese. Bildet brukes kun til å lese nummeret og slettes umiddelbart.</p>
       <div class="verify-knapper">
-        <button id="btn-verify-foto" class="sek" type="button">📷 Ta bilde av merket</button>
+        <button id="btn-verify-foto" class="sek" type="button">
+          <svg class="ikon" aria-hidden="true"><use href="#ikon-kamera"/></svg>
+          Ta bilde av merket
+        </button>
         <input id="verify-fil" type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1">
       </div>
       <div class="verify-manuell">
@@ -157,7 +180,10 @@
       <div id="verify-bekreft" class="verify-bekreft hidden">
         <p>Vi leste: <b id="verify-lest"></b></p>
         <div class="verify-bekreft-knapper">
-          <button id="btn-verify-ja" class="prim" type="button">✓ Stemmer — vis glasset</button>
+          <button id="btn-verify-ja" class="prim" type="button">
+            <svg class="ikon" aria-hidden="true"><use href="#ikon-sjekk"/></svg>
+            Stemmer — vis glasset
+          </button>
           <button id="btn-verify-nei" class="link" type="button">Endre / prøv igjen</button>
         </div>
       </div>
@@ -166,14 +192,20 @@
     <button id="btn-bestill" class="prim" type="button" disabled title="Åpner etter beta" aria-disabled="true">
       Bestill glass — åpner etter beta
     </button>
-    <button class="link" type="button" data-tilbake="spm">← Nytt søk</button>
+    <button class="link" type="button" data-tilbake="spm">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
+      Nytt søk
+    </button>
   </section>
 
   <!-- Skjerm 7: Ingen treff / feil -->
   <section id="screen-tomt" class="screen hidden" aria-label="Ingen treff" aria-live="assertive">
     <h2 id="tomt-tittel">Fant ingen treff</h2>
     <p class="sub" id="tomt-tekst">Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss, så hjelper vi deg manuelt.</p>
-    <button class="link" type="button" data-tilbake="start">← Nytt søk</button>
+    <button class="link" type="button" data-tilbake="start">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
+      Nytt søk
+    </button>
   </section>
 
   <footer role="contentinfo">

@@ -88,7 +88,7 @@
   });
 
   // 1. Start: kjennemerke → SVV-oppslag (kjennemerke → bil). ALLE kjennemerke lagres (læring).
-  //    Finner vi bilen → rett til bekreft. Finner vi den ikke → manuell innfylling.
+  //    Finner vi bilen → rett til bekreft. Finner vi den ikke → feilmelding med foto-forslag.
   $('form-regnr').addEventListener('submit', function (e) {
     e.preventDefault();
     var raw = $('input-regnr').value.trim();
@@ -120,31 +120,70 @@
           renderBekreftDet();
           show('bekreft');
         } else {
-          show('manual');
+          visStartFeil('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at kjennemerket er riktig, eller ta bilde av det.');
         }
         visRegnr();
       })
-      .catch(function () { show('manual'); })
+      .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller ta bilde av kjennemerket.'); })
       .finally(function () { btn.disabled = false; btn.textContent = orgTekst; });
   });
-  $('btn-manual').addEventListener('click', function () { show('manual'); });
 
-  // 2. Manuell → bekreft (SVV-detaljer ukjent: chassisnummer/dato/import nullstilles)
-  $('form-manual').addEventListener('submit', function (e) {
-    e.preventDefault();
-    state.merke = $('m-merke').value.trim();
-    state.modell = $('m-modell').value.trim();
-    state.aar = parseInt($('m-aar').value, 10) || null;
-    state.vin = null;
-    state.forstegangsregistrert = null;
-    state.import = false;
-    state.importLand = null;
-    $('bekreft-merkelbl').textContent = state.merke;
-    $('bekreft-navn').textContent =
-      state.modell + (state.aar ? ' · ' + state.aar : '');
-    renderBekreftDet();
-    show('bekreft');
+  // 1b. Foto av kjennemerket → AI leser skiltet → SVV-oppslag (samme flyt som skrevet regnr).
+  $('btn-foto-regnr').addEventListener('click', function () { $('regnr-fil').click(); });
+  $('regnr-fil').addEventListener('change', function () {
+    var fil = this.files && this.files[0];
+    this.value = '';
+    if (!fil) return;
+    if (!fil.type.startsWith('image/')) { visStartFeil('Filen må være et bilde.'); return; }
+    if (fil.size > 5 * 1024 * 1024) { visStartFeil('Bildet er over 5 MB — ta et nytt bilde med mobilen.'); return; }
+    var leser = new FileReader();
+    leser.onload = function () {
+      var btn = $('btn-foto-regnr');
+      var org = btn.innerHTML;
+      btn.disabled = true;
+      btn.textContent = 'Leser kjennemerket…';
+      fetch('/api/les-skilt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: String(leser.result) })
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d.ok && d.funnet && d.bil && d.bil.merke) {
+            state.regnr = formatRegnr(d.regnr);
+            state.merke = d.bil.merke;
+            state.modell = d.bil.modell;
+            state.aar = d.bil.aar;
+            state.vin = d.bil.vin || null;
+            state.forstegangsregistrert = d.bil.forstegangsregistrert || null;
+            state.import = !!d.bil.import;
+            state.importLand = d.bil.importLand || null;
+            state.resolver = d.resolver || null;
+            $('bekreft-merkelbl').textContent = state.merke;
+            $('bekreft-navn').textContent =
+              state.modell + (state.aar ? ' · ' + state.aar : '');
+            renderBekreftDet();
+            show('bekreft');
+          } else if (d && d.ok && !d.funnet) {
+            visStartFeil('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen. Prøv å skrive kjennemerket manuelt.');
+            $('input-regnr').value = formatRegnr(d.regnr);
+          } else if (d && d.error) {
+            visStartFeil(d.error);
+          } else {
+            visStartFeil('Kunne ikke lese kjennemerket. Prøv igjen i bedre lys, uten reflekser.');
+          }
+        })
+        .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller skriv kjennemerket manuelt.'); })
+        .finally(function () { btn.disabled = false; btn.innerHTML = org; });
+    };
+    leser.readAsDataURL(fil);
   });
+
+  function visStartFeil(msg) {
+    var el = $('start-feil');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
 
   // 3. Bekreft → videre. Logikk (aldri spør om ting som ikke skiller kandidatene):
   //    PINPOINT  → ETT entydig glass → 0 spørsmål, direkte til resultat.
@@ -170,7 +209,7 @@
     spmRender();
     show('spm');
   });
-  $('btn-bekreft-nei').addEventListener('click', function () { show('manual'); });
+  $('btn-bekreft-nei').addEventListener('click', function () { show('start'); });
 
   // 4. Glassvalg (kun frontrute er live i beta)
   document.querySelectorAll('.glassopt').forEach(function (b) {

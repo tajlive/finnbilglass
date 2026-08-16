@@ -24,3 +24,6 @@ data/test-500-*.jsonl
 # Skjermbilder og demo-skrap
 docs/*.png
 docs/demo-*
+
+# Scrapet eurocode-katalog (regenererbar)
+data/scrape/

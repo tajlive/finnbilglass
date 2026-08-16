@@ -272,8 +272,40 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
   font-size: var(--fs-sm);
   padding: 0;
   margin-top: 12px;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
+
+/* Foto av kjennemerket — tydelig sekundær-handling på startskjermen */
+.foto-link {
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--brand-deep);
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0 18px;
+  min-height: 52px;
+  width: 100%;
+  justify-content: center;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.foto-link:hover { border-color: var(--brand); background: var(--brand-subtle); }
+.foto-link .ikon { width: 20px; height: 20px; }
+
+/* Ikoner (SVG-sprite, lucide-stil) */
+.ikon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: -3px;
+}
+.search button .ikon { width: 18px; height: 18px; }
+.sek .ikon { width: 18px; height: 18px; }
+.prim .ikon { width: 18px; height: 18px; }
+.sjekk .ikon { width: 26px; height: 26px; }
 
 /* Bekreft-rad (Ja / Nei) */
 .rad { display: flex; gap: 10px; margin-top: 4px; }
