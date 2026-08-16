@@ -209,27 +209,45 @@ async function main() {
   // (≥4 tegn) har prefiks-overlapp — «TRANSPORTER»↔«TRANSPORTE+MULTIVAN» ✓,
   // «MODEL S»↔«MODEL 3» ✗ (S/3 <4 tegn). Brukes for generasjons-capp av åpne vinduer.
   const ordAv = (m) => String(m ?? '').toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter((o) => o.length >= 4);
-  const familieOverlapp = (a, b) => {
-    const A = ordAv(a), B = ordAv(b);
-    return A.some((x) => B.some((y) => x.startsWith(y) || y.startsWith(x)));
+
+  // ── Karosserigrenser (Tom-godkjent 2026-08-16, Wikipedia-verifisert) ──
+  // Åpne årvinduer cappes KUN ved ekte karosseriskifter — aldri ved facelift.
+  // VW T-familie: T1 50-67 (katalogen), T2 1968-1979, T3 1980-1990, T4 1991-2003,
+  // T5 2003-2015 (2009 = facelift T5.1→T5.2, SAMME karosseri), T6 2016-, T7 2022-.
+  // Kilde: en.wikipedia.org/wiki/Volkswagen_Transporter_(T5)/(T6)/(T4) + Toms fasit.
+  // Katalogen selv: 2525GYAM-kommentar «NB 09- 2980GYM HAR» → 2009-linjen er en
+  // PARALLELL variant (rektangulert sensor), ikke en generasjon — aldri capp på 2009.
+  const KAROSSERIGRENSER = {
+    VW: {
+      ord: ['TRANSP', 'CARAV', 'MULTIVAN'],
+      grenser: [1968, 1980, 1991, 2003, 2016, 2022],
+    },
+  };
+  const karosseriGrense = (merke, modell, start) => {
+    const cfg = KAROSSERIGRENSER[String(merke).toUpperCase().replace(/[^A-ZÆØÅ]/g, '')];
+    if (!cfg) return null;
+    const ord = ordAv(modell);
+    if (!ord.some((o) => cfg.ord.some((ko) => o.startsWith(ko) || ko.startsWith(o)))) return null;
+    return cfg.grenser.find((g) => g > start) ?? null;
   };
   for (const [merke, modeller] of Object.entries(perMerkeModell)) {
-    const alleVarianter = Object.entries(modeller).flatMap(([modell, varianter]) =>
-      varianter.map((v) => ({ ...v, modell })));
     for (const [modell, varianter] of Object.entries(modeller)) {
-      // Generasjonsslutt: eksplisitt slutt, ellers neste start i FAMILIEN − 1,
-      // capet av SVV-levetid (ingen fantom-rader for utgåtte modeller)
+      // Generasjonsslutt: eksplisitt slutt, ellers karosserigrense-tabellen
+      // (VW T-familie: ekte karosseriskifter, parallell-varianter lever side om side),
+      // ellers neste start i SAMME modell-streng − 1, capet av SVV-levetid.
       const starter = [...new Set(varianter.map((v) => v.start))].sort((a, b) => a - b);
       for (const v of varianter) {
         let slutt = v.end;
         if (slutt == null) {
-          const egenNeste = starter.find((s) => s > v.start);
-          const familieNeste = alleVarianter
-            .filter((fv) => familieOverlapp(fv.modell, modell) && fv.start > v.start)
-            .map((fv) => fv.start)
-            .sort((a, b) => a - b)[0];
-          const neste = [egenNeste, familieNeste].filter((n) => n != null).sort((a, b) => a - b)[0];
-          slutt = neste ? neste - 1 : levetidCap(merke, modell, v.start);
+          const kg = karosseriGrense(merke, modell, v.start);
+          if (kg != null) {
+            // Karosseri-tabell styrer: ingen capp ved facelift, ingen capp på tvers av
+            // parallelle varianter («TRANSP+CARAVELLE 2003-» OG «2009-» → begge til 2015)
+            slutt = kg - 1;
+          } else {
+            const egenNeste = starter.find((s) => s > v.start);
+            slutt = egenNeste ? egenNeste - 1 : levetidCap(merke, modell, v.start);
+          }
         }
         if (slutt < v.start) slutt = v.start;
         for (let yr = v.start; yr <= slutt; yr++) {

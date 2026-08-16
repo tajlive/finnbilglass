@@ -49,7 +49,11 @@ async function main() {
 
   const stateFile = `/Users/taj/finnbilglass/data/gt-ekspansjon/import-state-${target}.json`;
   let startBatch = 0;
-  if (existsSync(stateFile)) startBatch = JSON.parse(readFileSync(stateFile, 'utf8')).doneBatches ?? 0;
+  if (existsSync(stateFile)) {
+    const st = JSON.parse(readFileSync(stateFile, 'utf8'));
+    // Resume KUN hvis antall rader er uendret siden siste kjøring — ellers start på 0
+    if (st.totalRader === rader.length && (st.doneBatches ?? 0) > 0) startBatch = st.doneBatches;
+  }
 
   const B = 200;
   let done = 0;
@@ -72,10 +76,10 @@ async function main() {
     done += chunk.split('(').length - 1;
     if (batchNo % 20 === 0) {
       console.log(`batch ${batchNo}/${Math.ceil(rader.length / B)} — ${done} rader`);
-      writeFileSync(stateFile, JSON.stringify({ doneBatches: batchNo + 1 }));
+      writeFileSync(stateFile, JSON.stringify({ doneBatches: batchNo + 1, totalRader: rader.length }));
     }
   }
-  writeFileSync(stateFile, JSON.stringify({ doneBatches: Math.ceil(rader.length / B), ferdig: true }));
+  writeFileSync(stateFile, JSON.stringify({ doneBatches: Math.ceil(rader.length / B), totalRader: rader.length, ferdig: true }));
   console.log(`FERDIG: ${done} rader til ${target}`);
 }
 main().catch((e) => { console.error(e.message); process.exit(1); });
