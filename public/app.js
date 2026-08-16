@@ -6,13 +6,13 @@
 (function () {
   'use strict';
 
-  var state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '' };
+  var state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null };
   var spm = [
-    { key: 'sensor',     tittel: 'Har bilen regnsensor?',       hjelp: 'Regnsensor styrer vindusviskerne automatisk.' },
-    { key: 'antenne',    tittel: 'Har bilen antenne i glasset?', hjelp: 'Antenne sitter ofte i frontruten.' },
-    { key: 'coated',     tittel: 'Har frontruten coating (spesialbelegg)?', hjelp: 'Coating reduserer varme og UV. Usikker? Velg «Vet ikke».' },
-    { key: 'adaskamera', tittel: 'Har bilen kamera/ADAS?',       hjelp: 'Kamera/ADAS krever kalibrering etter montering.' },
-    { key: 'oppvarmet',  tittel: 'Er frontruten oppvarmet?',     hjelp: 'Oppvarmet rute har varmetråder i glasset.' }
+    { key: 'sensor',     tittel: 'Har bilen regnsensor?', hjelp: 'Da starter viskerne automatisk når det regner.' },
+    { key: 'antenne',    tittel: 'Har bilen radioantenne i frontruten?', hjelp: 'Usikker? Velg «Vet ikke». Vi dobbeltsjekker før sending.' },
+    { key: 'coated',     tittel: 'Har frontruten et sol- eller varmedempende belegg?', hjelp: 'Dette er ofte vanskelig å se. Velg «Vet ikke» hvis du er usikker.' },
+    { key: 'adaskamera', tittel: 'Har bilen kamera bak speilet eller førerassistansesystemer?', hjelp: 'For eksempel filholder, nødbrems eller skiltgjenkjenning.' },
+    { key: 'oppvarmet',  tittel: 'Har frontruten varmetråder i glasset?', hjelp: 'Oppvarmet frontrute har synlige tråder eller varmefelt i glasset.' }
   ];
   var spmIndex = 0;
 
@@ -20,7 +20,7 @@
 
   function show(id) {
     document.querySelectorAll('.screen').forEach(function (s) { s.classList.add('hidden'); });
-    if (id === 'start') state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '' };
+    if (id === 'start') state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null };
     var el = $('screen-' + id);
     if (el) el.classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -44,6 +44,31 @@
     return m ? m[1] + ' ' + m[2] : ren;
   }
 
+  // Dato-visning: "2005-04-20" → "20. april 2005"
+  var MND = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+  function formatDato(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    return m ? parseInt(m[3], 10) + '. ' + MND[parseInt(m[2], 10) - 1] + ' ' + m[1] : null;
+  }
+
+  // Side 2-detaljer: chassisnummer + førstegangsregistrering + import-merkelapp (fra SVV).
+  function renderBekreftDet() {
+    var det = [];
+    if (state.vin) det.push('<div><b>Chassisnummer:</b> ' + state.vin + '</div>');
+    var d = formatDato(state.forstegangsregistrert);
+    if (d) det.push('<div><b>Førstegangsregistrert i Norge:</b> ' + d + '</div>');
+    var detEl = $('bekreft-det');
+    detEl.innerHTML = det.join('');
+    detEl.classList.toggle('hidden', det.length === 0);
+    var imp = $('bekreft-import');
+    if (state.import) {
+      imp.textContent = '⚠️ Dette er en importbil' + (state.importLand ? ' — importert fra ' + state.importLand : '');
+      imp.classList.remove('hidden');
+    } else {
+      imp.classList.add('hidden');
+    }
+  }
+
   function visRegnr() {
     var t = state.regnr ? 'Kjennemerke: ' + state.regnr : '';
     ['bekreft-regnr', 'resultat-regnr'].forEach(function (id) {
@@ -51,6 +76,15 @@
       if (el) { el.textContent = t; el.classList.toggle('hidden', !t); }
     });
   }
+
+  // Live-formatering av kjennemerke: SU18018 → SU 18018 (norsk format: 2 bokstaver + 4–5 siffer).
+  // Formateres mens kunden skriver — reduserer tastefeil og ser proft ut.
+  $('input-regnr').addEventListener('input', function () {
+    var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
+    var m = /^([A-Z]{2})(\d{0,5})$/.exec(v);
+    var f = m ? (m[2] ? m[1] + ' ' + m[2] : m[1]) : v;
+    if (this.value !== f) this.value = f;
+  });
 
   // 1. Start: kjennemerke → SVV-oppslag (kjennemerke → bil). ALLE kjennemerke lagres (læring).
   //    Finner vi bilen → rett til bekreft. Finner vi den ikke → manuell innfylling.
@@ -74,8 +108,14 @@
           state.merke = d.bil.merke;
           state.modell = d.bil.modell;
           state.aar = d.bil.aar;
+          state.vin = d.bil.vin || null;
+          state.forstegangsregistrert = d.bil.forstegangsregistrert || null;
+          state.import = !!d.bil.import;
+          state.importLand = d.bil.importLand || null;
+          state.resolver = d.resolver || null;
           $('bekreft-bil').textContent =
             state.merke + ' ' + state.modell + (state.aar ? ' · ' + state.aar : '');
+          renderBekreftDet();
           show('bekreft');
         } else {
           show('manual');
@@ -87,19 +127,46 @@
   });
   $('btn-manual').addEventListener('click', function () { show('manual'); });
 
-  // 2. Manuell → bekreft
+  // 2. Manuell → bekreft (SVV-detaljer ukjent: chassisnummer/dato/import nullstilles)
   $('form-manual').addEventListener('submit', function (e) {
     e.preventDefault();
     state.merke = $('m-merke').value.trim();
     state.modell = $('m-modell').value.trim();
     state.aar = parseInt($('m-aar').value, 10) || null;
+    state.vin = null;
+    state.forstegangsregistrert = null;
+    state.import = false;
+    state.importLand = null;
     $('bekreft-bil').textContent =
       (state.merke ? state.merke + ' ' : '') + state.modell + (state.aar ? ' · ' + state.aar : '');
+    renderBekreftDet();
     show('bekreft');
   });
 
-  // 3. Bekreft
-  $('btn-bekreft-ja').addEventListener('click', function () { show('glass'); });
+  // 3. Bekreft → videre. Logikk (aldri spør om ting som ikke skiller kandidatene):
+  //    PINPOINT  → ETT entydig glass → 0 spørsmål, direkte til resultat.
+  //    VERIFY    → spør KUN om funksjonene som faktisk skiller kandidatene (backend svarer).
+  //    FALLBACK  → spør om sensor/antenne/coated (kan hjelpe tekstmatchen).
+  $('btn-bekreft-ja').addEventListener('click', function () {
+    var r = state.resolver;
+    if (r && r.utfall === 'PINPOINT' && r.varenr) {
+      renderResolverResultat(r.kandidater || []);
+      return;
+    }
+    if (r && r.utfall === 'VERIFY') {
+      var skillende = (r.sporsmaal && r.sporsmaal.length) ? r.sporsmaal : [];
+      settSpm(skillende);
+      if (!spm.length) { renderResolverResultat(r.kandidater || []); return; } // ingenting å skille på → vis varianter direkte
+      spmIndex = 0;
+      spmRender();
+      show('spm');
+      return;
+    }
+    settSpm(['sensor', 'antenne', 'coated']);
+    spmIndex = 0;
+    spmRender();
+    show('spm');
+  });
   $('btn-bekreft-nei').addEventListener('click', function () { show('manual'); });
 
   // 4. Glassvalg (kun frontrute er live i beta)
@@ -112,7 +179,24 @@
     });
   });
 
-  // 5. Utstyrs-spørsmål — ett om gangen, aldri anta ("Vet ikke" er alltid tilgjengelig)
+  // 5. Utstyrs-spørsmål — KUN funksjoner som faktisk skiller kandidatene stilles.
+  //    Aldri spør om noe som ikke finnes som variant for bilen (Tom-doktrine).
+  var SPM_DEF = {
+    sensor:    { tittel: 'Har bilen regnsensor?', hjelp: 'Da starter viskerne automatisk når det regner.' },
+    antenne:   { tittel: 'Har bilen radioantenne i frontruten?', hjelp: 'Usikker? Velg «Vet ikke». Vi dobbeltsjekker før sending.' },
+    hud:       { tittel: 'Har bilen head-up display?', hjelp: 'Informasjon projiseres på frontruten foran sjåføren.' },
+    kamera:    { tittel: 'Har bilen kamera bak speilet?', hjelp: 'For eksempel filholder, nødbrems eller skiltgjenkjenning.' },
+    adas:      { tittel: 'Har bilen førerassistansesystemer?', hjelp: 'For eksempel nødbrems, filholder eller adaptiv cruise.' },
+    coated:    { tittel: 'Har frontruten et sol- eller varmedempende belegg?', hjelp: 'Dette er ofte vanskelig å se. Velg «Vet ikke» hvis du er usikker.' },
+    oppvarmet: { tittel: 'Har frontruten varmetråder i glasset?', hjelp: 'Oppvarmet frontrute har synlige tråder eller varmefelt i glasset.' }
+  };
+
+  function settSpm(funksjoner) {
+    spm = (funksjoner || []).filter(function (f) { return SPM_DEF[f]; }).map(function (f) {
+      return { key: f, tittel: SPM_DEF[f].tittel, hjelp: SPM_DEF[f].hjelp };
+    });
+  }
+
   function spmRender() {
     var q = spm[spmIndex];
     $('spm-teller').textContent = (spmIndex + 1) + '/' + spm.length;
@@ -132,12 +216,59 @@
   }
 
   function spmSvar(key, val) {
-    if (key === 'sensor') state.profil.sensor = val;
-    else if (key === 'antenne') state.profil.antenne = val;
-    else if (key === 'coated') state.profil.coated = val;
-    else state.info[key] = val; // adaskamera / oppvarmet: kun info i resultatet, ikke matcher-profilen
-    if (spmIndex < spm.length - 1) { spmIndex++; spmRender(); }
-    else { show('resultat'); lastResultat(); }
+    if (key === 'sensor' || key === 'antenne' || key === 'coated') state.profil[key] = val;
+    else state.info[key] = val; // hud / kamera / adas / oppvarmet: info i resultatet, ikke matcher-profilen
+    if (spmIndex < spm.length - 1) { spmIndex++; spmRender(); return; }
+    // Siste spørsmål besvart — velg direkte blant resolver-kandidatene når de finnes
+    var valgt = filtrerResolverKandidater();
+    if (valgt && renderResolverResultat(valgt)) return;
+    show('resultat');
+    lastResultat();
+  }
+
+  // Filtrer resolver-kandidater på kundens svar (kun besvarte funksjoner;
+  // kandidat med ukjent verdi for funksjonen strykes ikke — vi vet ikke).
+  function filtrerResolverKandidater() {
+    var r = state.resolver;
+    if (!r || !r.kandidater || !r.kandidater.length) return null;
+    var svar = {};
+    ['sensor', 'antenne', 'coated'].forEach(function (k) {
+      if (state.profil[k] === true || state.profil[k] === false) svar[k] = state.profil[k];
+    });
+    ['hud', 'kamera', 'adas', 'oppvarmet'].forEach(function (k) {
+      if (state.info[k] === true || state.info[k] === false) svar[k] = state.info[k];
+    });
+    var nokler = Object.keys(svar);
+    if (!nokler.length) return r.kandidater;
+    return r.kandidater.filter(function (k) {
+      return nokler.every(function (nk) {
+        var kv = k.attributter && k.attributter[nk];
+        return kv == null || kv === svar[nk];
+      });
+    });
+  }
+
+  // Bygg resultat-visning direkte fra resolver-kandidater (ingen /api/frontrute-kall).
+  // 1 kandidat → PINPOINT (pris direkte). Flere → prisspenn + varianter.
+  function renderResolverResultat(kandidater) {
+    if (!kandidater || !kandidater.length) return false;
+    var en = kandidater.length === 1 ? kandidater[0] : null;
+    var billigste = kandidater.slice().sort(function (a, b) {
+      return (a.pris == null ? Infinity : a.pris) - (b.pris == null ? Infinity : b.pris);
+    })[0];
+    var valg = en || billigste;
+    renderResultat({
+      pinpoint: !!en,
+      anbefaling: {
+        varenr: valg.varenr,
+        eurokode: valg.eurokode || null,
+        pris: valg.pris != null ? valg.pris : null
+      },
+      kandidater: kandidater,
+      meta: { resolver: true }
+    });
+    show('resultat');
+    return true;
   }
 
   // 6. Resultat — kall Worker /api/frontrute.
@@ -158,9 +289,30 @@
   }
 
   function lblEgenskap(e) {
-    var map = { coated: 'coating', sensor: 'regnsensor', antenne: 'antenne', solar: 'solar',
-      oppvarmet: 'oppvarmet', elektrisk: 'el', innkapslet: 'innkapslet', sensorgel: 'sensorgel' };
+    var map = { coated: 'sol-/varmedempende belegg', sensor: 'regnsensor', antenne: 'antenne i glasset', solar: 'solbeskyttelse',
+      oppvarmet: 'oppvarmet', elektrisk: 'elektrisk', innkapslet: 'innkapslet', sensorgel: 'sensorfeste' };
     return map[e] || e;
+  }
+
+  function prisData(data, anbefaling) {
+    var kandidater = Array.isArray(data && data.kandidater) ? data.kandidater : [];
+    var priser = kandidater
+      .map(function (k) { return k && typeof k.pris === 'number' ? k.pris : null; })
+      .filter(function (p) { return p != null; });
+    var harResolver = !!(data && data.meta && data.meta.resolver);
+    if (data && data.pinpoint && anbefaling && anbefaling.pris != null) {
+      return { label: 'Pris inkl. mva', verdi: formatPris(anbefaling.pris) };
+    }
+    if (harResolver && priser.length > 1) {
+      var min = Math.min.apply(Math, priser);
+      var max = Math.max.apply(Math, priser);
+      if (min === max) return { label: 'Pris inkl. mva', verdi: formatPris(min) };
+      return { label: 'Pris avhenger av variant', verdi: formatPris(min) + '–' + formatPris(max) };
+    }
+    if (anbefaling && anbefaling.pris != null) {
+      return { label: harResolver ? 'Narmeste pris inkl. mva' : 'Pris inkl. mva', verdi: formatPris(anbefaling.pris) };
+    }
+    return { label: 'Pris', verdi: 'Pris pa foresporsel' };
   }
 
   function renderResultat(data) {
@@ -172,10 +324,13 @@
     }
     var st = $('resultat-status');
     if (data.pinpoint) {
-      st.textContent = '✓ Dette er glasset til din bil';
+      st.textContent = 'Vi har funnet en eksakt match til bilen din.';
       st.className = 'note status pinpoint';
+    } else if (data && data.meta && data.meta.resolver) {
+      st.textContent = 'Vi har funnet flere mulige varianter. Dette er naermeste pris og beste kandidat akkurat na, og vi dobbeltsjekker riktig rute for bilen din før sending.';
+      st.className = 'note status verify';
     } else {
-      st.textContent = 'Flere varianter passer. Vi viser den som passer best — og dobbeltsjekker mot bilens VIN før vi sender.';
+      st.textContent = 'Vi har funnet beste kandidat ut fra bildataene dine. Vi dobbeltsjekker riktig rute før sending.';
       st.className = 'note status';
     }
     st.classList.remove('hidden');
@@ -194,22 +349,23 @@
     var specs = [];
     if (state.profil.sensor === true) specs.push('med regnsensor');
     if (state.profil.sensor === false) specs.push('uten regnsensor');
-    if (state.profil.antenne === true) specs.push('med antenne');
-    if (state.profil.coated === true) specs.push('med coating');
-    if (state.profil.coated === false) specs.push('uten coating');
-    if (state.info.adaskamera === true) specs.push('kamera/ADAS');
+    if (state.profil.antenne === true) specs.push('med antenne i glasset');
+    if (state.profil.coated === true) specs.push('med sol-/varmedempende belegg');
+    if (state.profil.coated === false) specs.push('uten sol-/varmedempende belegg');
+    if (state.info.adaskamera === true) specs.push('med kamera/foererassistansesystem');
     if (state.info.oppvarmet === true) specs.push('oppvarmet');
     kort.querySelector('.spec').textContent = specs.join(' · ');
 
-    $('resultat-pris').textContent =
-      a.pris == null ? 'Pris på forespørsel' : formatPris(a.pris);
+    var pris = prisData(data, a);
+    $('resultat-prislbl').textContent = pris.label;
+    $('resultat-pris').textContent = pris.verdi;
 
     var alt = $('resultat-alt');
     alt.innerHTML = '';
     if (data.kandidater && data.kandidater.length > 1 && !data.pinpoint) {
       var t = document.createElement('p');
       t.className = 'note';
-      t.textContent = 'Andre varianter:';
+      t.textContent = 'Andre mulige varianter:';
       alt.appendChild(t);
       data.kandidater.slice(1, 4).forEach(function (k) {
         var row = document.createElement('div');
@@ -242,4 +398,12 @@
       show(t === 'spm' ? 'start' : t); // «Nytt søk» fra resultat → start
     });
   });
+
+  // Service worker: cache-first statisk + network-first HTML (80 % mobil = raske gjentatte besøk).
+  // Kun https (aldri file://-demo). Registreres etter load for ikke å konkurrere med første maling.
+  if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function () { /* ikke-kritisk */ });
+    });
+  }
 })();
