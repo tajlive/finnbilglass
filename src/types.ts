@@ -4,4 +4,5 @@ export interface Env {
   ASSETS: Fetcher;
   ENVIRONMENT: string;
   SVV_API_KEY?: string;
+  IMAGE_RESOLVER_SECRET?: string;
 }

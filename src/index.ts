@@ -6,12 +6,21 @@
 import type { Env } from './types';
 import { matchFrontrute, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
+import { resolverModus } from './kill-switch';
 import { svvLookup } from './svv';
+import {
+  resolveImageObservations,
+  type ImageObservation,
+} from './image-resolver';
+import type {
+  EvidenceSignal,
+  FusionCandidate,
+} from './evidence-fusion';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 function json(data: unknown, status = 200): Response {
@@ -52,6 +61,78 @@ function validateBil(body: unknown): BilInput | string {
   return bil;
 }
 
+function isRecord(x: unknown): x is Record<string, unknown> {
+  return !!x && typeof x === 'object' && !Array.isArray(x);
+}
+
+function validateImageResolverBody(body: unknown):
+  | {
+      queryRef: string;
+      candidates: FusionCandidate[];
+      observations: ImageObservation[];
+      existingSignals: EvidenceSignal[];
+    }
+  | string {
+  if (!isRecord(body)) return 'JSON-body påkrevd';
+  const queryRef = typeof body.queryRef === 'string' && body.queryRef.trim()
+    ? body.queryRef.trim().slice(0, 120)
+    : `img-${crypto.randomUUID()}`;
+  if (!Array.isArray(body.candidates) || body.candidates.length === 0) return 'candidates påkrevd';
+  if (!Array.isArray(body.observations) || body.observations.length === 0) return 'observations påkrevd';
+
+  const candidates = body.candidates.slice(0, 25).map((raw) => {
+    if (!isRecord(raw)) throw new Error('ugyldig kandidat');
+    const glassId = typeof raw.glassId === 'string' ? raw.glassId.trim() : '';
+    if (!glassId) throw new Error('candidate.glassId påkrevd');
+    const oemNumbers = Array.isArray(raw.oemNumbers) ? raw.oemNumbers.filter((v): v is string => typeof v === 'string') : [];
+    const features = isRecord(raw.features) ? raw.features : {};
+    const normalizedFeatures: Record<string, boolean | null> = {};
+    for (const [k, v] of Object.entries(features)) {
+      if (typeof v === 'boolean' || v === null) normalizedFeatures[k] = v;
+    }
+    return {
+      glassId,
+      eurocode: typeof raw.eurocode === 'string' ? raw.eurocode : null,
+      oemNumbers,
+      features: normalizedFeatures,
+      sellable: raw.sellable !== false,
+      priceTier: typeof raw.priceTier === 'number' ? raw.priceTier : null,
+      label: typeof raw.label === 'string' ? raw.label : undefined,
+    };
+  });
+
+  const observations = body.observations.slice(0, 6).map((raw) => {
+    if (!isRecord(raw)) throw new Error('ugyldig observation');
+    const imageId = typeof raw.imageId === 'string' ? raw.imageId.trim() : '';
+    const modelVersion = typeof raw.modelVersion === 'string' ? raw.modelVersion.trim() : '';
+    if (!imageId || !modelVersion) throw new Error('observation.imageId og modelVersion påkrevd');
+    return {
+      imageId,
+      role: typeof raw.role === 'string' ? raw.role as ImageObservation['role'] : 'unknown',
+      inputHash: typeof raw.inputHash === 'string' ? raw.inputHash : undefined,
+      modelVersion,
+      rawText: typeof raw.rawText === 'string' ? raw.rawText.slice(0, 5000) : undefined,
+      eurocodes: Array.isArray(raw.eurocodes) ? raw.eurocodes : [],
+      oemNumbers: Array.isArray(raw.oemNumbers) ? raw.oemNumbers : [],
+      features: Array.isArray(raw.features) ? raw.features : [],
+      similarities: Array.isArray(raw.similarities) ? raw.similarities : [],
+      warnings: Array.isArray(raw.warnings) ? raw.warnings.filter((v): v is string => typeof v === 'string') : [],
+    };
+  });
+
+  const existingSignals = Array.isArray(body.existingSignals)
+    ? body.existingSignals.filter(isRecord) as unknown as EvidenceSignal[]
+    : [];
+
+  return { queryRef, candidates, observations, existingSignals };
+}
+
+function hasImageResolverAccess(request: Request, env: Env): boolean {
+  if (!env.IMAGE_RESOLVER_SECRET) return env.ENVIRONMENT !== 'production';
+  const auth = request.headers.get('Authorization') ?? '';
+  return auth === `Bearer ${env.IMAGE_RESOLVER_SECRET}`;
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -76,15 +157,27 @@ export default {
       if (typeof bil === 'string') return json({ ok: false, error: bil }, 400);
       try {
         // Resolver først (PINPOINT/VERIFY). FALLBACK → eksisterende tekstmatcher (uendret).
-        const resolver = await resolveFrontrute(env, bil);
+        // Kill switch (G6): resolver_all → tvungen FALLBACK; resolver_pinpoint → degrader til VERIFY.
+        let resolver = await resolveFrontrute(env, bil);
+        const modus = await resolverModus(env, resolver.utfall);
+        if (modus !== resolver.utfall) {
+          resolver = { ...resolver, utfall: modus, grunn: `kill switch: ${resolver.utfall}→${modus} (${resolver.grunn})` };
+        }
         if (resolver.utfall !== 'FALLBACK') {
+          const topp = resolver.kandidater?.[0] ?? null;
           return json({
             ok: true,
             ...resolver,
             pinpoint: resolver.utfall === 'PINPOINT',
             anbefaling: resolver.utfall === 'PINPOINT'
               ? { varenr: resolver.varenr, varenavn: resolver.varenavn, pris: resolver.pris, listepris: resolver.listepris, eurokode: resolver.eurokode }
-              : null,
+              : (topp ? {
+                  varenr: topp.varenr,
+                  varenavn: topp.varenavn,
+                  pris: topp.pris,
+                  listepris: topp.listepris,
+                  eurokode: topp.eurokode,
+                } : null),
             meta: { resolver: true, grunn: resolver.grunn },
           });
         }
@@ -147,6 +240,46 @@ export default {
         }
       }
       return json({ ok: true, lagret, bil, resolver });
+    }
+
+    if (method === 'POST' && path === '/api/image-resolver') {
+      if (!hasImageResolverAccess(request, env)) return json({ ok: false, error: 'Ikke autorisert' }, 401);
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: 'Ugyldig JSON' }, 400);
+      }
+      try {
+        const parsed = validateImageResolverBody(body);
+        if (typeof parsed === 'string') return json({ ok: false, error: parsed }, 400);
+
+        const result = resolveImageObservations(parsed.candidates, parsed.observations, parsed.existingSignals);
+        try {
+          await env.FINNBILGLASS_DB.prepare(
+            `INSERT INTO image_resolution_audit
+             (query_ref, request_json, response_json, outcome, confidence, resolver_version)
+             VALUES (?, ?, ?, ?, ?, ?)`
+          ).bind(
+            parsed.queryRef,
+            JSON.stringify({
+              candidates: parsed.candidates,
+              observations: parsed.observations,
+              existingSignals: parsed.existingSignals,
+            }),
+            JSON.stringify(result),
+            result.outcome,
+            result.fusion.confidence,
+            result.resolverVersion,
+          ).run();
+        } catch (e) {
+          console.error('image-resolver audit feilet:', e);
+        }
+
+        return json({ ok: true, queryRef: parsed.queryRef, ...result });
+      } catch (e) {
+        return json({ ok: false, error: e instanceof Error ? e.message : 'Ugyldig bilde-resolver payload' }, 400);
+      }
     }
 
     // Alt annet (/, index.html, styles.css, app.js, …) → statiske assets fra public/

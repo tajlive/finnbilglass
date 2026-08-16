@@ -17,6 +17,7 @@
  * Bruk:
  *   node scripts/import-resolver-data.mjs            # staging (default)
  *   node scripts/import-resolver-data.mjs --db navn  # annen DB
+ *   node scripts/import-resolver-data.mjs --require-live
  *   B2B_CLOUDFLARE_API_TOKEN=... node scripts/import-resolver-data.mjs
  */
 import { execFileSync } from 'node:child_process';
@@ -30,7 +31,22 @@ const OUT = '/tmp/resolver-import';
 const DB = process.argv.includes('--db')
   ? process.argv[process.argv.indexOf('--db') + 1]
   : 'finnbilglass-db-staging';
+const REQUIRE_LIVE = process.argv.includes('--require-live');
+
+loadDotEnvLocal();
+
 const LIVE = !!(process.env.B2B_CLOUDFLARE_API_TOKEN && process.env.B2B_CLOUDFLARE_ACCOUNT_ID);
+if (REQUIRE_LIVE && !LIVE) {
+  console.error([
+    'B2B-live import er påkrevd, men token mangler.',
+    'Sett i miljøet eller .env.local:',
+    '  B2B_CLOUDFLARE_API_TOKEN=<token for B2B-konto med D1 read/export>',
+    '  B2B_CLOUDFLARE_ACCOUNT_ID=<B2B account id>',
+    '',
+    'Ingen staging-tabeller er endret.',
+  ].join('\n'));
+  process.exit(2);
+}
 
 mkdirSync(OUT, { recursive: true });
 
@@ -84,6 +100,22 @@ function vn(raw) {
 // ---------------------------------------------------------------------------
 // Hjelpere
 // ---------------------------------------------------------------------------
+function loadDotEnvLocal() {
+  const envPath = join(ROOT, '.env.local');
+  if (!existsSync(envPath)) return;
+  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const m = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(trimmed);
+    if (!m || process.env[m[1]] != null) continue;
+    let value = m[2].trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    process.env[m[1]] = value;
+  }
+}
+
 function run(args, env = {}) {
   try {
     execFileSync('npx', args, { stdio: 'pipe', env: { ...process.env, ...env } });
@@ -223,6 +255,7 @@ if (ktOut.length) {
 if (LIVE) {
   console.log('  B2B-live-modus: eksporterer fra glass-catalog-db …');
   const b2bEnv = { CLOUDFLARE_API_TOKEN: process.env.B2B_CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID: process.env.B2B_CLOUDFLARE_ACCOUNT_ID };
+  run(['wrangler', 'd1', 'execute', 'glass-catalog-db', '--remote', '--json', '--command', 'SELECT COUNT(*) AS n FROM vin_ktype_map LIMIT 1'], b2bEnv);
   for (const [table, outFile] of [['vin_ktype_map', 'b2b_vin_ktype_map.sql'], ['ground_truth', 'b2b_ground_truth.sql'], ['glass_catalog', 'b2b_glass_catalog.sql'], ['oe_eurocode_mapping', 'b2b_oe.sql']]) {
     try {
       run(['wrangler', 'd1', 'export', 'glass-catalog-db', '--remote', '--no-schema', '--table', table, '--output', join(OUT, outFile)], b2bEnv);

@@ -1,14 +1,14 @@
 {
-  "generert": "2026-08-13T16:09:19.192Z",
+  "generert": "2026-08-13T17:56:35.470Z",
   "base": "https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev",
   "total": 110,
   "fordeling": {
-    "correct_pinpoint": 12,
+    "correct_pinpoint": 11,
     "wrong_pinpoint": 0,
-    "verify": 73,
-    "fallback": 25
+    "verify": 77,
+    "fallback": 20
   },
-  "apiFeil": 0,
+  "apiFeil": 2,
   "detaljer": [
     {
       "regnr": "AE13412",
@@ -32,12 +32,12 @@
     },
     {
       "regnr": "LH90120",
-      "klasse": "fallback",
+      "klasse": "verify",
       "bil": "VW CARAVELLE TDI 2000",
-      "utfall": "FALLBACK",
-      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 0,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -105,7 +105,7 @@
       "klasse": "verify",
       "bil": "AUDI A5 2008",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 16 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 17 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -122,13 +122,13 @@
     },
     {
       "regnr": "AA78283",
-      "klasse": "correct_pinpoint",
+      "klasse": "verify",
       "bil": "PEUGEOT EXPERT 2025",
-      "utfall": "PINPOINT",
-      "grunn": "L2 (glass_catalog): entydig treff (1 kandidat)",
-      "treff": "27943GN (? kr)",
-      "antallKandidater": 1,
-      "bekreftet": true
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
+      "treff": null,
+      "antallKandidater": 4,
+      "bekreftet": null
     },
     {
       "regnr": "NH12612",
@@ -305,9 +305,9 @@
       "klasse": "verify",
       "bil": "MITSUBISHI MITSUBISHI PAJERO 2012",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 12 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 4,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -325,7 +325,7 @@
       "klasse": "verify",
       "bil": "PEUGEOT 207 2011",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 20 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -345,19 +345,19 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA RAV4 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 3,
+      "antallKandidater": 4,
       "bekreftet": null
     },
     {
       "regnr": "RH69811",
-      "klasse": "fallback",
+      "klasse": "verify",
       "bil": "MITSUBISHI L200 1999",
-      "utfall": "FALLBACK",
-      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 0,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -365,7 +365,7 @@
       "klasse": "verify",
       "bil": "JAGUAR JAGUAR XF 2018",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 11 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 15 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -415,7 +415,7 @@
       "klasse": "verify",
       "bil": "MITSUBISHI OUTLANDER 2009",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 10 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -435,7 +435,7 @@
       "klasse": "verify",
       "bil": "VW TOUAREG 2004",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 7 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -495,27 +495,21 @@
       "klasse": "verify",
       "bil": "VW CADDY 2012",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 18 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 22 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
     },
     {
       "regnr": "TV92229",
-      "klasse": "verify",
-      "bil": "VW TOURAN 2017",
-      "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 24 varianter — utstyr må verifiseres",
-      "treff": null,
-      "antallKandidater": 6,
-      "bekreftet": null
+      "klasse": "svv_eller_resolver_mangler"
     },
     {
       "regnr": "JV35505",
       "klasse": "verify",
       "bil": "VW CADDY 2023",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 25 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 29 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -545,7 +539,7 @@
       "klasse": "verify",
       "bil": "VW CADDY 2018",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 23 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -575,7 +569,7 @@
       "klasse": "verify",
       "bil": "VW CADDY 2020",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 27 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 31 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -595,7 +589,7 @@
       "klasse": "verify",
       "bil": "VW TOURAN 2012",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 21 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -635,9 +629,9 @@
       "klasse": "verify",
       "bil": "VW PASSAT 2010",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 11 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 3,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -645,7 +639,7 @@
       "klasse": "verify",
       "bil": "VW CADDY 2012",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 18 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 22 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -665,7 +659,7 @@
       "klasse": "verify",
       "bil": "VW CADDY 2022",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 25 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 29 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -755,7 +749,7 @@
       "klasse": "verify",
       "bil": "VW TIGUAN 2013",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 13 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 17 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -765,7 +759,7 @@
       "klasse": "verify",
       "bil": "VW CADDY 2008",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 14 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 18 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -845,19 +839,19 @@
       "klasse": "verify",
       "bil": "VW EOS 2007",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 4,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
       "regnr": "ST30377",
-      "klasse": "fallback",
+      "klasse": "verify",
       "bil": "TOYOTA CAMRY 1999",
-      "utfall": "FALLBACK",
-      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 8 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 0,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -865,7 +859,7 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA COROLLA 2023",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -885,9 +879,9 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA RAV4 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 3,
+      "antallKandidater": 4,
       "bekreftet": null
     },
     {
@@ -905,9 +899,9 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA RAV4 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 3,
+      "antallKandidater": 4,
       "bekreftet": null
     },
     {
@@ -925,9 +919,9 @@
       "klasse": "verify",
       "bil": "TOYOTA RAV4 2005",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 5 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 13 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 5,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -935,9 +929,9 @@
       "klasse": "verify",
       "bil": "TOYOTA RAV4 2007",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 5 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 13 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 5,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -965,19 +959,19 @@
       "klasse": "verify",
       "bil": "TOYOTA COROLLA 2023",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
     },
     {
       "regnr": "BR67700",
-      "klasse": "fallback",
+      "klasse": "verify",
       "bil": "TOYOTA LAND CRUISER 2008",
-      "utfall": "FALLBACK",
-      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 13 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 0,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -985,7 +979,7 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA COROLLA 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -995,9 +989,9 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA RAV4 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 3,
+      "antallKandidater": 4,
       "bekreftet": null
     },
     {
@@ -1015,19 +1009,19 @@
       "klasse": "verify",
       "bil": "TOYOTA RAV4 2023",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 3,
+      "antallKandidater": 4,
       "bekreftet": null
     },
     {
       "regnr": "BU28171",
-      "klasse": "fallback",
+      "klasse": "verify",
       "bil": "TOYOTA LAND CRUISER (150 SERIES) 2021",
-      "utfall": "FALLBACK",
-      "grunn": "ingen resolver-data — tekstmatcher overtar",
+      "utfall": "VERIFY",
+      "grunn": "L2 (glass_catalog): 9 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 0,
+      "antallKandidater": 6,
       "bekreftet": null
     },
     {
@@ -1035,9 +1029,9 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA RAV4 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 3,
+      "antallKandidater": 4,
       "bekreftet": null
     },
     {
@@ -1045,9 +1039,9 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA RAV4 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 3 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 4 varianter — utstyr må verifiseres",
       "treff": null,
-      "antallKandidater": 3,
+      "antallKandidater": 4,
       "bekreftet": null
     },
     {
@@ -1055,7 +1049,7 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA COROLLA 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
@@ -1065,27 +1059,21 @@
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA COROLLA 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
     },
     {
       "regnr": "HK18790",
-      "klasse": "verify",
-      "bil": "TOYOTA TOYOTA COROLLA 2024",
-      "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
-      "treff": null,
-      "antallKandidater": 6,
-      "bekreftet": null
+      "klasse": "svv_eller_resolver_mangler"
     },
     {
       "regnr": "HK18789",
       "klasse": "verify",
       "bil": "TOYOTA TOYOTA COROLLA 2024",
       "utfall": "VERIFY",
-      "grunn": "L2 (glass_catalog): 6 varianter — utstyr må verifiseres",
+      "grunn": "L2 (glass_catalog): 19 varianter — utstyr må verifiseres",
       "treff": null,
       "antallKandidater": 6,
       "bekreftet": null
