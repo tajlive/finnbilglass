@@ -1,0 +1,27 @@
+{
+  "_doktrine": "ENESTE sannhetskilde for Tom-verifiserte glass-fasiter. Alle vin_glass_overrides, seed-SQL og regresjonstester MÅ matche denne filen — tests/fasit-integritet.test.mjs håndhever det. En fasit får KUN endres med eksplisitt Tom-bekreftelse i chat, og da oppdateres 'kilde' med dato + sitat-referanse.",
+  "_laerdom": "2026-08-16: SU18018 lå 3 døgn i prod med FEIL glass (2525CSGY/8579ACSGYAVZ1B, coated, 14 045 kr) fordi overriden 2026-08-13 ble merket 'Tom-fasit' uten sporbar kilde. Riktig er 2525GYA. Regel: ingen override uten oppføring her.",
+  "fasiter": [
+    {
+      "regnr": "SU18018",
+      "vin": "WV1ZZZ7HZ5H060934",
+      "bil": "VW Transporter T5 2005",
+      "varenr": "2525GYA",
+      "eurocode": "8579AGSGYAVZ1B",
+      "egenskaper": "INNK+ANT, IKKE coated",
+      "listepris": 9980,
+      "kilde": "Tom i chat 2026-08-16: '2525CSGY ER IKKE RIKTIG GLASS' — korrigert fra 8579ACSGYAVZ1B (2525CSGY, coated, 14 045 kr)",
+      "verifisert": "2026-08-16"
+    },
+    {
+      "regnr": "AJ95429",
+      "vin": null,
+      "bil": "Mercedes CLA 2016",
+      "varenr": null,
+      "eurocode": null,
+      "forventet_utfall": "VERIFY",
+      "kilde": "Tom-fasit 2026-08-13: tvetydig datagrunnlag (1B/1T-varianter) — aldri tving PINPOINT",
+      "verifisert": "2026-08-13"
+    }
+  ]
+}
