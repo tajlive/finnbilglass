@@ -12,6 +12,7 @@ database_id = "ac35018c-0d43-4742-adf8-d881b7274684"
 
 # ── Secrets (IKKE i denne filen — bruk wrangler secret put): ──
 #    wrangler secret put SVV_API_KEY   (kjennemerke → bil, kommende)
+#    wrangler secret put IMAGE_RESOLVER_SECRET  (pilot-API for B2B/FinnBilGlass)
 #    wrangler secret put CRON_SECRET
 
 [vars]

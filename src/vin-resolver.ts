@@ -47,6 +47,8 @@ export interface ResolverResultat {
   listepris?: number | null;
   eurokode?: string | null;
   kandidater?: ResolverKandidat[];
+  /** Spørsmål som FAKTISK skiller kandidatene (VERIFY) — tom liste = ingen spørsmål nødvendig. */
+  sporsmaal?: string[];
 }
 
 interface Env { FINNBILGLASS_DB: D1Database }
@@ -141,21 +143,50 @@ function modellAarIntervall(model: string | null): { start: number; slutt: numbe
   return m ? { start: parseInt(m[0], 10), slutt: Infinity } : null;
 }
 
-/** Prisliste-oppslag på varenr ELLER eurokode (rad_type='glass'). */
+/** Prisliste-oppslag på varenr ELLER eurokode (rad_type='glass').
+ *  Attributter fylles fra glass_catalog (rain_sensor/antenna/hud/camera/adas)
+ *  når eurokoden finnes der — så ALLE lag (L0/L1/L3) får utstyrsdata, ikke bare L2. */
 async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | null> {
   const r = await env.FINNBILGLASS_DB.prepare(
     `SELECT varenr, varenavn, pris, eurokode FROM autoglass_prisliste
      WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
   ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>();
   if (!r) return null;
+  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null };
+  if (r.eurokode) {
+    const f = await env.FINNBILGLASS_DB.prepare(
+      `SELECT rain_sensor, antenna, hud, camera, adas FROM glass_catalog WHERE eurocode = ? LIMIT 1`
+    ).bind(r.eurokode).first<{
+      rain_sensor: number | null; antenna: number | null; hud: number | null; camera: number | null; adas: number | null;
+    }>();
+    if (f) {
+      attributter.sensor = f.rain_sensor == null ? null : f.rain_sensor === 1;
+      attributter.antenne = f.antenna == null ? null : f.antenna === 1;
+      attributter.hud = f.hud == null ? null : f.hud === 1;
+      attributter.kamera = f.camera == null ? null : f.camera === 1;
+      attributter.adas = f.adas == null ? null : f.adas === 1;
+    }
+  }
   return {
     varenr: r.varenr,
     varenavn: r.varenavn,
     pris: tierPris(r.pris),
     listepris: r.pris,
     eurokode: r.eurokode,
-    attributter: { sensor: null, antenne: null, hud: null, kamera: null, adas: null },
+    attributter,
   };
+}
+
+/** Spørsmål som FAKTISK skiller kandidatene: felt der minst én kandidat har true OG minst én har false.
+ *  Ukjente verdier (null) teller ikke — vi spør aldri om ting vi ikke kan skille på. */
+export function skillendeSporsmaal(kandidater: ResolverKandidat[]): string[] {
+  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'kamera', 'adas'];
+  const ut: string[] = [];
+  for (const f of felt) {
+    const verdier = kandidater.map((k) => k.attributter[f]).filter((v): v is boolean => typeof v === 'boolean');
+    if (verdier.some((v) => v) && verdier.some((v) => !v)) ut.push(f);
+  }
+  return ut;
 }
 
 function normVin(vin: string | null | undefined): string | null {
@@ -377,6 +408,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
         grunn: `L${lag}: 1 kandidat, men ikke bekreftet av ground_truth — utstyr må verifiseres`,
         confidence: Math.min(confidence, 0.5),
         kandidater: [k],
+        sporsmaal: skillendeSporsmaal([k]),
       };
     }
     return {
@@ -389,6 +421,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
       listepris: k.listepris,
       eurokode: k.eurokode,
       kandidater: [k],
+      sporsmaal: [],
     };
   }
   return {
@@ -396,6 +429,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
     grunn: `L${lag}: ${kandidater.length} varianter — utstyr må verifiseres`,
     confidence: Math.min(confidence, 0.5),
     kandidater: kandidater.slice(0, 6),
+    sporsmaal: skillendeSporsmaal(kandidater.slice(0, 6)),
   };
 }
 

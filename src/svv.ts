@@ -10,7 +10,24 @@ export interface SvvBil {
   vin: string | null;
   farge: string | null;
   registrert: boolean;
+  /** Full førstegangsregistreringsdato i Norge (ISO: 2005-04-20). */
+  forstegangsregistrert: string | null;
+  /** True hvis bilen er importert (fortollingsreferanse finnes). */
+  import: boolean;
+  /** Norsk navn på importland (f.eks. «Storbritannia») — null hvis ikke import/ukjent. */
+  importLand: string | null;
 }
+
+/** ISO-3166 alpha-2 → norsk landnavn (vanligste importland til Norge). */
+const LAND_NAVN: Record<string, string> = {
+  SE: 'Sverige', DE: 'Tyskland', DK: 'Danmark', NL: 'Nederland', GB: 'Storbritannia',
+  BE: 'Belgia', FI: 'Finland', FR: 'Frankrike', AT: 'Østerrike', CH: 'Sveits',
+  PL: 'Polen', ES: 'Spania', IT: 'Italia', US: 'USA', JP: 'Japan', KR: 'Sør-Korea',
+  CN: 'Kina', IE: 'Irland', CZ: 'Tsjekkia', LU: 'Luxembourg', NO: 'Norge',
+  PT: 'Portugal', HU: 'Ungarn', SK: 'Slovakia', EE: 'Estland', LV: 'Latvia',
+  LT: 'Litauen', RO: 'Romania', BG: 'Bulgaria', GR: 'Hellas', IS: 'Island',
+  AU: 'Australia', CA: 'Canada', MX: 'Mexico', TR: 'Tyrkia', TH: 'Thailand',
+};
 
 /** Katalog-navn for merker avviker fra SVV (f.eks. MERCEDES-BENZ → MERCEDES). */
 const MERKE_ALIAS: Record<string, string> = {
@@ -57,6 +74,12 @@ export async function svvLookup(regnrNorm: string, apiKey: string | undefined): 
               karosseriOgLasteplan?: { rFarge?: Array<{ kodeNavn?: string }> };
             };
           };
+          forstegangsGodkjenning?: {
+            fortollingOgMva?: {
+              fortollingsreferanse?: string;
+              beskrivelse?: string;
+            };
+          };
         };
       }>;
     };
@@ -68,6 +91,10 @@ export async function svvLookup(regnrNorm: string, apiKey: string | undefined): 
     if (!merke) return null;
     const regDato = k.forstegangsregistrering?.registrertForstegangNorgeDato ?? '';
     const aar = regDato ? parseInt(regDato.slice(0, 4), 10) : null;
+    // Import-deteksjon: fortollingsreferanse finnes = bilen er fortollet/importert.
+    // Land: første token i beskrivelsen er ISO-landkode (f.eks. «GB BMW X3 …»).
+    const fortoll = k.godkjenning?.forstegangsGodkjenning?.fortollingOgMva;
+    const importLandKode = fortoll?.beskrivelse ? /^([A-Z]{2})\b/.exec(fortoll.beskrivelse.trim())?.[1] : undefined;
     return {
       merke,
       modell,
@@ -75,6 +102,9 @@ export async function svvLookup(regnrNorm: string, apiKey: string | undefined): 
       vin: k.kjoretoyId?.understellsnummer ?? null,
       farge: k.godkjenning?.tekniskGodkjenning?.tekniskeData?.karosseriOgLasteplan?.rFarge?.[0]?.kodeNavn ?? null,
       registrert: k.registrering?.registreringsstatus?.kodeVerdi === 'REGISTRERT',
+      forstegangsregistrert: regDato || null,
+      import: !!fortoll?.fortollingsreferanse,
+      importLand: importLandKode ? LAND_NAVN[importLandKode] ?? importLandKode : null,
     };
   } catch (e) {
     console.error('SVV-oppslag feilet:', e instanceof Error ? e.message : String(e));
