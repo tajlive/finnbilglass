@@ -19,7 +19,7 @@ import type { BilInput } from './matcher';
 import { tierPris } from './matcher';
 import { matcherAar, parseAar } from './aar-parser';
 import { serieKey, normaliserKatalogModell } from './serie-mapping';
-import { dekodeEurokode } from './eurokode-dekoder';
+import { dekodeEurokode, type Dekodet } from './eurokode-dekoder';
 
 export type ResolverUtfall = 'PINPOINT' | 'VERIFY' | 'FALLBACK';
 
@@ -145,32 +145,51 @@ function modellAarIntervall(model: string | null): { start: number; slutt: numbe
   return m ? { start: parseInt(m[0], 10), slutt: Infinity } : null;
 }
 
-/** Prisliste-oppslag på varenr ELLER eurokode (rad_type='glass').
- *  Attributter: primær = glass_catalog (Pilkington-flagg), fallback = eurokode-dekoder.
- *  Eurokode-dekoderen er autoritativ for A/M/C/H-bokstaver (Tom 2026-08-13) og
- *  brukes når glass_catalog-flagget er null — sikrer at T5-familien og lignende
- *  familier der glass_catalog mangler flagg likevel får riktige attributter for
- *  skillendeSporsmaal() og PINPOINT-gaten. */
+/** Ikke-frontrute-keywords (samme liste som scripts/gt-generator.mjs sin erFrontrute). */
+const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE', 'SUNROOF', 'SOLTAK',
+  'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT', 'PYNTELIST', 'GUMMILIST', 'KLIPS'];
+
+/** Er raden en FRONTRUTE-kandidat? Samme doktrine som gt-generator.mjs: avvis KUN klare
+ *  ikke-frontrute-signaler (bak/side/dør/ventil-posisjon, takglass/keywords, side-glass-varenr
+ *  L/R etter 3–5-sifret prefiks). 2-sifrede veteran-koder og OEM-delnummer uten side/bak-markør
+ *  faller gjennom som frontrute-kandidater (aldri false-negative — Tom-doktrine). */
+function erFrontrute(varenavn: string | null, varenr: string, dek: Dekodet): boolean {
+  const n = (varenavn ?? '').toUpperCase();
+  if (IKKE_FRONTRUTE.some((k) => n.includes(k))) return false;
+  if (/^\d{3,5}[LR]/.test(varenr)) return false; // side-glass-varenr (8103LGAR5, 26270LFWXBYN)
+  if (dek.posisjon && dek.posisjon !== 'frontrute') return false; // bak/side/dør/ventil
+  return true; // frontrute-posisjon ELLER ukjent (veteran/OEM) → kandidat
+}
+
+/** Prisliste-oppslag på varenr ELLER eurokode (rad_type='glass'), frontrute-gated.
+ *  Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13);
+ *  glass_catalog brukes KUN for kamera/adas (ikke kodet i eurokoden). Ikke-frontrute
+ *  (bak/side/dør/takglass) og OEM-delnummer uten FRONTR-markør returnerer null. */
 async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | null> {
   const r = await env.FINNBILGLASS_DB.prepare(
     `SELECT varenr, varenavn, pris, eurokode FROM autoglass_prisliste
      WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
   ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>();
   if (!r) return null;
+
+  const dek = dekodeEurokode(r.eurokode);
+  if (!erFrontrute(r.varenavn, r.varenr, dek)) return null; // bak/side/dør/takglass
+
   const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
 
-  // Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13).
-  // glass_catalog brukes KUN for kamera og adas (ikke kodet i eurokoden).
-  if (r.eurokode) {
-    const dek = dekodeEurokode(r.eurokode);
+  // Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13),
+  // men KUN når koden faktisk er en eurokode (gyldig posisjonsbokstav). OEM-delnummer
+  // (f.eks. VW 7H0877051) har posisjon=null — da er A/M/C/H ukjent (null), ikke false.
+  if (dek.posisjon) {
     const eg = dek.egenskaper;
-    // Direkte fra eurokoden (autoritativ)
     attributter.sensor  = eg.includes('sensor');
     attributter.antenne = eg.includes('antenne');
     attributter.hud     = eg.includes('oppvarmet');
     attributter.coated  = eg.includes('coated');
+  }
 
-    // glass_catalog kun for kamera + adas (ikke i eurokoden)
+  // glass_catalog kun for kamera + adas (ikke kodet i eurokoden)
+  if (r.eurokode) {
     const f = await env.FINNBILGLASS_DB.prepare(
       `SELECT camera, adas FROM glass_catalog WHERE eurocode = ? LIMIT 1`
     ).bind(r.eurokode).first<{ camera: number | null; adas: number | null }>();
@@ -305,7 +324,7 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
     eurocode: string; brand: string; model: string | null; year_from: number | null; year_to: number | null;
     rain_sensor: number | null; antenna: number | null; hud: number | null; camera: number | null; adas: number | null; description: string | null;
   }>();
-  const unike = new Map<string, ResolverKandidat & { flagg: number }>();
+  const unike = new Map<string, ResolverKandidat>();
   for (const r of rows.results ?? []) {
     if (!ordTreff(r.model ?? '', tokens)) continue; // ordbasert — aldri substring
     // Årvindu: kolonne-verdier, ellers år-hint i modellstrengen
@@ -318,23 +337,13 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
     }
     const k = await prisKandidat(env, r.eurocode);
     if (!k) continue;
-    const flagg = {
-      sensor: r.rain_sensor === 1,
-      antenne: r.antenna === 1,
-      hud: r.hud === 1,
-      kamera: r.camera === 1,
-      adas: r.adas === 1,
-      coated: k.attributter.coated ?? false, // eurokode-dekoder allerede beregnet i prisKandidat
-    };
+    // prisKandidat gir allerede korrekte attributter (eurokode-dekoder for A/M/C/H,
+    // glass_catalog kun for kamera/adas) — IKKE overstyr med glass_catalog-flagg her
+    // (glass_catalog har feil/manglende antenna/rain_sensor for 57 %+ av radene).
     const nøkkel = k.eurokode ?? k.varenr;
-    if (!unike.has(nøkkel)) unike.set(nøkkel, { ...k, attributter: flagg, flagg: 0 });
-    // Behold rikeste attributt-info (senere rad kan ha flagg satt)
-    const eks = unike.get(nøkkel)!;
-    if (flagg.sensor || flagg.antenne || flagg.hud || flagg.kamera || flagg.adas) {
-      unike.set(nøkkel, { ...k, attributter: flagg, flagg: eks.flagg });
-    }
+    if (!unike.has(nøkkel)) unike.set(nøkkel, k);
   }
-  let liste = [...unike.values()].map(({ flagg: _f, ...rest }) => rest);
+  let liste = [...unike.values()];
   // Utstyrsfiltrering: profil-flagg → kun kandidater som matcher (ukjente flagg straffes ikke)
   const p = profil ?? {};
   const aktiv: Array<keyof ResolverKandidat['attributter']> = [];
