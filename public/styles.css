@@ -511,6 +511,43 @@ footer {
   font-size: 13px;
 }
 
+/* ── 43R-VERIFISERING («Vil du være 100 % sikker?») ─────────── */
+.verify {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1.5px dashed var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.verify h3 { font-size: var(--fs-sm); font-weight: 800; margin: 0 0 6px; }
+.verify-hjelp { font-size: var(--fs-xs); color: var(--text-3); line-height: 1.5; margin: 0 0 12px; }
+.verify-knapper { display: flex; gap: 8px; margin-bottom: 10px; }
+.verify-knapper .sek { flex: 1; }
+.verify-manuell label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-3); display: block; margin-bottom: 4px; }
+.verify-rad { display: flex; gap: 8px; }
+.verify-rad input {
+  flex: 1;
+  font-size: var(--fs-md);
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  letter-spacing: .5px;
+}
+.verify-rad input:focus { outline: none; border-color: var(--brand); }
+.verify-bekreft {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--brand-subtle);
+}
+.verify-bekreft p { margin: 0 0 10px; font-size: var(--fs-sm); font-weight: 700; }
+.verify-bekreft p b { font-size: var(--fs-md); letter-spacing: 1px; color: var(--brand-deep); }
+.verify-bekreft-knapper { display: flex; gap: 10px; align-items: center; }
+.verify-bekreft-knapper .prim { flex: 1; }
+
 /* ── RESPONSIVT ────────────────────────────────────────────── */
 
 /* Svært smal (< 360 px): stack søkefelt vertikalt */

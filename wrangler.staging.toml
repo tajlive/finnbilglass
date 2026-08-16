@@ -7,6 +7,10 @@ compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
+# ── Workers AI (bilde-avlesning: 43R/eurocode/OEM/features) ──
+[ai]
+binding = "AI"
+
 # ── D1 staging (resolver-data + prisliste-kopi) ─────────────────
 [[d1_databases]]
 binding = "FINNBILGLASS_DB"

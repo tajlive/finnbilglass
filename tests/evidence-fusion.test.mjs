@@ -4,13 +4,14 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fuseEvidence, normalizeEurocode, makeSignal, WEIGHTS } from '../src/evidence-fusion.ts';
+import { fuseEvidence, normalizeEurocode, makeSignal, WEIGHTS, normalizeR43 } from '../src/evidence-fusion.ts';
 
 function selgbar(overrides = {}) {
   return {
     glassId: 'g1',
     eurocode: '2525ACSGYAVZ1B', // 14 tegn, faktisk fasitformat
     oemNumbers: ['5G0845011ANVB'],
+    r43Numbers: [],
     features: { camera: null, hud: null, heated: null, rain_sensor: null },
     sellable: true,
     priceTier: 5490,
@@ -108,4 +109,39 @@ test('Vekter: oem_build > visual_similarity (oppdragsgitte prioriteringer)', () 
   assert.ok(WEIGHTS.oem_build > WEIGHTS.visual_similarity);
   assert.ok(WEIGHTS.ocr_eurocode > WEIGHTS.image_feature);
   assert.ok(WEIGHTS.manual_verification === 1.0);
+});
+
+test('normalizeR43: ulike skriveformer normaliseres til siffer', () => {
+  assert.equal(normalizeR43('43R-004592'), '004592');
+  assert.equal(normalizeR43('43R 004592'), '004592');
+  assert.equal(normalizeR43('E1 43R004592'), '004592');
+  assert.equal(normalizeR43('43R—003635'), '003635');
+  assert.equal(normalizeR43('ikke et nummer'), null);
+  assert.equal(normalizeR43('43R-123'), null); // for få siffer
+});
+
+test('PINPOINT via ocr_r43: fysisk bevis på glasset matcher kandidatens familie', () => {
+  const c = selgbar({ r43Numbers: ['004592'] });
+  const r = fuseEvidence([c], [makeSignal('ocr_r43', '43R-004592', 0.95)]);
+  assert.equal(r.outcome, 'PINPOINT');
+  assert.equal(r.winner?.glassId, 'g1');
+  assert.ok(r.confidence > 0.8);
+});
+
+test('Negativt 43R-bevis eliminerer kandidat som ikke er i godkjenningsfamilien', () => {
+  const c = selgbar({ r43Numbers: ['004592'] });
+  const r = fuseEvidence([c], [
+    makeSignal('ocr_r43', '43R-004592', 0.95, 'negative'),
+  ]);
+  assert.equal(r.outcome, 'FALLBACK');
+  assert.ok(r.eliminated.some((e) => e.reason.includes('negativt bevis')));
+});
+
+test('MANUAL_REVIEW: motstridende 43R-numre (AI usikker / feil glass fotografert)', () => {
+  const c = selgbar({ r43Numbers: ['004592'] });
+  const r = fuseEvidence([c], [
+    makeSignal('ocr_r43', '43R-004592', 0.8),
+    makeSignal('ocr_r43', '43R-008177', 0.8),
+  ]);
+  assert.equal(r.outcome, 'MANUAL_REVIEW');
 });

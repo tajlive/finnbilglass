@@ -23,6 +23,7 @@
     if (id === 'start') state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null };
     var el = $('screen-' + id);
     if (el) el.classList.remove('hidden');
+    if (id === 'resultat') visVerify();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -388,6 +389,121 @@
       });
     }
   }
+
+  // 6b. 43R-verifisering (valgfri) — «Vil du være 100 % sikker?»
+  //     Bilde av merket på frontruten (hvitt ark bak) eller manuelt nummer.
+  //     Kall /api/verify-glass → AI leser → bekreftelses-steg → bekreftet match.
+  var verifyData = null;
+
+  function visVerify() {
+    var seksjon = $('verify-seksjon');
+    if (!seksjon) return;
+    verifyData = null;
+    $('verify-bekreft').classList.add('hidden');
+    $('verify-fil').value = '';
+    $('verify-input').value = '';
+    $('verify-status').classList.add('hidden');
+    seksjon.classList.remove('hidden');
+  }
+
+  function verifyStatus(t, klasse) {
+    var st = $('verify-status');
+    st.textContent = t;
+    st.className = 'note status ' + (klasse || '');
+    st.classList.remove('hidden');
+  }
+
+  function verifySend(kilde, bildeDataUrl, r43Manuelt) {
+    var body = { queryRef: 'fb-' + Date.now(), role: 'corner_marking' };
+    if (bildeDataUrl) body.image = bildeDataUrl;
+    if (r43Manuelt) body.r43 = r43Manuelt;
+    if (state.merke && state.modell) {
+      body.merke = state.merke;
+      body.modell = state.modell;
+      body.aar = state.aar;
+      if (state.vin) body.vin = state.vin;
+    }
+    verifyStatus(kilde === 'photo' ? 'Leser merket…' : 'Sjekker nummeret…');
+    fetch('/api/verify-glass', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        verifyData = d;
+        if (d.r43Nummer) {
+          $('verify-lest').textContent = d.r43Nummer;
+          $('verify-bekreft').classList.remove('hidden');
+          $('verify-status').classList.add('hidden');
+        } else {
+          $('verify-bekreft').classList.add('hidden');
+          verifyStatus(d.melding || 'Fant ikke 43R-nummer i bildet. Prøv igjen med bedre lys, eller skriv nummeret manuelt.');
+        }
+      })
+      .catch(function () {
+        $('verify-bekreft').classList.add('hidden');
+        verifyStatus('Vi kunne ikke lese bildet akkurat nå. Prøv igjen — eller skriv nummeret manuelt.');
+      });
+  }
+
+  function verifyBekreftet() {
+    var d = verifyData;
+    if (!d) return;
+    $('verify-bekreft').classList.add('hidden');
+    var f = d.fusion;
+    var treff = Array.isArray(d.treff) ? d.treff : [];
+    if (f && f.outcome === 'PINPOINT' && f.winner) {
+      var varenr = String(f.winner.glassId).replace(/^(r43|res)-/, '');
+      var rad = treff.filter(function (t) { return t.varenr === varenr; })[0] || null;
+      var navn = (rad && rad.varenavn) || f.winner.label || varenr;
+      var pris = (rad && rad.pris != null) ? rad.pris : (f.winner.priceTier != null ? f.winner.priceTier : null);
+      verifyStatus('✅ Bekreftet: ' + navn + (pris != null ? ' — ' + formatPris(pris) : ''), 'pinpoint');
+      var kort = $('resultat-kort');
+      kort.querySelector('.meta').textContent = 'Varenr. ' + varenr + (rad && rad.eurokode ? ' · ' + rad.eurokode : '');
+      if (pris != null) {
+        $('resultat-prislbl').textContent = 'Pris inkl. mva';
+        $('resultat-pris').textContent = formatPris(pris);
+      }
+      $('resultat-status').textContent = 'Glasset er bekreftet med 43R-nummeret fra frontruten din.';
+      $('resultat-status').className = 'note status pinpoint';
+    } else if (f && f.outcome === 'VERIFY') {
+      verifyStatus('✅ Nummeret stemmer med riktig glassfamilie. Svar på spørsmålene over for å lande eksakt glass.', 'verify');
+    } else if (treff.length) {
+      var beskrivelse = treff.map(function (t) {
+        return (t.varenavn || t.varenr || '') + (t.pris != null ? ' (' + formatPris(t.pris) + ')' : '');
+      }).join(', ');
+      verifyStatus('✅ Vi fant glasset i katalogen: ' + beskrivelse, 'pinpoint');
+    } else {
+      verifyStatus(d.melding || 'Vi kjenner ikke dette nummeret ennå — men glasset over er forslaget basert på bilen din.');
+    }
+  }
+
+  $('btn-verify-foto').addEventListener('click', function () { $('verify-fil').click(); });
+  $('verify-fil').addEventListener('change', function () {
+    var fil = this.files && this.files[0];
+    if (!fil) return;
+    if (fil.size > 5 * 1024 * 1024) { verifyStatus('Bildet er for stort (maks 5 MB).'); return; }
+    var leser = new FileReader();
+    leser.onload = function () { verifySend('photo', String(leser.result)); };
+    leser.readAsDataURL(fil);
+  });
+  $('btn-verify-sok').addEventListener('click', function () {
+    var v = $('verify-input').value.trim();
+    if (!/43R/i.test(v) || v.replace(/[^0-9]/g, '').length < 4) {
+      verifyStatus('Skriv nummeret fra glasset, f.eks. 43R-004592.');
+      return;
+    }
+    verifySend('manual', null, v);
+  });
+  $('verify-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btn-verify-sok').click(); });
+  $('btn-verify-ja').addEventListener('click', verifyBekreftet);
+  $('btn-verify-nei').addEventListener('click', function () {
+    $('verify-bekreft').classList.add('hidden');
+    $('verify-fil').value = '';
+    $('verify-input').value = '';
+    $('verify-status').classList.add('hidden');
+  });
 
   function mock() {
     // Demo-fasit (verifisert katalogdata, finnbilglass-db): VW TRANSPORTER T5 2003- →

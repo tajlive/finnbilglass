@@ -11,6 +11,7 @@ import {
   fuseEvidence,
   makeSignal,
   normalizeEurocode,
+  normalizeR43,
   type EvidenceSignal,
   type FusionCandidate,
   type FusionResult,
@@ -75,6 +76,8 @@ export interface ImageObservation {
   rawText?: string;
   eurocodes: VisionIdentity[];
   oemNumbers: VisionIdentity[];
+  /** ECE R43-approval-nummer lest av på glasset (f.eks. «43R-004592»). */
+  r43Numbers?: VisionIdentity[];
   features: VisionFeature[];
   similarities: VisionSimilarity[];
   warnings: string[];
@@ -168,6 +171,7 @@ export function buildVisionPrompt(image: ImageInput, candidateImages: CandidateI
     task: 'Analyse windshield image for evidence signals only. Do not select a final product.',
     imageRole: image.role,
     requiredOutput: {
+      r43: { value: 'string som 43R-004592 eller null', confidence: '0..1', explanation: 'short' },
       eurocodes: [{ value: 'string', confidence: '0..1', explanation: 'short' }],
       oemNumbers: [{ value: 'string', confidence: '0..1', explanation: 'short' }],
       features: [{ name: 'camera|rain_sensor|heated|hud|antenna|acoustic|solar_coated|mirror_bracket|vin_window|panoramic', value: 'boolean|null', confidence: '0..1', explanation: 'short' }],
@@ -180,6 +184,7 @@ export function buildVisionPrompt(image: ImageInput, candidateImages: CandidateI
       'Do not infer Eurocode from shape alone.',
       'Do not invent OE numbers or Eurocodes.',
       'OCR must preserve visible characters only.',
+      '43R approval number: read the digits after "43R" exactly as printed (e.g. 43R-004592).',
     ],
     candidateImages: candidateList,
   });
@@ -208,6 +213,15 @@ export function observationToSignals(observation: ImageObservation): EvidenceSig
     signals.push(makeSignal('ocr_oem', oem, signalConfidence(o.confidence, observation.role, 'ocr'), 'positive', {
       ...common,
       explanation: o.explanation ?? `OCR OEM fra ${observation.role}`,
+    }));
+  }
+
+  for (const r of observation.r43Numbers ?? []) {
+    const r43 = normalizeR43(r.value);
+    if (!r43) continue;
+    signals.push(makeSignal('ocr_r43', r43, signalConfidence(r.confidence, observation.role, 'ocr'), 'positive', {
+      ...common,
+      explanation: r.explanation ?? `OCR ECE R43-approval-nummer fra ${observation.role}`,
     }));
   }
 
@@ -270,6 +284,7 @@ export async function resolveGlassImages(input: ImageResolverInput, provider: Vi
       rawText: observation.rawText,
       eurocodes: observation.eurocodes ?? [],
       oemNumbers: observation.oemNumbers ?? [],
+      r43Numbers: observation.r43Numbers ?? [],
       features: observation.features ?? [],
       similarities: observation.similarities ?? [],
       warnings: observation.warnings ?? [],

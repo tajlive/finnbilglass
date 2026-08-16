@@ -4,18 +4,21 @@
  *  Alt annet (/, styles.css, app.js, index.html) → [assets] public/
  */
 import type { Env } from './types';
-import { matchFrontrute, type BilInput } from './matcher';
+import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
 import { resolverModus } from './kill-switch';
 import { svvLookup } from './svv';
 import {
   resolveImageObservations,
+  observationToSignals,
   type ImageObservation,
 } from './image-resolver';
+import { WorkersAIVisionProvider } from './vision-provider';
 import type {
   EvidenceSignal,
   FusionCandidate,
 } from './evidence-fusion';
+import { normalizeR43, fuseEvidence } from './evidence-fusion';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -86,6 +89,9 @@ function validateImageResolverBody(body: unknown):
     const glassId = typeof raw.glassId === 'string' ? raw.glassId.trim() : '';
     if (!glassId) throw new Error('candidate.glassId påkrevd');
     const oemNumbers = Array.isArray(raw.oemNumbers) ? raw.oemNumbers.filter((v): v is string => typeof v === 'string') : [];
+    const r43Numbers = Array.isArray(raw.r43Numbers)
+      ? raw.r43Numbers.filter((v): v is string => typeof v === 'string').map(normalizeR43).filter((v): v is string => v !== null)
+      : [];
     const features = isRecord(raw.features) ? raw.features : {};
     const normalizedFeatures: Record<string, boolean | null> = {};
     for (const [k, v] of Object.entries(features)) {
@@ -95,6 +101,7 @@ function validateImageResolverBody(body: unknown):
       glassId,
       eurocode: typeof raw.eurocode === 'string' ? raw.eurocode : null,
       oemNumbers,
+      r43Numbers,
       features: normalizedFeatures,
       sellable: raw.sellable !== false,
       priceTier: typeof raw.priceTier === 'number' ? raw.priceTier : null,
@@ -280,6 +287,212 @@ export default {
         return json({ ok: true, queryRef: parsed.queryRef, ...result });
       } catch (e) {
         return json({ ok: false, error: e instanceof Error ? e.message : 'Ugyldig bilde-resolver payload' }, 400);
+      }
+    }
+
+    if (method === 'POST' && path === '/api/verify-glass') {
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: 'Ugyldig JSON' }, 400);
+      }
+      if (!isRecord(body)) return json({ ok: false, error: 'JSON-body påkrevd' }, 400);
+
+      const imageRaw = typeof body.image === 'string' ? body.image : '';
+      const manuellR43 = typeof body.r43 === 'string' ? body.r43.trim() : '';
+      if (!imageRaw && !manuellR43) {
+        return json({ ok: false, error: 'image (dataURL) eller r43 påkrevd' }, 400);
+      }
+      if (imageRaw && (imageRaw.length < 100 || !imageRaw.startsWith('data:image/'))) {
+        return json({ ok: false, error: 'image må være dataURL (data:image/jpeg|png|webp;base64,...)' }, 400);
+      }
+      if (imageRaw.length > 7_000_000) {
+        return json({ ok: false, error: 'Bildet er for stort (maks ~5 MB)' }, 413);
+      }
+
+      const queryRef =
+        typeof body.queryRef === 'string' && body.queryRef.trim()
+          ? body.queryRef.trim().slice(0, 120)
+          : `verify-${crypto.randomUUID()}`;
+      const roleRaw = body.role;
+      const role: 'corner_marking' | 'full_glass' = roleRaw === 'corner_marking' || roleRaw === 'full_glass' ? roleRaw : 'corner_marking';
+
+      try {
+        let observation: ImageObservation;
+        if (imageRaw) {
+          const provider = new WorkersAIVisionProvider(env.AI);
+          const image = {
+            id: `${queryRef}-img`,
+            role,
+            imageRef: imageRaw,
+            mime: 'image/jpeg',
+            source: 'customer' as const,
+          };
+          observation = await provider.observe({ image, candidateImages: [], prompt: '' });
+        } else {
+          // Manuell vei: kunden leste av nummeret selv — syntetisk observasjon.
+          const r43v = manuellR43;
+          observation = {
+            imageId: `${queryRef}-manual`,
+            role,
+            modelVersion: 'manual-input-0.1',
+            eurocodes: [],
+            oemNumbers: [],
+            r43Numbers: [{ value: r43v, confidence: 0.9, explanation: 'manuelt innskrevet av kunde' }],
+            features: [],
+            similarities: [],
+            warnings: [],
+          };
+        }
+        const imageSignals = observationToSignals(observation);
+        const r43Norm = normalizeR43(observation.r43Numbers?.[0]?.value ?? '');
+
+        // 1) ECE R43-oppslag i mappingen.
+        let treff: Array<Record<string, unknown>> = [];
+        if (r43Norm) {
+          const { results } = await env.FINNBILGLASS_DB.prepare(
+            `SELECT r43_nummer, landkode, eurokode, varenr, merke, modell, kilde, bekreftet
+             FROM ece_r43 WHERE r43_nummer = ? ORDER BY bekreftet DESC, id ASC LIMIT 20`
+          ).bind(r43Norm).all();
+          treff = results as Array<Record<string, unknown>>;
+          // Berik treffene med varenavn + sluttpris (tier) fra prislista.
+          const varenrListe = treff
+            .map((r) => r.varenr)
+            .filter((v): v is string => typeof v === 'string' && v.length > 0)
+            .slice(0, 20);
+          if (varenrListe.length > 0) {
+            const placeholders = varenrListe.map(() => '?').join(',');
+            const { results: prisResult } = await env.FINNBILGLASS_DB.prepare(
+              `SELECT varenr, varenavn, pris FROM autoglass_prisliste
+               WHERE rad_type = 'glass' AND varenr IN (${placeholders})`
+            ).bind(...varenrListe).all();
+            const prisMap = new Map<string, { varenavn: string | null; pris: number | null }>();
+            for (const row of prisResult as Array<Record<string, unknown>>) {
+              prisMap.set(String(row.varenr), {
+                varenavn: typeof row.varenavn === 'string' ? row.varenavn : null,
+                pris: tierPris(typeof row.pris === 'number' ? row.pris : null),
+              });
+            }
+            treff = treff.map((r) => {
+              const info = prisMap.get(String(r.varenr));
+              return info ? { ...r, varenavn: info.varenavn, pris: info.pris } : r;
+            });
+          }
+          try {
+            await env.FINNBILGLASS_DB.prepare(
+              'INSERT INTO r43_sok_logg (r43_nummer, treff, kilde, query_ref, ip) VALUES (?, ?, ?, ?, ?)'
+            ).bind(r43Norm, treff.length, 'photo', queryRef, request.headers.get('CF-Connecting-IP') ?? null).run();
+          } catch {
+            // søkelogg-feil må ikke knekke svaret
+          }
+        }
+
+        // 2) Kandidater: ece_r43-treff + (valgfri) resolver-kjøring med bil-kontekst.
+        const candidates: FusionCandidate[] = [];
+        for (const rad of treff) {
+          const varenr = typeof rad.varenr === 'string' ? rad.varenr : null;
+          const eurokode = typeof rad.eurokode === 'string' ? rad.eurokode : null;
+          candidates.push({
+            glassId: `r43-${varenr ?? eurokode ?? '?'}`,
+            eurocode: eurokode,
+            oemNumbers: [],
+            r43Numbers: [String(rad.r43_nummer)],
+            features: {},
+            sellable: true,
+            priceTier: null,
+            label: [rad.merke, rad.modell].filter((x): x is string => typeof x === 'string' && x.length > 0).join(' ') || undefined,
+          });
+        }
+
+        const harKontekst = typeof body.merke === 'string' && typeof body.modell === 'string';
+        if (harKontekst) {
+          const bil = validateBil({
+            merke: body.merke,
+            modell: body.modell,
+            aar: body.aar ?? null,
+            vin: typeof body.vin === 'string' ? body.vin : undefined,
+            profil: {},
+          });
+          if (typeof bil !== 'string') {
+            const resolver = await resolveFrontrute(env, bil);
+            const koder = (resolver.kandidater ?? [])
+              .slice(0, 25)
+              .map((k) => k.eurokode)
+              .filter((k): k is string => !!k);
+            const r43Map = new Map<string, string[]>();
+            if (koder.length > 0) {
+              const placeholders = koder.map(() => '?').join(',');
+              const { results } = await env.FINNBILGLASS_DB.prepare(
+                `SELECT eurokode, r43_nummer FROM ece_r43 WHERE eurokode IN (${placeholders})`
+              ).bind(...koder).all();
+              for (const row of results as Array<Record<string, unknown>>) {
+                const ek = String(row.eurokode);
+                r43Map.set(ek, [...(r43Map.get(ek) ?? []), String(row.r43_nummer)]);
+              }
+            }
+            for (const k of resolver.kandidater ?? []) {
+              candidates.push({
+                glassId: `res-${k.varenr}`,
+                eurocode: k.eurokode ?? null,
+                oemNumbers: [],
+                r43Numbers: k.eurokode ? (r43Map.get(k.eurokode) ?? []) : [],
+                features: {
+                  rain_sensor: k.attributter.sensor ?? null,
+                  antenna: k.attributter.antenne ?? null,
+                  hud: k.attributter.hud ?? null,
+                  camera: k.attributter.kamera ?? null,
+                  solar_coated: k.attributter.coated ?? null,
+                },
+                sellable: true,
+                priceTier: k.pris,
+                label: k.varenavn ?? undefined,
+              });
+            }
+          }
+        }
+
+        // 3) Fusion: 43R-bevis (0.95) + eventuelle katalog-/resolver-signaler.
+        const fusion = candidates.length > 0 ? fuseEvidence(candidates, imageSignals) : null;
+
+        // 4) Audit (sporbarhet — reproduserbar beslutning, bildet lagres ALDRI).
+        try {
+          await env.FINNBILGLASS_DB.prepare(
+            `INSERT INTO image_resolution_audit
+             (query_ref, request_json, response_json, outcome, confidence, resolver_version)
+             VALUES (?, ?, ?, ?, ?, ?)`
+          ).bind(
+            queryRef,
+            JSON.stringify({ role, harKontekst, bildeSha256: await crypto.subtle.digest('SHA-256', new TextEncoder().encode(imageRaw)).then((b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('')) }),
+            JSON.stringify({ observation, treff, fusion }),
+            fusion?.outcome ?? 'FALLBACK',
+            fusion?.confidence ?? 0,
+            observation.modelVersion,
+          ).run();
+        } catch {
+          // audit-feil må aldri knekke svaret
+        }
+
+        return json({
+          ok: true,
+          queryRef,
+          r43Nummer: r43Norm ? `43R-${r43Norm}` : null,
+          observasjon: observation,
+          treff,
+          fusion,
+          melding: !r43Norm
+            ? 'Fant ikke 43R-nummer i bildet. Prøv nytt bilde med bedre lys, eller skriv nummeret manuelt.'
+            : treff.length === 0
+              ? 'Vi kjenner ikke dette 43R-nummeret ennå — det kan være kopiglass eller et glass utenfor katalogen vår. Her er forslaget basert på bilen din.'
+              : fusion?.outcome === 'PINPOINT'
+                ? 'Bekreftet: dette er glasset som hører til nummeret du fotograferte.'
+                : fusion?.outcome === 'VERIFY'
+                  ? 'Nummeret stemmer med riktig glassfamilie — svar på spørsmålene for å lande eksakt glass.'
+                  : 'Fant glass i samme godkjenningsfamilie.',
+        });
+      } catch (e) {
+        console.error('verify-glass feilet:', e);
+        return json({ ok: false, error: 'Intern feil' }, 500);
       }
     }
 

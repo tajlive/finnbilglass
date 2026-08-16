@@ -14,6 +14,7 @@ export type EvidenceType =
   | 'vin_ktype'          // VIN → kType
   | 'ocr_eurocode'       // OCR av eurocode på glasset
   | 'ocr_oem'            // OCR av OEM-nummer på glasset
+  | 'ocr_r43'            // OCR av ECE R43-approval-nummer på glasset (fysisk bevis, familie-nivå)
   | 'feature_data'       // strukturert feature-data (katalog/build)
   | 'image_feature'      // bilde-basert feature-deteksjon (CV)
   | 'visual_similarity'  // generell visuell likhet (lav vekt)
@@ -37,6 +38,8 @@ export interface FusionCandidate {
   glassId: string;
   eurocode: string | null;
   oemNumbers: string[];
+  /** ECE R43-approval-numre for glasset/familien (normalisert: siffer, uten 43R-prefiks/landkode). */
+  r43Numbers: string[];
   /** feature → kjent verdi; null = ukjent */
   features: Record<string, boolean | null>;
   /** Har salgbart FinnBilGlass-varenr i prislisten */
@@ -66,6 +69,7 @@ export const WEIGHTS: Record<EvidenceType, number> = {
   vin_ktype: 0.9,
   ocr_eurocode: 0.9,
   ocr_oem: 0.85,
+  ocr_r43: 0.95, // fysisk bevis fra selve glasset — men familie-nivå (ett nummer kan dekke flere koder)
   feature_data: 0.65,
   image_feature: 0.5,
   visual_similarity: 0.2,
@@ -92,6 +96,8 @@ function identityValue(s: EvidenceSignal): string | null {
       return normalizeEurocode(s.value);
     case 'ocr_oem':
       return s.value.trim().toUpperCase();
+    case 'ocr_r43':
+      return `R43:${normalizeR43(s.value) ?? s.value.trim().toUpperCase()}`;
     case 'vin_ktype':
       return `KTYPE:${s.value.trim().toUpperCase()}`;
     case 'oem_build':
@@ -99,6 +105,17 @@ function identityValue(s: EvidenceSignal): string | null {
     default:
       return null;
   }
+}
+
+/**
+ * Normaliserer et ECE R43-approval-nummer til sifferform.
+ * «43R-004592», «43R 004592», «E1 43R004592» → «004592».
+ * Returnerer null hvis ingen gyldig 43R-sekvens finnes (4-7 siffer).
+ */
+export function normalizeR43(raw: string): string | null {
+  const m = /43R\s*[-–—]?\s*(\d{4,7})/i.exec(raw || '');
+  if (!m) return null;
+  return m[1];
 }
 
 /** Normaliserer eurocode: strip bindestreker/mellomrom. Faktisk format i våre data:
@@ -112,6 +129,7 @@ export function normalizeEurocode(raw: string): string | null {
 
 function candidateMatchesIdentity(c: FusionCandidate, ident: string): boolean {
   if (ident.startsWith('OEM:')) return c.oemNumbers.includes(ident.slice(4));
+  if (ident.startsWith('R43:')) return c.r43Numbers.includes(ident.slice(4));
   if (ident.startsWith('KTYPE:')) return false; // ktype er kjøretøy-nivå, ikke glass-nivå her
   const ec = normalizeEurocode(ident);
   return ec !== null && normalizeEurocode(c.eurocode ?? '') === ec;
@@ -155,7 +173,7 @@ export function fuseEvidence(candidates: FusionCandidate[], signals: EvidenceSig
   const byType = new Map<EvidenceType, EvidenceSignal[]>();
   for (const s of signals) byType.set(s.type, [...(byType.get(s.type) ?? []), s]);
   for (const [type, list] of byType) {
-    if (type !== 'ocr_eurocode' && type !== 'ocr_oem' && type !== 'feature_data') continue;
+    if (type !== 'ocr_eurocode' && type !== 'ocr_oem' && type !== 'ocr_r43' && type !== 'feature_data') continue;
     const vals = [...new Set(list.filter((s) => s.confidence >= 0.7).map((s) => s.value))];
     if (vals.length > 1 && !(type === 'feature_data')) {
       return {
@@ -249,7 +267,7 @@ export function fuseEvidence(candidates: FusionCandidate[], signals: EvidenceSig
 
   // 4) PINPOINT — alle obligatoriske bevis enige + klar margin + høyvektsbevis.
   const highWeightEvidence = top.matches.filter((m) =>
-    m.startsWith('oem_build') || m.startsWith('ocr_eurocode') || m.startsWith('manual') || m.startsWith('vin_ktype'),
+    m.startsWith('oem_build') || m.startsWith('ocr_eurocode') || m.startsWith('ocr_r43') || m.startsWith('manual') || m.startsWith('vin_ktype'),
   );
   const hasHighWeight = highWeightEvidence.length > 0;
 
