@@ -14,6 +14,7 @@
  * Output: data/gt-ekspansjon/gt-generert.sql + gt-generator-rapport.json
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { serieKey, normaliserKatalogModell } from '../src/serie-mapping.ts';
 
 const DATA = '/Users/taj/finnbilglass/data/gt-ekspansjon';
@@ -76,17 +77,17 @@ function parseAarVindu(s) {
 // ── Frontrute-klassifisering ──
 const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE', 'SUNROOF', 'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT',
   'ALLE MOD', 'ALL MODELS', 'DOBBELTHYTTE', 'DOUBLE CAB', 'PYNTELIST', 'GUMMILIST', 'KLIPS'];
-function erFrontrute(varenavn, varenr, eurokode) {
+export function erFrontrute(varenavn, varenr, eurokode) {
   const n = varenavn.toUpperCase();
   if (IKKE_FRONTRUTE.some((k) => n.includes(k))) return false;
-  // Side-glass-mønster: L/R direkte etter 4- ELLER 5-sifret prefiks
-  // (8103LGAR5 = 4-sifret, 26270LFWXBYN = 5-sifret prefiks)
-  if (/^\d{4,5}[LR]/.test(varenr ?? '')) return false;
-  // Eurokode-posisjonssjekk: 4-5 sifre + glass-posisjon A=front, L/R=side, B=bak.
-  // Fanger sideruter varenr-mønsteret overser («27733GN»=5439LGSV3RD, «26501GN»=8579LGSP4RD)
-  // og bakruter uten navne-markør («21416YP TRANSPORTER 91-»=8537BYPV).
+  // Side-glass-mønster: L/R direkte etter 3–5-sifret prefiks
+  // (8103LGAR5 = 4-sifret, 26270LFWXBYN = 5-sifret prefiks).
+  if (/^\d{3,5}[LR]/.test(varenr ?? '')) return false;
+  // Eurokode-posisjonssjekk: 3–5 sifre + glass-posisjon A=front, L/R=side, B=bak.
+  // 3-sifret prefiks fanges også («538LRGSC4RVWZ1M»=siderute, «671RGNC2FV»=siderute) —
+  // 2-sifrede veteran-koder («42C», «3C») faller fortsatt gjennom som frontrute-kandidater.
   const ek = String(eurokode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const mm = ek.match(/^(\d{4,5})([A-Z])/);
+  const mm = ek.match(/^(\d{3,5})([A-Z])/);
   if (mm && /[LRB]/.test(mm[2])) return false;
   return true; // uten side/bak-markør = frontrute-kandidat (FR/WS/uten markør)
 }
@@ -330,4 +331,6 @@ async function main() {
   if (o.dry) console.log('\n[dry-run] SQL ikke skrevet til DB — kun filer over.');
 }
 
-main().catch((e) => { console.error('❌', e); process.exit(1); });
+// Kjør kun main() ved direkte kjøring — ikke ved import (tester importerer erFrontrute).
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) main().catch((e) => { console.error('❌', e); process.exit(1); });
