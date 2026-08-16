@@ -113,8 +113,9 @@
           state.import = !!d.bil.import;
           state.importLand = d.bil.importLand || null;
           state.resolver = d.resolver || null;
-          $('bekreft-bil').textContent =
-            state.merke + ' ' + state.modell + (state.aar ? ' · ' + state.aar : '');
+          $('bekreft-merkelbl').textContent = state.merke;
+          $('bekreft-navn').textContent =
+            state.modell + (state.aar ? ' · ' + state.aar : '');
           renderBekreftDet();
           show('bekreft');
         } else {
@@ -137,8 +138,9 @@
     state.forstegangsregistrert = null;
     state.import = false;
     state.importLand = null;
-    $('bekreft-bil').textContent =
-      (state.merke ? state.merke + ' ' : '') + state.modell + (state.aar ? ' · ' + state.aar : '');
+    $('bekreft-merkelbl').textContent = state.merke;
+    $('bekreft-navn').textContent =
+      state.modell + (state.aar ? ' · ' + state.aar : '');
     renderBekreftDet();
     show('bekreft');
   });
@@ -200,6 +202,16 @@
   function spmRender() {
     var q = spm[spmIndex];
     $('spm-teller').textContent = (spmIndex + 1) + '/' + spm.length;
+    // Fremgangs-prikker
+    var pp = $('framgang-punkter');
+    if (pp) {
+      pp.innerHTML = '';
+      spm.forEach(function (_, i) {
+        var dot = document.createElement('span');
+        dot.className = 'fp' + (i < spmIndex ? ' ferdig' : i === spmIndex ? ' aktiv' : '');
+        pp.appendChild(dot);
+      });
+    }
     $('spm-tittel').textContent = q.tittel;
     $('spm-hjelp').textContent = q.hjelp;
     var svar = $('spm-svar');
@@ -310,9 +322,9 @@
       return { label: 'Pris avhenger av variant', verdi: formatPris(min) + '–' + formatPris(max) };
     }
     if (anbefaling && anbefaling.pris != null) {
-      return { label: harResolver ? 'Narmeste pris inkl. mva' : 'Pris inkl. mva', verdi: formatPris(anbefaling.pris) };
+      return { label: harResolver ? 'Nærmeste pris inkl. mva' : 'Pris inkl. mva', verdi: formatPris(anbefaling.pris) };
     }
-    return { label: 'Pris', verdi: 'Pris pa foresporsel' };
+    return { label: 'Pris', verdi: 'Pris på forespørsel' };
   }
 
   function renderResultat(data) {
@@ -327,7 +339,7 @@
       st.textContent = 'Vi har funnet en eksakt match til bilen din.';
       st.className = 'note status pinpoint';
     } else if (data && data.meta && data.meta.resolver) {
-      st.textContent = 'Vi har funnet flere mulige varianter. Dette er naermeste pris og beste kandidat akkurat na, og vi dobbeltsjekker riktig rute for bilen din før sending.';
+      st.textContent = 'Vi har funnet flere mulige varianter. Dette er nærmeste pris og beste kandidat akkurat nå, og vi dobbeltsjekker riktig rute for bilen din før sending.';
       st.className = 'note status verify';
     } else {
       st.textContent = 'Vi har funnet beste kandidat ut fra bildataene dine. Vi dobbeltsjekker riktig rute før sending.';
@@ -352,7 +364,7 @@
     if (state.profil.antenne === true) specs.push('med antenne i glasset');
     if (state.profil.coated === true) specs.push('med sol-/varmedempende belegg');
     if (state.profil.coated === false) specs.push('uten sol-/varmedempende belegg');
-    if (state.info.adaskamera === true) specs.push('med kamera/foererassistansesystem');
+    if (state.info.adaskamera === true) specs.push('med kamera/førerassistansesystem');
     if (state.info.oppvarmet === true) specs.push('oppvarmet');
     kort.querySelector('.spec').textContent = specs.join(' · ');
 
