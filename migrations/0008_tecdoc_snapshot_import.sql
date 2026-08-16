@@ -1,5 +1,5 @@
 -- ============================================================================
--- 0006_tecdoc_snapshot_import.sql — Lisensiert TecAlliance-import (KLA-307)
+-- 0008_tecdoc_snapshot_import.sql — Lisensiert TecAlliance-import (KLA-307)
 -- ----------------------------------------------------------------------------
 -- Holder selve importbeviset atskilt fra produkt- og kjøretøykoblingene i
 -- canonical master. En rad opprettes kun etter at importscriptet har godtatt
