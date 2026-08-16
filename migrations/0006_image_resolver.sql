@@ -1,5 +1,5 @@
 -- ============================================================================
--- 0005_image_resolver.sql — AI bilde-resolver audit/intake (KLA-301)
+-- 0006_image_resolver.sql — AI bilde-resolver audit/intake (KLA-301)
 -- ----------------------------------------------------------------------------
 -- AI-bilder brukes som evidens, ikke som sannhetskilde. Selve avgjørelsen skjer
 -- fortsatt i evidence-fusion med OEM/VIN/build/katalogdata.
