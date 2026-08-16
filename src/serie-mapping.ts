@@ -147,6 +147,141 @@ const MERCEDES_KLASSER: Record<string, SerieDef[]> = {
   EQB: [{ kode: 'X243', start: 2021, slutt: 2035 }],
 };
 
+// ── VW: modell → generasjons-betegnelse (romertall som i katalogen: «GOLF IV») ──
+// Kilde: Wikipedia (Typ-koder i parentes). Katalogen bruker romertall-formen.
+const VW_GENERASJONER: Record<string, SerieDef[]> = {
+  GOLF: [
+    { kode: 'GOLF I', start: 1974, slutt: 1983 },
+    { kode: 'GOLF II', start: 1983, slutt: 1991 },
+    { kode: 'GOLF III', start: 1991, slutt: 1997 },
+    { kode: 'GOLF IV', start: 1997, slutt: 2003 },
+    { kode: 'GOLF V', start: 2003, slutt: 2008 },
+    { kode: 'GOLF VI', start: 2008, slutt: 2012 },
+    { kode: 'GOLF VII', start: 2012, slutt: 2019 },
+    { kode: 'GOLF VIII', start: 2019, slutt: 2035 },
+  ],
+  PASSAT: [
+    { kode: 'PASSAT', start: 1973, slutt: 1981 }, // B1
+    { kode: 'PASSAT', start: 1981, slutt: 1988 }, // B2
+    { kode: 'PASSAT', start: 1988, slutt: 1993 }, // B3
+    { kode: 'PASSAT', start: 1993, slutt: 1996 }, // B4
+    { kode: 'PASSAT', start: 1996, slutt: 2005 }, // B5
+    { kode: 'PASSAT', start: 2005, slutt: 2010 }, // B6
+    { kode: 'PASSAT', start: 2010, slutt: 2014 }, // B7
+    { kode: 'PASSAT B9', start: 2014, slutt: 2035 }, // B8+B9 (katalogen bruker B9 for 2019+)
+  ],
+  POLO: [
+    { kode: 'POLO', start: 1975, slutt: 1994 },
+    { kode: 'POLO', start: 1994, slutt: 2002 },
+    { kode: 'POLO', start: 2002, slutt: 2009 },
+    { kode: 'POLO', start: 2009, slutt: 2017 },
+    { kode: 'POLO', start: 2017, slutt: 2035 },
+  ],
+  TOURAN: [
+    { kode: 'TOURAN', start: 2003, slutt: 2015 },
+    { kode: 'TOURAN', start: 2015, slutt: 2035 },
+  ],
+  TIGUAN: [
+    { kode: 'TIGUAN', start: 2007, slutt: 2017 },
+    { kode: 'TIGUAN', start: 2017, slutt: 2035 },
+  ],
+};
+
+// ── OPEL: modell → generasjons-bokstav (som i katalogen: «VECTRA C») ──
+const OPEL_GENERASJONER: Record<string, SerieDef[]> = {
+  VECTRA: [
+    { kode: 'VECTRA A', start: 1988, slutt: 1995 },
+    { kode: 'VECTRA B', start: 1995, slutt: 2002 },
+    { kode: 'VECTRA C', start: 2002, slutt: 2008 },
+  ],
+  CORSA: [
+    { kode: 'CORSA', start: 1982, slutt: 1993 }, // A
+    { kode: 'CORSA B', start: 1993, slutt: 2000 },
+    { kode: 'CORSA C', start: 2000, slutt: 2006 },
+    { kode: 'CORSA D', start: 2006, slutt: 2014 },
+    { kode: 'CORSA', start: 2014, slutt: 2035 }, // E/F
+  ],
+  KADETT: [
+    { kode: 'KADETT D', start: 1979, slutt: 1984 },
+    { kode: 'KADETT E', start: 1984, slutt: 1991 },
+  ],
+  ASTRA: [
+    { kode: 'ASTRA', start: 1991, slutt: 1998 }, // F
+    { kode: 'ASTRA', start: 1998, slutt: 2004 }, // G
+    { kode: 'ASTRA', start: 2004, slutt: 2010 }, // H
+    { kode: 'ASTRA', start: 2010, slutt: 2015 }, // J
+    { kode: 'ASTRA', start: 2015, slutt: 2021 }, // K
+    { kode: 'ASTRA', start: 2021, slutt: 2035 }, // L
+  ],
+  OMEGA: [
+    { kode: 'OMEGA', start: 1986, slutt: 1994 }, // A
+    { kode: 'OMEGA B', start: 1994, slutt: 2003 },
+  ],
+  INSIGNIA: [
+    { kode: 'INSIGNIA', start: 2008, slutt: 2017 }, // A
+    { kode: 'INSIGNIA', start: 2017, slutt: 2035 }, // B
+  ],
+  ZAFIRA: [
+    { kode: 'ZAFIRA A', start: 1999, slutt: 2005 },
+    { kode: 'ZAFIRA B', start: 2005, slutt: 2011 },
+    { kode: 'ZAFIRA', start: 2011, slutt: 2035 }, // C
+  ],
+};
+
+// ── MINI: modell → R/F-kode (BMW-koder, som i katalogen: «F56») ──
+// Kilde: Wikipedia (Mini Hatch/Clubman/Countryman). Hatch 1.gen = R50/R53,
+// 2.gen = R56, 3.gen = F56, 4.gen = F66; Clubman R55/F54; Countryman R60/F60.
+const MINI_GENERASJONER: Record<string, SerieDef[]> = {
+  COOPER: [
+    { kode: 'R50', start: 2001, slutt: 2006 },
+    { kode: 'R56', start: 2006, slutt: 2013 },
+    { kode: 'F56', start: 2014, slutt: 2024 },
+    { kode: 'F66', start: 2024, slutt: 2035 },
+  ],
+  CLUBMAN: [
+    { kode: 'R55', start: 2007, slutt: 2014 },
+    { kode: 'F54', start: 2015, slutt: 2024 },
+  ],
+  COUNTRYMAN: [
+    { kode: 'R60', start: 2010, slutt: 2016 },
+    { kode: 'F60', start: 2017, slutt: 2024 },
+  ],
+};
+
+// ── NISSAN: modell → kode (P10/P11, K11/K12, N15/N16) ──
+const NISSAN_GENERASJONER: Record<string, SerieDef[]> = {
+  PRIMERA: [
+    { kode: 'P10', start: 1990, slutt: 1996 },
+    { kode: 'P11', start: 1996, slutt: 2001 },
+    { kode: 'P12', start: 2001, slutt: 2007 },
+  ],
+  MICRA: [
+    { kode: 'K10', start: 1982, slutt: 1992 },
+    { kode: 'K11', start: 1992, slutt: 2002 },
+    { kode: 'K12', start: 2002, slutt: 2010 },
+    { kode: 'K13', start: 2010, slutt: 2017 },
+  ],
+  ALMERA: [
+    { kode: 'N15', start: 1995, slutt: 2000 },
+    { kode: 'N16', start: 2000, slutt: 2006 },
+  ],
+};
+
+// ── TOYOTA: SUPRA MK3/MK4, LANDCRUISER J-serier ──
+const TOYOTA_GENERASJONER: Record<string, SerieDef[]> = {
+  SUPRA: [
+    { kode: 'SUPRA MK3', start: 1986, slutt: 1993 },
+    { kode: 'SUPRA MK4', start: 1993, slutt: 2002 },
+  ],
+  LANDCRUISER: [
+    { kode: 'LANDCRUISER HJ60', start: 1980, slutt: 1990 },
+    { kode: 'LANDCRUISER HJ80', start: 1990, slutt: 1997 },
+    { kode: 'LANDCRUISER FJ100', start: 1998, slutt: 2007 },
+    { kode: 'LANDCRUISER FJ200', start: 2007, slutt: 2021 },
+    { kode: 'LANDCRUISER J250', start: 2021, slutt: 2035 },
+  ],
+};
+
 // ── BMW: serie (tall-prefiks eller modell-navn) → E/F/G-koder ──
 const BMW_SERIER: Record<string, SerieDef[]> = {
   '1': [
@@ -280,6 +415,53 @@ export function serieKey(merke: string, modell: string, aar: number | null): str
     const k = iVindu(BMW_SERIER[serie], aar);
     return k ? k.split('/')[0].split('-')[0] : null; // kanonisk form
   }
+  // ── VW: «GOLF», «PASSAT», «POLO», «TOURAN», «TIGUAN» + år → generasjon ──
+  if (m === 'VW' || m === 'VOLKSWAGEN') {
+    const M = (modell || '').toUpperCase();
+    const base = M.match(/^(GOLF|PASSAT|POLO|TOURAN|TIGUAN)\b/);
+    if (!base) return null;
+    const k = iVindu(VW_GENERASJONER[base[1]], aar);
+    return k ?? null; // «GOLF IV»-formen, direkte
+  }
+  // ── OPEL: «VECTRA», «CORSA», «KADETT», «ASTRA», «OMEGA», «INSIGNIA», «ZAFIRA» + år ──
+  if (m === 'OPEL' || m === 'VAUXHALL' || m === 'OPEL VAUXHALL') {
+    const M = (modell || '').toUpperCase();
+    const base = M.match(/^(VECTRA|CORSA|KADETT|ASTRA|OMEGA|INSIGNIA|ZAFIRA)\b/);
+    if (!base) return null;
+    const k = iVindu(OPEL_GENERASJONER[base[1]], aar);
+    return k ?? null; // «VECTRA C»-formen
+  }
+  // ── MINI: «COOPER», «CLUBMAN», «COUNTRYMAN» + år → R/F-kode ──
+  if (m === 'MINI') {
+    const M = (modell || '').toUpperCase();
+    // Ren kode i navnet («F56», «R56») — katalogen bruker koden direkte.
+    const mk = M.match(/\b([RF]\d{2})\b/);
+    if (mk) return mk[1];
+    if (M.includes('COUNTRYMAN')) return iVindu(MINI_GENERASJONER.COUNTRYMAN, aar);
+    if (M.includes('CLUBMAN')) return iVindu(MINI_GENERASJONER.CLUBMAN, aar);
+    return iVindu(MINI_GENERASJONER.COOPER, aar); // «COOPER», «ONE», hatch
+  }
+  // ── NISSAN: «PRIMERA», «MICRA», «ALMERA» + år → P/K/N-kode ──
+  if (m === 'NISSAN') {
+    const M = (modell || '').toUpperCase();
+    const base = M.match(/^(PRIMERA|MICRA|ALMERA)\b/);
+    if (!base) return null;
+    const k = iVindu(NISSAN_GENERASJONER[base[1]], aar);
+    return k ?? null; // «P11», «K11», «N16»
+  }
+  // ── TOYOTA: «SUPRA» MK3/MK4, «LAND CRUISER» J-serier ──
+  if (m === 'TOYOTA') {
+    const M = (modell || '').toUpperCase();
+    if (M.includes('SUPRA')) {
+      const k = iVindu(TOYOTA_GENERASJONER.SUPRA, aar);
+      return k ?? null; // «SUPRA MK3»-formen
+    }
+    // «LAND CRUISER», «LANDCRUISER», «LAND CRUSER» (SVV-skrivefeil)
+    if (/^LAND\s?CRU\w*/.test(M) || M.includes('LANDCRUISER')) {
+      const k = iVindu(TOYOTA_GENERASJONER.LANDCRUISER, aar);
+      return k ?? null; // «LANDCRUISER FJ100»-formen
+    }
+  }
   return null;
 }
 
@@ -299,12 +481,24 @@ export function normaliserKatalogModell(modell: string): string | null {
   // Mercedes: «W204 STV», «M KLASSE W164», «GL X164», «CLK W209 CAB», «R-CLASS W251»
   const w = m.match(/\b([WXCR]\d{3}(?:\/\d{3})?)\b/);
   if (w) return KAROSSERI_ALIAS[kanonisk(w[1])] ?? kanonisk(w[1]);
-  // BMW: «SERIEN E39», «SERIE E46», «COMPACT E36», «CABRIOLET E36»
+  // BMW/MINI: «SERIEN E39», «SERIE E46», «COMPACT E36», «CABRIOLET E36», «F56», «F54»
   const e = m.match(/\b([EFG]\d{2}(?:\/\d{2})?)\b/);
   if (e) return KAROSSERI_ALIAS[kanonisk(e[1])] ?? kanonisk(e[1]);
   // «G460», «X164»-lignende allerede fanget over; «I01» osv.
   const i = m.match(/\b(I\d{2})\b/);
   if (i) return KAROSSERI_ALIAS[kanonisk(i[1])] ?? kanonisk(i[1]);
+  // VW: «GOLF IV 3+5D CC+STV» → «GOLF IV» (romertall-generasjon)
+  const vw = m.match(/\b(GOLF|PASSAT|POLO|TOURAN|TIGUAN)\s+(I{1,3}|IV|V|VI{1,3}|VII|VIII|IX)\b/);
+  if (vw) return `${vw[1]} ${vw[2]}`;
+  // Opel: «VECTRA A SED+5D CC», «CORSA B 3/5D», «KADETT D», «OMEGA B» (enkelt bokstav)
+  const opel = m.match(/\b(VECTRA|CORSA|KADETT|ASTRA|OMEGA|INSIGNIA|ZAFIRA)\s+([A-K])\b/);
+  if (opel) return `${opel[1]} ${opel[2]}`;
+  // Nissan: «PRIMERA P11 97-01», «MICRA K10», «ALMERA 3+5D CC N16»
+  const nissan = m.match(/\b(P1[0-2]|K1[0-3]|N1[56])\b/);
+  if (nissan) return nissan[1];
+  // Toyota: «SUPRA MK3», «LANDCRUISER FJ100 / HJ80 / J250»
+  const toyota = m.match(/\b(SUPRA MK[1-5])\b/) ?? m.match(/\b(LANDCRUISER\s+(?:HJ\d{2}|FJ\d{3}|J\d{3}))\b/);
+  if (toyota) return toyota[1];
   return null;
 }
 
