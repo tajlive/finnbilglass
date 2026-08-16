@@ -75,7 +75,7 @@ function parseAarVindu(s) {
 
 // ── Frontrute-klassifisering ──
 const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE', 'SUNROOF', 'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT',
-  'ALLE MOD', 'ALL MODELS', 'DOBBELTHYTTE', 'DOUBLE CAB'];
+  'ALLE MOD', 'ALL MODELS', 'DOBBELTHYTTE', 'DOUBLE CAB', 'PYNTELIST', 'GUMMILIST', 'KLIPS'];
 function erFrontrute(varenavn, varenr, eurokode) {
   const n = varenavn.toUpperCase();
   if (IKKE_FRONTRUTE.some((k) => n.includes(k))) return false;
