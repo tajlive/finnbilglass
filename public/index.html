@@ -4,115 +4,160 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Finnbilglass — bilglass til ekte pris</title>
-<meta name="description" content="Finn riktig frontrute til din bil — uten forsikring. Ekte priser, direkte fra lager.">
-<meta name="theme-color" content="#0E9F6E">
+<meta name="description" content="Finn riktig bilglass til din bil — uten forsikring. Ekte priser, direkte fra lager. Levert over hele Norge.">
+<meta name="theme-color" content="#F59E0B">
+
+<!-- Open Graph / sosiale medier -->
+<meta property="og:title" content="Finnbilglass — bilglass til ekte pris">
+<meta property="og:description" content="Finn riktig bilglass til din bil — uten forsikring. Direkte fra lager.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://finnbilglass.no/">
+<meta property="og:locale" content="nb_NO">
+
+<!-- Font: Inter Tight — selvhostet via Google Fonts (byttes til lokal ved GDPR-revisjon) -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&display=swap">
+
 <link rel="stylesheet" href="styles.css">
 <link rel="icon" type="image/svg+xml" href="ikon.svg">
 </head>
 <body>
 <div class="wrap">
 
-  <header class="top">
-    <div class="logo">
+  <!-- HEADER -->
+  <header class="top" role="banner">
+    <div class="logo" role="img" aria-label="Finnbilglass">
       <svg class="logo-ikon" viewBox="0 0 28 28" width="26" height="26" aria-hidden="true" focusable="false">
         <path d="M7 6.2 C7 4.4 8.4 3.2 10.2 3.2 H17.8 C19.6 3.2 21 4.4 21 6.2 L19.4 19.4 C19.2 21.1 17.9 22.4 16.2 22.7 L11.8 22.7 C10.1 22.4 8.8 21.1 8.6 19.4 Z" fill="none" stroke-width="2.4" stroke-linejoin="round"/>
       </svg>
       <span class="logo-tekst">finn<span>bilglass</span></span>
     </div>
-    <span class="beta">Åpner etter beta</span>
+    <span class="beta" aria-label="Åpner etter beta">Åpner etter beta</span>
   </header>
 
-  <!-- 1: start -->
-  <section id="screen-start" class="screen">
+  <!-- Skjerm 1: Start / søk -->
+  <section id="screen-start" class="screen" aria-label="Søk etter bilglass">
+    <div class="hero-stripe" aria-hidden="true"></div>
     <h1>Bilglass til ekte pris — uten forsikring</h1>
-    <p class="sub">Skriv inn kjennemerket, så finner vi riktig glass til din bil.</p>
-    <form id="form-regnr" class="search">
-      <input id="input-regnr" type="text" placeholder="F.eks. SU 18018" autocomplete="off" autocapitalize="characters" spellcheck="false" autocorrect="off" enterkeyhint="go" maxlength="10">
-      <button type="submit">Finn glass</button>
+    <p class="sub">Skriv inn kjennemerket, så finner vi riktig glass til bilen din.</p>
+    <form id="form-regnr" class="search" novalidate aria-label="Kjennemerke-søk">
+      <input
+        id="input-regnr"
+        type="text"
+        inputmode="text"
+        placeholder="F.eks. SU 18018"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+        autocorrect="off"
+        enterkeyhint="go"
+        maxlength="10"
+        aria-label="Kjennemerke"
+        required
+      >
+      <button type="submit" aria-label="Finn glass">Finn glass</button>
     </form>
-    <button id="btn-manual" class="link">Fyll inn bilen manuelt</button>
-    <p class="note">✓ Vi bruker Statens vegvesen for å identifisere bilen din.</p>
+    <button id="btn-manual" class="link" type="button">Fyll inn bilen manuelt</button>
+    <p class="svv-badge" aria-label="Vi bruker Statens vegvesen for å identifisere bilen din">
+      Oppslag via Statens vegvesen
+    </p>
   </section>
 
-  <!-- 2: manuell bil -->
-  <section id="screen-manual" class="screen hidden">
+  <!-- Skjerm 2: Manuell bil -->
+  <section id="screen-manual" class="screen hidden" aria-label="Fyll inn bil manuelt">
     <h2>Hvilken bil?</h2>
-    <form id="form-manual" class="stack">
-      <label>Merke<input id="m-merke" type="text" placeholder="VW" required></label>
-      <label>Modell<input id="m-modell" type="text" placeholder="Transporter T5" required></label>
-      <label>Årsmodell<input id="m-aar" type="number" placeholder="2003" min="1950" max="2030" required></label>
-      <button type="submit">Neste</button>
+    <form id="form-manual" class="stack" novalidate aria-label="Bildata manuell innfylling">
+      <label for="m-merke">
+        Merke
+        <input id="m-merke" type="text" placeholder="VW" autocomplete="off" required aria-required="true">
+      </label>
+      <label for="m-modell">
+        Modell
+        <input id="m-modell" type="text" placeholder="Transporter T5" autocomplete="off" required aria-required="true">
+      </label>
+      <label for="m-aar">
+        Årsmodell
+        <input id="m-aar" type="number" inputmode="numeric" placeholder="2003" min="1950" max="2030" required aria-required="true">
+      </label>
+      <button type="submit" class="prim">Neste</button>
     </form>
-    <button class="link" data-tilbake="start">← Tilbake</button>
+    <button class="link" type="button" data-tilbake="start">← Tilbake</button>
   </section>
 
-  <!-- 3: bekreft bil -->
-  <section id="screen-bekreft" class="screen hidden">
-    <h2>Vi fant bilen din</h2>
-    <div id="bekreft-bil" class="bilkort"></div>
-    <div id="bekreft-import" class="import-merke hidden"></div>
-    <div id="bekreft-det" class="detlinjer hidden"></div>
-    <div id="bekreft-regnr" class="note regnr-note hidden"></div>
+  <!-- Skjerm 3: Bekreft bil -->
+  <section id="screen-bekreft" class="screen hidden" aria-label="Bekreft at dette er bilen din">
+    <h2>Er dette bilen din?</h2>
+    <div id="bekreft-bil" class="bilkort" role="region" aria-label="Bilinformasjon">
+      <span class="bilkort-merke" id="bekreft-merkelbl" aria-hidden="true"></span>
+      <span class="bilkort-navn" id="bekreft-navn"></span>
+    </div>
+    <div id="bekreft-import" class="import-merke hidden" role="alert" aria-live="polite"></div>
+    <div id="bekreft-det" class="detlinjer hidden" aria-label="Detaljer fra Statens vegvesen"></div>
+    <div id="bekreft-regnr" class="note regnr-note hidden" aria-label="Kjennemerke"></div>
     <div class="rad">
-      <button id="btn-bekreft-ja" class="prim">Fortsett til glass</button>
-      <button id="btn-bekreft-nei" class="sek">Ikke min bil</button>
+      <button id="btn-bekreft-ja" class="prim" type="button">Fortsett til glass</button>
+      <button id="btn-bekreft-nei" class="sek" type="button">Ikke min bil</button>
     </div>
   </section>
 
-  <!-- 4: glassvalg -->
-  <section id="screen-glass" class="screen hidden">
+  <!-- Skjerm 4: Glassvalg -->
+  <section id="screen-glass" class="screen hidden" aria-label="Velg type bilglass">
     <h2>Hvilket glass trenger du?</h2>
-    <div class="glassvalg">
-      <button class="glassopt aktiv" data-type="front">Frontrute</button>
-      <button class="glassopt" disabled title="Kommer snart">Bakrute</button>
-      <button class="glassopt" disabled title="Kommer snart">Siderute</button>
-      <button class="glassopt" disabled title="Kommer snart">Dørrute</button>
+    <div class="glassvalg" role="group" aria-label="Glasstype">
+      <button class="glassopt aktiv" data-type="front" type="button" aria-pressed="true">Frontrute</button>
+      <button class="glassopt" type="button" disabled title="Kommer snart" aria-disabled="true">Bakrute</button>
+      <button class="glassopt" type="button" disabled title="Kommer snart" aria-disabled="true">Siderute</button>
+      <button class="glassopt" type="button" disabled title="Kommer snart" aria-disabled="true">Dørrute</button>
     </div>
-    <button class="link" data-tilbake="bekreft">← Tilbake</button>
+    <button class="link" type="button" data-tilbake="bekreft">← Tilbake</button>
   </section>
 
-  <!-- 5: utstyrs-spørsmål -->
-  <section id="screen-spm" class="screen hidden">
-    <div class="framgang"><span id="spm-teller">1/4</span></div>
+  <!-- Skjerm 5: Utstyrsspørsmål -->
+  <section id="screen-spm" class="screen hidden" aria-label="Spørsmål om bilutstyr">
+    <div class="framgang" aria-label="Fremgang" role="status" aria-live="polite">
+      <div class="framgang-punkter" id="framgang-punkter" aria-hidden="true"></div>
+      <span class="framgang-tekst" id="spm-teller"></span>
+    </div>
     <h2 id="spm-tittel"></h2>
     <p id="spm-hjelp" class="hjelp"></p>
-    <div class="svar" id="spm-svar"></div>
-    <button id="btn-vetikke" class="link hidden">Vet ikke</button>
+    <div class="svar" id="spm-svar" role="group" aria-label="Svaralternativer"></div>
+    <button id="btn-vetikke" class="link hidden" type="button">Vet ikke</button>
   </section>
 
-  <!-- 6: resultat -->
-  <section id="screen-resultat" class="screen hidden">
+  <!-- Skjerm 6: Resultat -->
+  <section id="screen-resultat" class="screen hidden" aria-label="Funnet bilglass" aria-live="polite">
     <div class="resultat-header">
-      <span class="sjekk">✓</span>
+      <span class="sjekk" aria-hidden="true">✓</span>
       <h2>Vi fant glasset ditt</h2>
     </div>
-    <div id="resultat-status" class="note status hidden"></div>
-    <div id="resultat-kort" class="varekort"></div>
-    <div id="resultat-regnr" class="note regnr-note hidden"></div>
-    <div id="resultat-alt" class="alternativer"></div>
+    <div id="resultat-status" class="note status hidden" role="status" aria-live="polite"></div>
+    <div id="resultat-kort" class="varekort" role="region" aria-label="Glassdetaljer"></div>
+    <div id="resultat-regnr" class="note regnr-note hidden" aria-label="Kjennemerke"></div>
+    <div id="resultat-alt" class="alternativer" aria-label="Andre mulige varianter"></div>
     <div class="prislinje">
       <span id="resultat-prislbl" class="prislbl">Pris inkl. mva</span>
-      <span id="resultat-pris" class="pris"></span>
+      <span id="resultat-pris" class="pris" aria-label="Pris" aria-live="polite"></span>
     </div>
-    <p class="note">Montering (frontrute) og frakt tilkommer. Glasset sendes direkte fra lager — eller du kan velge et av våre avtale-verksteder.</p>
-    <button id="btn-bestill" class="prim" disabled title="Åpner etter beta">Bestill glass — åpner etter beta</button>
-    <button class="link" data-tilbake="spm">← Nytt søk</button>
+    <p class="note">Glasset sendes direkte til deg — eller til et av våre avtaleverksteder for montering. Montering og frakt tilkommer.</p>
+    <button id="btn-bestill" class="prim" type="button" disabled title="Åpner etter beta" aria-disabled="true">
+      Bestill glass — åpner etter beta
+    </button>
+    <button class="link" type="button" data-tilbake="spm">← Nytt søk</button>
   </section>
 
-  <!-- 7: ingen treff / feil -->
-  <section id="screen-tomt" class="screen hidden">
+  <!-- Skjerm 7: Ingen treff / feil -->
+  <section id="screen-tomt" class="screen hidden" aria-label="Ingen treff" aria-live="assertive">
     <h2 id="tomt-tittel">Fant ingen treff</h2>
-    <p class="sub" id="tomt-tekst">Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss så hjelper vi deg manuelt.</p>
-    <button class="link" data-tilbake="start">← Nytt søk</button>
+    <p class="sub" id="tomt-tekst">Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss, så hjelper vi deg manuelt.</p>
+    <button class="link" type="button" data-tilbake="start">← Nytt søk</button>
   </section>
 
-  <footer>
+  <footer role="contentinfo">
     <p>Finnbilglass — bilglass til ekte pris. Leveres over hele Norge.</p>
   </footer>
-</div>
+
+</div><!-- /.wrap -->
 <script src="app.js"></script>
 </body>
 </html>
