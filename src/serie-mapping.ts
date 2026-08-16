@@ -229,6 +229,8 @@ function mercedesKlasse(modell: string): string | null {
   if (/^G\b/.test(ren)) return 'G';
   if (/^GELAND\w*\b/i.test(ren)) return 'G';
   if (/^R\b/.test(ren) && /\d/.test(ren)) return 'R'; // «R 350» (R-klasse) — kun med tall
+  // «M-CLASS» / «M KLASSE» / «ML» → ML (M-klasse)
+  if (/^M[- ]?(?:CLASS|CLASSE|KLASSE)\b/i.test(ren) || /^ML\b/.test(ren)) return 'ML';
   const klasse = ren.match(/^(C|E|S|A|B|CLA|CLK|CLS|SL|SLK|SLC|ML|VIANO|VITO|SPRINTER)\b/);
   return klasse ? klasse[1] : null;
 }
@@ -260,12 +262,19 @@ function bmwSerie(modell: string): string | null {
 export function serieKey(merke: string, modell: string, aar: number | null): string | null {
   const m = (merke || '').trim().toUpperCase();
   if (m === 'MERCEDES' || m === 'MERCEDES-BENZ' || m === 'MERCEDES BENZ') {
+    // SVV gir ofte ren W-kode som modellnavn: «W140», «W204», «R230», «X164», «C257».
+    // Gjenkjenn den direkte — katalogen bruker samme koder («SERIE W140», «W204 STV»).
+    const wk = (modell || '').toUpperCase().match(/\b([WXCR]\d{3}(?:\/\d{3})?)\b/);
+    if (wk) return kanonisk(wk[1]);
     const klasse = mercedesKlasse(modell);
     if (!klasse) return null;
     const k = iVindu(MERCEDES_KLASSER[klasse], aar);
     return k ? k.split('/')[0].split('-')[0] : null; // kanonisk form
   }
   if (m === 'BMW') {
+    // SVV kan også gi ren E/F/G-kode («E39», «F10»).
+    const ek = (modell || '').toUpperCase().match(/\b([EFG]\d{2}(?:\/\d{2})?)\b/);
+    if (ek) return kanonisk(ek[1]);
     const serie = bmwSerie(modell);
     if (!serie) return null;
     const k = iVindu(BMW_SERIER[serie], aar);
