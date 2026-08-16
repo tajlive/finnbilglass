@@ -436,6 +436,7 @@
 
   function renderResultat(data) {
     visRegnr();
+    $('tilbehor-seksjon').classList.remove('hidden');
     var a = data && data.anbefaling;
     if (!a) {
       tomtVis('Fant ingen treff', 'Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss så hjelper vi deg manuelt.');
@@ -494,26 +495,6 @@
         alt.appendChild(row);
       });
     }
-
-    renderTilbehor(a);
-  }
-
-  // Vis tilbehør som er aktuelt for DETTE glasset.
-  // Sika-pakken gjelder alltid for frontrute; klips/pynteliste/regnsensorgel kun når aktuelt.
-  function renderTilbehor(a) {
-    var seksjon = $('tilbehor-seksjon');
-    var navn = (a && a.varenavn) || '';
-    var trenger = {
-      sika: true,                                        // frontrute monteres alltid med lim + primer
-      klips: /klips/i.test(navn),
-      pyntelist: /pyntelist|topplist|bunnlist/i.test(navn),
-      sensorgel: state.profil.sensor === true            // regnsensorgel fester regnsensoren
-    };
-    $('tilbehor-sika').classList.toggle('hidden', !trenger.sika);
-    $('tilbehor-klips').classList.toggle('hidden', !trenger.klips);
-    $('tilbehor-pyntelist').classList.toggle('hidden', !trenger.pyntelist);
-    $('tilbehor-sensorgel').classList.toggle('hidden', !trenger.sensorgel);
-    seksjon.classList.toggle('hidden', !(trenger.sika || trenger.klips || trenger.pyntelist || trenger.sensorgel));
   }
 
   // 6b. 43R-verifisering (valgfri) — «Vil du være 100 % sikker?»
