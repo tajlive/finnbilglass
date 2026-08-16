@@ -19,6 +19,7 @@ import type { BilInput } from './matcher';
 import { tierPris } from './matcher';
 import { matcherAar, parseAar } from './aar-parser';
 import { serieKey, normaliserKatalogModell } from './serie-mapping';
+import { dekodeEurokode } from './eurokode-dekoder';
 
 export type ResolverUtfall = 'PINPOINT' | 'VERIFY' | 'FALLBACK';
 
@@ -34,6 +35,7 @@ export interface ResolverKandidat {
     hud: boolean | null;
     kamera: boolean | null;
     adas: boolean | null;
+    coated: boolean | null;
   };
 }
 
@@ -144,29 +146,40 @@ function modellAarIntervall(model: string | null): { start: number; slutt: numbe
 }
 
 /** Prisliste-oppslag på varenr ELLER eurokode (rad_type='glass').
- *  Attributter fylles fra glass_catalog (rain_sensor/antenna/hud/camera/adas)
- *  når eurokoden finnes der — så ALLE lag (L0/L1/L3) får utstyrsdata, ikke bare L2. */
+ *  Attributter: primær = glass_catalog (Pilkington-flagg), fallback = eurokode-dekoder.
+ *  Eurokode-dekoderen er autoritativ for A/M/C/H-bokstaver (Tom 2026-08-13) og
+ *  brukes når glass_catalog-flagget er null — sikrer at T5-familien og lignende
+ *  familier der glass_catalog mangler flagg likevel får riktige attributter for
+ *  skillendeSporsmaal() og PINPOINT-gaten. */
 async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | null> {
   const r = await env.FINNBILGLASS_DB.prepare(
     `SELECT varenr, varenavn, pris, eurokode FROM autoglass_prisliste
      WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
   ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>();
   if (!r) return null;
-  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null };
+  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
+
+  // Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13).
+  // glass_catalog brukes KUN for kamera og adas (ikke kodet i eurokoden).
   if (r.eurokode) {
+    const dek = dekodeEurokode(r.eurokode);
+    const eg = dek.egenskaper;
+    // Direkte fra eurokoden (autoritativ)
+    attributter.sensor  = eg.includes('sensor');
+    attributter.antenne = eg.includes('antenne');
+    attributter.hud     = eg.includes('oppvarmet');
+    attributter.coated  = eg.includes('coated');
+
+    // glass_catalog kun for kamera + adas (ikke i eurokoden)
     const f = await env.FINNBILGLASS_DB.prepare(
-      `SELECT rain_sensor, antenna, hud, camera, adas FROM glass_catalog WHERE eurocode = ? LIMIT 1`
-    ).bind(r.eurokode).first<{
-      rain_sensor: number | null; antenna: number | null; hud: number | null; camera: number | null; adas: number | null;
-    }>();
+      `SELECT camera, adas FROM glass_catalog WHERE eurocode = ? LIMIT 1`
+    ).bind(r.eurokode).first<{ camera: number | null; adas: number | null }>();
     if (f) {
-      attributter.sensor = f.rain_sensor == null ? null : f.rain_sensor === 1;
-      attributter.antenne = f.antenna == null ? null : f.antenna === 1;
-      attributter.hud = f.hud == null ? null : f.hud === 1;
       attributter.kamera = f.camera == null ? null : f.camera === 1;
-      attributter.adas = f.adas == null ? null : f.adas === 1;
+      attributter.adas   = f.adas   == null ? null : f.adas   === 1;
     }
   }
+
   return {
     varenr: r.varenr,
     varenavn: r.varenavn,
@@ -180,7 +193,7 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
 /** Spørsmål som FAKTISK skiller kandidatene: felt der minst én kandidat har true OG minst én har false.
  *  Ukjente verdier (null) teller ikke — vi spør aldri om ting vi ikke kan skille på. */
 export function skillendeSporsmaal(kandidater: ResolverKandidat[]): string[] {
-  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'kamera', 'adas'];
+  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'kamera', 'adas', 'coated'];
   const ut: string[] = [];
   for (const f of felt) {
     const verdier = kandidater.map((k) => k.attributter[f]).filter((v): v is boolean => typeof v === 'boolean');
@@ -311,6 +324,7 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
       hud: r.hud === 1,
       kamera: r.camera === 1,
       adas: r.adas === 1,
+      coated: k.attributter.coated ?? false, // eurokode-dekoder allerede beregnet i prisKandidat
     };
     const nøkkel = k.eurokode ?? k.varenr;
     if (!unike.has(nøkkel)) unike.set(nøkkel, { ...k, attributter: flagg, flagg: 0 });
