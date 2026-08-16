@@ -2,7 +2,7 @@
 /**
  * Fasit-tester for OE/VIN-pinpoint (mot staging-worker).
  *
- *   SU18018 → PINPOINT, eurokode 8579ACSGYAVZ1B (HARD regresjonstest, Tom 2026-08-13)
+ *   SU18018 → PINPOINT, eurokode 8579AGSGYAVZ1B / 2525GYA (HARD regresjonstest, Tom-fasit 2026-08-16 — KORRIGERT fra 8579ACSGYAVZ1B som var FEIL variant, coated)
  *   AJ95429 → VERIFY                           (tvetydig datagrunnlag → aldri tving PINPOINT)
  *
  * Bruk:
@@ -23,10 +23,10 @@ async function sok(regnr) {
 
 const FA_SIT = [
   {
-    navn: 'SU18018 → 8579ACSGYAVZ1B (hard regresjon)',
+    navn: 'SU18018 → 8579AGSGYAVZ1B / 2525GYA (hard regresjon)',
     regnr: 'SU18018',
-    krav: (res) => res?.utfall === 'PINPOINT' && res.eurokode === '8579ACSGYAVZ1B',
-    beskriv: 'PINPOINT med eurokode 8579ACSGYAVZ1B (VW Transporter T5 frontrute)',
+    krav: (res) => res?.utfall === 'PINPOINT' && res.eurokode === '8579AGSGYAVZ1B',
+    beskriv: 'PINPOINT med eurokode 8579AGSGYAVZ1B = 2525GYA (VW Transporter T5, INNK+ANT, IKKE coated)',
   },
   {
     navn: 'AJ95429 → VERIFY (tvetydig → aldri tving PINPOINT)',

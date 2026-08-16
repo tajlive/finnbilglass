@@ -8,11 +8,13 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck && npm run test:serie && npm run test:fusion && npm run test:pipeline && npm run test:tecdoc",
+    "test": "npm run typecheck && npm run test:serie && npm run test:fusion && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:fasit-integritet",
+    "test:fasit-integritet": "node --test tests/fasit-integritet.test.mjs",
     "test:serie": "node --import tsx --test tests/serie-mapping.test.mjs",
     "test:fusion": "node --import tsx --test tests/evidence-fusion.test.mjs tests/image-resolver.test.mjs",
     "test:pipeline": "node --test tests/crosswalk-pipeline.test.mjs",
-    "test:tecdoc": "node --test tests/tecdoc-snapshot-import.test.mjs"
+    "test:tecdoc": "node --test tests/tecdoc-snapshot-import.test.mjs",
+    "test:resolver": "node --import tsx --test tests/resolver-sporsmaal.test.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
