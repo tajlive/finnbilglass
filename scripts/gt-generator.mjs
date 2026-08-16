@@ -75,20 +75,27 @@ function parseAarVindu(s) {
 }
 
 // ── Frontrute-klassifisering ──
-const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE', 'SUNROOF', 'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT',
-  'ALLE MOD', 'ALL MODELS', 'DOBBELTHYTTE', 'DOUBLE CAB', 'PYNTELIST', 'GUMMILIST', 'KLIPS'];
+// NB: «ALLE MOD»/«ALL MODELS»/«DOBBELTHYTTE»/«DOUBLE CAB» er FJERNET (2026-08-16) —
+// de traff ekte frontruter («MAZDA 323 ALLE MOD», «LIGIER AMBRA/NOVA ALLE MOD» med
+// posisjon A). Dobbel-cab-dørruter fanges av posisjonssjekken (L/R) uansett.
+// Ordgrense-lookaround forhindrer substring-falske positiver: «VENT» må IKKE treffe
+// «VENTURE»/«VENTO», «HATCH» må IKKE treffe «HATCHBACK».
+const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'SIDORUTE', 'SIDORUTA', 'SIDERUTA', 'BAKRUTE', 'BAGRUTE',
+  'BACKLITE', 'SUNROOF', 'SOLTAK', 'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT',
+  'PYNTELIST', 'GUMMILIST', 'KLIPS', 'PAKNING'];
+const IKKE_FRONTRUTE_RE = new RegExp(`(?<![A-ZÆØÅ0-9])(${IKKE_FRONTRUTE.join('|')})(?![A-ZÆØÅ0-9])`);
 export function erFrontrute(varenavn, varenr, eurokode) {
   const n = varenavn.toUpperCase();
-  if (IKKE_FRONTRUTE.some((k) => n.includes(k))) return false;
+  if (IKKE_FRONTRUTE_RE.test(n)) return false;
   // Side-glass-mønster: L/R direkte etter 3–5-sifret prefiks
   // (8103LGAR5 = 4-sifret, 26270LFWXBYN = 5-sifret prefiks).
   if (/^\d{3,5}[LR]/.test(varenr ?? '')) return false;
-  // Eurokode-posisjonssjekk: 3–5 sifre + glass-posisjon A=front, L/R=side, B=bak.
+  // Eurokode-posisjonssjekk: 3–5 sifre + glass-posisjon A=front, L/R=dør, B=bak, F=ventil, S=side.
   // 3-sifret prefiks fanges også («538LRGSC4RVWZ1M»=siderute, «671RGNC2FV»=siderute) —
   // 2-sifrede veteran-koder («42C», «3C») faller fortsatt gjennom som frontrute-kandidater.
   const ek = String(eurokode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   const mm = ek.match(/^(\d{3,5})([A-Z])/);
-  if (mm && /[LRB]/.test(mm[2])) return false;
+  if (mm && /[BLRFS]/.test(mm[2])) return false;
   return true; // uten side/bak-markør = frontrute-kandidat (FR/WS/uten markør)
 }
 

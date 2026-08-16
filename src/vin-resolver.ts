@@ -145,9 +145,14 @@ function modellAarIntervall(model: string | null): { start: number; slutt: numbe
   return m ? { start: parseInt(m[0], 10), slutt: Infinity } : null;
 }
 
-/** Ikke-frontrute-keywords (samme liste som scripts/gt-generator.mjs sin erFrontrute). */
-const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE', 'SUNROOF', 'SOLTAK',
-  'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT', 'PYNTELIST', 'GUMMILIST', 'KLIPS'];
+/** Ikke-frontrute-keywords (samme liste som scripts/gt-generator.mjs sin erFrontrute,
+ *  pluss svenske varianter og pakning — sett i faktiske katalogdata).
+ *  Ordgrense-lookaround forhindrer substring-falske positiver:
+ *  «VENT» må IKKE treffe «VENTURE»/«VENTO», «HATCH» må IKKE treffe «HATCHBACK». */
+const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'SIDORUTE', 'SIDORUTA', 'SIDERUTA', 'BAKRUTE', 'BAGRUTE',
+  'BACKLITE', 'SUNROOF', 'SOLTAK', 'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT',
+  'PYNTELIST', 'GUMMILIST', 'KLIPS', 'PAKNING'];
+const IKKE_FRONTRUTE_RE = new RegExp(`(?<![A-ZÆØÅ0-9])(${IKKE_FRONTRUTE.join('|')})(?![A-ZÆØÅ0-9])`);
 
 /** Er raden en FRONTRUTE-kandidat? Samme doktrine som gt-generator.mjs: avvis KUN klare
  *  ikke-frontrute-signaler (bak/side/dør/ventil-posisjon, takglass/keywords, side-glass-varenr
@@ -155,7 +160,7 @@ const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'BAKRUTE', 'BACKLITE'
  *  faller gjennom som frontrute-kandidater (aldri false-negative — Tom-doktrine). */
 function erFrontrute(varenavn: string | null, varenr: string, dek: Dekodet): boolean {
   const n = (varenavn ?? '').toUpperCase();
-  if (IKKE_FRONTRUTE.some((k) => n.includes(k))) return false;
+  if (IKKE_FRONTRUTE_RE.test(n)) return false;
   if (/^\d{3,5}[LR]/.test(varenr)) return false; // side-glass-varenr (8103LGAR5, 26270LFWXBYN)
   if (dek.posisjon && dek.posisjon !== 'frontrute') return false; // bak/side/dør/ventil
   return true; // frontrute-posisjon ELLER ukjent (veteran/OEM) → kandidat

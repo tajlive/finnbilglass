@@ -32,3 +32,47 @@ test('frontrute 3-sifret prefiks + A → frontrute (CLA 3172-serien)', () => {
 test('veteran 2-sifret kode faller gjennom → frontrute-kandidat («42C»)', () => {
   assert.equal(erFrontrute('GAMMEL BIL 1960', '42C', '42C'), true);
 });
+
+test('SOLTAK-keyword → ikke frontrute (AUDI A2 soltak)', () => {
+  assert.equal(erFrontrute('AUDI A2 00-05 SOLTAK', '8562GBZH5', '8Z0877055'), false);
+});
+
+test('PAKNING-keyword → ikke frontrute (AUDI A6 pakning)', () => {
+  assert.equal(erFrontrute('AUDI A6 4B 97-04 PAKNING SOLTAK', '8589GZPE5', '8K9877071'), false);
+});
+
+test('SIDORUTA (svensk) → ikke frontrute (SUZUKI SJ410)', () => {
+  assert.equal(erFrontrute('SUZUKI SJ410 85- SIDORUTA CL VS+HS', '10054CL', '8005FCLR3RQ'), false);
+});
+
+test('F-posisjon (ventilrute) → ikke frontrute', () => {
+  assert.equal(erFrontrute('SUZUKI SJ410 85-', '10054CL', '8005FCLR3RQ'), false);
+});
+
+test('S-posisjon (siderute) → ikke frontrute', () => {
+  assert.equal(erFrontrute('VOLVO S60 01-', '1234SGN', '5321SGNC1'), false);
+});
+
+test('«BYTTNR»-plassholder (ikke eurokode) faller gjennom → frontrute-kandidat', () => {
+  assert.equal(erFrontrute('FORD TRANSIT 86-99 FRONTRUTE EL.', '1456GYEL', 'BYTTNR'), true);
+});
+
+test('«VENT» må IKKE treffe «VENTURE» (modellnavn) → frontrute-kandidat', () => {
+  assert.equal(erFrontrute('CHEVROLET VENTURE 97-', 'W1454GB', '6281AGNBLVZ'), true);
+});
+
+test('«VENT» alene (ventilrute) → ikke frontrute — posisjon A isolerer keywordet', () => {
+  assert.equal(erFrontrute('FORD ESCORT VENT 80-', '1310CL', '5453ACL'), false);
+});
+
+test('«HATCH» må IKKE treffe «HATCHBACK» → frontrute-kandidat', () => {
+  assert.equal(erFrontrute('FORD FIESTA HATCHBACK 89-', '1440GN', '5137AGN'), true);
+});
+
+test('«ALLE MOD» er fjernet — MAZDA 323 ALLE MOD med posisjon A → frontrute-kandidat', () => {
+  assert.equal(erFrontrute('MAZDA 323 ALLE MOD 86-89', '1413BL', '5125ABL'), true);
+});
+
+test('«ALLE MOD» er fjernet, men DØRRUTE fanger fortsatt (MAZDA 6 DØRRUTE)', () => {
+  assert.equal(erFrontrute('MAZDA 6 ALLE MOD 13- DØRRUTE', '29969GN', '5180LGSS4FDW'), false);
+});

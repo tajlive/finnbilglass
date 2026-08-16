@@ -34,8 +34,12 @@ export function dekodeEurokode(kode: string | null | undefined): Dekodet {
   if (!kode) return { kode: kode ?? '', posisjon: null, fargetone: null, egenskaper: [], raa: '' };
   const raa = kode.toUpperCase();
   const m = raa.match(/^(\d{3,5})(.*)$/);
-  const rest = m ? m[2] : raa;
-
+  // Ingen 3–5-sifret katalogkode → IKKE en eurokode. OEM-delnummer («7H0877051»),
+  // plassholdere («BYTTNR»), 2-sifrede veterankoder («42C») og US-koder («W946GB»)
+  // har ingen pålitelig posisjon å utlede. Returnér null-posisjon, aldri gjett
+  // («B» i «BYTTNR» er IKKE bakrute).
+  if (!m) return { kode, posisjon: null, fargetone: null, egenskaper: [], raa };
+  const rest = m[2];
   const posBokstav = rest.charAt(0);
   const posisjon = POSISJON[posBokstav] ?? null;
 
