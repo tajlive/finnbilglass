@@ -181,10 +181,21 @@ async function lagVinOverride(env: Env, vin: string | null | undefined): Promise
   return [...unike.values()];
 }
 
+/** GT-radens serie-kode — begge veier: direkte kode i navnet («GOLF IV», «W204»,
+ *  «F56») ELLER utledet fra (merke, GT-modell-navn, år) som SVV-modell
+ *  («1 HBK» 2007 → E81 — seed-rader uten kode får generasjonskoden sin). */
+function gtSerieFor(make: string, gtModell: string, aar: number | null): string | null {
+  const direkte = normaliserKatalogModell(gtModell);
+  if (direkte) return direkte;
+  return serieKey(make, gtModell, aar);
+}
+
 /** Alla GT-eurokoder for et kjøretøy (inkl. de uten prislistetreff) — fasit-settet.
  *  Brukes for å gate PINPOINT fra L2/L3: kandidaten MÅ bekreftes av ground_truth.
- *  Serie-mapping: Mercedes W-koder («C 180 CDI» 2013 → W204) og BMW E/F/G-koder
- *  («525D» 2001 → E39) matches mot GT-rader nøklet med samme serie-kode. */
+ *  Serie-mapping: Mercedes W-koder («C 180 CDI» 2013 → W204), BMW E/F/G-koder
+ *  («525D» 2001 → E39), VW-generasjoner («GOLF» 2005 → GOLF V), Opel-bokstaver,
+ *  MINI R/F-koder, Nissan P/K/N, Toyota MK/J-serier — matches mot GT-rader
+ *  nøklet med samme serie-kode (begge veier, se gtSerieFor). */
 async function gtEurokoderSett(env: Env, make: string, model: string, aar: number | null): Promise<Set<string> | null> {
   if (aar == null) return null;
   const tokens = modellTokensAv(model, make);
@@ -199,7 +210,7 @@ async function gtEurokoderSett(env: Env, make: string, model: string, aar: numbe
   const sortert = [...(rows.results ?? [])].sort((a, b) => (eksakt(b) ? 1 : 0) - (eksakt(a) ? 1 : 0));
   const sett = new Set<string>();
   for (const r of sortert) {
-    const gtSerie = normaliserKatalogModell(r.model);
+    const gtSerie = gtSerieFor(make, r.model, aar);
     const serieMatch = !!serie && !!gtSerie && gtSerie === serie;
     if (!eksakt(r) && !ordTreff(r.model, tokens) && !serieMatch) continue;
     sett.add(String(r.frontrute_eurocode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
@@ -209,7 +220,7 @@ async function gtEurokoderSett(env: Env, make: string, model: string, aar: numbe
 
 /** L1 — ground_truth: verifiserte kjøretøy → frontrute-kode (varenr i prisliste).
  *  Match: make + EKSAKT år + ordbasert modell-token (aldri substring)
- *  ELLER serie-kode-match (Mercedes W204 / BMW E39). */
+ *  ELLER serie-kode-match (Mercedes W204 / BMW E39 / VW GOLF V / …). */
 async function lagGroundTruth(env: Env, make: string, model: string, aar: number | null): Promise<ResolverKandidat[]> {
   if (aar == null) return [];
   const tokens = modellTokensAv(model, make);
@@ -224,7 +235,7 @@ async function lagGroundTruth(env: Env, make: string, model: string, aar: number
   const eksakt = (r: { model: string }) => r.model.toUpperCase() === model;
   const sortert = [...(rows.results ?? [])].sort((a, b) => (eksakt(b) ? 1 : 0) - (eksakt(a) ? 1 : 0));
   for (const r of sortert) {
-    const gtSerie = normaliserKatalogModell(r.model);
+    const gtSerie = gtSerieFor(make, r.model, aar);
     const serieMatch = !!serie && !!gtSerie && gtSerie === serie;
     if (!eksakt(r) && !ordTreff(r.model, tokens) && !serieMatch) continue;
     const k = await prisKandidat(env, r.frontrute_eurocode);
