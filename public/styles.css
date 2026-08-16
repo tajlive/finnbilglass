@@ -1,7 +1,7 @@
 /* Finnbilglass.no — designtokens + komponenter
    Palett: B teal (Tom-vedtatt 2026-08-13). Font: Plus Jakarta Sans.
-   Mobil-først, WCAG 2.2 AA. Større + boldere type (Tom 2026-08-13, iPhone 15 Pro). */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+   Mobil-først, WCAG 2.2 AA. Større + boldere type (Tom 2026-08-13, iPhone 15 Pro).
+   Font lastes via <link> i index.html (preconnect + wght@500..800 — vekt 400 ubrukt). */
 
 :root {
   /* Brand — B teal */
@@ -40,12 +40,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.wrap { max-width: 560px; margin: 0 auto; padding: 0 20px 48px; }
+/* Notch / safe-area (iPhone) — viewport-fit=cover i index.html */
+.wrap { max-width: 560px; margin: 0 auto; padding: 0 20px calc(48px + env(safe-area-inset-bottom)); }
 
 /* Header */
 .top {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 0; border-bottom: 1px solid var(--border); margin-bottom: 28px;
+  padding: calc(18px + env(safe-area-inset-top)) 0 18px; border-bottom: 1px solid var(--border); margin-bottom: 28px;
 }
 .logo { display: flex; align-items: center; gap: 8px; font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
 .logo-ikon { flex: 0 0 auto; }
@@ -121,6 +122,22 @@ button { font-family: inherit; cursor: pointer; }
 .rad { display: flex; gap: 10px; margin-top: 4px; }
 .rad .prim, .rad .sek { flex: 1; }
 
+/* Import-merkelapp (side 2: bekreft) */
+.import-merke {
+  border: 1.5px solid #E3B341; background: #FDF6E3; color: #7A5B00;
+  border-radius: var(--radius-card); padding: 10px 14px; margin-bottom: 12px;
+  font-size: 15px; font-weight: 700; line-height: 1.35;
+}
+
+/* Detaljlinjer (chassisnummer, førstegangsregistrering) */
+.detlinjer {
+  border: 1.5px solid var(--border); border-radius: var(--radius-card);
+  padding: 12px 16px; margin-bottom: 16px; background: var(--surface);
+  font-size: 14px; color: var(--text-2);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.detlinjer b { color: var(--ink); font-weight: 700; }
+
 /* Car card */
 .bilkort {
   border: 1.5px solid var(--border); border-radius: var(--radius-card);
@@ -160,7 +177,7 @@ button { font-family: inherit; cursor: pointer; }
 .varekort .meta { font-size: 14px; font-weight: 600; color: var(--text-3); }
 .varekort .spec { font-size: 15px; font-weight: 600; color: var(--text-2); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 .alt-row { font-size: 14px; font-weight: 600; color: var(--text-2); padding: 6px 0; border-bottom: 1px dashed var(--border); font-variant-numeric: tabular-nums; }
-.prisline {
+.prislinje {
   display: flex; justify-content: space-between; align-items: baseline;
   border-top: 1px solid var(--border); padding: 16px 0 12px; margin-top: 4px;
 }
@@ -177,9 +194,19 @@ button { font-family: inherit; cursor: pointer; }
   color: #086b4c; background: #e6f7f0; border: 1px solid #b8e6d5;
   border-radius: 10px; padding: 10px 14px; margin: 4px 0 16px;
 }
+.status.verify {
+  color: #9a6700; background: #fff7e8; border: 1px solid #f4d7a1;
+  border-radius: 10px; padding: 10px 14px; margin: 4px 0 16px;
+}
 
 /* Footer */
 footer { text-align: center; font-size: 13px; font-weight: 500; color: var(--text-3); padding-top: 24px; border-top: 1px solid var(--border); margin-top: 24px; }
+
+/* Smal mobil (<380px): stack søkefeltet — input over knapp (bedre plass til skiltet) */
+@media (max-width: 380px) {
+  .search { flex-direction: column; }
+  .search button { width: 100%; }
+}
 
 /* Desktop: samme sentrerte kolonne, litt større type */
 @media (min-width: 768px) {

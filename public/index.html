@@ -2,9 +2,13 @@
 <html lang="no">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Finnbilglass — bilglass til ekte pris</title>
 <meta name="description" content="Finn riktig frontrute til din bil — uten forsikring. Ekte priser, direkte fra lager.">
+<meta name="theme-color" content="#0E9F6E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
 <link rel="stylesheet" href="styles.css">
 <link rel="icon" type="image/svg+xml" href="ikon.svg">
 </head>
@@ -26,11 +30,11 @@
     <h1>Bilglass til ekte pris — uten forsikring</h1>
     <p class="sub">Skriv inn kjennemerket, så finner vi riktig glass til din bil.</p>
     <form id="form-regnr" class="search">
-      <input id="input-regnr" type="text" placeholder="F.eks. SU18018" autocomplete="off" maxlength="10" autocapitalize="characters">
+      <input id="input-regnr" type="text" placeholder="F.eks. SU 18018" autocomplete="off" autocapitalize="characters" spellcheck="false" autocorrect="off" enterkeyhint="go" maxlength="10">
       <button type="submit">Finn glass</button>
     </form>
     <button id="btn-manual" class="link">Fyll inn bilen manuelt</button>
-    <p class="note">Vi slår opp bilen din direkte hos Statens vegvesen. Finner vi den ikke, fyller du inn bilen manuelt.</p>
+    <p class="note">✓ Vi bruker Statens vegvesen for å identifisere bilen din.</p>
   </section>
 
   <!-- 2: manuell bil -->
@@ -47,12 +51,14 @@
 
   <!-- 3: bekreft bil -->
   <section id="screen-bekreft" class="screen hidden">
-    <h2>Stemmer dette?</h2>
+    <h2>Vi fant bilen din</h2>
     <div id="bekreft-bil" class="bilkort"></div>
+    <div id="bekreft-import" class="import-merke hidden"></div>
+    <div id="bekreft-det" class="detlinjer hidden"></div>
     <div id="bekreft-regnr" class="note regnr-note hidden"></div>
     <div class="rad">
-      <button id="btn-bekreft-ja" class="prim">Ja, det stemmer</button>
-      <button id="btn-bekreft-nei" class="sek">Nei</button>
+      <button id="btn-bekreft-ja" class="prim">Fortsett til glass</button>
+      <button id="btn-bekreft-nei" class="sek">Ikke min bil</button>
     </div>
   </section>
 
@@ -88,7 +94,7 @@
     <div id="resultat-regnr" class="note regnr-note hidden"></div>
     <div id="resultat-alt" class="alternativer"></div>
     <div class="prislinje">
-      <span class="prislbl">Pris inkl. mva</span>
+      <span id="resultat-prislbl" class="prislbl">Pris inkl. mva</span>
       <span id="resultat-pris" class="pris"></span>
     </div>
     <p class="note">Montering (frontrute) og frakt tilkommer. Glasset sendes direkte fra lager — eller du kan velge et av våre avtale-verksteder.</p>
@@ -104,7 +110,7 @@
   </section>
 
   <footer>
-    <p>Finnbilglass — bilglass til ekte pris. Levert fra lager i Oslo og Stockholm.</p>
+    <p>Finnbilglass — bilglass til ekte pris. Leveres over hele Norge.</p>
   </footer>
 </div>
 <script src="app.js"></script>
