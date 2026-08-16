@@ -231,6 +231,30 @@ function normVin(vin: string | null | undefined): string | null {
   return v.length >= 11 ? v : null;
 }
 
+/** VIN-posisjon 10 → FAKTISK modellår (fabrikkåret). SVV gir kun norsk registreringsdato —
+ *  importbiler registrert år X kan være modellår X−n, og katalog-/GT-år er modellårsbasert.
+ *  Standard VIN-årskoder: 1980–2000 = A–Y (uten I/O/Q/U/Z), 2001–2009 = 1–9, 2010+ = A–Y igjen.
+ *  hintAar (registreringsåret) disambiguerer syklusene (A = 1980 eller 2010). */
+export function vinModelYear(vin: string | null | undefined, hintAar: number | null | undefined): number | null {
+  const v = (vin ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (v.length < 11) return null;
+  const c = v.charAt(9); // posisjon 10 (1-indeksert)
+  if (/^[1-9]$/.test(c)) return 2000 + parseInt(c, 10); // 2001–2009
+  const BOKSTAV: Record<string, number> = {
+    A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, J: 8, K: 9, L: 10, M: 11, N: 12,
+    P: 13, R: 14, S: 15, T: 16, V: 17, W: 18, X: 19, Y: 20,
+  };
+  const offset = BOKSTAV[c];
+  if (offset == null) return null;
+  const aar80 = offset + 1980; // 1980–2000
+  const aar10 = offset + 2010; // 2010–2030
+  if (hintAar != null) {
+    return Math.abs(hintAar - aar80) <= Math.abs(hintAar - aar10) ? aar80 : aar10;
+  }
+  // Uten hint: moderne bilpark dominerer — velg 2010+-syklusen hvis den er rimelig.
+  return aar10 <= new Date().getUTCFullYear() + 2 ? aar10 : aar80;
+}
+
 /** L0 — eksakt VIN-fasit. Kun manuelt verifiserte overstyringer. */
 async function lagVinOverride(env: Env, vin: string | null | undefined): Promise<ResolverKandidat[]> {
   const v = normVin(vin);
@@ -264,21 +288,22 @@ function gtSerieFor(make: string, gtModell: string, aar: number | null): string 
  *  («525D» 2001 → E39), VW-generasjoner («GOLF» 2005 → GOLF V), Opel-bokstaver,
  *  MINI R/F-koder, Nissan P/K/N, Toyota MK/J-serier — matches mot GT-rader
  *  nøklet med samme serie-kode (begge veier, se gtSerieFor). */
-async function gtEurokoderSett(env: Env, make: string, model: string, aar: number | null): Promise<Set<string> | null> {
-  if (aar == null) return null;
+async function gtEurokoderSett(env: Env, make: string, model: string, aarList: number[]): Promise<Set<string> | null> {
+  if (!aarList.length) return null;
   const tokens = modellTokensAv(model, make);
-  const serie = serieKey(make, model, aar);
+  const serie = serieKey(make, model, aarList[0]);
   if (!tokens.length && !serie) return null;
+  const plasser = aarList.map(() => '?').join(',');
   const rows = await env.FINNBILGLASS_DB.prepare(
     `SELECT model, frontrute_eurocode FROM ground_truth
-     WHERE make = ? AND year = ?
+     WHERE make = ? AND year IN (${plasser})
      ORDER BY model LIMIT 200`
-  ).bind(make, aar).all<{ model: string; frontrute_eurocode: string }>();
+  ).bind(make, ...aarList).all<{ model: string; frontrute_eurocode: string }>();
   const eksakt = (r: { model: string }) => r.model.toUpperCase() === model;
   const sortert = [...(rows.results ?? [])].sort((a, b) => (eksakt(b) ? 1 : 0) - (eksakt(a) ? 1 : 0));
   const sett = new Set<string>();
   for (const r of sortert) {
-    const gtSerie = gtSerieFor(make, r.model, aar);
+    const gtSerie = gtSerieFor(make, r.model, aarList[0]);
     const serieMatch = !!serie && !!gtSerie && gtSerie === serie;
     if (!eksakt(r) && !ordTreff(r.model, tokens) && !serieMatch) continue;
     sett.add(String(r.frontrute_eurocode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
@@ -288,22 +313,25 @@ async function gtEurokoderSett(env: Env, make: string, model: string, aar: numbe
 
 /** L1 — ground_truth: verifiserte kjøretøy → frontrute-kode (varenr i prisliste).
  *  Match: make + EKSAKT år + ordbasert modell-token (aldri substring)
- *  ELLER serie-kode-match (Mercedes W204 / BMW E39 / VW GOLF V / …). */
-async function lagGroundTruth(env: Env, make: string, model: string, aar: number | null): Promise<ResolverKandidat[]> {
-  if (aar == null) return [];
+ *  ELLER serie-kode-match (Mercedes W204 / BMW E39 / VW GOLF V / …).
+ *  aarList: prioriterte år (VIN-modellåret først, registreringsåret som fallback) —
+ *  GT-rader kan være nøklet på begge, og VIN-korreksjon må aldri MISTE GT-treff. */
+async function lagGroundTruth(env: Env, make: string, model: string, aarList: number[]): Promise<ResolverKandidat[]> {
+  if (!aarList.length) return [];
   const tokens = modellTokensAv(model, make);
-  const serie = serieKey(make, model, aar);
+  const serie = serieKey(make, model, aarList[0]);
   if (!tokens.length && !serie) return [];
+  const plasser = aarList.map(() => '?').join(',');
   const rows = await env.FINNBILGLASS_DB.prepare(
     `SELECT model, frontrute_eurocode, confidence FROM ground_truth
-     WHERE make = ? AND year = ?
+     WHERE make = ? AND year IN (${plasser})
      ORDER BY confidence DESC, model ASC LIMIT 200`
-  ).bind(make, aar).all<{ model: string; frontrute_eurocode: string; confidence: number }>();
+  ).bind(make, ...aarList).all<{ model: string; frontrute_eurocode: string; confidence: number }>();
   const unike = new Map<string, ResolverKandidat>();
   const eksakt = (r: { model: string }) => r.model.toUpperCase() === model;
   const sortert = [...(rows.results ?? [])].sort((a, b) => (eksakt(b) ? 1 : 0) - (eksakt(a) ? 1 : 0));
   for (const r of sortert) {
-    const gtSerie = gtSerieFor(make, r.model, aar);
+    const gtSerie = gtSerieFor(make, r.model, aarList[0]);
     const serieMatch = !!serie && !!gtSerie && gtSerie === serie;
     if (!eksakt(r) && !ordTreff(r.model, tokens) && !serieMatch) continue;
     const k = await prisKandidat(env, r.frontrute_eurocode);
@@ -465,6 +493,13 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
 export async function resolveFrontrute(env: Env, bil: BilInput): Promise<ResolverResultat> {
   const make = normBrand(bil.merke);
   const model = (bil.modell ?? '').trim().toUpperCase();
+  // Faktisk modellår fra VIN (pos 10) vinner over registreringsåret: SVV gir kun norsk
+  // registreringsdato, så importbiler registrert senere enn modellåret fikk feil generasjon.
+  const aarVin = vinModelYear(bil.vin, bil.aar);
+  const aar = aarVin ?? bil.aar ?? null;
+  // GT-oppslag prøver begge år (VIN-året først, registreringsåret som fallback) —
+  // GT-rader kan være nøklet på enten, og VIN-korreksjon må aldri miste GT-treff.
+  const aarList = aar == null ? [] : [...new Set([aar, ...(bil.aar != null ? [bil.aar] : [])])];
 
   // L0 — eksakt VIN-overstyring for manuelt verifiserte fasitbiler
   let kand = await lagVinOverride(env, bil.vin);
@@ -472,12 +507,12 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   if (res) return res;
 
   // L1 — ground_truth (verifiserte kjøretøy)
-  kand = await lagGroundTruth(env, make, model, bil.aar ?? null);
+  kand = await lagGroundTruth(env, make, model, aarList);
   res = utfraKandidater(kand, '1 (ground_truth)', 0.85);
   if (res) return res;
 
   // GT-fasit-settet for kjøretøyet (gate for L2/L3-PINPOINT — G1-doktrine)
-  const gtSett = await gtEurokoderSett(env, make, model, bil.aar ?? null);
+  const gtSett = await gtEurokoderSett(env, make, model, aarList);
 
   // L3T — lisensiert TecDoc Vehicle Identification + parts linkage.
   // Ktype alene kan aldri overstyre feature-/OEM-gaten for PINPOINT.
@@ -486,12 +521,12 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   if (res) return res;
 
   // L2 — Pilkington-katalog
-  kand = await lagPilkington(env, make, model, bil.aar ?? null, bil.profil);
+  kand = await lagPilkington(env, make, model, aar, bil.profil);
   res = utfraKandidater(kand, '2 (glass_catalog)', 0.7, gtSett);
   if (res) return res;
 
   // L3 — ktype (kun når data finnes)
-  kand = await lagKtype(env, make, model, bil.aar ?? null);
+  kand = await lagKtype(env, make, model, aar);
   res = utfraKandidater(kand, '3 (ktype)', 0.75, gtSett);
   if (res) return res;
 

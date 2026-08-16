@@ -286,7 +286,7 @@
   // 6. Resultat — kall Worker /api/frontrute.
   //    Mock KUN ved file:// (demo). På live: ærlig feilmelding, aldri oppdiktede treff.
   function lastResultat() {
-    var body = { merke: state.merke, modell: state.modell, aar: state.aar, profil: state.profil };
+    var body = { merke: state.merke, modell: state.modell, aar: state.aar, vin: state.vin, profil: state.profil };
     fetch('/api/frontrute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -48,6 +48,7 @@ function validateBil(body: unknown): BilInput | string {
   const bil: BilInput = { merke: b.merke.trim() };
   if (typeof b.modell === 'string') bil.modell = b.modell.trim();
   if (typeof b.aar === 'number' && Number.isInteger(b.aar) && b.aar > 1900 && b.aar < 2100) bil.aar = b.aar;
+  if (typeof b.vin === 'string' && b.vin.trim()) bil.vin = b.vin.trim().toUpperCase();
   if (Array.isArray(b.nokkelord)) bil.nokkelord = (b.nokkelord as unknown[]).filter((k) => typeof k === 'string').map((k) => (k as string).trim());
   if (b.profil && typeof b.profil === 'object') {
     const p = b.profil as Record<string, unknown>;
