@@ -5,3 +5,22 @@ node_modules/
 dist/
 *.log
 .DS_Store
+
+# Hermes lokal tilstand
+.hermes/
+
+# Skrapet finn.no-data (regenererbar)
+data/finn-modeller/
+
+# Genererte dumper/rapporter (tracked inngangsdata beholdes: *.sql, *.md, fasit-glass.json)
+data/gt-ekspansjon/*.json
+data/hull-kart-*
+data/test-100-bom-analyse.json
+data/test-100-rapport.json
+data/test-100-resultater.jsonl
+data/test-500-*.json
+data/test-500-*.jsonl
+
+# Skjermbilder og demo-skrap
+docs/*.png
+docs/demo-*
