@@ -177,7 +177,10 @@ test('GT-konsistens mot test-500-gt-detaljer: entydige sett må komme fra en mat
       const enKode = [...sett][0];
       // Den entydige koden må ha en GT-rad (make+år) som matcher bilens modell
       // (fasit-kilden er GT-dataene, ikke test-scriptets gruppering).
-      const kildeRad = rader.find((r) => String(r.frontrute_eurocode ?? '').toUpperCase() === enKode);
+      // NB: gtRaderSett normaliserer koder (f.eks. bobil-koder «BO90.02.203GN» →
+      // «BO9002203GN»); kildeRad-sjekken må normalisere på samme måte.
+      const normKode = (k) => String(k ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const kildeRad = rader.find((r) => normKode(r.frontrute_eurocode) === enKode);
       if (!kildeRad) {
         avvik++;
         if (avvik <= 3) console.error(`  avvik: ${d.make} ${d.model} ${d.year}: ${enKode} har ingen GT-rad i make+år`);
