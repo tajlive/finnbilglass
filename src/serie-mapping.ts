@@ -355,6 +355,12 @@ function mercedesKlasse(modell: string): string | null {
   // «190 E 2.O» spesialfall; «300 D» → W123/W124/W210-æra
   if (/^190\b/.test(ren)) return '190';
   if (/^300\b/.test(ren)) return '300';
+  // Varebiler: «208 CDI», «308 CDI», «311 CDI» (2XX-5XX = SPRINTER) og
+  // «108 CDI», «115 CDI» (1XX = VITO). SVV gir siffer-ledet betegnelse uten
+  // klasse-bokstav (UR67407: «208 CDI» = Sprinter W901, typebetegnelse C).
+  // «190»/«300» fanges over — 1XX her er VITO (108/109/111/115/119/122 CDI).
+  const varebil = ren.match(/^(\d{3})\s*(CDI|D)\b/);
+  if (varebil) return parseInt(varebil[1], 10) < 200 ? 'VITO' : 'SPRINTER';
   // EQ-serien: «EQE 350 4MATIC», «EQA 250», «EQB 300»
   const eq = ren.match(/^(EQE|EQS|EQC|EQA|EQB)\b/);
   if (eq) return eq[1];

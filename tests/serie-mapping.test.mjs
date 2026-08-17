@@ -40,6 +40,15 @@ test('Mercedes: klasse-prefiks → W-kode per år', () => {
   assert.equal(serieKey('MERCEDES', 'A 180', 2000), 'W168');
 });
 
+test('Mercedes varebiler: siffer-betegnelse → SPRINTER/VITO (UR67407-saken)', () => {
+  // SVV gir «208 CDI» (Sprinter W901, typebetegnelse C) — siffer-ledet uten klassebokstav.
+  assert.equal(serieKey('MERCEDES', '208 CDI', 2002), 'W901');
+  assert.equal(serieKey('MERCEDES', '308 CDI', 2008), 'W906');
+  assert.equal(serieKey('MERCEDES', '311 CDI', 2015), 'W906');
+  assert.equal(serieKey('MERCEDES', '108 CDI', 2002), 'W638'); // VITO
+  assert.equal(serieKey('MERCEDES', '115 CDI', 2010), 'W639'); // VITO
+});
+
 test('Mercedes: ukjent modell → null (fallback til token-matching)', () => {
   assert.equal(serieKey('MERCEDES', 'ATEGO', 2012), null);
   assert.equal(serieKey('MERCEDES', 'SUPERCAB', 1981), null);
