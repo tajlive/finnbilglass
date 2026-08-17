@@ -547,14 +547,34 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
   margin: 4px 0 16px;
 }
 
-/* Alternative rader */
+/* Alternative rader — folkemål-variantliste */
 .alt-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   font-size: var(--fs-xs);
-  font-weight: 600;
   color: var(--text-2);
   padding: 7px 0;
   border-bottom: 1px dashed var(--border);
   font-variant-numeric: tabular-nums;
+}
+.alt-pris {
+  font-weight: 800;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.alt-beskrivelse {
+  font-weight: 500;
+}
+.varianter-intro {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  margin: 0 0 8px;
+}
+.varianter-avslutning {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  margin: 10px 0 0;
 }
 
 /* Kjennemerkelinje */

@@ -414,6 +414,25 @@
     return map[e] || e;
   }
 
+  // Variant på folkemål — kunden skal forstå forskjellen uten varenr eller fagbegreper.
+  function beskrivVariant(k) {
+    var a = k.attributter || {};
+    var deler = [];
+    if (a.sensor) deler.push('med regnsensor');
+    if (a.kamera) deler.push('med kamera');
+    if (a.adas) deler.push('med førerassistansesystem');
+    if (a.coated) deler.push('med sol-/varmedempende belegg');
+    if (a.hud) deler.push('med head-up-display');
+    if (a.antenne) deler.push('med antenne i glasset');
+    if (a.oppvarmet) deler.push('oppvarmet');
+    if (a.acoustic) deler.push('lyddempet');
+    if (deler.length) return deler.join(', ');
+    var e = (k.egenskaper || []).map(lblEgenskap).join(', ');
+    if (e) return e;
+    var navn = (k.varenavn || '').trim();
+    return navn || null;
+  }
+
   function prisData(data, anbefaling) {
     var kandidater = Array.isArray(data && data.kandidater) ? data.kandidater : [];
     var priser = kandidater
@@ -484,17 +503,30 @@
     var alt = $('resultat-alt');
     alt.innerHTML = '';
     if (data.kandidater && data.kandidater.length > 1 && !data.pinpoint) {
-      var t = document.createElement('p');
-      t.className = 'note';
-      t.textContent = 'Andre mulige varianter:';
-      alt.appendChild(t);
+      var intro = document.createElement('p');
+      intro.className = 'varianter-intro';
+      intro.textContent = 'Flere varianter av frontruten finnes til din bil. Riktig variant avhenger av utstyret bilen ble levert med. Vi finner den riktige for deg — du trenger ikke velge selv.';
+      alt.appendChild(intro);
       data.kandidater.slice(1, 4).forEach(function (k) {
         var row = document.createElement('div');
         row.className = 'alt-row';
-        var attrs = (k.egenskaper || []).map(lblEgenskap).join(', ');
-        row.textContent = (k.varenr || '') + ' — ' + formatPris(k.pris) + (attrs ? ' · ' + attrs : '');
+        var pris = document.createElement('span');
+        pris.className = 'alt-pris';
+        pris.textContent = formatPris(k.pris);
+        row.appendChild(pris);
+        var beskrivelse = beskrivVariant(k);
+        if (beskrivelse) {
+          var txt = document.createElement('span');
+          txt.className = 'alt-beskrivelse';
+          txt.textContent = beskrivelse;
+          row.appendChild(txt);
+        }
         alt.appendChild(row);
       });
+      var avslutning = document.createElement('p');
+      avslutning.className = 'varianter-avslutning';
+      avslutning.textContent = 'Raskeste måte å være 100 % sikker: fotografer 43R-nummeret på det gamle glasset (1 minutt). Ellers dobbeltsjekker vi riktig variant før levering.';
+      alt.appendChild(avslutning);
     }
   }
 
