@@ -71,9 +71,12 @@ test('tierPris: ×0,60 rundet ned til nærmeste tier', () => {
   assert.equal(tierPris(14150), 8490);
 });
 
-test('tierPris: over høyeste tier → null (spesial)', () => {
-  assert.equal(tierPris(15000), 8490); // 9000 → høyeste tier
-  assert.equal(tierPris(20000), 8490); // 12000 → høyeste tier
+test('tierPris: over høyeste tier → null (spesial/pris på forespørsel)', () => {
+  // 15000 × 0,60 = 9000 > 8490 → spesial (Tom: 5. prisgruppe «pris på forespørsel»)
+  assert.equal(tierPris(15000), null);
+  assert.equal(tierPris(20000), null); // 12000 → spesial
+  // Grensetilfelle: 14152 × 0,60 = 8491,2 > 8490 → spesial; 14150 × 0,60 = 8490 → tier 8490
+  assert.equal(tierPris(14152), null);
 });
 
 test('tierPris: under laveste tier eller ugyldig → null', () => {

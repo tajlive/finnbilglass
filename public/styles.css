@@ -301,6 +301,12 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
 .foto-prim:active { transform: scale(.98); }
 .foto-prim .ikon { width: 24px; height: 24px; }
 
+/* «Fotografer kjennemerket» er kun for touch-enheter (mobil/pad). Desktop skriver kjennemerket. */
+@media (hover: hover) and (pointer: fine) {
+  .foto-prim { display: none; }
+  .eller { display: none; }
+}
+
 /* «eller skriv kjennemerket»-separator */
 .eller {
   display: flex;
@@ -413,7 +419,8 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
   margin-bottom: 14px;
   box-shadow: 0 1px 4px rgba(15,23,42,.06);
 }
-.bilkort-merke { font-size: var(--fs-xs); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); }
+.bilkort-merke { font-size: var(--fs-xs); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); display: flex; align-items: center; min-height: 26px; }
+.bilkort-logo { height: 30px; width: auto; max-width: 150px; object-fit: contain; }
 .bilkort-navn { font-size: 22px; font-weight: 900; letter-spacing: -.02em; }
 
 /* ── IMPORTMERKELAPP ───────────────────────────────────────── */

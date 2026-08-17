@@ -186,6 +186,138 @@
   }
 
   // Felles: fyll state fra SVV-bil + resolver → vis glassvalg-skjermen (Tom: ingen bekreft-skjerm).
+  // Bilmerke → logo-fil (public/bilmerker/<slug>.svg). Nominell varemerkebruk for å
+  // identifisere bilens merke. Fallback: merketekst hvis logo mangler eller ikke lastes.
+  // Dekker alle merkene i auto-glass.no-katalogen (Tom 2026-08-18).
+  var MERKE_LOGO = {
+    'ALFA': 'alfa-romeo',
+    'ALFA ROMEO': 'alfa-romeo',
+    'ASTON MARTIN': 'aston-martin',
+    'AUDI': 'audi',
+    'AUSTIN': 'austin',
+    'BENTLEY': 'bentley',
+    'BMW': 'bmw',
+    'BORGWARD': 'borgward',
+    'BUICK': 'buick',
+    'BYD': 'byd',
+    'CADILLAC': 'cadillac',
+    'CHEVROLET': 'chevrolet',
+    'CHRYSLER': 'chrysler',
+    'CITROEN': 'citroen',
+    'CITROËN': 'citroen',
+    'CUPRA': 'cupra',
+    'DACIA': 'dacia',
+    'DAEWOO': 'daewoo',
+    'DAIHATSU': 'daihatsu',
+    'DODGE': 'dodge',
+    'FERRARI': 'ferrari',
+    'FIAT': 'fiat',
+    'FORD': 'ford',
+    'GINETTA': 'ginetta',
+    'HONDA': 'honda',
+    'HUMMER': 'hummer',
+    'HYUNDAI': 'hyundai',
+    'INFINITI': 'infiniti',
+    'ISUZU': 'isuzu',
+    'IVECO': 'iveco',
+    'JAGUAR': 'jaguar',
+    'JEEP': 'jeep',
+    'KIA': 'kia',
+    'LADA': 'lada',
+    'LAMBORGHINI': 'lamborghini',
+    'LANCIA': 'lancia',
+    'LAND ROVER': 'land-rover',
+    'LANDROVER': 'land-rover',
+    'LEXUS': 'lexus',
+    'LINCOLN': 'lincoln',
+    'LOTUS': 'lotus',
+    'MAN': 'man',
+    'MASERATI': 'maserati',
+    'MAXUS': 'maxus',
+    'MAZDA': 'mazda',
+    'MCLAREN': 'mclaren',
+    'MERCEDES': 'mercedes-benz',
+    'MERCEDES AMG': 'mercedes-benz',
+    'MERCEDES-AMG': 'mercedes-benz',
+    'MERCEDES-BENZ': 'mercedes-benz',
+    'MG': 'mg',
+    'MINI': 'mini',
+    'MITSUBISHI': 'mitsubishi',
+    'MORGAN': 'morgan',
+    'NIO': 'nio',
+    'NISSAN': 'nissan',
+    'OPEL': 'opel',
+    'PEUGEOT': 'peugeot',
+    'POLESTAR': 'polestar',
+    'PORSCHE': 'porsche',
+    'RENAULT': 'renault',
+    'ROLLS ROYCE': 'rolls-royce',
+    'ROLLS-ROYCE': 'rolls-royce',
+    'ROLLS-ROYCE MOTOR CARS': 'rolls-royce',
+    'ROVER': 'rover',
+    'SAAB': 'saab',
+    'SCANIA': 'scania',
+    'SEAT': 'seat',
+    'SERES': 'seres',
+    'SKODA': 'skoda',
+    'SMART': 'smart',
+    'SSANGYONG': 'ssangyong',
+    'SUBARU': 'subaru',
+    'SUZUKI': 'suzuki',
+    'TESLA': 'tesla',
+    'TOYOTA': 'toyota',
+    'VAUXHALL': 'vauxhall',
+    'VOLKSWAGEN': 'volkswagen',
+    'VOLVO': 'volvo',
+    'VOYAH': 'voyah',
+    'VW': 'volkswagen',
+    'VW NUTZFAHRZEUGE': 'volkswagen',
+    'XPENG': 'xpeng'
+  };
+
+  // Pen skrivemåte: «VOLKSWAGEN TRANSPORTER» → «Volkswagen Transporter» (Tom 2026-08-18).
+  // Beholder ekte forkortelser (CDI/TDI/AMG/VW), sifferkoder (208, XC90, W116) og
+  // bindestreks-/-pluss-kjeder uendret i de delene som er koder.
+  var BIL_FORKORTELSER = new Set([
+    'CDI','TDI','TSI','TFSI','GTI','GTD','AMG','DCI','SDI','HDI','JTD','CRDI',
+    'V8','V6','V12','V10','GT','RS','ST','GR','GTR','MPS','STI','WRX','NISMO','TRD',
+    'EV','PHEV','4WD','AWD','4MOTION','XDRIVE','QUATTRO','4MATIC','BLUETEC','MAN','BYD',
+    'BMW','GMC','JAC','DFSK','LPG'
+  ]);
+  // Kjente merker med spesiell skrivemåte (Tom 2026-08-18: «pent og moderne»).
+  var MERKE_PENT = {
+    'MCLAREN': 'McLaren', 'CITROEN': 'Citroën', 'CITROËN': 'Citroën',
+    'SSANGYONG': 'SsangYong', 'LAND ROVER': 'Land Rover', 'LANDROVER': 'Land Rover',
+    'ALFA ROMEO': 'Alfa Romeo', 'ASTON MARTIN': 'Aston Martin', 'ROLLS-ROYCE': 'Rolls-Royce',
+    'ROLLS ROYCE': 'Rolls-Royce', 'ROLLS-ROYCE MOTOR CARS': 'Rolls-Royce', 'VW': 'VW'
+  };
+  function penSkrivemaate(s) {
+    var key = String(s || '').toUpperCase().trim();
+    if (MERKE_PENT[key]) return MERKE_PENT[key];
+    return key.split(/([\s\-/+])/).map(function (del) {
+      if (/^[\s\-/+]+$/.test(del)) return del;       // separator beholdes
+      if (/\d/.test(del)) return del;                // sifferkoder: 208, XC90, W116, G-4
+      var upper = del.toUpperCase();
+      if (BIL_FORKORTELSER.has(upper)) return upper; // CDI, TDI, AMG, BMW…
+      if (del.length <= 2) return upper;             // VW, MG, X, S
+      return upper.charAt(0) + upper.slice(1).toLowerCase();
+    }).join('');
+  }
+
+  // Viser bilmerkets logo i bilkortet; fallback til merketekst hvis logo ikke finnes.
+  function visMerkeLogo(merke) {
+    var el = $('glass-merkelbl');
+    var key = (merke || '').toUpperCase().trim();
+    var slug = MERKE_LOGO[key];
+    if (!slug) { el.textContent = penSkrivemaate(key); return; }
+    var img = document.createElement('img');
+    img.className = 'bilkort-logo';
+    img.src = '/bilmerker/' + slug + '.svg';
+    img.alt = penSkrivemaate(key);
+    img.onerror = function () { el.textContent = penSkrivemaate(key); };
+    el.appendChild(img);
+  }
+
   function settBilFraSvv(bil, resolver, regnr) {
     state.regnr = regnr ? formatRegnr(regnr) : '';
     state.merke = bil.merke;
@@ -196,14 +328,15 @@
     state.import = !!bil.import;
     state.importLand = bil.importLand || null;
     state.resolver = resolver || null;
-    $('glass-merkelbl').textContent = state.merke;
-    $('glass-bilnavn').textContent = state.modell + (state.aar ? ' · ' + state.aar : '');
+    $('glass-merkelbl').textContent = '';
+    visMerkeLogo(state.merke);
+    $('glass-bilnavn').textContent = penSkrivemaate(state.modell) + (state.aar ? ' · ' + state.aar : '');
     renderGlassDet();
     visRegnr();
     show('glass');
   }
 
-  // Detaljlinjer fra SVV (førstegangsregistrert + import-merkelapp) på glassvalg-skjermen.
+  // Detaljlinjer fra SVV (førstegangsregistrert + VIN + import-merkelapp) på glassvalg-skjermen.
   function renderGlassDet() {
     var det = $('glass-det');
     det.classList.remove('hidden');
@@ -213,6 +346,12 @@
       r.className = 'detlinje';
       r.textContent = 'Førstegangsregistrert ' + state.forstegangsregistrert;
       det.appendChild(r);
+    }
+    if (state.vin) {
+      var v = document.createElement('div');
+      v.className = 'detlinje';
+      v.textContent = 'VIN-nummer: ' + state.vin;
+      det.appendChild(v);
     }
     if (state.import) {
       var imp = $('glass-import');
