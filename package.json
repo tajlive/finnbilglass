@@ -16,6 +16,8 @@
     "test:aar": "node --import tsx --test tests/aar-parser.test.mjs",
     "test:vin-gt": "node --import tsx --test tests/vin-resolver-gt.test.mjs",
     "test:fasit-live": "node --import tsx --test tests/fasit-live.test.mjs",
+    "test:fitment:golden": "node --test tests/fitment-golden.test.mjs",
+    "test:fitment:live": "node scripts/test-fitment-live.mjs",
     "test:fasit-integritet": "node --test tests/fasit-integritet.test.mjs",
     "test:gt-generator": "node --import tsx --test tests/er-frontrute.test.mjs",
     "test:serie": "node --import tsx --test tests/serie-mapping.test.mjs",
