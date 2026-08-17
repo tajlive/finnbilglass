@@ -14,6 +14,11 @@ binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db"
 database_id = "ac35018c-0d43-4742-adf8-d881b7274684"
 
+# ── R2 (opplæringsbilder: skilt-foto + 43R-foto, ALDRI slettet uten avtale) ──
+[[r2_buckets]]
+binding = "OPPLAERING_BUCKET"
+bucket_name = "finnbilglass-opplaering"
+
 # ── Secrets (IKKE i denne filen — bruk wrangler secret put): ──
 #    wrangler secret put SVV_API_KEY   (kjennemerke → bil, kommende)
 #    wrangler secret put IMAGE_RESOLVER_SECRET  (pilot-API for B2B/FinnBilGlass)

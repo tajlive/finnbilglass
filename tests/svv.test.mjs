@@ -65,7 +65,7 @@ test('svvLookup: full parsing av SVV-svar', async () => {
   assert.equal(bil.importLand, null);
 });
 
-test('svvLookup: import-deteksjon med land', async () => {
+test('svvLookup: import-deteksjon med bruktimport-objekt + land', async () => {
   mockFetch(200, {
     kjoretoydataListe: [
       {
@@ -73,15 +73,48 @@ test('svvLookup: import-deteksjon med land', async () => {
         registrering: { registreringsstatus: { kodeVerdi: 'REGISTRERT' } },
         godkjenning: {
           tekniskGodkjenning: { tekniskeData: { generelt: { merke: [{ merke: 'BMW' }], handelsbetegnelse: ['BMW X3'] } } },
-          forstegangsGodkjenning: { gyldigFraDato: '2018-11-01', fortollingOgMva: { fortollingsreferanse: '2018-11-01-1234', beskrivelse: 'DE BMW X3 XDRIVE20D' } },
+          forstegangsGodkjenning: {
+            gyldigFraDato: '2018-11-01',
+            fortollingOgMva: { fortollingsreferanse: '2018-11-01-1234', beskrivelse: 'DE BMW X3 XDRIVE20D' },
+            bruktimport: { importland: { landkode: 'DE', landNavn: 'TYSKLAND' }, kilometerstand: 35000 },
+          },
         },
       },
     ],
   });
   const bil = await svvLookup('XX12345', 'hemmelig');
   assert.equal(bil.import, true);
-  assert.equal(bil.importLand, 'Tyskland'); // DE → norsk navn
+  assert.equal(bil.importLand, 'TYSKLAND'); // SVVs landNavn vinner over fortollings-beskrivelse
   assert.equal(bil.aar, 2019);
+});
+
+test('svvLookup: fortollingsbeskrivelse med landkode alene er IKKE import (Tesla EF 93128-saken)', async () => {
+  // Tesla Model Y levert NY i Norge: fortollingen starter med «GB» som tollformat-kode
+  // (11GB/12GB-feltkoder), ikke Storbritannia. Bruktimport mangler, COC-gap 1 mnd.
+  mockFetch(200, {
+    kjoretoydataListe: [
+      {
+        kjoretoyId: { understellsnummer: 'XP7YGCEK8PB151026' },
+        forstegangsregistrering: { registrertForstegangNorgeDato: '2023-06-28' },
+        registrering: { registreringsstatus: { kodeVerdi: 'REGISTRERT' } },
+        godkjenning: {
+          tekniskGodkjenning: {
+            tekniskeData: { generelt: { merke: [{ merke: 'TESLA' }], handelsbetegnelse: ['Model Y'] } },
+            kjoretoyklassifisering: { nasjonalGodkjenning: { nasjonaltGodkjenningsAr: 2023 } },
+          },
+          forstegangsGodkjenning: {
+            gyldigFraDato: '2023-05-30',
+            forstegangRegistrertDato: '2023-06-28',
+            fortollingOgMva: { fortollingsreferanse: '4440012300219586', beskrivelse: 'GB Model Y 2023 Europe 11GB TESLA 12GB MODEL Y 13AK 1 20KK NE 20MK ADDR 21' },
+          },
+        },
+      },
+    ],
+  });
+  const bil = await svvLookup('EF93128', 'hemmelig');
+  assert.equal(bil.import, false); // GB i fortollingen er feltkode, ikke importbevis
+  assert.equal(bil.importLand, null);
+  assert.equal(bil.aar, 2023);
 });
 
 test('svvLookup: fortollingsreferanse alene med liten COC-gap → IKKE importbil (JD79487-saken)', async () => {
@@ -127,12 +160,13 @@ test('svvLookup: ukjent importland-kode beholdes rå', async () => {
         forstegangsregistrering: { registrertForstegangNorgeDato: '2020-01-01' },
         godkjenning: {
           tekniskGodkjenning: { tekniskeData: { generelt: { merke: [{ merke: 'OPEL' }], handelsbetegnelse: ['OPEL CORSA'] } } },
-          forstegangsGodkjenning: { fortollingOgMva: { fortollingsreferanse: 'x', beskrivelse: 'ZZ OPEL CORSA' } },
+          forstegangsGodkjenning: { fortollingOgMva: { fortollingsreferanse: 'x', beskrivelse: 'ZZ OPEL CORSA' }, bruktimport: { importland: { landkode: 'ZZ' } } },
         },
       },
     ],
   });
   const bil = await svvLookup('XX12345', 'hemmelig');
+  assert.equal(bil.import, true); // bruktimport-objekt = bevis
   assert.equal(bil.importLand, 'ZZ'); // ikke i LAND_NAVN → rå kode
 });
 

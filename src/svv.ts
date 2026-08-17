@@ -132,17 +132,24 @@ async function svvOppslag(
     // engangsavgift), også helt vanlige nybiler levert via norsk importør.
     //  Kilder til positivt bevis, i prioritert rekkefølge:
     //  1) SVVs EGET bruktimport-objekt (importland + kilometerstand) = autoritativt
-    //  2) fortollingsbeskrivelse med ISO-landkode («GB BMW X3 …») = positivt bevis
-    //  3) gap typegodkjenning (COC gyldigFraDato) → norsk førstegangsregistrering
+    //  2) gap typegodkjenning (COC gyldigFraDato) → norsk førstegangsregistrering
     //     > 24 mnd = bilen var registrert/brukt i utlandet før import til Norge
+    //  NB: landkode i fortollingsbeskrivelsen er IKKE bevis — «GB Model Y 2023
+    //  Europe 11GB TESLA…» er tollformatets feltkoder (11GB/12GB), ikke importland
+    //  (Tesla EF 93128, 2026-08-17: norsk-levert nybil flagget feil som GB-import).
+    //  Landkoden brukes KUN som importland-navn når importen allerede er bevist.
     const bruktimport = fg?.bruktimport;
     const fortoll = fg?.fortollingOgMva;
     const cocDato = fg?.gyldigFraDato;
-    const importLandKode = bruktimport?.importland?.landkode
-      ?? (fortoll?.beskrivelse ? /^([A-Z]{2})\b/.exec(fortoll.beskrivelse.trim())?.[1] : undefined);
+    const importLandKode = fortoll?.beskrivelse ? /^([A-Z]{2})\b/.exec(fortoll.beskrivelse.trim())?.[1] : undefined;
     const gapMnd = cocDato && regDato ? (Date.parse(regDato) - Date.parse(cocDato)) / (1000 * 60 * 60 * 24 * 30.44) : 0;
-    const importBrukt = !!bruktimport
-      || (!!fortoll?.fortollingsreferanse && (!!importLandKode || gapMnd > 24));
+    const importBrukt = !!bruktimport || gapMnd > 24;
+    // Importland: kun relevant når import er bevist. SVVs landNavn (autoritativt)
+    // vinner; ellers landkode-konvertering som siste fallback for COC-gap-import.
+    const importLand = !importBrukt
+      ? null
+      : bruktimport?.importland?.landNavn
+        ?? (importLandKode ? LAND_NAVN[importLandKode] ?? importLandKode : null);
     return {
       merke,
       modell,
@@ -152,8 +159,7 @@ async function svvOppslag(
       registrert: k.registrering?.registreringsstatus?.kodeVerdi === 'REGISTRERT',
       forstegangsregistrert: regDato || null,
       import: importBrukt,
-      importLand: bruktimport?.importland?.landNavn
-        ?? (importLandKode ? LAND_NAVN[importLandKode] ?? importLandKode : null),
+      importLand,
     };
   } catch (e) {
     console.error('SVV-oppslag feilet:', e instanceof Error ? e.message : String(e));
