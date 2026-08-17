@@ -1,0 +1,58 @@
+{
+  "_doktrine": "FITMENT TRUTH BASELINE v1 (Phase A0). Denne filen er den deterministiske GOLDEN-fasiten: hva uavhengig evidens sier SKAL skje — IKKE hva produksjonen tilfeldigvis returnerer i dag. En fasit får KUN endres med uavhengig, maskin-traceable evidens (OE-nummer, VIN→build-data, fysisk glass), aldri for å få en test grønn.",
+  "_kildeAutoritet": {
+    "A": "uavhengig verifisert fitment-sannhet",
+    "B": "autoritativ deterministisk katalog/OE-evidens",
+    "C": "sterk avledet fitment-evidens",
+    "D": "heuristisk/avledet kandidatevidens",
+    "E": "fallback/søk-heuristikk"
+  },
+  "_beslutningsvokabular": ["AUTO_MATCH", "NEEDS_CONFIRMATION", "MANUAL_REVIEW"],
+  "_verifikasjonsvokabular": ["VERIFIED", "PROVISIONAL", "AMBIGUOUS", "UNVERIFIED", "CONFLICTING"],
+  "_kjernerelger": [
+    "antall kandidater = 1 er IKKE det samme som riktig glass bevist.",
+    "AUTO_MATCH krever VERIFIED (uavhengig evidens) OG ingen uløst materiell konflikt.",
+    "PROVISIONAL/AMBIGUOUS/UNVERIFIED/CONFLICTING => aldri AUTO_MATCH (minst NEEDS_CONFIRMATION).",
+    "data/fasit-live.json (119 'maskinverifiserte') er CURRENT-BASELINE for drift-deteksjon, IKKE golden truth — de er gt-auto-prisliste-avledet."
+  ],
+  "fixtures": [
+    {
+      "id": "SU18018",
+      "regnr": "SU18018",
+      "vin": "WV1ZZZ7HZ5H060934",
+      "bil": "VW Transporter T5 2005",
+      "expectedOE": null,
+      "expectedEurocode": "8579AGSGYAVZ1B",
+      "expectedVarenr": "2525GYA",
+      "expectedDecision": "NEEDS_CONFIRMATION",
+      "verificationState": "PROVISIONAL",
+      "evidenceSource": "Kun Tom i chat 2026-08-16 ('2525CSGY ER IKKE RIKTIG GLASS') — én menneskelig kilde, ingen maskin-traceable evidens.",
+      "independentEvidenceAvailable": false,
+      "circularEvidence": "data/vin-glass-overrides.sql (source='manual-fasit', conf 0.98) er det ENESTE mekanisme som ville pinne VIN→8579AGSGYAVZ1B; den er IKKE i prod (vin_glass_overrides=0 rader). oe_eurocode_mapping har 0 VW T5 (8579*/7H0*) rader. glass_catalog.oem_numbers er '[]' for hele 8579*-familien. b2b-seed har 0 VW TRANSPORTER T5 rader.",
+      "currentBaselineDecision": "NEEDS_CONFIRMATION",
+      "currentBaselineDetail": "Prod returnerer VERIFY (6 kandidater via L2 glass_catalog 8579*-familie), IKKE PINPOINT. Det gamle scripts/test-fasit.mjs krevde PINPOINT 8579AGSGYAVZ1B — INKONSISTENT med både data og doktrine.",
+      "distinguishingFeature": "coated (C) vs ikke-coated — skillet mellom 2525CSGY og 2525GYA er utstyrsnivå som SVV/VIN IKKE kan bestemme.",
+      "verificationStatus": "PROVISIONAL",
+      "notes": "Bilidentitet er VERIFIED (SVV + VIN-dekode enige: VW TRANSPORTER, 2005). Glass-fitment er IKKE uavhengig verifiserbart fra dagens data — krever VIN→build-data→OE→eurocode eller fysisk glass-bilde (43R)."
+    },
+    {
+      "id": "AJ95429",
+      "regnr": "AJ95429",
+      "vin": null,
+      "bil": "Mercedes CLA 2016",
+      "expectedOE": null,
+      "expectedEurocode": null,
+      "expectedVarenr": null,
+      "expectedDecision": "NEEDS_CONFIRMATION",
+      "verificationState": "AMBIGUOUS",
+      "evidenceSource": "Tom-fasit 2026-08-13: tvetydig datagrunnlag (1B/1T-varianter) — aldri tving PINPOINT.",
+      "independentEvidenceAvailable": false,
+      "circularEvidence": "1B/1T-variant-suffikset er ikke dechiffrert; ingen OE/VIN-evidens skiller dem.",
+      "currentBaselineDecision": "NEEDS_CONFIRMATION",
+      "currentBaselineDetail": "Prod returnerer VERIFY (4 varianter 1B/1T). Konsistent med golden.",
+      "distinguishingFeature": "1B vs 1T versjonssuffiks (ubetydning avklart) + coated-variant.",
+      "verificationStatus": "AMBIGUOUS",
+      "notes": "Skal ALDRI konverteres til én deterministisk match uten at evidensen faktisk oppløser tvetydigheten."
+    }
+  ]
+}
