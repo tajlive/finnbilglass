@@ -58,14 +58,17 @@ for (const f of golden.fixtures) {
   const eurokode = res?.eurokode ?? null;
   const kandidater = (res?.kandidater ?? []).map((k) => k.varenr ?? k.eurokode ?? '?');
 
-  // Drift = naavaerende decision avviker fra golden, ELLER (ved AUTO_MATCH) feil eurokode.
+  // Sikkerhetsrekkefølge (synkende visshet): AUTO_MATCH > NEEDS_CONFIRMATION > MANUAL_REVIEW.
+  const RANK = { AUTO_MATCH: 2, NEEDS_CONFIRMATION: 1, MANUAL_REVIEW: 0 };
   const eurokodeDrift = goldenDecision === 'AUTO_MATCH' && f.expectedEurocode && eurokode !== f.expectedEurocode;
   const avvik = naavaerende !== goldenDecision || eurokodeDrift;
+  // Farlig drift = prod ER sikrere enn golden (falsk sikkerhet). Sikker drift = prod mer konservativ.
+  const retning = RANK[naavaerende] > RANK[goldenDecision] ? 'FARLIG' : avvik ? 'SIKKER' : '—';
 
-  rapporter.push({ id: f.id, status: avvik ? 'DRIFT' : 'OK', naavaerende, goldenDecision, eurokode, kandidater });
+  rapporter.push({ id: f.id, status: avvik ? 'DRIFT' : 'OK', retning, naavaerende, goldenDecision, eurokode, kandidater });
   if (avvik) {
     drift++;
-    console.log(`✗ DRIFT ${f.id}: prod=${naavaerende} (${res?.grunn ?? ''}) golden=${goldenDecision} eurokode=${eurokode ?? 'null'} kandidater=[${kandidater.join(', ')}]`);
+    console.log(`✗ DRIFT(${retning}) ${f.id}: prod=${naavaerende} (${res?.grunn ?? ''}) golden=${goldenDecision} eurokode=${eurokode ?? 'null'} kandidater=[${kandidater.join(', ')}]`);
   } else {
     console.log(`✓ OK ${f.id}: prod=${naavaerende} golden=${goldenDecision} (${res?.grunn ?? ''})`);
   }

@@ -48,8 +48,8 @@
       "evidenceSource": "Tom-fasit 2026-08-13: tvetydig datagrunnlag (1B/1T-varianter) — aldri tving PINPOINT.",
       "independentEvidenceAvailable": false,
       "circularEvidence": "1B/1T-variant-suffikset er ikke dechiffrert; ingen OE/VIN-evidens skiller dem.",
-      "currentBaselineDecision": "NEEDS_CONFIRMATION",
-      "currentBaselineDetail": "Prod returnerer VERIFY (4 varianter 1B/1T). Konsistent med golden.",
+      "currentBaselineDecision": "MANUAL_REVIEW",
+      "currentBaselineDetail": "Prod returnerer FALLBACK (SVV gir modell 'CLA 200 D 4MATIC' som resolveren ikke har GT/katalog-data for — konservativt, men avslører modell-granularitetsproblemet: resolveren matcher 'CLA' men ikke 'CLA 200 D 4MATIC').",
       "distinguishingFeature": "1B vs 1T versjonssuffiks (ubetydning avklart) + coated-variant.",
       "verificationStatus": "AMBIGUOUS",
       "notes": "Skal ALDRI konverteres til én deterministisk match uten at evidensen faktisk oppløser tvetydigheten."
