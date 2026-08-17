@@ -37,7 +37,9 @@ test(`live-fasit: ${fasiter.length} maskinverifiserte fasiter mot ${BASE}`, asyn
   let feil = 0;
   for (const [i, f] of fasiter.entries()) {
     await sleep(DELAY);
-    const { data } = await sok({ merke: f.merke, modell: f.modell, aar: f.aar });
+    const body = { merke: f.merke, modell: f.modell, aar: f.aar };
+    if (f.profil) body.profil = f.profil;
+    const { data } = await sok(body);
     const utfall = data?.utfall ?? (data?.pinpoint === true ? 'PINPOINT' : data?.pinpoint === false ? 'VERIFY' : 'FALLBACK');
     const valgt = norm(data?.eurokode ?? data?.anbefaling?.eurokode ?? '');
     const gyldig = (f.gyldigeKoder ?? []).map(norm);

@@ -46,9 +46,10 @@ async function hentGt() {
   }
   const ACCOUNT = '80d5b1d56a3e907150ba7348b6182894';
   const H = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+  const DB_NAME = process.env.DB_NAME ?? 'finnbilglass-db-staging';
   const dbs = await (await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/d1/database`, { headers: H })).json();
-  const db = (dbs.result ?? []).find((d) => d.name === 'finnbilglass-db-staging');
-  if (!db) throw new Error('fant ikke finnbilglass-db-staging i D1-listen');
+  const db = (dbs.result ?? []).find((d) => d.name === DB_NAME);
+  if (!db) throw new Error(`fant ikke ${DB_NAME} i D1-listen`);
   const q = async (sql) => {
     const r = await (await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/d1/database/${db.uuid}/query`, {
       method: 'POST', headers: H, body: JSON.stringify({ sql }),
