@@ -217,10 +217,16 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
 
   // Steg 4: frontrute-filter (posisjon A) + Steg 5: årstall-hardfilter.
   //    Utelukk trim/lister (PYNTELIST, KLIPS, LIST) — de er ikke glass.
+  //    PY*-/GU*-varenr-suffiks = pyntelist/gummilist (dekorlist rundt glasset,
+  //    Tom 2026-08-17): «1979PY» 625 kr er en list, ikke frontrute. YP*/YPC*/
+  //    YPS*/YPL* er EKTE glass med list-attributt — behold.
   const TRIM_RE = /PYNTELIST|KLIPS|LISTE\b|LIST\b|TAKELIST|BAGASJEROMSLIST/;
+  // PY*-/GU*-varenr-suffiks = pyntelist/gummilist; K-suffiks (siffer+K) =
+  // klips-kit per bilmodell (popnagler) — ingen er glass (Tom 2026-08-17).
+  const TRIM_VARENR_RE = /(?:PY|GU)[A-Z]{0,4}$|^\d{3,5}K$/;
   const front = [...sett.values()].filter((r) => {
     const dek = dekodeEurokode(r.eurokode);
-    const erTrim = TRIM_RE.test(r.varenavn ?? '');
+    const erTrim = TRIM_RE.test(r.varenavn ?? '') || TRIM_VARENR_RE.test((r.varenr ?? '').toUpperCase());
     return !erTrim && (dek.posisjon === 'frontrute' || /FRONT/.test(r.varenavn ?? ''));
   });
   const kandidater = bil.aar != null ? front.filter((r) => matcherAar(parseAar(r.varenavn), bil.aar)) : front;

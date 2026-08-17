@@ -73,6 +73,83 @@ test('«ALLE MOD» er fjernet — MAZDA 323 ALLE MOD med posisjon A → frontrut
   assert.equal(erFrontrute('MAZDA 323 ALLE MOD 86-89', '1413BL', '5125ABL'), true);
 });
 
+test('K-suffiks = KLIPS-KIT (ikke glass): MERCEDES 190 KLIPS KIT', () => {
+  assert.equal(erFrontrute('MERCEDES 190+190E 85- KLIPS KIT', '1400K', '10012K'), false);
+});
+
+test('K-suffiks = KLIPS (ikke glass): NISSAN STANZA KLIPS', () => {
+  assert.equal(erFrontrute('NISSAN STANZA KLIPS', '1207K', '10011K'), false);
+});
+
+test('K-suffiks = KLIPS FRONTRUTE-kit (ikke glass): KIA CREDOS', () => {
+  assert.equal(erFrontrute('KIA CREDOS 97- KLIPS FRONTRUTE', '2052K', '10015K'), false);
+});
+
+test('Sensorgel-glass er EKTE glass (sensor-attributt, behold): VOLVO FH', () => {
+  assert.equal(erFrontrute('VOLVO FH TRUCK 94-', '1892GNM', '1035AGNM'), true);
+});
+
+test('Sensortape-glass er EKTE glass (behold): AUDI A4 SENSORTAPE S2', () => {
+  assert.equal(erFrontrute('AUDI A4 4D SEDAN 01- FRONTRUTE', '2324CSGY', '8579AGSCSGY'), true);
+});
+
 test('«ALLE MOD» er fjernet, men DØRRUTE fanger fortsatt (MAZDA 6 DØRRUTE)', () => {
   assert.equal(erFrontrute('MAZDA 6 ALLE MOD 13- DØRRUTE', '29969GN', '5180LGSS4FDW'), false);
+});
+
+// ── PY*/GU*-pyntelist-guard (Tom 2026-08-17, UR67407) ──
+// PY/PYT/PYB/PYS/PYC/PYKIT = pyntelist (dekorlist rundt glasset som skjuler
+// limfugen), GU/GUM = gummilist — IKKE glass. «1979PY» 625 kr er en list,
+// riktig frontrute er 1979C 5 320 kr. YP*/YPC*/YPS*/YPL* er EKTE glass med
+// list-attributt og skal BEHOLDES.
+
+test('PY-suffiks → ikke frontrute (1979PY feilpris-variant)', () => {
+  assert.equal(erFrontrute('MERCEDES SPRINTER 95-06 LAV MOD', '1979PY', '5426ASMV'), false);
+});
+
+test('PY-suffiks → ikke frontrute (1971PY feilpris-variant)', () => {
+  assert.equal(erFrontrute('MERCEDES SPRINTER HØY 95-06', '1971PY', '5427ASMV'), false);
+});
+
+test('PYT-suffiks → ikke frontrute (1102PYT Mercedes W126 pyntelist)', () => {
+  assert.equal(erFrontrute('MERCEDES W126 81-91 PYNTELIST', '1102PYT', '5931AKMSC'), false);
+});
+
+test('PYC-suffiks → ikke frontrute (1354PYC)', () => {
+  assert.equal(erFrontrute('CITROEN BX 83- PYNTELIST', '1354PYC', '6519AKMC'), false);
+});
+
+test('PYKIT-suffiks → ikke frontrute (BMW X1 pyntelist-kit)', () => {
+  assert.equal(erFrontrute('BMW X1 5D SUV 15- PYNTELIST KIT V+H FRONTRUTE', '3355PYKIT', '5174AKMS'), false);
+});
+
+test('GU-suffiks → ikke frontrute (540GU Mercedes W108 gummilist)', () => {
+  assert.equal(erFrontrute('MERCEDES 250-300S W108 63-72 GUMMILIST FRONTRUT', '540GU', '108ACL'), false);
+});
+
+test('GUM-suffiks → ikke frontrute', () => {
+  assert.equal(erFrontrute('SAAB 900 3D/5D/4D 79-92 GUMMILIST', '1018GUM', '7402AKMH'), false);
+});
+
+test('YP-suffiks er EKTE glass (list-attributt) → frontrute-kandidat', () => {
+  assert.equal(erFrontrute('NISSAN 160J 2DV COUPE 78-81 FRONTRUTE+BL', '1004YP', '5401ABL'), true);
+});
+
+test('YPC-suffiks er EKTE glass (list-attributt) → frontrute-kandidat', () => {
+  assert.equal(erFrontrute('FORD MONDEO 4D SE 07- FRONTRUTE+INNK+CROM LIST+SOTET', '28035YPC', '5439AGB'), true);
+});
+
+test('YPS-suffiks er EKTE glass (list-attributt) → frontrute-kandidat', () => {
+  assert.equal(erFrontrute('FORD FOCUS 5D HBK 11- FRONTRUTE+INNK+SORT LIST+SOTET', '29487YPS', '5441AGB'), true);
+});
+
+test('YPL-suffiks er EKTE glass (list-attributt) → frontrute-kandidat', () => {
+  assert.equal(erFrontrute('AUDI A8 4D SEDAN 03- FRONTRUTE LAMINERT VS+SOTET', '26303YPL', '5442AGB'), true);
+});
+
+test('riktige Sprinter-varianter er fortsatt frontruter (1979C/1971C/1979GY/1971GG)', () => {
+  assert.equal(erFrontrute('MERCEDES SPRINTER (LAV TYPE)', '1979C', '5426ACL'), true);
+  assert.equal(erFrontrute('MERCEDES SPRINTER', '1971C', '5427ACL1C'), true);
+  assert.equal(erFrontrute('MERCEDES SPRINTER (LAV TYPE)', '1979GY', '5426AGNGY'), true);
+  assert.equal(erFrontrute('MERC SPRINTER SKAPVOGN', '1971GG', '5427AGNGN1C'), true);
 });

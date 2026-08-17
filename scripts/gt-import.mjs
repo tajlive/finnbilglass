@@ -47,6 +47,24 @@ async function main() {
 
   if (dry) return;
 
+  // Slett ALLE tidligere GT-genererte rader FØR insert — INSERT OR IGNORE alene
+  // etterlater feilrader fra gamle kjøringer (UR67407: 1979PY/1971PY-pyntelister
+  // lå igjen i prod selv etter at generatoren sluttet å produsere dem).
+  // Kun source='gt-auto-prisliste' slettes — verifiserte fasits (andre kilder) beholdes.
+  const del = await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACC}/d1/database/${dbId}/query`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sql: `DELETE FROM ground_truth WHERE source='gt-auto-prisliste'` }),
+  });
+  const delJ = await del.json();
+  if (!delJ.success) {
+    console.error(`DELETE av gamle GT-rader FEILET: ${JSON.stringify(delJ.errors ?? delJ).slice(0, 300)}`);
+    process.exit(1);
+  }
+  const slettet = delJ.result?.[0]?.changes ?? 0;
+  console.log(`Slettet ${slettet} gamle GT-rader (source='gt-auto-prisliste') fra ${target}`);
+
+
   const stateFile = `/Users/taj/finnbilglass/data/gt-ekspansjon/import-state-${target}.json`;
   let startBatch = 0;
   if (existsSync(stateFile)) {

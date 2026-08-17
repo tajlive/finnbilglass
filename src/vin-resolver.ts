@@ -161,6 +161,14 @@ const IKKE_FRONTRUTE_RE = new RegExp(`(?<![A-ZÆØÅ0-9])(${IKKE_FRONTRUTE.join(
 export function erFrontrute(varenavn: string | null, varenr: string, dek: Dekodet): boolean {
   const n = (varenavn ?? '').toUpperCase();
   if (IKKE_FRONTRUTE_RE.test(n)) return false;
+  // PY*-suffiks = PYNTELIST, GU*-suffiks = GUMMILIST (dekorlist rundt glasset
+  // som skjuler limfugen), IKKE glass — samme guard som gt-generator.mjs
+  // (Tom 2026-08-17). «1979PY» 625 kr er en list, ikke frontrute (riktig:
+  // 1979C 5 320 kr). YP/YPC/YPS/YPL er EKTE glass med list-attributt — behold.
+  if (/(?:PY|GU)[A-Z]{0,4}$/.test(varenr.toUpperCase())) return false;
+  // K-suffiks (rent siffer-prefiks + K) = KLIPS-KIT per bilmodell (popnagler/
+  // spiletap), IKKE glass — «MERCEDES 190 KLIPS KIT» 1400K (Tom 2026-08-17).
+  if (/^\d{3,5}K$/.test(varenr.toUpperCase())) return false;
   if (/^\d{3,5}[LR]/.test(varenr)) return false; // side-glass-varenr (8103LGAR5, 26270LFWXBYN)
   if (dek.posisjon && dek.posisjon !== 'frontrute') return false; // bak/side/dør/ventil
   return true; // frontrute-posisjon ELLER ukjent (veteran/OEM) → kandidat

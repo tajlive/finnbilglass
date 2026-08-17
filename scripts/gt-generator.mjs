@@ -14,6 +14,7 @@
  * Output: data/gt-ekspansjon/gt-generert.sql + gt-generator-rapport.json
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
 import { serieKey, normaliserKatalogModell } from '../src/serie-mapping.ts';
 
@@ -87,6 +88,23 @@ const IKKE_FRONTRUTE_RE = new RegExp(`(?<![A-ZÆØÅ0-9])(${IKKE_FRONTRUTE.join(
 export function erFrontrute(varenavn, varenr, eurokode) {
   const n = varenavn.toUpperCase();
   if (IKKE_FRONTRUTE_RE.test(n)) return false;
+  // PY*-suffiks = PYNTELIST, GU*-suffiks = GUMMILIST (dekorlist rundt glasset
+  // som skjuler limfugen), IKKE glass. Hele familiene: PY, PYT, PYB, PYV, PYH,
+  // PYS, PYC, PYKIT, PYCKI… og GU, GUM (Tom 2026-08-17). Autoglass-katalogen
+  // bekrefter: «ROVER 800 PYNTELIST FRONTRUTE» 1 360 kr, «SMART FORTWO PYNTELIST
+  // FRONTRUTE» 1 010 kr, «MERCEDES W108 GUMMILIST FRONTRUT» 1 590 kr —
+  // frontruter koster 4 000-20 000+. 1 301 PY*/GU*-rader (55 merker) ble feilaktig
+  // klassifisert som frontruter → feilpriser i GT (UR67407: 1979PY 625 kr vs
+  // 1979C 5 320 kr; ALFA-klynge 300-2 900 kr vs 3 960-12 410 kr).
+  // NB: YP/YPC/YPS/YPL er EKTE glass med list-attributt («SIDERUTE+INNK+CROM
+  // LIST») — de skal IKKE ekskluderes, kun rene list-produkter (PY*/GU*).
+  if (/(?:PY|GU)[A-Z]{0,4}$/.test(String(varenr ?? '').toUpperCase())) return false;
+  // K-suffiks (rent siffer-prefiks + K) = KLIPS-KIT per bilmodell, IKKE glass
+  // («NISSAN STANZA KLIPS» 1207K, «MERCEDES 190+190E KLIPS KIT» 1400K,
+  // «KIA CREDOS KLIPS FRONTRUTE x10stk» 2052K — popnagler/spiletap).
+  // Tom 2026-08-17: klips fester pyntelist/torpedodeksel til karosseriet.
+  // 163 K-suffiks-rader i dumpen, 0 i katalogen (som glass).
+  if (/^\d{3,5}K$/.test(String(varenr ?? '').toUpperCase())) return false;
   // Side-glass-mønster: L/R direkte etter 3–5-sifret prefiks
   // (8103LGAR5 = 4-sifret, 26270LFWXBYN = 5-sifret prefiks).
   if (/^\d{3,5}[LR]/.test(varenr ?? '')) return false;
@@ -103,7 +121,10 @@ export function erFrontrute(varenavn, varenr, eurokode) {
 const MODELL_STOPP = ['2D', '3D', '4D', '5D', 'SED', 'SEDAN', 'SUV', 'COUPE', 'KOMBI', 'STASJONSVOGN',
   'FR', 'WS', 'EL', 'CL', 'COATED', 'AKU', 'AKO', 'SENS', 'TRIPPEL', 'TRIPLE', 'KAMERA'];
 function parseVarenavn(varenavn, merke) {
-  const n = varenavn.replace(/\s+/g, ' ').trim();
+  // Parenteser («MERCEDES SPRINTER (LAV TYPE)») er beskrivende tillegg, ikke
+  // modell-tokens — strip dem FØR tokenisering så varianten normaliseres til
+  // SPRINTER og matcher serieKey W901 (UR67407: 1979C/1979GY «(LAV TYPE)»).
+  const n = varenavn.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
   // Årvindu-markør: finn første årvindu-mønster og del navnet der
   let deler = n.split(/(?=\b(?:JAN|FEB|MAR|APR|MAI|MAY|JUN|JUL|AUG|SEP|OKT|OCT|NOV|DES|JUNI|JULI)?(?:\d{4}|\d{1,2})\s*(?:\/|-))/i);
   // Katalog-skrivefeil: åpent vindu uten bindestrek («75 FR+GB», 814GB) —
@@ -112,6 +133,10 @@ function parseVarenavn(varenavn, merke) {
     deler = n.split(/(?=\b\d{2,4}\s+(?:FR|GB|GY|GN|AKU|WS|LDW|HUD|EL|CL|CAM|SENS|ACO|PYNT|FARGE|SOTET|GRØNN|GRONN)\b)/i);
   }
   const hode = deler[0]?.trim() ?? n;
+  // Autoglass forkorter MERCEDES til MERC («MERC SPRINTER SKAPVOGN» 1971GG) —
+  // normaliser FØR merke-stripping, ellers blir MERC et modell-token og
+  // serieKey gir null (UR67407: 1971GG matchet aldri W901).
+  const hodeNorm = merke === 'MERCEDES' ? hode.replace(/^MERC(?=\s)/i, 'MERCEDES') : hode;
   const vinduTekst = deler.slice(1).join(' ').trim();
   // Vindu kan være en del av «18-21 FR AKU» — parse fra start av vindu-teksten.
   // Fallback: strip utstyrssuffiks («FR AKU,», «LDW», «HUD») og parse igjen —
@@ -122,7 +147,7 @@ function parseVarenavn(varenavn, merke) {
     vindu = kjerne ? parseAarVindu(kjerne) : null;
   }
   // Modell-tokens: hode minus merke
-  const utenMerke = hode.replace(new RegExp(`^${merke.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i'), '');
+  const utenMerke = hodeNorm.replace(new RegExp(`^${merke.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*`, 'i'), '');
   // Samle-rader med «/» («CIVIC/ ROVER») = ULIKE biler på én rad → ekskluder (falsk GT-kilde).
   // «+»-rader («V70+S60») deler glass ifølge katalogen → beholdes.
   if (utenMerke.includes('/')) return null;
@@ -173,6 +198,45 @@ function lastDumps(merker) {
   return rader;
 }
 
+/** Katalog-index (catalog-prod): varenr → rader med strukturert brand/model/år/pris.
+ *  GT-generatoren krever år i varenavnet, men Autoglass' navn har ofte IKKE år
+ *  («MERCEDES SPRINTER (LAV TYPE)») — da mister vi hele varianten (UR67407:
+ *  kun «95-06 LAV MOD»-raden 1979PY hadde år → feilpris 625 kr i GT).
+ *  Berik fra den strukturerte katalogen (samme kilde som auto-glass.no). */
+let KATALOG_INDEX = null;
+function katalogIndex() {
+  if (KATALOG_INDEX) return KATALOG_INDEX;
+  KATALOG_INDEX = new Map();
+  const fil = '/Users/taj/bilglass/data/catalog-prod.min.json.gz';
+  if (!existsSync(fil)) return KATALOG_INDEX;
+  const d = JSON.parse(gunzipSync(readFileSync(fil)).toString('utf8'));
+  for (const r of d.records ?? []) {
+    const vnr = String(r.article_number ?? '').toUpperCase();
+    if (!vnr) continue;
+    if (!KATALOG_INDEX.has(vnr)) KATALOG_INDEX.set(vnr, []);
+    KATALOG_INDEX.get(vnr).push({
+      brand: String(r.brand ?? '').toUpperCase(),
+      model: String(r.model ?? '').toUpperCase(),
+      start: r.year_from ?? null,
+      end: r.year_to ?? null,
+      pris: r.price ?? null,
+    });
+  }
+  return KATALOG_INDEX;
+}
+
+/** Finn årvindu for (varenr, merke) fra katalogen — brand-prefiks-match
+ *  («MERCEDES» ⊂ «MERCEDES TRUCKS»), ellers første rad med år. */
+function katalogVindu(varenr, merke) {
+  const rader = katalogIndex().get(String(varenr ?? '').toUpperCase());
+  if (!rader?.length) return null;
+  const m = (merke ?? '').toUpperCase().replace(/[^A-ZÆØÅ]/g, '');
+  const match = rader.find((r) => r.start != null && (m ? r.brand.replace(/[^A-ZÆØÅ]/g, '').startsWith(m) || r.brand.replace(/[^A-ZÆØÅ]/g, '').includes(m) : true));
+  const valgt = match ?? rader.find((r) => r.start != null);
+  if (!valgt) return null;
+  return { start: valgt.start, end: valgt.end ?? null };
+}
+
 async function main() {
   const o = parseArgs();
   mkdirSync(DATA, { recursive: true });
@@ -191,12 +255,46 @@ async function main() {
     if (/^\d$/.test(merke) && /^SERIE/.test(r.varenavn.split(/\s+/)[1] ?? '')) merke = 'BMW';
     // «RANGE ROVER ...» → LAND ROVER (SVV-navn)
     if (merke === 'RANGE' && /^ROVER/.test(r.varenavn.split(/\s+/)[1] ?? '')) merke = 'LAND ROVER';
+    // «MERC SPRINTER SKAPVOGN» — Autoglass forkorter MERCEDES til MERC
+    // (UR67407: 1971GG ble hoppet over → manglet helt i GT-radene).
+    if (merke === 'MERC') merke = 'MERCEDES';
     if (!merkeSett.has(merke)) continue;
     if (!erFrontrute(r.varenavn, r.varenr, r.eurokode)) { ekskludert++; continue; }
     frontruteRader++;
-    const p = parseVarenavn(r.varenavn, merke);
+    let p = parseVarenavn(r.varenavn, merke);
+    // Berikelse (UR67407): Autoglass-navn uten år («MERCEDES SPRINTER (LAV TYPE)»)
+    // mister hele varianten. Hent strukturert år fra katalogen (catalog-prod).
+    if ((!p || !p.vindu || p.vindu.start == null) && r.varenr) {
+      const kv = katalogVindu(r.varenr, merke);
+      if (kv) {
+        const eksisterende = p ?? { modell: null, utstyr: '' };
+        p = { modell: eksisterende.modell, vindu: kv, utstyr: eksisterende.utstyr ?? '' };
+      }
+    }
     if (!p || !p.vindu || p.vindu.start == null) { utenVindu++; continue; }
     if (!p.modell) { utenVindu++; continue; }
+    // Feilpris-guard (UR67407): GT-dumpen («prisliste-alle-glass.json») inneholder
+    // rader som IKKE finnes i den autoritative katalogen (catalog-prod) — de er
+    // feilprise/foreldede («1979PY» 625 kr / «1971PY» 695 kr, mens riktige varianter
+    // er 1979C 5 320 / 1979GY 6 880 / 1971C 8 510 / 1971GG 9 510). Katalogen er
+    // fasit: ekskluder GT-rader hvis varenummeret ikke finnes der (men behold
+    // rader med år i varenavnet når katalogen ikke dekker dem — eldre glass).
+    if (r.varenr && !katalogIndex().has(String(r.varenr).toUpperCase())) {
+      // Kun ekskluder hvis katalogen DEKKER samme (merke, modell, årvindu) med
+      // andre varenumre — da er dump-raden en feilpris-variant, ikke et hull.
+      // Modell-sammenligning via serieKey (W901 == SPRINTER) ELLER token-prefiks.
+      const gtSerie = serieKey(merke, p.modell, p.vindu.start);
+      const dekkes = [...katalogIndex().values()].flat().some((k) =>
+        k.start != null &&
+        k.start <= (p.vindu.end ?? 9999) && (k.end == null || k.end >= p.vindu.start) &&
+        (k.brand.includes(merke) || merke.includes(k.brand.replace(/[^A-ZÆØÅ]/g, '').slice(0, 4))) &&
+        (
+          (gtSerie != null && serieKey(merke, String(k.model ?? ''), k.start) === gtSerie) ||
+          (p.modell ? String(k.model ?? '').toUpperCase().includes(String(p.modell).toUpperCase().split(' ')[0]) : true)
+        )
+      );
+      if (dekkes) { ekskludert++; continue; }
+    }
     perMerkeModell[merke] ??= {};
     perMerkeModell[merke][p.modell] ??= [];
     perMerkeModell[merke][p.modell].push({
