@@ -18,6 +18,44 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // ── Opplæringslogging (Tom 2026-08-17): ALLE valg og inntasting lagres.
+  //    Session-id (localStorage) kobler hele kundereisen: søk → bekreft →
+  //    utstyrs-svar → tilbehør → 43R-verifisering. Bilder lagres separat (R2).
+  //    Kundenes faktiske valg er fasit-signaler for opplæring av matcher/vision.
+  var SESSION_KEY = 'fb-session-id';
+  var sessionId = (function () {
+    try {
+      var s = localStorage.getItem(SESSION_KEY);
+      if (!s) {
+        s = 's-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem(SESSION_KEY, s);
+      }
+      return s;
+    } catch (e) { return 's-' + Date.now().toString(36); }
+  })();
+
+  function bilKontekstLogg() {
+    var ctx = {};
+    if (state.regnr) ctx.regnr = state.regnr;
+    if (state.vin) ctx.vin = state.vin;
+    if (state.merke) { ctx.merke = state.merke; ctx.modell = state.modell; ctx.aar = state.aar; }
+    return ctx;
+  }
+
+  // Fire-and-forget: aldri blokkerende, feil svelges (logging må ikke knekke flyten).
+  function loggHendelse(hendelse, data, resolverUtfall) {
+    try {
+      var body = { sessionId: sessionId, hendelse: hendelse, bil: bilKontekstLogg() };
+      if (data !== undefined) body.data = data;
+      if (resolverUtfall) body.resolverUtfall = resolverUtfall;
+      fetch('/api/opplaering', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
   function show(id) {
     document.querySelectorAll('.screen').forEach(function (s) { s.classList.add('hidden'); });
     if (id === 'start') {
@@ -104,11 +142,12 @@
     fetch('/api/regnr', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ regnr: raw })
+      body: JSON.stringify({ regnr: raw, sessionId: sessionId })
     })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         state.regnr = formatRegnr(raw);
+        loggHendelse('sok_regnr', { regnr: raw, funnet: !!(d && d.bil && d.bil.merke) }, d && d.resolver ? d.resolver.utfall : null);
         if (d && d.bil && d.bil.merke) {
           state.merke = d.bil.merke;
           state.modell = d.bil.modell;
@@ -150,10 +189,11 @@
       fetch('/api/les-skilt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: String(leser.result) })
+        body: JSON.stringify({ image: String(leser.result), sessionId: sessionId })
       })
         .then(function (r) { return r.json(); })
         .then(function (d) {
+          loggHendelse('foto_skilt', { lest: d.regnr || null, funnet: !!(d && d.funnet) }, d && d.resolver ? d.resolver.utfall : null);
           if (d && d.ok && d.funnet && d.bil && d.bil.merke) {
             state.regnr = formatRegnr(d.regnr);
             state.merke = d.bil.merke;
@@ -236,10 +276,11 @@
     fetch('/api/vin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vin: raw })
+      body: JSON.stringify({ vin: raw, sessionId: sessionId })
     })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
+        loggHendelse('sok_vin', { vin: raw, funnet: !!(d && d.bil && d.bil.merke) }, d && d.resolver ? d.resolver.utfall : null);
         if (d && d.bil && d.bil.merke) {
           settBilFraSvv(d.bil, d.resolver || null, '');
         } else if (d && d.error) {
@@ -258,6 +299,7 @@
   //    FALLBACK  → spør om sensor/antenne/coated (kan hjelpe tekstmatchen).
   $('btn-bekreft-ja').addEventListener('click', function () {
     var r = state.resolver;
+    loggHendelse('bekreft_ja', null, r ? r.utfall : null);
     if (r && r.utfall === 'PINPOINT' && r.varenr) {
       renderResolverResultat(r.kandidater || []);
       return;
@@ -276,7 +318,10 @@
     spmRender();
     show('spm');
   });
-  $('btn-bekreft-nei').addEventListener('click', function () { show('start'); });
+  $('btn-bekreft-nei').addEventListener('click', function () {
+    loggHendelse('bekreft_nei', { merke: state.merke, modell: state.modell, regnr: state.regnr });
+    show('start');
+  });
 
   // 4. Glassvalg (kun frontrute er live i beta)
   document.querySelectorAll('.glassopt').forEach(function (b) {
@@ -335,6 +380,7 @@
   }
 
   function spmSvar(key, val) {
+    loggHendelse('spm_svar', { key: key, verdi: val === undefined ? 'vet_ikke' : val });
     if (key === 'sensor' || key === 'antenne' || key === 'coated') state.profil[key] = val;
     else state.info[key] = val; // hud / kamera / adas / oppvarmet: info i resultatet, ikke matcher-profilen
     if (spmIndex < spm.length - 1) { spmIndex++; spmRender(); return; }
@@ -580,7 +626,8 @@
   }
 
   function verifySend(kilde, bildeDataUrl, r43Manuelt) {
-    var body = { queryRef: 'fb-' + Date.now(), role: 'corner_marking' };
+    loggHendelse(kilde === 'photo' ? 'verify_foto' : 'verify_manuell', { r43: r43Manuelt || null });
+    var body = { queryRef: 'fb-' + Date.now(), role: 'corner_marking', sessionId: sessionId };
     if (bildeDataUrl) body.image = bildeDataUrl;
     if (r43Manuelt) body.r43 = r43Manuelt;
     if (state.merke && state.modell) {
@@ -619,6 +666,11 @@
     $('verify-bekreft').classList.add('hidden');
     var f = d.fusion;
     var treff = Array.isArray(d.treff) ? d.treff : [];
+    loggHendelse('verify_bekreft', {
+      r43: d.r43Nummer || null,
+      utfall: (f && f.outcome) || null,
+      varenr: (f && f.outcome === 'PINPOINT' && f.winner) ? String(f.winner.glassId).replace(/^(r43|res)-/, '') : null,
+    });
     if (f && f.outcome === 'PINPOINT' && f.winner) {
       var varenr = String(f.winner.glassId).replace(/^(r43|res)-/, '');
       var rad = treff.filter(function (t) { return t.varenr === varenr; })[0] || null;
@@ -693,7 +745,15 @@
   document.querySelectorAll('[data-tilbake]').forEach(function (b) {
     b.addEventListener('click', function () {
       var t = b.getAttribute('data-tilbake');
+      loggHendelse('nytt_sok');
       show(t === 'spm' ? 'start' : t); // «Nytt søk» fra resultat → start
+    });
+  });
+
+  // Tilbehørsvalg (Sika/klips/pyntelist/sensorgel) — fasit for tilbehørs-modellen.
+  document.querySelectorAll('.tilbehor-valg input[type="checkbox"]').forEach(function (cb) {
+    cb.addEventListener('change', function () {
+      loggHendelse('tilbehor_valg', { valg: cb.value, avkrysset: cb.checked });
     });
   });
 

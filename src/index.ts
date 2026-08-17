@@ -142,6 +142,119 @@ function hasImageResolverAccess(request: Request, env: Env): boolean {
   return auth === `Bearer ${env.IMAGE_RESOLVER_SECRET}`;
 }
 
+/** Session-id fra frontend (localStorage) — kobler hele kundereisen. */
+function sessionId(body: unknown, request: Request): string | null {
+  if (isRecord(body) && typeof body.sessionId === 'string' && body.sessionId.trim()) {
+    return body.sessionId.trim().slice(0, 64) || null;
+  }
+  return request.headers.get('X-Session-Id')?.slice(0, 64) || null;
+}
+
+/** Hent bil-kontekst fra body for opplæringslogging. */
+function bilKontekst(body: unknown): Record<string, unknown> | null {
+  if (!isRecord(body)) return null;
+  const b = body as Record<string, unknown>;
+  const bil = isRecord(b.bil) ? b.bil as Record<string, unknown> : null;
+  const ctx: Record<string, unknown> = {};
+  if (typeof b.regnr === 'string' && b.regnr.trim()) ctx.regnr = b.regnr.trim();
+  if (typeof b.vin === 'string' && b.vin.trim()) ctx.vin = b.vin.trim();
+  if (bil) {
+    for (const key of ['merke', 'modell', 'aar', 'import', 'importLand', 'forstegangsregistrert'] as const) {
+      if (bil[key] !== undefined && bil[key] !== null) ctx[key] = bil[key];
+    }
+  }
+  return Object.keys(ctx).length ? ctx : null;
+}
+
+/** Logg hendelse (valg/inntasting) — aldri blokkerende, feil svelges. */
+async function loggHendelse(env: Env, body: unknown, request: Request): Promise<void> {
+  try {
+    const hendelse = isRecord(body) && typeof (body as Record<string, unknown>).hendelse === 'string'
+      ? ((body as Record<string, unknown>).hendelse as string).trim().slice(0, 40)
+      : '';
+    if (!hendelse) return;
+    const data = isRecord(body) && (body as Record<string, unknown>).data !== undefined
+      ? JSON.stringify((body as Record<string, unknown>).data)
+      : null;
+    const utfall = isRecord(body) && typeof (body as Record<string, unknown>).resolverUtfall === 'string'
+      ? ((body as Record<string, unknown>).resolverUtfall as string).slice(0, 12)
+      : null;
+    const sid = sessionId(body, request);
+    const ctx = bilKontekst(body);
+    await env.FINNBILGLASS_DB.prepare(
+      `INSERT INTO opplaering_hendelse (session_id, hendelse, data, bil_kontekst, resolver_utfall, ip, ua)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      sid,
+      hendelse,
+      data,
+      ctx ? JSON.stringify(ctx) : null,
+      utfall,
+      request.headers.get('CF-Connecting-IP') ?? null,
+      request.headers.get('User-Agent') ?? null,
+    ).run();
+  } catch (e) {
+    console.error('opplaering-hendelse-logging feilet:', e);
+  }
+}
+
+/** DataURL → { bytes, mime, ext }. Returnerer null ved ugyldig dataURL. */
+function dataUrlTilBytes(dataUrl: string): { bytes: Uint8Array; mime: string; ext: string } | null {
+  const m = /^data:([a-z0-9/+-]+);base64,(.+)$/i.exec(dataUrl);
+  if (!m) return null;
+  try {
+    const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
+    const mime = m[1].toLowerCase();
+    const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+    return { bytes, mime, ext };
+  } catch {
+    return null;
+  }
+}
+
+/** Lagre bilde til R2 + metadata til D1 — aldri blokkerende. */
+async function lagreOpplaeringBilde(
+  env: Env,
+  opts: {
+    sessionId: string | null;
+    type: 'skilt' | 'verify43r';
+    imageDataUrl?: string;
+    lesing?: Record<string, unknown>;
+    fasit?: Record<string, unknown> | null;
+    utfall: 'ok' | 'ikke_funnet' | 'feil';
+  }
+): Promise<void> {
+  try {
+    if (!env.OPPLAERING_BUCKET) return;
+    let r2Key: string | null = null;
+    let mime: string | null = null;
+    if (opts.imageDataUrl) {
+      const parsed = dataUrlTilBytes(opts.imageDataUrl);
+      if (parsed) {
+        const ts = Date.now();
+        const sid = opts.sessionId ?? 'anonym';
+        r2Key = `${opts.type}/${sid}/${ts}.${parsed.ext}`;
+        mime = parsed.mime;
+        await env.OPPLAERING_BUCKET.put(r2Key, parsed.bytes, { httpMetadata: { contentType: parsed.mime } });
+      }
+    }
+    await env.FINNBILGLASS_DB.prepare(
+      `INSERT INTO opplaering_bilde (session_id, type, r2_key, mime, lesing, fasit, utfall)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      opts.sessionId,
+      opts.type,
+      r2Key,
+      mime,
+      opts.lesing ? JSON.stringify(opts.lesing) : null,
+      opts.fasit ? JSON.stringify(opts.fasit) : null,
+      opts.utfall,
+    ).run();
+  } catch (e) {
+    console.error('opplaering-bilde-lagring feilet:', e);
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -196,6 +309,19 @@ export default {
         console.error('matchFrontrute feilet:', e);
         return json({ ok: false, error: 'Intern feil' }, 500);
       }
+    }
+
+    if (method === 'POST' && path === '/api/opplaering') {
+      // Opplæringslogging av valg/inntasting — frontend kaller ved hver interaksjon.
+      // Aldri blokkerende, ingen auth (kun hendelsesdata, ingen PII utover kjennemerke).
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: 'Ugyldig JSON' }, 400);
+      }
+      await loggHendelse(env, body, request);
+      return json({ ok: true });
     }
 
     if (method === 'POST' && path === '/api/regnr') {
@@ -303,6 +429,16 @@ export default {
       }
       try {
         const lest = await lesSkilt(env.AI, imageRaw);
+        // Opplæring: lagre skiltbildet + hva AI-en leste (innlesingsfeil må kunne analyseres).
+        const sid = sessionId(body, request);
+        await lagreOpplaeringBilde(env, {
+          sessionId: sid,
+          type: 'skilt',
+          imageDataUrl: imageRaw,
+          lesing: { regnr: lest.regnr, confidence: lest.confidence, raatekst: lest.raatekst.slice(0, 300) },
+          fasit: bilKontekst(body),
+          utfall: lest.regnr ? 'ok' : 'ikke_funnet',
+        });
         if (!lest.regnr) {
           return json({ ok: false, error: 'Kunne ikke lese kjennemerket i bildet. Prøv igjen i bedre lys, eller skriv det inn manuelt.', lest: { confidence: lest.confidence } }, 422);
         }
@@ -400,6 +536,7 @@ export default {
           : `verify-${crypto.randomUUID()}`;
       const roleRaw = body.role;
       const role: 'corner_marking' | 'full_glass' = roleRaw === 'corner_marking' || roleRaw === 'full_glass' ? roleRaw : 'corner_marking';
+      const sid = sessionId(body, request);
 
       try {
         let observation: ImageObservation;
@@ -556,6 +693,23 @@ export default {
           // audit-feil må aldri knekke svaret
         }
 
+        // Opplæring: lagre 43R-bildet + hva som ble lest/utfall (innlesingsfeil analyseres).
+        await lagreOpplaeringBilde(env, {
+          sessionId: sid,
+          type: 'verify43r',
+          imageDataUrl: imageRaw || undefined,
+          lesing: {
+            r43: r43Norm ? `43R-${r43Norm}` : null,
+            modelVersion: observation.modelVersion,
+            raatekst: observation.rawText?.slice(0, 300),
+          },
+          fasit: fusion?.outcome === 'PINPOINT' && fusion.winner
+            ? { varenr: String(fusion.winner.glassId).replace(/^(r43|res)-/, ''), utfall: fusion.outcome }
+            : null,
+          utfall: fusion?.outcome === 'PINPOINT' ? 'ok' : r43Norm ? 'ikke_funnet' : 'feil',
+        });
+
+        const erIkkeNaerbilde = (observation.warnings ?? []).some((w) => /ikke et nærbilde|not a close/i.test(w));
         return json({
           ok: true,
           queryRef,
@@ -564,7 +718,9 @@ export default {
           treff,
           fusion,
           melding: !r43Norm
-            ? 'Fant ikke 43R-nummer i bildet. Prøv nytt bilde med bedre lys, eller skriv nummeret manuelt.'
+            ? erIkkeNaerbilde
+              ? 'Bildet ser ikke ut til å være et nærbilde av merkingen. Merket sitter nederst i hjørnet av frontruten (på førersiden) og er noen centimeter stort — zoom inn så merket fyller bildet, eller skriv nummeret manuelt.'
+              : 'Fant ikke 43R-nummer i bildet. Prøv nytt bilde med bedre lys, eller skriv nummeret manuelt.'
             : treff.length === 0
               ? 'Vi kjenner ikke dette 43R-nummeret ennå — det kan være kopiglass eller et glass utenfor katalogen vår. Her er forslaget basert på bilen din.'
               : fusion?.outcome === 'PINPOINT'

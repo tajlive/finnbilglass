@@ -29,8 +29,10 @@ function visjonPrompt(image: ImageInput): string {
     imageRole: image.role,
     instructions: [
       'Respond with ONLY a single JSON object. No markdown, no explanations, no step-by-step text, no code fences.',
-      'Schema: {"r43":{"value":"43R-004592","confidence":0..1,"explanation":"short"},"eurocodes":[{"value":"string","confidence":0..1,"explanation":"short"}],"oemNumbers":[{"value":"string","confidence":0..1,"explanation":"short"}],"produsent":"string|null","glasstype":"string|null","dotNummer":"string|null","features":[{"name":"camera|rain_sensor|heated|hud|antenna|acoustic|solar_coated|mirror_bracket|vin_window|panoramic","value":true|false|null,"confidence":0..1}],"warnings":["string"]}',
-      'Set r43.value to null if no 43R number is visible. Never invent numbers.',
+      'FIRST classify the image: bildetType must be "naerbilde_merking" ONLY IF the image is a CLOSE-UP of a small stamped/etched label on glass (a corner of a windshield). If the image shows a whole car, a whole windshield, a workshop, a room, a person, or anything that is NOT a close-up of the glass marking — set bildetType to "annet".',
+      'Schema: {"bildetType":"naerbilde_merking|annet","r43":{"value":"43R-004592","confidence":0..1,"explanation":"short"},"eurocodes":[{"value":"string","confidence":0..1,"explanation":"short"}],"oemNumbers":[{"value":"string","confidence":0..1,"explanation":"short"}],"produsent":"string|null","glasstype":"string|null","dotNummer":"string|null","features":[{"name":"camera|rain_sensor|heated|hud|antenna|acoustic|solar_coated|mirror_bracket|vin_window|panoramic","value":true|false|null,"confidence":0..1}],"warnings":["string"]}',
+      'Set r43.value to null if no 43R number is clearly readable. Never invent numbers.',
+      'CRITICAL: if bildetType is "annet", you MUST set r43.value to null, eurocodes to [], oemNumbers to [] and add a warning "bildet er ikke et nærbilde av merkingen". You cannot read a tiny stamp from a picture of a whole car.',
       'The 43R approval number sits under/next to a circle with E and a country code (E1, E2...).',
       '0/O, 1/I, 5/S are easily confused in stamps — lower confidence when unsure.',
     ],
@@ -152,37 +154,53 @@ export class WorkersAIVisionProvider implements VisionProvider {
       warnings: [],
     };
 
+    // Klassifiserings-gate: «annet» = ikke et nærbilde av glassmerkingen
+    // (hel bil, hel frontrute, verksted, rom, person…). Da er ALL tekst-
+    // lesing upålitelig — r43/eurocode/OEM forkastes (hallusinasjonsvern,
+    // bevist av bilde av hel Peugeot som «leste» 43R-004592).
+    let erNaerbilde = true;
     if (j && typeof j === 'object') {
-      base.eurocodes = parseIdentities(j.eurocodes);
-      base.oemNumbers = parseIdentities(j.oemNumbers);
-      base.features = parseFeatures(j.features);
       if (Array.isArray(j.warnings)) {
         base.warnings = j.warnings.filter((w): w is string => typeof w === 'string').slice(0, 10);
       }
-      const r43Field = j.r43;
-      if (r43Field && typeof r43Field === 'object') {
-        const rec = r43Field as Record<string, unknown>;
-        if (typeof rec.value === 'string' && normalizeR43(rec.value)) {
-          base.r43Numbers = [
-            {
-              value: rec.value,
-              confidence: clampNum(rec.confidence),
-              explanation: typeof rec.explanation === 'string' ? rec.explanation as string : undefined,
-            },
-          ];
+      // Klassifiserings-gate: «annet» = ikke et nærbilde av glassmerkingen
+      // (hel bil, hel frontrute, verksted, rom, person…). Da er ALL tekst-
+      // lesing upålitelig — r43/eurocode/OEM forkastes (hallusinasjonsvern,
+      // bevist av bilde av hel Peugeot som «leste» 43R-004592).
+      const bildetType = typeof j.bildetType === 'string' ? j.bildetType.trim().toLowerCase() : '';
+      erNaerbilde = bildetType === 'naerbilde_merking' || (bildetType === '' && !base.warnings.some((w) => /ikke et nærbilde|not a close/i.test(w)));
+      if (erNaerbilde) {
+        base.eurocodes = parseIdentities(j.eurocodes);
+        base.oemNumbers = parseIdentities(j.oemNumbers);
+        base.features = parseFeatures(j.features);
+        const r43Field = j.r43;
+        if (r43Field && typeof r43Field === 'object') {
+          const rec = r43Field as Record<string, unknown>;
+          if (typeof rec.value === 'string' && normalizeR43(rec.value)) {
+            base.r43Numbers = [
+              {
+                value: rec.value,
+                confidence: clampNum(rec.confidence),
+                explanation: typeof rec.explanation === 'string' ? rec.explanation as string : undefined,
+              },
+            ];
+          }
+        } else if (typeof r43Field === 'string' && normalizeR43(r43Field)) {
+          base.r43Numbers = [{ value: r43Field, confidence: 0.9 }];
         }
-      } else if (typeof r43Field === 'string' && normalizeR43(r43Field)) {
-        base.r43Numbers = [{ value: r43Field, confidence: 0.9 }];
+      } else {
+        base.warnings.push('bildet er ikke et nærbilde av glassmerkingen — tekstlesing avvist');
       }
     }
 
     // Fallback: regex-søk i råteksten hvis JSON-tolkning mangler r43.
     // Modellen er en instruct-modell som ofte svarer i tekst — nummeret står da
-    // i teksten. Kunden bekrefter uansett nummeret etterpå (bekreftelses-steg),
-    // så 0.85 er forsvarlig og gir PINPOINT-vekt når alt annet stemmer.
-    if (!base.r43Numbers || base.r43Numbers.length === 0) {
+    // i teksten. Men den HALLUSINERER også (hele-bil-bildet «leste» 43R-004592),
+    // så fallback får LAV confidence (0.55): aldri alene PINPOINT-verdig, og
+    // kun når modellen selv hevder nærbilde (ikke «annet»-svar).
+    if ((!base.r43Numbers || base.r43Numbers.length === 0) && erNaerbilde) {
       const m = /43R\s*[-–—]?\s*\d{4,7}/i.exec(rawText);
-      if (m) base.r43Numbers = [{ value: m[0], confidence: 0.85, explanation: 'AI-tekst-tolkning (regex) — bekreftes av kunden' }];
+      if (m) base.r43Numbers = [{ value: m[0], confidence: 0.55, explanation: 'AI-tekst-tolkning (regex) — lav tillit, må bekreftes av kunden' }];
     }
 
     return base;

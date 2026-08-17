@@ -6,4 +6,5 @@ export interface Env {
   ENVIRONMENT: string;
   SVV_API_KEY?: string;
   IMAGE_RESOLVER_SECRET?: string;
+  OPPLAERING_BUCKET?: R2Bucket;
 }
