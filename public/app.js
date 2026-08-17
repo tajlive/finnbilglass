@@ -27,7 +27,7 @@
     }
     var el = $('screen-' + id);
     if (el) el.classList.remove('hidden');
-    if (id === 'resultat') $('verify-seksjon').classList.add('hidden'); // 43R = kun når kunden selv ber om det
+    if (id === 'resultat') $('verify-seksjon').classList.add('hidden'); // 43R: vises direkte ved VERIFY (vis43RVedVerify), ellers kun på forespørsel
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -387,6 +387,7 @@
       meta: { resolver: true }
     });
     show('resultat');
+    vis43RVedVerify({ pinpoint: !!en, kandidater: kandidater });
     return true;
   }
 
@@ -400,7 +401,7 @@
       body: JSON.stringify(body)
     })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(renderResultat)
+      .then(function (data) { renderResultat(data); vis43RVedVerify(data); })
       .catch(function () {
         if (window.location.protocol === 'file:') { renderResultat(mock()); return; }
         tomtVis('Noe gikk galt', 'Vi kunne ikke hente glasset akkurat nå. Prøv igjen om litt.');
@@ -511,6 +512,32 @@
     $('verify-input').value = '';
     $('verify-status').classList.add('hidden');
     seksjon.classList.remove('hidden');
+  }
+
+  // 6c. 43R fremtredende ved VERIFY (2+ varianter): vis verifiseringssteget direkte —
+  //     «Fotografer 43R-merkingen på ditt nåværende glass» som tydelig steg, ikke bare lenke.
+  //     Ved PINPOINT: seksjonen forblir skjult bak «Verifiser glasset»-knappen.
+  function vis43RVedVerify(data) {
+    var seksjon = $('verify-seksjon');
+    var apneKnapp = $('btn-apne-verify');
+    if (!seksjon || !apneKnapp) return;
+    var erVerify = !data.pinpoint && Array.isArray(data.kandidater) && data.kandidater.length > 1;
+    var kontekst = $('verify-kontekst');
+    var fotoKnapp = $('btn-verify-foto');
+    if (erVerify) {
+      if (kontekst) {
+        kontekst.textContent = 'Vi fant flere varianter for bilen din. Merkingen på det gamle glasset avgjør nøyaktig hvilket glass du trenger.';
+        kontekst.classList.remove('hidden');
+      }
+      if (fotoKnapp) fotoKnapp.classList.replace('sek', 'prim'); // foto = hovedhandling
+      apneKnapp.classList.add('hidden');
+      visVerify();
+    } else {
+      if (kontekst) { kontekst.textContent = ''; kontekst.classList.add('hidden'); }
+      if (fotoKnapp) fotoKnapp.classList.replace('prim', 'sek');
+      apneKnapp.classList.remove('hidden');
+      seksjon.classList.add('hidden');
+    }
   }
 
   function verifyStatus(t, klasse) {
