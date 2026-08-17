@@ -237,40 +237,6 @@
       </label>
       <p class="note note-tilbehor">Tilbehørspriser vises når beta åpner.</p>
     </div>
-    <button id="btn-apne-verify" class="link" type="button">
-      <svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>
-      Verifiser glasset med 43R-nummeret (valgfritt)
-    </button>
-    <div id="verify-seksjon" class="verify hidden" aria-label="Verifiser glasset med 43R-nummer">
-      <h3>Verifiser med 43R-nummeret</h3>
-      <p id="verify-kontekst" class="note verify-kontekst hidden" role="status"></p>
-      <p class="verify-hjelp">Hvert glass har et nummer inni glasset, nederst i hjørnet på førersiden (f.eks. 43R-004592). Sett et hvitt ark på innsiden bak merket, og ta bilde fra utsiden — da blir nummeret lett å lese. Bildet brukes kun til å lese nummeret og slettes umiddelbart.</p>
-      <div class="verify-knapper">
-        <button id="btn-verify-foto" class="sek" type="button">
-          <svg class="ikon" aria-hidden="true"><use href="#ikon-kamera"/></svg>
-          Ta bilde av merket
-        </button>
-        <input id="verify-fil" type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1">
-      </div>
-      <div class="verify-manuell">
-        <label for="verify-input">…eller skriv nummeret selv:</label>
-        <div class="verify-rad">
-          <input id="verify-input" type="text" inputmode="text" placeholder="43R-004592" maxlength="16" autocomplete="off">
-          <button id="btn-verify-sok" class="sek" type="button">Sjekk</button>
-        </div>
-      </div>
-      <div id="verify-status" class="note status hidden" role="status" aria-live="polite"></div>
-      <div id="verify-bekreft" class="verify-bekreft hidden">
-        <p>Vi leste: <b id="verify-lest"></b></p>
-        <div class="verify-bekreft-knapper">
-          <button id="btn-verify-ja" class="prim" type="button">
-            <svg class="ikon" aria-hidden="true"><use href="#ikon-sjekk"/></svg>
-            Stemmer — vis glasset
-          </button>
-          <button id="btn-verify-nei" class="link" type="button">Endre / prøv igjen</button>
-        </div>
-      </div>
-    </div>
     <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Glasset sendes direkte til deg — eller til et av våre avtaleverksteder for montering. Montering og frakt tilkommer.</p>
     <button id="btn-bestill" class="prim" type="button" disabled title="Åpner etter beta" aria-disabled="true">
       Bestill glass + tilbehør — åpner etter beta
