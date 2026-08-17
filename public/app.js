@@ -1,5 +1,5 @@
 /* Finnbilglass.no — frontend-flyt.
-   Flyt: regnr → manuell → bekreft → glassvalg → utstyrs-spørsmål → resultat (API) → tomt.
+   Flyt: kjennemerke (foto/skriv) → glassvalg (bil-info + glasstype) → utstyrs-spørsmål → resultat (API) → tomt.
    API: POST /api/frontrute { merke, modell, aar, profil:{sensor,antenne} }
         POST /api/regnr      { regnr }   ← ALLE kjennemerke lagres (læring).
    Mock-fallback KUN ved file:// (offline demo), tydelig merket som DEMO. */
@@ -60,7 +60,6 @@
     document.querySelectorAll('.screen').forEach(function (s) { s.classList.add('hidden'); });
     if (id === 'start') {
       state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null };
-      $('btn-vin-fallback').classList.add('hidden');
       $('start-feil').classList.add('hidden');
     }
     var el = $('screen-' + id);
@@ -94,29 +93,12 @@
   }
 
   // Side 2-detaljer: chassisnummer + førstegangsregistrering + import-merkelapp (fra SVV).
-  function renderBekreftDet() {
-    var det = [];
-    if (state.vin) det.push('<div><b>Chassisnummer:</b> ' + state.vin + '</div>');
-    var d = formatDato(state.forstegangsregistrert);
-    if (d) det.push('<div><b>Førstegangsregistrert i Norge:</b> ' + d + '</div>');
-    var detEl = $('bekreft-det');
-    detEl.innerHTML = det.join('');
-    detEl.classList.toggle('hidden', det.length === 0);
-    var imp = $('bekreft-import');
-    if (state.import) {
-      imp.textContent = '⚠️ Dette er en importbil' + (state.importLand ? ' — importert fra ' + state.importLand : '');
-      imp.classList.remove('hidden');
-    } else {
-      imp.classList.add('hidden');
-    }
-  }
+  // NB: VIN vises ikke lenger i UI (Tom 2026-08-17: «skal ikke være mulig å søke på VIN enda»).
 
   function visRegnr() {
     var t = state.regnr ? 'Kjennemerke: ' + state.regnr : '';
-    ['bekreft-regnr', 'resultat-regnr'].forEach(function (id) {
-      var el = $(id);
-      if (el) { el.textContent = t; el.classList.toggle('hidden', !t); }
-    });
+    var el = $('resultat-regnr');
+    if (el) { el.textContent = t; el.classList.toggle('hidden', !t); }
   }
 
   // Live-formatering av kjennemerke: SU18018 → SU 18018 (norsk format: 2 bokstaver + 4–5 siffer).
@@ -148,22 +130,9 @@
         state.regnr = formatRegnr(raw);
         loggHendelse('sok_regnr', { regnr: raw, funnet: !!(d && d.bil && d.bil.merke) }, d && d.resolver ? d.resolver.utfall : null);
         if (d && d.bil && d.bil.merke) {
-          state.merke = d.bil.merke;
-          state.modell = d.bil.modell;
-          state.aar = d.bil.aar;
-          state.vin = d.bil.vin || null;
-          state.forstegangsregistrert = d.bil.forstegangsregistrert || null;
-          state.import = !!d.bil.import;
-          state.importLand = d.bil.importLand || null;
-          state.resolver = d.resolver || null;
-          $('bekreft-merkelbl').textContent = state.merke;
-          $('bekreft-navn').textContent =
-            state.modell + (state.aar ? ' · ' + state.aar : '');
-          renderBekreftDet();
-          show('bekreft');
+          settBilFraSvv(d.bil, d.resolver || null, raw);
         } else {
-          visStartFeil('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at kjennemerket er riktig — eller søk med chassisnummeret (VIN).');
-          $('btn-vin-fallback').classList.remove('hidden');
+          visKontaktHandoff('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at kjennemerket er riktig.');
         }
         visRegnr();
       })
@@ -194,24 +163,10 @@
         .then(function (d) {
           loggHendelse('foto_skilt', { lest: d.regnr || null, funnet: !!(d && d.funnet) }, d && d.resolver ? d.resolver.utfall : null);
           if (d && d.ok && d.funnet && d.bil && d.bil.merke) {
-            state.regnr = formatRegnr(d.regnr);
-            state.merke = d.bil.merke;
-            state.modell = d.bil.modell;
-            state.aar = d.bil.aar;
-            state.vin = d.bil.vin || null;
-            state.forstegangsregistrert = d.bil.forstegangsregistrert || null;
-            state.import = !!d.bil.import;
-            state.importLand = d.bil.importLand || null;
-            state.resolver = d.resolver || null;
-            $('bekreft-merkelbl').textContent = state.merke;
-            $('bekreft-navn').textContent =
-              state.modell + (state.aar ? ' · ' + state.aar : '');
-            renderBekreftDet();
-            show('bekreft');
+            settBilFraSvv(d.bil, d.resolver || null, d.regnr);
           } else if (d && d.ok && !d.funnet) {
-            visStartFeil('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen. Prøv å skrive kjennemerket manuelt — eller søk med chassisnummeret (VIN).');
+            visKontaktHandoff('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen.');
             $('input-regnr').value = formatRegnr(d.regnr);
-            $('btn-vin-fallback').classList.remove('hidden');
           } else if (d && d.error) {
             visStartFeil(d.error);
           } else {
@@ -230,7 +185,7 @@
     el.classList.remove('hidden');
   }
 
-  // Felles: fyll state fra SVV-bil + resolver → vis bekreft-skjermen.
+  // Felles: fyll state fra SVV-bil + resolver → vis glassvalg-skjermen (Tom: ingen bekreft-skjerm).
   function settBilFraSvv(bil, resolver, regnr) {
     state.regnr = regnr ? formatRegnr(regnr) : '';
     state.merke = bil.merke;
@@ -241,91 +196,55 @@
     state.import = !!bil.import;
     state.importLand = bil.importLand || null;
     state.resolver = resolver || null;
-    $('bekreft-merkelbl').textContent = state.merke;
-    $('bekreft-navn').textContent = state.modell + (state.aar ? ' · ' + state.aar : '');
-    renderBekreftDet();
+    $('glass-merkelbl').textContent = state.merke;
+    $('glass-bilnavn').textContent = state.modell + (state.aar ? ' · ' + state.aar : '');
+    renderGlassDet();
     visRegnr();
-    show('bekreft');
+    show('glass');
   }
 
-  // 1c. VIN-backup: kjennemerke fant ikke bilen i SVV → chassisnummer-oppslag.
-  function vinFeil(msg) {
-    var el = $('vin-feil');
-    el.textContent = msg;
+  // Detaljlinjer fra SVV (førstegangsregistrert + import-merkelapp) på glassvalg-skjermen.
+  function renderGlassDet() {
+    var det = $('glass-det');
+    det.classList.remove('hidden');
+    det.innerHTML = '';
+    if (state.forstegangsregistrert) {
+      var r = document.createElement('div');
+      r.className = 'detlinje';
+      r.textContent = 'Førstegangsregistrert ' + state.forstegangsregistrert;
+      det.appendChild(r);
+    }
+    if (state.import) {
+      var imp = $('glass-import');
+      imp.classList.remove('hidden');
+      imp.textContent = '⚠️ importbil — importert fra ' + (state.importLand || 'utlandet');
+    }
+  }
+
+  // Kjennemerke funnet ikke i SVV → ærlig melding + handoff til kontakt (ingen VIN/manuell — Tom 2026-08-17).
+  function visKontaktHandoff(msg) {
+    var el = $('start-feil');
+    el.innerHTML = msg + ' <a href="mailto:support@finnbilglass.no" class="link">Send oss en e-post</a> eller ring <a href="tel:+4740408241" class="link">40 40 82 41</a> — så hjelper vi deg.';
     el.classList.remove('hidden');
   }
-  $('btn-vin-fallback').addEventListener('click', function () {
-    $('vin-feil').classList.add('hidden');
-    $('input-vin').value = '';
-    show('vin');
-    setTimeout(function () { $('input-vin').focus(); }, 50);
-  });
-  $('input-vin').addEventListener('input', function () {
-    var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 17);
-    if (this.value !== v) this.value = v;
-  });
-  $('form-vin').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var raw = $('input-vin').value.trim();
-    if (!raw) return;
-    var btn = this.querySelector('button');
-    var orgTekst = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'Søker etter bilen…';
-    fetch('/api/vin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vin: raw, sessionId: sessionId })
-    })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) {
-        loggHendelse('sok_vin', { vin: raw, funnet: !!(d && d.bil && d.bil.merke) }, d && d.resolver ? d.resolver.utfall : null);
-        if (d && d.bil && d.bil.merke) {
-          settBilFraSvv(d.bil, d.resolver || null, '');
-        } else if (d && d.error) {
-          vinFeil(d.error);
-        } else {
-          vinFeil('Fant ikke bilen på dette chassisnummeret. Sjekk at nummeret er riktig — eller ta bilde av kjennemerket i stedet.');
-        }
-      })
-      .catch(function () { vinFeil('Noe gikk galt. Prøv igjen, eller ta bilde av kjennemerket.'); })
-      .finally(function () { btn.disabled = false; btn.textContent = orgTekst; });
-  });
 
-  // 3. Bekreft → videre. Logikk (aldri spør om ting som ikke skiller kandidatene):
-  //    PINPOINT  → ETT entydig glass → 0 spørsmål, direkte til resultat.
-  //    VERIFY    → spør KUN om funksjonene som faktisk skiller kandidatene (backend svarer).
-  //    FALLBACK  → spør om sensor/antenne/coated (kan hjelpe tekstmatchen).
-  $('btn-bekreft-ja').addEventListener('click', function () {
-    var r = state.resolver;
-    loggHendelse('bekreft_ja', null, r ? r.utfall : null);
-    if (r && r.utfall === 'PINPOINT' && r.varenr) {
-      renderResolverResultat(r.kandidater || []);
-      return;
-    }
-    if (r && r.utfall === 'VERIFY') {
-      var skillende = (r.sporsmaal && r.sporsmaal.length) ? r.sporsmaal : [];
-      settSpm(skillende);
-      if (!spm.length) { renderResolverResultat(r.kandidater || []); return; } // ingenting å skille på → vis varianter direkte
-      spmIndex = 0;
-      spmRender();
-      show('spm');
-      return;
-    }
-    settSpm(['sensor', 'antenne', 'coated']);
-    spmIndex = 0;
-    spmRender();
-    show('spm');
-  });
-  $('btn-bekreft-nei').addEventListener('click', function () {
-    loggHendelse('bekreft_nei', { merke: state.merke, modell: state.modell, regnr: state.regnr });
+  // 3. Glassvalg → videre. VIN-søk og manuell inngang er fjernet (Tom 2026-08-17):
+  //    kjennemerke (SVV) er eneste inngang; «Ikke min bil» → start; «Annet» → kontakt.
+  $('btn-ikke-min-bil').addEventListener('click', function () {
+    loggHendelse('ikke_min_bil', { merke: state.merke, modell: state.modell, regnr: state.regnr });
     show('start');
   });
+  $('btn-annet').addEventListener('click', function () {
+    loggHendelse('annet_glass', { merke: state.merke, modell: state.modell, regnr: state.regnr });
+    window.location.href = 'mailto:support@finnbilglass.no?subject=' + encodeURIComponent('Annet glass — trenger hjelp');
+  });
 
-  // 4. Glassvalg (kun frontrute er live i beta)
-  document.querySelectorAll('.glassopt').forEach(function (b) {
+  // 4. Glasstype (kun frontrute er live i beta)
+  document.querySelectorAll('.glassopt[data-type]').forEach(function (b) {
     b.addEventListener('click', function () {
       if (b.disabled) return;
+      if (b.dataset.type !== 'front') return; // kun frontrute er aktiv i beta
+      loggHendelse('velg_frontrute', { merke: state.merke, modell: state.modell, regnr: state.regnr });
       spmIndex = 0;
       spmRender();
       show('spm');

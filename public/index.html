@@ -86,6 +86,19 @@
       <path d="M7 6.2C7 4.4 8.4 3.2 10.2 3.2h3.6C15.6 3.2 17 4.4 17 6.2l-1.6 13.2c-.2 1.7-1.5 3-3.2 3.3l-2.4.4c-1.7-.3-3-1.6-3.2-3.3z"/>
       <path d="M9 5.5 9.8 19M15 5.5 14.2 19"/>
     </symbol>
+    <symbol id="ikon-siderute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 6.5 8.5 3.2c1.6-.9 3.4-.9 5 0L19 6.5c1.2.7 2 2 2 3.4V17a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17z"/>
+      <path d="M3 10h18M8 3.8V10M16 3.8V10"/>
+    </symbol>
+    <symbol id="ikon-bakrute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 5h16a1 1 0 0 1 1 1v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1z"/>
+      <path d="M3 9.5h18M12 5v14"/>
+    </symbol>
+    <symbol id="ikon-sporsmaal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+      <path d="M12 17h.01"/>
+    </symbol>
     <symbol id="ikon-lim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 14l6-6 6 6-1.5 4.5A2 2 0 0 1 12.6 20h-1.2a2 2 0 0 1-1.9-1.5z"/>
       <path d="M10 8l1-3h6l-1 3"/>
@@ -153,42 +166,49 @@
     </form>
     <input id="regnr-fil" type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1">
     <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
-    <button id="btn-vin-fallback" class="link vin-fallback hidden" type="button">
-      <svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>
-      Søk med chassisnummer (VIN) i stedet
-    </button>
     <p class="svv-badge" aria-label="Vi henter bilopplysningene fra Statens vegvesen">
       <svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-skjold"/></svg>
       Vi henter bilopplysningene fra Statens vegvesen
     </p>
   </section>
 
-  <!-- Skjerm 3: Bekreft bil -->
-  <section id="screen-bekreft" class="screen hidden" aria-label="Bekreft at dette er bilen din">
-    <h2>Er dette riktig bil?</h2>
-    <div id="bekreft-bil" class="bilkort" role="region" aria-label="Bilinformasjon">
-      <span class="bilkort-merke" id="bekreft-merkelbl" aria-hidden="true"></span>
-      <span class="bilkort-navn" id="bekreft-navn"></span>
-    </div>
-    <div id="bekreft-import" class="import-merke hidden" role="alert" aria-live="polite"></div>
-    <div id="bekreft-det" class="detlinjer hidden" aria-label="Detaljer fra Statens vegvesen"></div>
-    <div id="bekreft-regnr" class="note regnr-note hidden" aria-label="Kjennemerke"></div>
-    <div class="rad">
-      <button id="btn-bekreft-ja" class="prim" type="button">Finn glass til min bil</button>
-      <button id="btn-bekreft-nei" class="sek" type="button">Ikke min bil</button>
-    </div>
-  </section>
+  <!-- Skjerm 3: Velg glass (bil-info øverst, glasstype-bokser under — Tom 2026-08-17) -->
+  <section id="screen-glass" class="screen hidden" aria-label="Velg hvilken type glass du vil ha">
+    <h2>Velg hvilken type glass du vil ha</h2>
 
-  <!-- Skjerm 4: Glassvalg -->
-  <section id="screen-glass" class="screen hidden" aria-label="Velg type bilglass">
-    <h2>Hvilket glass trenger du?</h2>
-    <div class="glassvalg" role="group" aria-label="Glasstype">
-      <button class="glassopt aktiv" data-type="front" type="button" aria-pressed="true">Frontrute</button>
-      <button class="glassopt" type="button" disabled title="Kommer snart" aria-disabled="true">Bakrute</button>
-      <button class="glassopt" type="button" disabled title="Kommer snart" aria-disabled="true">Siderute</button>
-      <button class="glassopt" type="button" disabled title="Kommer snart" aria-disabled="true">Dørrute</button>
+    <!-- Bil identifisert (fra SVV via kjennemerke) -->
+    <div id="glass-bil-seksjon" class="bil-seksjon">
+      <div id="glass-bil" class="bilkort" role="region" aria-label="Bilinformasjon">
+        <span class="bilkort-merke" id="glass-merkelbl" aria-hidden="true"></span>
+        <span class="bilkort-navn" id="glass-bilnavn"></span>
+      </div>
+      <div id="glass-import" class="import-merke hidden" role="alert" aria-live="polite"></div>
+      <div id="glass-det" class="detlinjer hidden" aria-label="Detaljer fra Statens vegvesen"></div>
+      <button id="btn-ikke-min-bil" class="link" type="button">Ikke min bil</button>
     </div>
-    <button class="link" type="button" data-tilbake="bekreft">
+
+    <!-- Glasstype-bokser -->
+    <div class="glassvalg" role="group" aria-label="Glasstype">
+      <button class="glassopt" data-type="front" type="button">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-frontrute"/></svg>
+        Frontrute
+      </button>
+      <button class="glassopt" data-type="side" type="button" disabled title="Kommer snart" aria-disabled="true">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-siderute"/></svg>
+        Siderute
+        <span class="kommer-snart">Kommer snart</span>
+      </button>
+      <button class="glassopt" data-type="bak" type="button" disabled title="Kommer snart" aria-disabled="true">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-bakrute"/></svg>
+        Bakrute
+        <span class="kommer-snart">Kommer snart</span>
+      </button>
+      <button id="btn-annet" class="glassopt" type="button">
+        <svg class="ikon" aria-hidden="true"><use href="#ikon-sporsmaal"/></svg>
+        Annet
+      </button>
+    </div>
+    <button class="link" type="button" data-tilbake="start">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Tilbake
     </button>
@@ -262,37 +282,6 @@
     <button class="link" type="button" data-tilbake="start">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Nytt søk
-    </button>
-  </section>
-
-  <!-- Skjerm 1b: VIN-backup (når kjennemerke ikke finnes i SVV) -->
-  <section id="screen-vin" class="screen hidden" aria-label="Søk med chassisnummer">
-    <h2>Søk med chassisnummer (VIN)</h2>
-    <p class="sub">Chassisnummeret står i vognkortet og nederst i frontruten, på førersiden. Det er 17 tegn med bokstaver og tall.</p>
-    <form id="form-vin" class="search" novalidate aria-label="Chassisnummer-søk">
-      <input
-        id="input-vin"
-        type="text"
-        inputmode="text"
-        placeholder="F.eks. WV2ZZZ7HZ5H123456"
-        autocomplete="off"
-        autocapitalize="characters"
-        spellcheck="false"
-        autocorrect="off"
-        enterkeyhint="go"
-        maxlength="17"
-        aria-label="Chassisnummer (VIN)"
-        required
-      >
-      <button type="submit" aria-label="Finn glass">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-sok"/></svg>
-        Finn glass
-      </button>
-    </form>
-    <p id="vin-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
-    <button class="link" type="button" data-tilbake="start">
-      <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
-      Tilbake
     </button>
   </section>
 
