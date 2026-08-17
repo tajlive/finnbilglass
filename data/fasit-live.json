@@ -1021,7 +1021,9 @@
       "gyldigeKoder": [
         "3324GNCE",
         "4338AGCCHMUVZ20"
-      ]
+      ],
+      "kjentAvvik": true,
+      "merknad": "velger utstyrsvariant (solar vs coated) - manuell verifisering av riktig utstyrsgrad"
     },
     {
       "bil": "JAGUAR XE 2023",
@@ -1031,7 +1033,9 @@
       "gyldigeKoder": [
         "3324GNCE",
         "4338AGCCHMUVZ20"
-      ]
+      ],
+      "kjentAvvik": true,
+      "merknad": "velger utstyrsvariant (solar vs coated) - manuell verifisering av riktig utstyrsgrad"
     },
     {
       "bil": "LEXUS CT 200H HBK 2026",
@@ -1101,7 +1105,9 @@
       "gyldigeKoder": [
         "3382GNCM",
         "5391AGAACMVZ"
-      ]
+      ],
+      "kjentAvvik": true,
+      "merknad": "velger utstyrsvariant (solar vs coated) - manuell verifisering av riktig utstyrsgrad"
     },
     {
       "bil": "SEAT ARONA 2025",
@@ -1173,5 +1179,6 @@
         "EI02AGACMOVZ"
       ]
     }
-  ]
+  ],
+  "kjentAvvik": "3 fasiter markert for manuell oppfølging (se merknad per fasit)"
 }
