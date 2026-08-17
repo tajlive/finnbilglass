@@ -13,6 +13,7 @@ dist/
 data/finn-modeller/
 
 # Genererte dumper/rapporter (tracked inngangsdata beholdes: *.sql, *.md, fasit-glass.json)
+data/fixtures/
 data/gt-ekspansjon/*.json
 data/hull-kart-*
 data/test-100-bom-analyse.json

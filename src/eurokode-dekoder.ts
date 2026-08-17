@@ -46,13 +46,18 @@ export function dekodeEurokode(kode: string | null | undefined): Dekodet {
   // Egenskapsdel = ALT etter posisjonsbokstaven (posisjonsbokstaven er ikke egenskap).
   // Semantikk per Tom (2026-08-13): M = regnsensor, S = solar. S betyr IKKE sensor.
   const eg = rest.slice(1);
+  // Fargetone-kombinasjoner strippes FØR egenskaps-sjekk: «CL» (klar fargetone)
+  // inneholder C, men er IKKE coating. Uten stripp tolkes 550+ veteran-koder
+  // (f.eks. 2000ACL = «ALFA ROMEO GIULIA 50-59») feilaktig som coated.
+  // «CSGY»/«ACCM»/«ACCGY» beholder C etter stripp → korrekt coated.
+  const egUtenFargetone = eg.replace(/GY|GN|GG|BL|BZ|CL/g, '');
   const egenskaper: string[] = [];
-  if (/C/.test(eg)) egenskaper.push('coated');    // C/CS = coating
-  if (/S/.test(eg)) egenskaper.push('solar');     // S = solar (solbeskyttende glass)
-  if (/A/.test(eg)) egenskaper.push('antenne');   // A = antenne i glasset
-  if (/EL/.test(eg)) egenskaper.push('elektrisk');
-  if (/M/.test(eg)) egenskaper.push('sensor');    // M = regnsensor
-  if (/H/.test(eg)) egenskaper.push('oppvarmet'); // H = varmetråder
+  if (/C/.test(egUtenFargetone)) egenskaper.push('coated'); // C/CS = coating
+  if (/S/.test(egUtenFargetone)) egenskaper.push('solar');  // S = solar (solbeskyttende glass)
+  if (/A/.test(egUtenFargetone)) egenskaper.push('antenne'); // A = antenne i glasset
+  if (/EL/.test(egUtenFargetone)) egenskaper.push('elektrisk');
+  if (/M/.test(egUtenFargetone)) egenskaper.push('sensor');  // M = regnsensor
+  if (/H/.test(egUtenFargetone)) egenskaper.push('oppvarmet'); // H = varmetråder
 
   const fargetone = FARGETONE.find((f) => f.re.test(eg))?.farge ?? null;
 

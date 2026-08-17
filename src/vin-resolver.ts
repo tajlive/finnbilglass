@@ -84,7 +84,7 @@ const MODEL_TOKEN_ALIAS: Record<string, string[]> = {
   MULTIVAN: ['MULTI'],
 };
 
-function normBrand(merke: string): string {
+export function normBrand(merke: string): string {
   const m = (merke || '').trim().toUpperCase();
   return BRAND_ALIAS[m] ?? m;
 }
@@ -98,7 +98,7 @@ const STOPP_TOKENS = new Set([
 ]);
 
 /** Signifikante modell-tokens: ≥2 tegn, ikke tall-dominert, ikke i stopp-liste, ikke merkenavnet. */
-function modellTokensAv(modell: string, merke: string): string[] {
+export function modellTokensAv(modell: string, merke: string): string[] {
   const merkeNorm = normBrand(merke).replace(/[^A-ZÆØÅ0-9]+/g, '');
   const ord = (modell || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/).filter(Boolean);
   const tokens: string[] = [];
@@ -125,7 +125,7 @@ function ordTokensAv(s: string): Set<string> {
       .filter((t) => t.length >= 2)
   );
 }
-function ordTreff(model: string, tokens: string[]): boolean {
+export function ordTreff(model: string, tokens: string[]): boolean {
   if (!tokens.length) return false;
   const sett = ordTokensAv(model);
   return tokens.some((t) => {
@@ -158,7 +158,7 @@ const IKKE_FRONTRUTE_RE = new RegExp(`(?<![A-ZÆØÅ0-9])(${IKKE_FRONTRUTE.join(
  *  ikke-frontrute-signaler (bak/side/dør/ventil-posisjon, takglass/keywords, side-glass-varenr
  *  L/R etter 3–5-sifret prefiks). 2-sifrede veteran-koder og OEM-delnummer uten side/bak-markør
  *  faller gjennom som frontrute-kandidater (aldri false-negative — Tom-doktrine). */
-function erFrontrute(varenavn: string | null, varenr: string, dek: Dekodet): boolean {
+export function erFrontrute(varenavn: string | null, varenr: string, dek: Dekodet): boolean {
   const n = (varenavn ?? '').toUpperCase();
   if (IKKE_FRONTRUTE_RE.test(n)) return false;
   if (/^\d{3,5}[LR]/.test(varenr)) return false; // side-glass-varenr (8103LGAR5, 26270LFWXBYN)
@@ -276,10 +276,96 @@ async function lagVinOverride(env: Env, vin: string | null | undefined): Promise
 /** GT-radens serie-kode — begge veier: direkte kode i navnet («GOLF IV», «W204»,
  *  «F56») ELLER utledet fra (merke, GT-modell-navn, år) som SVV-modell
  *  («1 HBK» 2007 → E81 — seed-rader uten kode får generasjonskoden sin). */
-function gtSerieFor(make: string, gtModell: string, aar: number | null): string | null {
+export function gtSerieFor(make: string, gtModell: string, aar: number | null): string | null {
   const direkte = normaliserKatalogModell(gtModell);
   if (direkte) return direkte;
   return serieKey(make, gtModell, aar);
+}
+
+/** Matcher én GT-rad mot kjøretøyet (make+år er allerede filtrert i SQL).
+ *  Eksakt modell-navn, ordbasert token-treff (aldri substring) eller serie-kode-match. */
+export function gtRadMatch(radModel: string, make: string, model: string, aarList: number[]): boolean {
+  const tokens = modellTokensAv(model, make);
+  const serie = serieKey(make, model, aarList[0]);
+  if (radModel.toUpperCase() === model) return true;
+  if (tokens.length && ordTreff(radModel, tokens)) return true;
+  if (serie) {
+    const gtSerie = gtSerieFor(make, radModel, aarList[0]);
+    if (gtSerie === serie) return true;
+  }
+  return false;
+}
+
+/** Ren versjon av gtEurokoderSett: GT-rader (make+år-filtrert) → fasit-sett.
+ *  Returnerer null når ingen rad matcher (G1-gaten må da nekte PINPOINT). */
+export function gtRaderSett(
+  rader: Array<{ model: string; frontrute_eurocode: string | null }>,
+  make: string,
+  model: string,
+  aarList: number[]
+): Set<string> | null {
+  if (!aarList.length) return null;
+  // Ingen early-return på tomme tokens: eksakt modell-navn («3», «X») må fortsatt
+  // kunne treffe selv om token-utvinningen gir 0 signifikante tokens (1-tegns navn
+  // droppes av modellTokensAv). gtRadMatch avgjør per rad.
+  const sett = new Set<string>();
+  for (const r of rader) {
+    if (!gtRadMatch(r.model, make, model, aarList)) continue;
+    sett.add(String(r.frontrute_eurocode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
+  }
+  return sett.size ? sett : null;
+}
+
+/** Ren versjon av lagGroundTruth: GT-rader → unike salgbare frontrute-kandidater. */
+export async function gtRaderKandidater(
+  rader: Array<{ model: string; frontrute_eurocode: string | null }>,
+  make: string,
+  model: string,
+  aarList: number[],
+  tilKandidat: (kode: string) => Promise<ResolverKandidat | null>
+): Promise<ResolverKandidat[]> {
+  if (!aarList.length) return [];
+  const unike = new Map<string, ResolverKandidat>();
+  const sortert = [...rader].sort((a, b) =>
+    (b.model.toUpperCase() === model ? 1 : 0) - (a.model.toUpperCase() === model ? 1 : 0)
+  );
+  for (const r of sortert) {
+    if (!gtRadMatch(r.model, make, model, aarList)) continue;
+    if (!r.frontrute_eurocode) continue;
+    const k = await tilKandidat(r.frontrute_eurocode);
+    if (k && !unike.has(k.varenr)) unike.set(k.varenr, k);
+  }
+  return [...unike.values()];
+}
+
+type ProfilFiltrerbar = 'sensor' | 'antenne' | 'coated';
+const FILTRERBARE_PROFIL: ProfilFiltrerbar[] = ['sensor', 'antenne', 'coated'];
+
+/** Utstyrsfiltrering på kundens svar: kun besvarte attributter virker.
+ *  - svar=true  → behold kandidater der attributt !== false (true eller ukjent)
+ *  - svar=false → behold kandidater der attributt !== true (false eller ukjent)
+ *  - ukjent (null) strykes aldri; tom resultatliste → original liste (aldri tøm).
+ *  - Positiv lookahead KUN for ja-svar: hvis nøyaktig én kandidat har alle
+ *    ja-attributtene satt til true og resten er ukjente → velg den. */
+export function filtrerPaaProfil(kandidater: ResolverKandidat[], profil: BilInput['profil'] | undefined): ResolverKandidat[] {
+  if (!kandidater.length) return kandidater;
+  const p = profil ?? {};
+  const besvart = FILTRERBARE_PROFIL.filter((k) => p[k] === true || p[k] === false);
+  if (!besvart.length) return kandidater;
+
+  let rest = kandidater.filter((k) =>
+    besvart.every((a) => (p[a] ? k.attributter[a] !== false : k.attributter[a] !== true))
+  );
+  if (rest.length === 1) return rest;
+  if (!rest.length) return kandidater;
+
+  // Lookahead kun for ja-svar: én kandidat med alle ja-attributter definitivt true.
+  const ja = besvart.filter((a) => p[a] === true);
+  if (ja.length) {
+    const positive = rest.filter((k) => ja.every((a) => k.attributter[a] === true));
+    if (positive.length === 1) return positive;
+  }
+  return rest;
 }
 
 /** Alla GT-eurokoder for et kjøretøy (inkl. de uten prislistetreff) — fasit-settet.
@@ -288,27 +374,17 @@ function gtSerieFor(make: string, gtModell: string, aar: number | null): string 
  *  («525D» 2001 → E39), VW-generasjoner («GOLF» 2005 → GOLF V), Opel-bokstaver,
  *  MINI R/F-koder, Nissan P/K/N, Toyota MK/J-serier — matches mot GT-rader
  *  nøklet med samme serie-kode (begge veier, se gtSerieFor). */
-async function gtEurokoderSett(env: Env, make: string, model: string, aarList: number[]): Promise<Set<string> | null> {
+async function gtEurokoderSett(env: Env, make: string, model: string, aarList: number[], makeRaa?: string): Promise<Set<string> | null> {
   if (!aarList.length) return null;
-  const tokens = modellTokensAv(model, make);
-  const serie = serieKey(make, model, aarList[0]);
-  if (!tokens.length && !serie) return null;
+  const makes = makeRaa && makeRaa !== make ? [make, makeRaa] : [make];
+  const mPlasser = makes.map(() => '?').join(',');
   const plasser = aarList.map(() => '?').join(',');
   const rows = await env.FINNBILGLASS_DB.prepare(
     `SELECT model, frontrute_eurocode FROM ground_truth
-     WHERE make = ? AND year IN (${plasser})
+     WHERE make IN (${mPlasser}) AND year IN (${plasser})
      ORDER BY model LIMIT 200`
-  ).bind(make, ...aarList).all<{ model: string; frontrute_eurocode: string }>();
-  const eksakt = (r: { model: string }) => r.model.toUpperCase() === model;
-  const sortert = [...(rows.results ?? [])].sort((a, b) => (eksakt(b) ? 1 : 0) - (eksakt(a) ? 1 : 0));
-  const sett = new Set<string>();
-  for (const r of sortert) {
-    const gtSerie = gtSerieFor(make, r.model, aarList[0]);
-    const serieMatch = !!serie && !!gtSerie && gtSerie === serie;
-    if (!eksakt(r) && !ordTreff(r.model, tokens) && !serieMatch) continue;
-    sett.add(String(r.frontrute_eurocode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
-  }
-  return sett.size ? sett : null;
+  ).bind(...makes, ...aarList).all<{ model: string; frontrute_eurocode: string }>();
+  return gtRaderSett(rows.results ?? [], make, model, aarList);
 }
 
 /** L1 — ground_truth: verifiserte kjøretøy → frontrute-kode (varenr i prisliste).
@@ -316,28 +392,20 @@ async function gtEurokoderSett(env: Env, make: string, model: string, aarList: n
  *  ELLER serie-kode-match (Mercedes W204 / BMW E39 / VW GOLF V / …).
  *  aarList: prioriterte år (VIN-modellåret først, registreringsåret som fallback) —
  *  GT-rader kan være nøklet på begge, og VIN-korreksjon må aldri MISTE GT-treff. */
-async function lagGroundTruth(env: Env, make: string, model: string, aarList: number[]): Promise<ResolverKandidat[]> {
+async function lagGroundTruth(env: Env, make: string, model: string, aarList: number[], makeRaa?: string, profil?: BilInput['profil']): Promise<ResolverKandidat[]> {
   if (!aarList.length) return [];
-  const tokens = modellTokensAv(model, make);
-  const serie = serieKey(make, model, aarList[0]);
-  if (!tokens.length && !serie) return [];
+  const makes = makeRaa && makeRaa !== make ? [make, makeRaa] : [make];
+  const mPlasser = makes.map(() => '?').join(',');
   const plasser = aarList.map(() => '?').join(',');
   const rows = await env.FINNBILGLASS_DB.prepare(
     `SELECT model, frontrute_eurocode, confidence FROM ground_truth
-     WHERE make = ? AND year IN (${plasser})
+     WHERE make IN (${mPlasser}) AND year IN (${plasser})
      ORDER BY confidence DESC, model ASC LIMIT 200`
-  ).bind(make, ...aarList).all<{ model: string; frontrute_eurocode: string; confidence: number }>();
-  const unike = new Map<string, ResolverKandidat>();
-  const eksakt = (r: { model: string }) => r.model.toUpperCase() === model;
-  const sortert = [...(rows.results ?? [])].sort((a, b) => (eksakt(b) ? 1 : 0) - (eksakt(a) ? 1 : 0));
-  for (const r of sortert) {
-    const gtSerie = gtSerieFor(make, r.model, aarList[0]);
-    const serieMatch = !!serie && !!gtSerie && gtSerie === serie;
-    if (!eksakt(r) && !ordTreff(r.model, tokens) && !serieMatch) continue;
-    const k = await prisKandidat(env, r.frontrute_eurocode);
-    if (k && !unike.has(k.varenr)) unike.set(k.varenr, k);
-  }
-  return [...unike.values()];
+  ).bind(...makes, ...aarList).all<{ model: string; frontrute_eurocode: string; confidence: number }>();
+  const kandidater = await gtRaderKandidater(rows.results ?? [], make, model, aarList, (kode) => prisKandidat(env, kode));
+  // L1-profilsmaling: kundens utstyrssvar gjør GT-varianter entydige (samme
+  // doktrine som L2). Uten svar: alle GT-varianter → VERIFY (G1-ærlig).
+  return kandidater.length > 1 ? filtrerPaaProfil(kandidater, profil) : kandidater;
 }
 
 /** L2 — glass_catalog (Pilkington): brand + ordbasert modell-token + år + utstyrsflagg.
@@ -378,16 +446,7 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
   }
   let liste = [...unike.values()];
   // Utstyrsfiltrering: profil-flagg → kun kandidater som matcher (ukjente flagg straffes ikke)
-  const p = profil ?? {};
-  const aktiv: Array<keyof ResolverKandidat['attributter']> = [];
-  if (p.sensor) aktiv.push('sensor');
-  if (p.antenne) aktiv.push('antenne');
-  if (liste.length > 1 && aktiv.length) {
-    const matcher = liste.filter((k) => aktiv.every((a) => k.attributter[a] !== false));
-    const positive = liste.filter((k) => aktiv.some((a) => k.attributter[a] === true));
-    if (matcher.length === 1) liste = matcher;
-    else if (matcher.length > 1 && positive.length === 1 && aktiv.every((a) => positive[0].attributter[a] === true)) liste = positive;
-  }
+  liste = filtrerPaaProfil(liste, profil);
   return liste;
 }
 
@@ -492,6 +551,9 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
 /** Hovedresolver: bil → PINPOINT / VERIFY / FALLBACK. */
 export async function resolveFrontrute(env: Env, bil: BilInput): Promise<ResolverResultat> {
   const make = normBrand(bil.merke);
+  // Rå make beholder katalog-spesifikke former («VOLVO TRUCKS», «FIAT TRUCKS»)
+  // som GT-tabellen bruker — normBrand-aliaset alene mister lastebil/kommersiell-glasstreff.
+  const makeRaa = (bil.merke ?? '').trim().toUpperCase();
   const model = (bil.modell ?? '').trim().toUpperCase();
   // Faktisk modellår fra VIN (pos 10) vinner over registreringsåret: SVV gir kun norsk
   // registreringsdato, så importbiler registrert senere enn modellåret fikk feil generasjon.
@@ -507,12 +569,12 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   if (res) return res;
 
   // L1 — ground_truth (verifiserte kjøretøy)
-  kand = await lagGroundTruth(env, make, model, aarList);
+  kand = await lagGroundTruth(env, make, model, aarList, makeRaa, bil.profil);
   res = utfraKandidater(kand, '1 (ground_truth)', 0.85);
   if (res) return res;
 
   // GT-fasit-settet for kjøretøyet (gate for L2/L3-PINPOINT — G1-doktrine)
-  const gtSett = await gtEurokoderSett(env, make, model, aarList);
+  const gtSett = await gtEurokoderSett(env, make, model, aarList, makeRaa);
 
   // L3T — lisensiert TecDoc Vehicle Identification + parts linkage.
   // Ktype alene kan aldri overstyre feature-/OEM-gaten for PINPOINT.

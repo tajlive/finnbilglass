@@ -1,0 +1,1305 @@
+{
+ "_doktrine": "Maskinverifiserte fasiter (GT-katalog + prod-utfall 2026-08-16). Tom-verifiserte fasiter ligger i data/fasit-glass.json — denne filen er regresjonssikring av resolveren, ikke Tom-godkjente overstyringer.",
+ "fasiter": [
+  {
+   "bil": "403, SAL & EST 1956",
+   "merke": "403,",
+   "modell": "SAL & EST",
+   "aar": 1956,
+   "gyldigeKoder": [
+    "6503ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "AUSTIN CAMBRIDGE MKI 1957",
+   "merke": "AUSTIN",
+   "modell": "CAMBRIDGE MKI",
+   "aar": 1957,
+   "gyldigeKoder": [
+    "007C",
+    "2209ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FORD TAUNUS 17M+20M+26M+P2 1958",
+   "merke": "FORD",
+   "modell": "TAUNUS 17M+20M+26M+P2",
+   "aar": 1958,
+   "gyldigeKoder": [
+    "224C",
+    "3504ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "GIULIETTA SPIDER CABRIOLET 1955",
+   "merke": "GIULIETTA",
+   "modell": "SPIDER CABRIOLET",
+   "aar": 1955,
+   "gyldigeKoder": [
+    "2003ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MERCEDES180-220 CPE+CAB 1956",
+   "merke": "MERCEDES180-220",
+   "modell": "CPE+CAB",
+   "aar": 1956,
+   "gyldigeKoder": [
+    "130C",
+    "5309ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "SIMCA ARONDE 9+90A 1957",
+   "merke": "SIMCA",
+   "modell": "ARONDE 9+90A",
+   "aar": 1957,
+   "gyldigeKoder": [
+    "163C",
+    "6500ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "VAUXHALL VELOX+CRESTA 1957",
+   "merke": "VAUXHALL",
+   "modell": "VELOX+CRESTA",
+   "aar": 1957,
+   "gyldigeKoder": [
+    "252C",
+    "6209ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "403, SAL & EST 1964",
+   "merke": "403,",
+   "modell": "SAL & EST",
+   "aar": 1964,
+   "gyldigeKoder": [
+    "6503ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "BMW CAB 1962",
+   "merke": "BMW",
+   "modell": "CAB",
+   "aar": 1962,
+   "gyldigeKoder": [
+    "3C",
+    "2408ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "BMW CAB 1968",
+   "merke": "BMW",
+   "modell": "CAB",
+   "aar": 1968,
+   "gyldigeKoder": [
+    "3C",
+    "2408ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "BUICK RIVIERA 1964",
+   "merke": "BUICK",
+   "modell": "RIVIERA",
+   "aar": 1964,
+   "gyldigeKoder": [
+    "W629GB",
+    "AB61AGNBL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CITROEN AMI 6 1965",
+   "merke": "CITROEN",
+   "modell": "AMI 6",
+   "aar": 1965,
+   "gyldigeKoder": [
+    "404C",
+    "2704ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FIAT 2300S+N CPE 1961",
+   "merke": "FIAT",
+   "modell": "2300S+N CPE",
+   "aar": 1961,
+   "gyldigeKoder": [
+    "431C",
+    "3311ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FIAT 2300S+N CPE 1968",
+   "merke": "FIAT",
+   "modell": "2300S+N CPE",
+   "aar": 1968,
+   "gyldigeKoder": [
+    "431C",
+    "3311ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FIAT SAL 1964",
+   "merke": "FIAT",
+   "modell": "SAL",
+   "aar": 1964,
+   "gyldigeKoder": [
+    "531C",
+    "3313ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FERRARI DINO GT 1973",
+   "merke": "FERRARI",
+   "modell": "DINO GT",
+   "aar": 1973,
+   "gyldigeKoder": [
+    "851GY",
+    "3110AGNGY"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "JENSEN CV8 MK3 SAL 1975",
+   "merke": "JENSEN",
+   "modell": "CV8 MK3 SAL",
+   "aar": 1975,
+   "gyldigeKoder": [
+    "9124ACL",
+    "9104ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MITSUBISHI GALANT 1978",
+   "merke": "MITSUBISHI",
+   "modell": "GALANT",
+   "aar": 1978,
+   "gyldigeKoder": [
+    "784BL",
+    "5606ABL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "NISSAN CHERRY FII,LE10 1977",
+   "merke": "NISSAN",
+   "modell": "CHERRY FII,LE10",
+   "aar": 1977,
+   "gyldigeKoder": [
+    "831BL",
+    "5924ABL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "OPEL BLITZ LASTEBIL 1970",
+   "merke": "OPEL",
+   "modell": "BLITZ LASTEBIL",
+   "aar": 1970,
+   "gyldigeKoder": [
+    "378C",
+    "6218ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "SKODA 110+10+110R 1972",
+   "merke": "SKODA",
+   "modell": "110+10+110R",
+   "aar": 1972,
+   "gyldigeKoder": [
+    "481C",
+    "7802ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "TRIUMPH STAG N-SPORT CPE 1976",
+   "merke": "TRIUMPH",
+   "modell": "STAG N-SPORT CPE",
+   "aar": 1976,
+   "gyldigeKoder": [
+    "413GB",
+    "2232AGNBL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "1100/1204 SED+STV-RANCHO 1984",
+   "merke": "1100/1204",
+   "modell": "SED+STV-RANCHO",
+   "aar": 1984,
+   "gyldigeKoder": [
+    "37CL",
+    "6530ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CITROEN BX 1983",
+   "merke": "CITROEN",
+   "modell": "BX",
+   "aar": 1983,
+   "gyldigeKoder": [
+    "1514C",
+    "2715ACL1C"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CITROEN DYANE 1983",
+   "merke": "CITROEN",
+   "modell": "DYANE",
+   "aar": 1983,
+   "gyldigeKoder": [
+    "9223C",
+    "2707ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FORD FAIRMONT R36 1982",
+   "merke": "FORD",
+   "modell": "FAIRMONT R36",
+   "aar": 1982,
+   "gyldigeKoder": [
+    "W883GB",
+    "DW0883GB"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FORD TRK 1983",
+   "merke": "FORD",
+   "modell": "TRK",
+   "aar": 1983,
+   "gyldigeKoder": [
+    "W828GB",
+    "DW828GBN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "GM TRUCK 1982",
+   "merke": "GM",
+   "modell": "TRUCK",
+   "aar": 1982,
+   "gyldigeKoder": [
+    "W847GB",
+    "AC04AGNBLA1C"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "LANCIA THEMA 1985",
+   "merke": "LANCIA",
+   "modell": "THEMA",
+   "aar": 1985,
+   "gyldigeKoder": [
+    "1491PYC",
+    "3336AKMHC"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MITSUBISHI CANTER LAST 1980",
+   "merke": "MITSUBISHI",
+   "modell": "CANTER LAST",
+   "aar": 1980,
+   "gyldigeKoder": [
+    "1132C",
+    "5616ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MITSUBISHI LANCER 1989",
+   "merke": "MITSUBISHI",
+   "modell": "LANCER",
+   "aar": 1989,
+   "gyldigeKoder": [
+    "1590BL",
+    "5633ABL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "NISSAN CEDRIK 1989",
+   "merke": "NISSAN",
+   "modell": "CEDRIK",
+   "aar": 1989,
+   "gyldigeKoder": [
+    "1577BB",
+    "5976ABLBL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "SUBARU SED+5D STV 1987",
+   "merke": "SUBARU",
+   "modell": "SED+5D STV",
+   "aar": 1987,
+   "gyldigeKoder": [
+    "1390PYC",
+    "7906AKMSS"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "TOYOTA LANDCRUISER HJ60 1984",
+   "merke": "TOYOTA",
+   "modell": "LANDCRUISER HJ60",
+   "aar": 1984,
+   "gyldigeKoder": [
+    "1181GU",
+    "8239ASRR"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "TRIUMPH ACCLAIM 1983",
+   "merke": "TRIUMPH",
+   "modell": "ACCLAIM",
+   "aar": 1983,
+   "gyldigeKoder": [
+    "1227C",
+    "2239ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "VOLVO F406 1981",
+   "merke": "VOLVO",
+   "modell": "F406",
+   "aar": 1981,
+   "gyldigeKoder": [
+    "8952CL",
+    "4616FCLL2RQ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "AUSTIN MINI MOKE CAB 1992",
+   "merke": "AUSTIN",
+   "modell": "MINI MOKE CAB",
+   "aar": 1992,
+   "gyldigeKoder": [
+    "7039ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CHEVROLET K3500 PICKUP 1990",
+   "merke": "CHEVROLET",
+   "modell": "K3500 PICKUP",
+   "aar": 1990,
+   "gyldigeKoder": [
+    "DB8316YP",
+    "AC28BGNPZU"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DAIHATSU CUORE CC 1996",
+   "merke": "DAIHATSU",
+   "modell": "CUORE CC",
+   "aar": 1996,
+   "gyldigeKoder": [
+    "1962GU",
+    "2919ASRH"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DAIHATSU HI-JET, VV 1998",
+   "merke": "DAIHATSU",
+   "modell": "HI-JET, VV",
+   "aar": 1998,
+   "gyldigeKoder": [
+    "1500C",
+    "2912ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DODGE PICK UP++++ 1990",
+   "merke": "DODGE",
+   "modell": "PICK UP++++",
+   "aar": 1990,
+   "gyldigeKoder": [
+    "W796GB",
+    "DW0914GNBL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "HYUNDAL ELANTRA 1997",
+   "merke": "HYUNDAL",
+   "modell": "ELANTRA",
+   "aar": 1997,
+   "gyldigeKoder": [
+    "23104GN",
+    "87111291000"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "KIA CARNIVAL LX MPV 1998",
+   "merke": "KIA",
+   "modell": "CARNIVAL LX MPV",
+   "aar": 1998,
+   "gyldigeKoder": [
+    "2248GB",
+    "4408AGNBL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "LOTUS ELAN CAB 1991",
+   "merke": "LOTUS",
+   "modell": "ELAN CAB",
+   "aar": 1991,
+   "gyldigeKoder": [
+    "9259AGNV"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MAZDA MX5 FRONTRUTE BL 1994",
+   "merke": "MAZDA",
+   "modell": "MX5 FRONTRUTE BL",
+   "aar": 1994,
+   "gyldigeKoder": [
+    "1696BL",
+    "5138ABL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MITSUBISHI COLT 1993",
+   "merke": "MITSUBISHI",
+   "modell": "COLT",
+   "aar": 1993,
+   "gyldigeKoder": [
+    "1799GN",
+    "5641AGN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MORGAN +8 ROADSTER 40 50 1991",
+   "merke": "MORGAN",
+   "modell": "+8 ROADSTER 40 50",
+   "aar": 1991,
+   "gyldigeKoder": [
+    "9008CL",
+    "9008ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MORGAN +8 ROADSTER 40 50 1992",
+   "merke": "MORGAN",
+   "modell": "+8 ROADSTER 40 50",
+   "aar": 1992,
+   "gyldigeKoder": [
+    "9008CL",
+    "9008ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "OMEGA B SED+5D STV 1999",
+   "merke": "OMEGA",
+   "modell": "B SED+5D STV",
+   "aar": 1999,
+   "gyldigeKoder": [
+    "1923PY",
+    "6261AKMS"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "SUBARU DOMINGO MINI VAN 1994",
+   "merke": "SUBARU",
+   "modell": "DOMINGO MINI VAN",
+   "aar": 1994,
+   "gyldigeKoder": [
+    "1845GN",
+    "7916AGNGY"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "VOLVO 760+960+V90 1995",
+   "merke": "VOLVO",
+   "modell": "760+960+V90",
+   "aar": 1995,
+   "gyldigeKoder": [
+    "1542GB",
+    "8818AGNBL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "VW GOLF II 1991",
+   "merke": "VW",
+   "modell": "GOLF II",
+   "aar": 1991,
+   "gyldigeKoder": [
+    "1299GGEN",
+    "8533AGNGNZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "BMW E39 2004",
+   "merke": "BMW",
+   "modell": "E39",
+   "aar": 2004,
+   "gyldigeKoder": [
+    "2527K",
+    "2445AKCSS1F"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "BMW E60 2008",
+   "merke": "BMW",
+   "modell": "E60",
+   "aar": 2008,
+   "gyldigeKoder": [
+    "2527GYM",
+    "2445AGSGYMV"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CITROEN C3 2002",
+   "merke": "CITROEN",
+   "modell": "C3",
+   "aar": 2002,
+   "gyldigeKoder": [
+    "2380GYM",
+    "2726AGNGYMV1B"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CITROEN C8-PEUGEOT 2005",
+   "merke": "CITROEN",
+   "modell": "C8-PEUGEOT",
+   "aar": 2005,
+   "gyldigeKoder": [
+    "2462GN",
+    "6546AGSVZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CRYSLER STRATUS 2004",
+   "merke": "CRYSLER",
+   "modell": "STRATUS",
+   "aar": 2004,
+   "gyldigeKoder": [
+    "W1198GB",
+    "DW1198GBN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DAF XF LASTEVOGN 2006",
+   "merke": "DAF",
+   "modell": "XF LASTEVOGN",
+   "aar": 2006,
+   "gyldigeKoder": [
+    "2791GN",
+    "4635AGN1B"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FERRARI TESTAROSSA 2003",
+   "merke": "FERRARI",
+   "modell": "TESTAROSSA",
+   "aar": 2003,
+   "gyldigeKoder": [
+    "3117ABZA1",
+    "3117ABZA1F"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FIAT DOBLO 2004",
+   "merke": "FIAT",
+   "modell": "DOBLO",
+   "aar": 2004,
+   "gyldigeKoder": [
+    "2391GY",
+    "3354AGNGY"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FIAT IDEA 2004",
+   "merke": "FIAT",
+   "modell": "IDEA",
+   "aar": 2004,
+   "gyldigeKoder": [
+    "2578GY",
+    "3358AGSGYV"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FORD ESCAPE 2003",
+   "merke": "FORD",
+   "modell": "ESCAPE",
+   "aar": 2003,
+   "gyldigeKoder": [
+    "W1397GB",
+    "AF52AGSBLVW"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FORD ESCAPE 2006",
+   "merke": "FORD",
+   "modell": "ESCAPE",
+   "aar": 2006,
+   "gyldigeKoder": [
+    "W1397GB",
+    "AF52AGSBLVW"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "HYUNDAI ACCENT 2000",
+   "merke": "HYUNDAI",
+   "modell": "ACCENT",
+   "aar": 2000,
+   "gyldigeKoder": [
+    "2263GB",
+    "4118AGNBL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "HYUNDAI ATOS PRIME 2003",
+   "merke": "HYUNDAI",
+   "modell": "ATOS PRIME",
+   "aar": 2003,
+   "gyldigeKoder": [
+    "2574GB",
+    "4121AGNBL1P"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "HYUNDAI SANTA FE 2008",
+   "merke": "HYUNDAI",
+   "modell": "SANTA FE",
+   "aar": 2008,
+   "gyldigeKoder": [
+    "2703PY",
+    "4133ASMR"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "JAGUAR XJ6 2005",
+   "merke": "JAGUAR",
+   "modell": "XJ6",
+   "aar": 2005,
+   "gyldigeKoder": [
+    "1906GNEL2",
+    "4324AGNHV1P"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "LANCIA KAPPA CPE 2009",
+   "merke": "LANCIA",
+   "modell": "KAPPA CPE",
+   "aar": 2009,
+   "gyldigeKoder": [
+    "4733AGSW",
+    "4734AGS"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MERCEDES W463 2009",
+   "merke": "MERCEDES",
+   "modell": "W463",
+   "aar": 2009,
+   "gyldigeKoder": [
+    "9996GNEL",
+    "5327AGSAHMV1W"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MITSUBISHI ECLIPSE 2007",
+   "merke": "MITSUBISHI",
+   "modell": "ECLIPSE",
+   "aar": 2007,
+   "gyldigeKoder": [
+    "FW2581GB",
+    "FW2581GBN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MITSUBISHI TRUCKS CANTER LASTEVOGN 2005",
+   "merke": "MITSUBISHI TRUCKS",
+   "modell": "CANTER LASTEVOGN",
+   "aar": 2005,
+   "gyldigeKoder": [
+    "2759GY",
+    "5677AGNGY"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MORGAN +8 ROADSTER 40 50 2000",
+   "merke": "MORGAN",
+   "modell": "+8 ROADSTER 40 50",
+   "aar": 2000,
+   "gyldigeKoder": [
+    "9008CL",
+    "9008ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MORGAN +8 ROADSTER 40 50 2003",
+   "merke": "MORGAN",
+   "modell": "+8 ROADSTER 40 50",
+   "aar": 2003,
+   "gyldigeKoder": [
+    "9008CL",
+    "9008ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MORGAN +8 ROADSTER 40 50 2004",
+   "merke": "MORGAN",
+   "modell": "+8 ROADSTER 40 50",
+   "aar": 2004,
+   "gyldigeKoder": [
+    "9008CL",
+    "9008ACL"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "PORSCHE BOXSTER ROADSTER 2008",
+   "merke": "PORSCHE",
+   "modell": "BOXSTER ROADSTER",
+   "aar": 2008,
+   "gyldigeKoder": [
+    "2074PY",
+    "6720ASMT"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "TOYOTA DYNA 2008",
+   "merke": "TOYOTA",
+   "modell": "DYNA",
+   "aar": 2008,
+   "gyldigeKoder": [
+    "2499GN",
+    "8343AGN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "USA CARS CADILLAC 2005",
+   "merke": "USA CARS",
+   "modell": "CADILLAC",
+   "aar": 2005,
+   "gyldigeKoder": [
+    "W1847GB",
+    "A127AGABLCMVZ2B"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "USA CARS DODGE 2007",
+   "merke": "USA CARS",
+   "modell": "DODGE",
+   "aar": 2007,
+   "gyldigeKoder": [
+    "W1670GN",
+    "AD48AGSV"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "USA CARS HUMMER 2006",
+   "merke": "USA CARS",
+   "modell": "HUMMER",
+   "aar": 2006,
+   "gyldigeKoder": [
+    "W1626GB",
+    "W1626GBY"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "BURSTNER VISEO 2013",
+   "merke": "BURSTNER",
+   "modell": "VISEO",
+   "aar": 2013,
+   "gyldigeKoder": [
+    "BO900026",
+    "BOB0037CLN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CHEVROLET SUBURBAN 2015",
+   "merke": "CHEVROLET",
+   "modell": "SUBURBAN",
+   "aar": 2015,
+   "gyldigeKoder": [
+    "DB12389YP",
+    "A136BYPRW"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DAIHATSU MATERIA 2016",
+   "merke": "DAIHATSU",
+   "modell": "MATERIA",
+   "aar": 2016,
+   "gyldigeKoder": [
+    "2933AGSH"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DETHLEFFS ADVANTAGE 2012",
+   "merke": "DETHLEFFS",
+   "modell": "ADVANTAGE",
+   "aar": 2012,
+   "gyldigeKoder": [
+    "BO900018",
+    "BOB0049CLN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DETHLEFFS GLOBETROTTER XLI 2013",
+   "merke": "DETHLEFFS",
+   "modell": "GLOBETROTTER XLI",
+   "aar": 2013,
+   "gyldigeKoder": [
+    "BO900033",
+    "BOB0047CLN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FERRARI ITALIA CPE 2019",
+   "merke": "FERRARI",
+   "modell": "ITALIA CPE",
+   "aar": 2019,
+   "gyldigeKoder": [
+    "3138AGNA",
+    "3138AGNAMZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FORD GALAXY 2019",
+   "merke": "FORD",
+   "modell": "GALAXY",
+   "aar": 2019,
+   "gyldigeKoder": [
+    "3587AGAC",
+    "3587AGACHMVZ1X"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "INFINITI M SAL 2011",
+   "merke": "INFINITI",
+   "modell": "M SAL",
+   "aar": 2011,
+   "gyldigeKoder": [
+    "6071AGAB",
+    "6071AGABLHMVWZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "INFINITI Q50 2014",
+   "merke": "INFINITI",
+   "modell": "Q50",
+   "aar": 2014,
+   "gyldigeKoder": [
+    "6088AGSCMVZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "LANCIA DELTA CC 2018",
+   "merke": "LANCIA",
+   "modell": "DELTA CC",
+   "aar": 2018,
+   "gyldigeKoder": [
+    "3141GNM",
+    "4740AGAMWZ1B"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MERCEDES R230 2010",
+   "merke": "MERCEDES",
+   "modell": "R230",
+   "aar": 2010,
+   "gyldigeKoder": [
+    "25977GN",
+    "23067001100"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MERCEDES SERIE W204 2010",
+   "merke": "MERCEDES",
+   "modell": "SERIE W204",
+   "aar": 2010,
+   "gyldigeKoder": [
+    "3071GNM",
+    "5364AGAMVZ1A"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MERCEDES W212 2018",
+   "merke": "MERCEDES",
+   "modell": "W212",
+   "aar": 2018,
+   "gyldigeKoder": [
+    "3075CSCAE",
+    "5371ACCACHMVW4"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "NISSAN PATHFINDER 2011",
+   "merke": "NISSAN",
+   "modell": "PATHFINDER",
+   "aar": 2011,
+   "gyldigeKoder": [
+    "6037GZPP4",
+    "91210EA510"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "NISSAN PATHFINDER 2013",
+   "merke": "NISSAN",
+   "modell": "PATHFINDER",
+   "aar": 2013,
+   "gyldigeKoder": [
+    "6037GZPP4",
+    "91210EA510"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "PORSCHE 928 2010",
+   "merke": "PORSCHE",
+   "modell": "928",
+   "aar": 2010,
+   "gyldigeKoder": [
+    "993GGA",
+    "6712AGNGNA"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "SSANGYONG TIVOLI 2019",
+   "merke": "SSANGYONG",
+   "modell": "TIVOLI",
+   "aar": 2019,
+   "gyldigeKoder": [
+    "3256GBCM",
+    "3042AGNBLCM20"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "SUZUKI JIMNY JEEP 2017",
+   "merke": "SUZUKI",
+   "modell": "JIMNY JEEP",
+   "aar": 2017,
+   "gyldigeKoder": [
+    "2188GY",
+    "8022AGNGY"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "SUZUKI SX4 2010",
+   "merke": "SUZUKI",
+   "modell": "SX4",
+   "aar": 2010,
+   "gyldigeKoder": [
+    "2966GN",
+    "8033AGS1P"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "USA CARS JEEP 2014",
+   "merke": "USA CARS",
+   "modell": "JEEP",
+   "aar": 2014,
+   "gyldigeKoder": [
+    "W2506GN",
+    "AJ20AGACHMOVZ1P"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "VOLVO XC60 2016",
+   "merke": "VOLVO",
+   "modell": "XC60",
+   "aar": 2016,
+   "gyldigeKoder": [
+    "3175GNEL",
+    "8840AGNHMPVWZ6"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "BMW G14 2025",
+   "merke": "BMW",
+   "modell": "G14",
+   "aar": 2025,
+   "gyldigeKoder": [
+    "2491ASMT"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CHEVROLET CAMARO CPE 2025",
+   "merke": "CHEVROLET",
+   "modell": "CAMARO CPE",
+   "aar": 2025,
+   "gyldigeKoder": [
+    "W2528GN",
+    "AC84AGSCUVWZ1B"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "CHRYSLER PACIFICA MPV 2024",
+   "merke": "CHRYSLER",
+   "modell": "PACIFICA MPV",
+   "aar": 2024,
+   "gyldigeKoder": [
+    "DB12698YP",
+    "A241BYPR"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DETHLEFFS GLOBETROTTER XLI 2021",
+   "merke": "DETHLEFFS",
+   "modell": "GLOBETROTTER XLI",
+   "aar": 2021,
+   "gyldigeKoder": [
+    "BO900033",
+    "BOB0047CLN"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "DS 7 CROSSBACK 2021",
+   "merke": "DS",
+   "modell": "7 CROSSBACK",
+   "aar": 2021,
+   "gyldigeKoder": [
+    "2762AGRC",
+    "2762AGRCHIMVZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "FORD RANGER+MAZDA PICK UP 2020",
+   "merke": "FORD",
+   "modell": "RANGER+MAZDA PICK UP",
+   "aar": 2020,
+   "gyldigeKoder": [
+    "3199GNCE",
+    "3579AGACHMVW2E"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "HYUNDAI I40 2023",
+   "merke": "HYUNDAI",
+   "modell": "I40",
+   "aar": 2023,
+   "gyldigeKoder": [
+    "3115GBCEL",
+    "4146AGSBLCHMNO2"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "JAGUAR XE 2025",
+   "merke": "JAGUAR",
+   "modell": "XE",
+   "aar": 2025,
+   "gyldigeKoder": [
+    "3324GNCE",
+    "4338AGCCHMUVZ20"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "JAGUAR XJ10 2024",
+   "merke": "JAGUAR",
+   "modell": "XJ10",
+   "aar": 2024,
+   "gyldigeKoder": [
+    "3020GNCE",
+    "4334AGACHMVW1C"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "JAGUAR XJ10 2025",
+   "merke": "JAGUAR",
+   "modell": "XJ10",
+   "aar": 2025,
+   "gyldigeKoder": [
+    "3020GNCE",
+    "4334AGACHMVW1C"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "KIA NIRO 2021",
+   "merke": "KIA",
+   "modell": "NIRO",
+   "aar": 2021,
+   "gyldigeKoder": [
+    "3397GBCM",
+    "4450AGRBLCMOV"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "LANDROVER DEF. L663 2025",
+   "merke": "LANDROVER",
+   "modell": "DEF. L663",
+   "aar": 2025,
+   "gyldigeKoder": [
+    "7050AGCC",
+    "7050AGCCHMUVZ1L"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MAZDA CX30 2026",
+   "merke": "MAZDA",
+   "modell": "CX30",
+   "aar": 2026,
+   "gyldigeKoder": [
+    "5190AGAC",
+    "5190AGACHMUVZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MERCEDES X253 2023",
+   "merke": "MERCEDES",
+   "modell": "X253",
+   "aar": 2023,
+   "gyldigeKoder": [
+    "3382GNCM",
+    "5391AGAACMVZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "MG CYBERSTER CAB 2025",
+   "merke": "MG",
+   "modell": "CYBERSTER CAB",
+   "aar": 2025,
+   "gyldigeKoder": [
+    "2259AGAC",
+    "2259AGACMVZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "NIO ET5 2022",
+   "merke": "NIO",
+   "modell": "ET5",
+   "aar": 2022,
+   "gyldigeKoder": [
+    "EN03ACDCMVZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "RENAULT EXPRESS VAREBIL 2026",
+   "merke": "RENAULT",
+   "modell": "EXPRESS VAREBIL",
+   "aar": 2026,
+   "gyldigeKoder": [
+    "7289AGNM",
+    "7289AGNMV1P"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "TOYOTA HI LUX 2021",
+   "merke": "TOYOTA",
+   "modell": "HI LUX",
+   "aar": 2021,
+   "gyldigeKoder": [
+    "8424AGSG",
+    "8424AGSGNV"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  },
+  {
+   "bil": "VW T-CROSS 2021",
+   "merke": "VW",
+   "modell": "T-CROSS",
+   "aar": 2021,
+   "gyldigeKoder": [
+    "8649AGAC",
+    "8649AGACMVZ"
+   ],
+   "kilde": "GT-verifisert L1-PINPOINT — test-500-gt prod 2026-08-16"
+  }
+ ]
+}

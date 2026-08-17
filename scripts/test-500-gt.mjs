@@ -5,6 +5,8 @@
  * Grupperer GT per (make, year, model-token) → kjøretøyets GYLDIGE glass-sett.
  * Klasser:
  *   correct_pinpoint   — PINPOINT og valgt ∈ gyldig-sett OG settet har 1 glass
+ *   correct_med_profil — VERIFY uten svar, men PINPOINT etter kundens utstyrssvar
+ *                        (to-pass: profil isolerer én GT-gyldig kandidat)
  *   pinpoint_aggressiv — PINPOINT men kjøretøyet har >1 GT-variant (SKAL være VERIFY)
  *   wrong_pinpoint     — PINPOINT og valgt ∉ gyldig-sett (HARD FALSK)
  *   verify_med_fasit   — VERIFY og valgt-sett ∩ kandidater ≠ ∅
@@ -135,7 +137,7 @@ async function main() {
 
   const fordeling = {
     correct_pinpoint: 0, pinpoint_aggressiv: 0, wrong_pinpoint: 0,
-    verify_med_fasit: 0, verify_uten_fasit: 0, fallback: 0, api_feil: 0,
+    correct_med_profil: 0, verify_med_fasit: 0, verify_uten_fasit: 0, fallback: 0, api_feil: 0,
   };
   const latencies = [];
   const detaljer = [];
@@ -160,6 +162,58 @@ async function main() {
     const valgtEuro = norm(r.data.eurocode ?? r.data.anbefaling?.eurokode ?? r.data.kandidater?.[0]?.eurokode ?? '');
     const kandidatKoder = (r.data.kandidater ?? []).flatMap((k) => [norm(k.varenr ?? ''), norm(k.eurokode ?? '')]).filter(Boolean);
     const overlapp = kandidatKoder.filter((k) => g.koder.includes(k)).length;
+
+    // To-pass: VERIFY → prøv kundens utstyrssvar (profil) for å isolere én GT-gyldig kandidat.
+    let profilBrukt = null;
+    if (utfall === 'VERIFY' && (r.data.kandidater ?? []).length > 1) {
+      const gyldig = [...g.koder, ...g.gtKoder];
+      const kandidater = r.data.kandidater;
+      const isoler = (profil) => {
+        const aktiv = Object.entries(profil).filter(([, v]) => typeof v === 'boolean');
+        if (!aktiv.length) return null;
+        const rest = kandidater.filter((k) => aktiv.every(([a, v]) => {
+          const kv = k.attributter?.[a];
+          return kv == null || kv === v;
+        }));
+        if (rest.length !== 1) return null;
+        const k = rest[0];
+        const treff = gyldig.includes(norm(k.varenr)) || gyldig.includes(norm(k.eurokode))
+          || gyldig.some((gg) => baseTreff(norm(k.eurokode), gg) || baseTreff(norm(k.varenr), gg));
+        return treff ? rest : null;
+      };
+      const attrs = ['sensor', 'antenne', 'coated'];
+      for (const a of attrs) {
+        for (const v of [true, false]) {
+          const isolert = isoler({ [a]: v });
+          if (isolert) { profilBrukt = { [a]: v }; break; }
+        }
+        if (profilBrukt) break;
+      }
+      if (!profilBrukt) {
+        for (const a1 of attrs) for (const a2 of attrs) {
+          if (a1 === a2) continue;
+          for (const v1 of [true, false]) for (const v2 of [true, false]) {
+            const isolert = isoler({ [a1]: v1, [a2]: v2 });
+            if (isolert) { profilBrukt = { [a1]: v1, [a2]: v2 }; break; }
+          }
+          if (profilBrukt) break;
+        }
+      }
+    }
+    if (profilBrukt) {
+      const r2 = await sok({ merke: g.make, modell: g.model, aar: g.year, profil: profilBrukt });
+      const utfall2 = r2.data?.utfall ?? (r2.data?.pinpoint === true ? 'PINPOINT' : r2.data?.pinpoint === false ? 'VERIFY' : 'FALLBACK');
+      const valgt2 = norm(r2.data?.eurocode ?? r2.data?.anbefaling?.eurokode ?? '');
+      const treff2 = g.koder.includes(valgt2) || g.gtKoder.includes(valgt2)
+        || g.koder.some((k) => baseTreff(valgt2, k)) || g.gtKoder.some((k) => baseTreff(valgt2, k));
+      if (utfall2 === 'PINPOINT' && treff2) {
+        fordeling.correct_med_profil++;
+        detaljer.push({ ...g, klasse: 'PINPOINT', medProfil: true, profil: profilBrukt, valgtEuro: valgt2, valgtVarenr: norm(r2.data?.varenr ?? r2.data?.anbefaling?.varenr ?? ''), koderAntall: g.koder.length, gyldigeKoder: g.koder, grunn: r2.data?.grunn ?? null });
+        if ((i + 1) % 100 === 0) console.log(`  ${i + 1}/${sett.length} …`);
+        await sleep(DELAY_MS);
+        continue;
+      }
+    }
 
     if (utfall === 'PINPOINT') {
       const treff = g.koder.includes(valgtVarenr) || g.koder.includes(valgtEuro)
@@ -190,6 +244,7 @@ async function main() {
     falsk_pinpoint_rate_hard: pinAll ? +(fordeling.wrong_pinpoint / pinAll).toFixed(4) : 0,
     aggressiv_rate_av_pinpoint: pinAll ? +((fordeling.pinpoint_aggressiv + fordeling.wrong_pinpoint) / pinAll).toFixed(4) : 0,
     fasit_dekning: +(((fordeling.correct_pinpoint + fordeling.verify_med_fasit) / sett.length)).toFixed(4),
+    pinpoint_med_profil: +(((fordeling.correct_pinpoint + fordeling.correct_med_profil) / sett.length)).toFixed(4),
     latency_ms: { p50: p(50), p95: p(95), p99: p(99), n: latencies.length },
     gate_g1_hard: fordeling.wrong_pinpoint === 0,
     gate_g1_inkl_aggressiv: fordeling.wrong_pinpoint === 0 && fordeling.pinpoint_aggressiv === 0,

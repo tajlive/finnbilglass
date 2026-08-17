@@ -105,8 +105,8 @@ function esc(s: string): string {
 //    (Autoglass-katalogen forkorter: "VW TRANSP+CARAVELLE T5 2003-".)
 //  - Korte tokens (1-3 tegn) krever EKSAKT ord-treff — "CLA" matcher dermed
 //    IKKE "S-CLASS"/"ACCLAIM"/"CLASS" (prefiksen kan ikke gjelde korte tokens).
-function ordTreff(tekst: string, tok: string): boolean {
-  const ord = tekst.toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter(Boolean);
+export function ordTreff(tekst: string, tok: string): boolean {
+  const ord = (tekst ?? '').toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter(Boolean);
   const T = tok.toUpperCase();
   if (!T) return false;
   return ord.some((o) => {
@@ -118,7 +118,7 @@ function ordTreff(tekst: string, tok: string): boolean {
 /** Seed-LIKE: bruker forkortet prefiks (5 tegn) av hvert søkeord for å treffe
  *  katalogforkortelser som "TRANSP" for "TRANSPORTER" (LIKE '%TRANS%' treffer begge).
  *  Presisjonen håndteres i ordTreff (steg 3). */
-function likePrefiks(tok: string): string {
+export function likePrefiks(tok: string): string {
   const t = tok.toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').trim();
   const ord = t.split(/\s+/);
   return ord.length >= 1 && ord[0].length >= 5 ? ord[0].slice(0, 5) : t;
@@ -127,11 +127,13 @@ function likePrefiks(tok: string): string {
 /** Modell-tokens med hygiene:
  *  - Fjern duplikat merke-token («NISSAN NISSAN LEAF» → «NISSAN LEAF»).
  *  - BMW M-prefiks-alias («M550D» → «550D» — katalogen skriver uten M). */
-function modelTokensAv(modell: string, merke: string): string[] {
+export function modelTokensAv(modell: string, merke: string): string[] {
   const merkeNorm = merke.toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, '');
   let tokens = modell.toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter((t) => t.length >= 2);
   if (tokens.length > 1 && tokens[0] === merkeNorm) tokens = tokens.slice(1);
-  const alias = tokens.filter((t) => /^M\d{3,}$/.test(t)).map((t) => t.slice(1));
+  // M-prefiks-alias: «M550D» → «550D» (SVV skriver M, katalogen uten).
+  // Tillater drivverk-suffiks («M550D XDRIVE» → token «M550D» → alias «550D»).
+  const alias = tokens.filter((t) => /^M\d{3,}[A-ZÆØÅ]*$/.test(t)).map((t) => t.slice(1));
   if (alias.length) tokens = [...tokens, ...alias];
   return tokens;
 }
