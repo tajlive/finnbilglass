@@ -73,7 +73,7 @@ test('svvLookup: import-deteksjon med land', async () => {
         registrering: { registreringsstatus: { kodeVerdi: 'REGISTRERT' } },
         godkjenning: {
           tekniskGodkjenning: { tekniskeData: { generelt: { merke: [{ merke: 'BMW' }], handelsbetegnelse: ['BMW X3'] } } },
-          forstegangsGodkjenning: { fortollingOgMva: { fortollingsreferanse: '2018-11-01-1234', beskrivelse: 'DE BMW X3 XDRIVE20D' } },
+          forstegangsGodkjenning: { gyldigFraDato: '2018-11-01', fortollingOgMva: { fortollingsreferanse: '2018-11-01-1234', beskrivelse: 'DE BMW X3 XDRIVE20D' } },
         },
       },
     ],
@@ -82,6 +82,42 @@ test('svvLookup: import-deteksjon med land', async () => {
   assert.equal(bil.import, true);
   assert.equal(bil.importLand, 'Tyskland'); // DE → norsk navn
   assert.equal(bil.aar, 2019);
+});
+
+test('svvLookup: fortollingsreferanse alene med liten COC-gap → IKKE importbil (JD79487-saken)', async () => {
+  mockFetch(200, {
+    kjoretoydataListe: [
+      {
+        forstegangsregistrering: { registrertForstegangNorgeDato: '2017-03-20' },
+        registrering: { registreringsstatus: { kodeVerdi: 'REGISTRERT' } },
+        godkjenning: {
+          tekniskGodkjenning: { tekniskeData: { generelt: { merke: [{ merke: 'VOLKSWAGEN' }], handelsbetegnelse: ['VW CADDY'] } } },
+          forstegangsGodkjenning: { gyldigFraDato: '2017-01-13', fortollingOgMva: { fortollingsreferanse: '0101112017010953' } },
+        },
+      },
+    ],
+  });
+  const bil = await svvLookup('JD79487', 'hemmelig');
+  assert.equal(bil.import, false); // vanlig norsk-levert nybil
+  assert.equal(bil.importLand, null);
+});
+
+test('svvLookup: stort COC-gap uten land → importbil (bruktimport-signal)', async () => {
+  mockFetch(200, {
+    kjoretoydataListe: [
+      {
+        forstegangsregistrering: { registrertForstegangNorgeDato: '2020-06-01' },
+        registrering: { registreringsstatus: { kodeVerdi: 'REGISTRERT' } },
+        godkjenning: {
+          tekniskGodkjenning: { tekniskeData: { generelt: { merke: [{ merke: 'AUDI' }], handelsbetegnelse: ['AUDI A4'] } } },
+          forstegangsGodkjenning: { gyldigFraDato: '2015-01-01', fortollingOgMva: { fortollingsreferanse: 'x' } },
+        },
+      },
+    ],
+  });
+  const bil = await svvLookup('XX12345', 'hemmelig');
+  assert.equal(bil.import, true); // ~65 mnd gap = brukt i utlandet først
+  assert.equal(bil.importLand, null);
 });
 
 test('svvLookup: ukjent importland-kode beholdes rå', async () => {

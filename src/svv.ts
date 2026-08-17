@@ -12,7 +12,8 @@ export interface SvvBil {
   registrert: boolean;
   /** Full førstegangsregistreringsdato i Norge (ISO: 2005-04-20). */
   forstegangsregistrert: string | null;
-  /** True hvis bilen er importert (fortollingsreferanse finnes). */
+  /** True ved positivt bevis på BRUKTIMPORT (ikke bare fortollingsreferanse —
+   *  alle biler i Norge fortolles ved innførsel). */
   import: boolean;
   /** Norsk navn på importland (f.eks. «Storbritannia») — null hvis ikke import/ukjent. */
   importLand: string | null;
@@ -89,6 +90,7 @@ async function svvOppslag(
             };
           };
           forstegangsGodkjenning?: {
+            gyldigFraDato?: string;
             fortollingOgMva?: {
               fortollingsreferanse?: string;
               beskrivelse?: string;
@@ -105,10 +107,17 @@ async function svvOppslag(
     if (!merke) return null;
     const regDato = k.forstegangsregistrering?.registrertForstegangNorgeDato ?? '';
     const aar = regDato ? parseInt(regDato.slice(0, 4), 10) : null;
-    // Import-deteksjon: fortollingsreferanse finnes = bilen er fortollet/importert.
-    // Land: første token i beskrivelsen er ISO-landkode (f.eks. «GB BMW X3 …»).
+    // Bruktimport-deteksjon — krever POSITIVT bevis. Fortollingsreferanse alene
+    // betyr IKKE importbil: alle biler i Norge fortolles ved innførsel (MVA/
+    // engangsavgift), også helt vanlige nybiler levert via norsk importør.
+    //  1) fortollingsbeskrivelse med ISO-landkode («GB BMW X3 …») = positivt bevis
+    //  2) gap typegodkjenning (COC gyldigFraDato) → norsk førstegangsregistrering
+    //     > 24 mnd = bilen var registrert/brukt i utlandet før import til Norge
     const fortoll = k.godkjenning?.forstegangsGodkjenning?.fortollingOgMva;
+    const cocDato = k.godkjenning?.forstegangsGodkjenning?.gyldigFraDato;
     const importLandKode = fortoll?.beskrivelse ? /^([A-Z]{2})\b/.exec(fortoll.beskrivelse.trim())?.[1] : undefined;
+    const gapMnd = cocDato && regDato ? (Date.parse(regDato) - Date.parse(cocDato)) / (1000 * 60 * 60 * 24 * 30.44) : 0;
+    const importBrukt = !!fortoll?.fortollingsreferanse && (!!importLandKode || gapMnd > 24);
     return {
       merke,
       modell,
@@ -117,7 +126,7 @@ async function svvOppslag(
       farge: k.godkjenning?.tekniskGodkjenning?.tekniskeData?.karosseriOgLasteplan?.rFarge?.[0]?.kodeNavn ?? null,
       registrert: k.registrering?.registreringsstatus?.kodeVerdi === 'REGISTRERT',
       forstegangsregistrert: regDato || null,
-      import: !!fortoll?.fortollingsreferanse,
+      import: importBrukt,
       importLand: importLandKode ? LAND_NAVN[importLandKode] ?? importLandKode : null,
     };
   } catch (e) {
