@@ -136,6 +136,58 @@ test('svvLookup: ukjent importland-kode beholdes rå', async () => {
   assert.equal(bil.importLand, 'ZZ'); // ikke i LAND_NAVN → rå kode
 });
 
+test('svvLookup: bruktimport-objekt fra SVV → import + riktig årsmodell (JD94062-saken)', async () => {
+  mockFetch(200, {
+    kjoretoydataListe: [
+      {
+        kjoretoyId: { understellsnummer: 'JMBXDGG2WEZ012146' },
+        forstegangsregistrering: { registrertForstegangNorgeDato: '2025-06-03' },
+        registrering: { registreringsstatus: { kodeVerdi: 'REGISTRERT' } },
+        godkjenning: {
+          tekniskGodkjenning: {
+            tekniskeData: { generelt: { merke: [{ merke: 'MITSUBISHI' }], handelsbetegnelse: ['MITSUBISHI OUTLANDER'] } },
+            kjoretoyklassifisering: { nasjonalGodkjenning: { nasjonaltGodkjenningsAr: 2014 } },
+          },
+          forstegangsGodkjenning: {
+            gyldigFraDato: '2025-06-03', // COC utstedt ved import — gap 0 mnd
+            fortollingOgMva: { fortollingsreferanse: '3650412500000182', beskrivelse: 'MITSUBISHI OUTLANDER 2.0 PHEV2014 MODELKM STAND 105250' },
+            bruktimport: {
+              importland: { landkode: 'NLD', landNavn: 'NEDERLAND' },
+              kilometerstand: 105291,
+            },
+          },
+        },
+      },
+    ],
+  });
+  const bil = await svvLookup('JD94062', 'hemmelig');
+  assert.equal(bil.aar, 2014); // årsmodell fra nasjonaltGodkjenningsAr, IKKE registreringsår 2025
+  assert.equal(bil.import, true); // SVVs bruktimport-objekt = autoritativt bevis
+  assert.equal(bil.importLand, 'NEDERLAND'); // SVVs eget landNavn vinner over kode-mapping
+  assert.equal(bil.forstegangsregistrert, '2025-06-03'); // norsk førstegangsregistrering uendret
+});
+
+test('svvLookup: nasjonaltGodkjenningsAr uten bruktimport → år oppdatert, import fortsatt false', async () => {
+  mockFetch(200, {
+    kjoretoydataListe: [
+      {
+        forstegangsregistrering: { registrertForstegangNorgeDato: '2025-01-15' },
+        registrering: { registreringsstatus: { kodeVerdi: 'REGISTRERT' } },
+        godkjenning: {
+          tekniskGodkjenning: {
+            tekniskeData: { generelt: { merke: [{ merke: 'TOYOTA' }], handelsbetegnelse: ['TOYOTA COROLLA'] } },
+            kjoretoyklassifisering: { nasjonalGodkjenning: { nasjonaltGodkjenningsAr: 2024 } },
+          },
+          forstegangsGodkjenning: { gyldigFraDato: '2024-11-01', fortollingOgMva: { fortollingsreferanse: 'x' } },
+        },
+      },
+    ],
+  });
+  const bil = await svvLookup('XX12345', 'hemmelig');
+  assert.equal(bil.aar, 2024); // nasjonaltGodkjenningsAr vinner
+  assert.equal(bil.import, false); // liten COC-gap + ingen landkode + ingen bruktimport
+});
+
 test('svvLookup: ugyldig år → null', async () => {
   mockFetch(200, {
     kjoretoydataListe: [

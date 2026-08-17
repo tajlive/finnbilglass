@@ -88,12 +88,20 @@ async function svvOppslag(
               };
               karosseriOgLasteplan?: { rFarge?: Array<{ kodeNavn?: string }> };
             };
+            kjoretoyklassifisering?: {
+              nasjonalGodkjenning?: { nasjonaltGodkjenningsAr?: number };
+            };
           };
           forstegangsGodkjenning?: {
             gyldigFraDato?: string;
+            forstegangRegistrertDato?: string;
             fortollingOgMva?: {
               fortollingsreferanse?: string;
               beskrivelse?: string;
+            };
+            bruktimport?: {
+              importland?: { landkode?: string; landNavn?: string };
+              kilometerstand?: number;
             };
           };
         };
@@ -106,28 +114,41 @@ async function svvOppslag(
     const modell = (g?.handelsbetegnelse?.[0] ?? '').trim().toUpperCase();
     if (!merke) return null;
     const regDato = k.forstegangsregistrering?.registrertForstegangNorgeDato ?? '';
-    const aar = regDato ? parseInt(regDato.slice(0, 4), 10) : null;
+    // Årsmodell: SVV gir nasjonaltGodkjenningsAr (f.eks. 2014 for bruktimporterte biler).
+    // Registreringsåret i Norge er IKKE årsmodellen for bruktimport — en 2014-bil
+    // importert i 2025 har årsmodell 2014, ikke 2025.
+    const nasjAr = k.godkjenning?.tekniskGodkjenning?.kjoretoyklassifisering?.nasjonalGodkjenning?.nasjonaltGodkjenningsAr;
+    const regAr = regDato ? parseInt(regDato.slice(0, 4), 10) : null;
+    const aarKandidat = nasjAr ?? regAr;
+    const aar = aarKandidat && aarKandidat > 1900 && aarKandidat < 2100 ? aarKandidat : null;
     // Bruktimport-deteksjon — krever POSITIVT bevis. Fortollingsreferanse alene
     // betyr IKKE importbil: alle biler i Norge fortolles ved innførsel (MVA/
     // engangsavgift), også helt vanlige nybiler levert via norsk importør.
-    //  1) fortollingsbeskrivelse med ISO-landkode («GB BMW X3 …») = positivt bevis
-    //  2) gap typegodkjenning (COC gyldigFraDato) → norsk førstegangsregistrering
+    //  Kilder til positivt bevis, i prioritert rekkefølge:
+    //  1) SVVs EGET bruktimport-objekt (importland + kilometerstand) = autoritativt
+    //  2) fortollingsbeskrivelse med ISO-landkode («GB BMW X3 …») = positivt bevis
+    //  3) gap typegodkjenning (COC gyldigFraDato) → norsk førstegangsregistrering
     //     > 24 mnd = bilen var registrert/brukt i utlandet før import til Norge
-    const fortoll = k.godkjenning?.forstegangsGodkjenning?.fortollingOgMva;
-    const cocDato = k.godkjenning?.forstegangsGodkjenning?.gyldigFraDato;
-    const importLandKode = fortoll?.beskrivelse ? /^([A-Z]{2})\b/.exec(fortoll.beskrivelse.trim())?.[1] : undefined;
+    const fg = k.godkjenning?.forstegangsGodkjenning;
+    const bruktimport = fg?.bruktimport;
+    const fortoll = fg?.fortollingOgMva;
+    const cocDato = fg?.gyldigFraDato;
+    const importLandKode = bruktimport?.importland?.landkode
+      ?? (fortoll?.beskrivelse ? /^([A-Z]{2})\b/.exec(fortoll.beskrivelse.trim())?.[1] : undefined);
     const gapMnd = cocDato && regDato ? (Date.parse(regDato) - Date.parse(cocDato)) / (1000 * 60 * 60 * 24 * 30.44) : 0;
-    const importBrukt = !!fortoll?.fortollingsreferanse && (!!importLandKode || gapMnd > 24);
+    const importBrukt = !!bruktimport
+      || (!!fortoll?.fortollingsreferanse && (!!importLandKode || gapMnd > 24));
     return {
       merke,
       modell,
-      aar: aar && aar > 1900 && aar < 2100 ? aar : null,
+      aar,
       vin: k.kjoretoyId?.understellsnummer ?? null,
       farge: k.godkjenning?.tekniskGodkjenning?.tekniskeData?.karosseriOgLasteplan?.rFarge?.[0]?.kodeNavn ?? null,
       registrert: k.registrering?.registreringsstatus?.kodeVerdi === 'REGISTRERT',
       forstegangsregistrert: regDato || null,
       import: importBrukt,
-      importLand: importLandKode ? LAND_NAVN[importLandKode] ?? importLandKode : null,
+      importLand: bruktimport?.importland?.landNavn
+        ?? (importLandKode ? LAND_NAVN[importLandKode] ?? importLandKode : null),
     };
   } catch (e) {
     console.error('SVV-oppslag feilet:', e instanceof Error ? e.message : String(e));
