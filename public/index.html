@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Finnbilglass — bilglass til ekte pris</title>
-<meta name="description" content="Finn riktig bilglass til din bil — uten forsikring. Ekte priser, direkte fra lager. Levert over hele Norge.">
+<title>Finnbilglass — bilglass til riktig pris</title>
+<meta name="description" content="Finn riktig bilglass til din bil — uten forsikring. Riktige priser, direkte fra lager. Levert over hele Norge.">
 <meta name="theme-color" content="#F59E0B">
 
 <!-- Open Graph / sosiale medier -->
-<meta property="og:title" content="Finnbilglass — bilglass til ekte pris">
+<meta property="og:title" content="Finnbilglass — bilglass til riktig pris">
 <meta property="og:description" content="Finn riktig bilglass til din bil — uten forsikring. Direkte fra lager.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://finnbilglass.no/">
@@ -54,6 +54,13 @@
     <symbol id="ikon-kamera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
       <circle cx="12" cy="13" r="3"/>
+    </symbol>
+    <symbol id="ikon-kamera-skilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Kamera med norsk kjennemerke i søkeren (bilglass-spesifikt, ikke generisk) -->
+      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+      <rect x="6.5" y="10" width="11" height="7" rx="1.2"/>
+      <rect x="6.5" y="10" width="2.4" height="7" rx="0.6" fill="currentColor" stroke="none"/>
+      <path d="M10.4 12.5h4.2M10.4 14.5h4.2M10.4 16.5h2.6"/>
     </symbol>
     <symbol id="ikon-skilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <rect x="2.5" y="5" width="19" height="14" rx="2"/>
@@ -117,13 +124,13 @@
   <!-- Skjerm 1: Start / søk -->
   <section id="screen-start" class="screen" aria-label="Søk etter bilglass">
     <div class="hero-stripe" aria-hidden="true"></div>
-    <h1>Bilglass til ekte pris — uten forsikring</h1>
-    <p class="sub">Ta bilde av kjennemerket, så finner vi riktig glass til bilen din — på sekunder.</p>
+    <h1>Bilglass til riktig pris</h1>
+    <p class="sub">Forsikringen bestemmer ikke prisen lenger.</p>
     <button id="btn-foto-regnr" class="foto-prim" type="button">
-      <svg class="ikon" aria-hidden="true"><use href="#ikon-kamera"/></svg>
-      Ta bilde av kjennemerket
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-kamera-skilt"/></svg>
+      Fotografer kjennemerket
     </button>
-    <div class="eller" aria-hidden="true"><span>eller skriv kjennemerket</span></div>
+    <div class="eller" aria-hidden="true"><span>eller skriv inn bilens kjennemerke</span></div>
     <form id="form-regnr" class="search" novalidate aria-label="Kjennemerke-søk">
       <input
         id="input-regnr"
@@ -150,8 +157,9 @@
       <svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>
       Søk med chassisnummer (VIN) i stedet
     </button>
-    <p class="svv-badge" aria-label="Vi bruker Statens vegvesen for å identifisere bilen din">
-      Oppslag via Statens vegvesen
+    <p class="svv-badge" aria-label="Vi henter bilopplysningene fra Statens vegvesen">
+      <svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-skjold"/></svg>
+      Vi henter bilopplysningene fra Statens vegvesen
     </p>
   </section>
 
@@ -300,7 +308,7 @@
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass — bilglass til ekte pris. Leveres over hele Norge.</p>
+    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass — bilglass til riktig pris. Leveres over hele Norge.</p>
   </footer>
 
 </div><!-- /.wrap -->
