@@ -188,6 +188,27 @@ test('svvLookup: nasjonaltGodkjenningsAr uten bruktimport → år oppdatert, imp
   assert.equal(bil.import, false); // liten COC-gap + ingen landkode + ingen bruktimport
 });
 
+test('svvLookup: forstegangRegistrertDato vinner over nasjonaltGodkjenningsAr (JD79487-mønster)', async () => {
+  mockFetch(200, {
+    kjoretoydataListe: [
+      {
+        forstegangsregistrering: { registrertForstegangNorgeDato: '2017-03-20' },
+        registrering: { registreringsstatus: { kodeVerdi: 'REGISTRERT' } },
+        godkjenning: {
+          tekniskGodkjenning: {
+            tekniskeData: { generelt: { merke: [{ merke: 'VOLKSWAGEN' }], handelsbetegnelse: ['VW CADDY'] } },
+            kjoretoyklassifisering: { nasjonalGodkjenning: { nasjonaltGodkjenningsAr: 2016 } }, // typegodkjenning året før
+          },
+          forstegangsGodkjenning: { gyldigFraDato: '2017-01-13', forstegangRegistrertDato: '2017-03-20', fortollingOgMva: { fortollingsreferanse: '0101112017010953' } },
+        },
+      },
+    ],
+  });
+  const bil = await svvLookup('JD79487', 'hemmelig');
+  assert.equal(bil.aar, 2017); // forstegangRegistrertDato (2017) vinner over nasjAr (2016)
+  assert.equal(bil.import, false); // fortsatt ikke import
+});
+
 test('svvLookup: ugyldig år → null', async () => {
   mockFetch(200, {
     kjoretoydataListe: [

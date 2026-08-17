@@ -114,12 +114,18 @@ async function svvOppslag(
     const modell = (g?.handelsbetegnelse?.[0] ?? '').trim().toUpperCase();
     if (!merke) return null;
     const regDato = k.forstegangsregistrering?.registrertForstegangNorgeDato ?? '';
-    // Årsmodell: SVV gir nasjonaltGodkjenningsAr (f.eks. 2014 for bruktimporterte biler).
-    // Registreringsåret i Norge er IKKE årsmodellen for bruktimport — en 2014-bil
-    // importert i 2025 har årsmodell 2014, ikke 2025.
+    const fg = k.godkjenning?.forstegangsGodkjenning;
+    // Årsmodell/årgang: SVVs forstegangRegistrertDato er bilens FØRSTE registrering
+    // noensinne (uansett land) — for bruktimport er det f.eks. 2014-04-14 (Nederland)
+    // selv om den ble registrert i Norge først i 2025. nasjonaltGodkjenningsAr er
+    // typegodkjenningsåret og kan ligge 1–2 år FØR bilen (Caddy 2017: nasjAr 2016),
+    // så den brukes kun som siste fallback. Registreringsåret i Norge er IKKE
+    // årsmodellen for bruktimport — en 2014-bil importert i 2025 er fra 2014.
+    const forsteReg = fg?.forstegangRegistrertDato;
     const nasjAr = k.godkjenning?.tekniskGodkjenning?.kjoretoyklassifisering?.nasjonalGodkjenning?.nasjonaltGodkjenningsAr;
-    const regAr = regDato ? parseInt(regDato.slice(0, 4), 10) : null;
-    const aarKandidat = nasjAr ?? regAr;
+    const aarKandidat = forsteReg
+      ? parseInt(forsteReg.slice(0, 4), 10)
+      : nasjAr ?? (regDato ? parseInt(regDato.slice(0, 4), 10) : null);
     const aar = aarKandidat && aarKandidat > 1900 && aarKandidat < 2100 ? aarKandidat : null;
     // Bruktimport-deteksjon — krever POSITIVT bevis. Fortollingsreferanse alene
     // betyr IKKE importbil: alle biler i Norge fortolles ved innførsel (MVA/
@@ -129,7 +135,6 @@ async function svvOppslag(
     //  2) fortollingsbeskrivelse med ISO-landkode («GB BMW X3 …») = positivt bevis
     //  3) gap typegodkjenning (COC gyldigFraDato) → norsk førstegangsregistrering
     //     > 24 mnd = bilen var registrert/brukt i utlandet før import til Norge
-    const fg = k.godkjenning?.forstegangsGodkjenning;
     const bruktimport = fg?.bruktimport;
     const fortoll = fg?.fortollingOgMva;
     const cocDato = fg?.gyldigFraDato;
