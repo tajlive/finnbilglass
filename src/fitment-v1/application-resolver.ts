@@ -103,13 +103,19 @@ export class ApplicationResolver {
 function matchesMakeModel(make: string, model: string, fam: FamilyKnowledge): boolean {
   const mk = make.toUpperCase();
   const mo = model.toUpperCase();
-  return fam.make.toUpperCase() === mk && (mo.includes(fam.model.toUpperCase()) || fam.model.toUpperCase().includes(mo));
+  if (fam.make.toUpperCase() !== mk) return false;
+  if (mo.includes(fam.model.toUpperCase()) || fam.model.toUpperCase().includes(mo)) return true;
+  // Aliaser: CARAVELLE/MULTIVAN er Transporter-varianter (samme glass) — deterministisk
+  if (fam.modelAliases?.some((a) => mo.includes(a.toUpperCase()))) return true;
+  return false;
 }
 
 export interface FamilyKnowledge {
   applicationId: string;
   make: string;
   model: string;
+  /** Modellaliaser (f.eks. CARAVELLE/MULTIVAN = Transporter-varianter) — deterministisk */
+  modelAliases?: string[];
   generation: string | null;
   body?: string | null;
   productionInterval: { from: number | null; to: number | null } | null;

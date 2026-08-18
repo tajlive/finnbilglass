@@ -1,0 +1,116 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-18T03:26:08.713Z",
+    "sok": 1000,
+    "prinsipp": "CLASS_D-kandidater = kapabilitet, aldri fasit. EXACT krever fortsatt OE/foto-evidens."
+  },
+  "fordeling": {
+    "EXACT_DIREKTE": {
+      "antall": 0,
+      "pct": 0
+    },
+    "ETT_SPORSMAL": {
+      "antall": 3,
+      "pct": 0.3
+    },
+    "FOTO_OE": {
+      "antall": 187,
+      "pct": 18.7
+    },
+    "HANDOFF": {
+      "antall": 810,
+      "pct": 81
+    }
+  },
+  "perFamilie": [
+    {
+      "familie": "ANNEN",
+      "sok": 337,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 337
+    },
+    {
+      "familie": "GOLF",
+      "sok": 111,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 3,
+      "FOTO_OE": 108,
+      "HANDOFF": 0
+    },
+    {
+      "familie": "LEAF",
+      "sok": 94,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 94
+    },
+    {
+      "familie": "RAV4",
+      "sok": 83,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 83
+    },
+    {
+      "familie": "TRANSPORTER",
+      "sok": 79,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 79,
+      "HANDOFF": 0
+    },
+    {
+      "familie": "3-SERIE",
+      "sok": 78,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 78
+    },
+    {
+      "familie": "MODEL-3",
+      "sok": 72,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 72
+    },
+    {
+      "familie": "MODEL-Y",
+      "sok": 50,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 50
+    },
+    {
+      "familie": "XC60",
+      "sok": 49,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 49
+    },
+    {
+      "familie": "PASSAT",
+      "sok": 44,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 44
+    },
+    {
+      "familie": "VITO",
+      "sok": 3,
+      "EXACT_DIREKTE": 0,
+      "ETT_SPORSMAL": 0,
+      "FOTO_OE": 0,
+      "HANDOFF": 3
+    }
+  ],
+  "konklusjon": "Fokus: familier med høy ETT_SPORSMAL/FOTO_OE-andel og høyt markedsvolum — question optimizer + fotoflyt gir mest her."
+}

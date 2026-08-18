@@ -136,12 +136,16 @@ export function matchClassDCandidates(index: CatalogueCandidate[], make: string,
   const mo = model.toUpperCase();
   const fam = FAMILIER.find((f) => f.merke === mk && f.re.test(mo));
   if (!fam) return [];
-  const hits = index.filter((c) => c.matchReason.startsWith(fam.merke + ' ' + fam.familie));
+  // Kandidatkvalitet: ekskluder bak/side-ruter OG tilbehør (PY/GU/K-lister, klips-kit — kjent katalogfelle)
+  const erBakSide = (c: CatalogueCandidate) => /BAKRUTE|SIDERUTE|DØRRUTE|DORRUTE|BAKRUT|SIDERUT/.test(c.varenavn);
+  const erTilbehor = (c: CatalogueCandidate) => /(PYT|PYB|PYV|PYH|PYS|PYC|PYKIT|PY|GU|GUM)$/.test(c.varenr) || /^\d{3,5}K$/.test(c.varenr) || /PYNTELIST|GUMMILIST|KLIPS|PYNTELISTE/.test(c.varenavn);
+  const hits = index.filter((c) => c.matchReason.startsWith(fam.merke + ' ' + fam.familie) && !erBakSide(c) && !erTilbehor(c));
   if (year == null) return hits.slice(0, 6);
   return hits.filter((c) => {
     const y = year;
     const r = /(\d{4})–(\d{4}|)$/.exec(c.matchReason.split(' ').slice(3).join(' '));
-    if (!r) return true; // rad uten årsintervall: behold som kandidat
+    // Katalog-rad UTEN produksjonsintervall er ikke kandidat-evidence for en år-spesifikk bil
+    if (!r) return false;
     const fra = parseInt(r[1], 10);
     const til = r[2] ? parseInt(r[2], 10) : Infinity;
     return y >= fra && y <= til;

@@ -32,6 +32,7 @@
     "test:c6": "node --test tests/c6.test.mjs",
     "test:c76": "node --test tests/c76.test.mjs",
     "test:c8": "node --import tsx --test tests/evidence-growth.test.mjs",
+    "test:c9": "node --import tsx --test tests/c9.test.mjs",
     "test:challenge": "node --import tsx --test tests/fitment-challenge.test.mjs"
   },
   "devDependencies": {
