@@ -513,7 +513,14 @@ export default {
       const total = [...byStatus.values()].reduce((a, b) => a + b, 0);
       let aiObservations = 0;
       try { aiObservations = (await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM evidence_events').first<{ n: number }>())?.n ?? 0; } catch { /* ledger may be intentionally absent in a new staging database */ }
-      return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
+      let inquiries = 0;
+      let latestInquiries: { id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string }[] = [];
+      try {
+        const q = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, created_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 10').all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string }>();
+        latestInquiries = q.results;
+        inquiries = (await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM beta_inquiries').first<{ n: number }>())?.n ?? latestInquiries.length;
+      } catch { /* beta_inquiries krever migrasjon 0017 — eldre staging-DB uten tabellen er ok */ }
+      return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, inquiries, latestInquiries, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
     }
     if (method === 'GET' && path === '/support/evidence') {
       // Behandlingsflaten (statusendring/sjekkliste) er staging-only i denne fasen.
