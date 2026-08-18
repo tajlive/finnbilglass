@@ -1,0 +1,396 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-18T02:39:40.790Z",
+    "corpusFiles": [
+      "data/finn-modeller/svv-verifisert.ndjson",
+      "data/test-500-gt-detaljer.jsonl",
+      "data/finn-100.jsonl",
+      "/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson"
+    ],
+    "privacy": "regnr/VIN kun sha256-hash; ingen eierdata; kun {make,model,year} til resolver"
+  },
+  "totals": {
+    "vehicles": 3076,
+    "withVin": 2979,
+    "applicationFound": 385,
+    "candidateSingle": 348,
+    "candidateMulti": 37,
+    "candidateNone": 2691
+  },
+  "coverage": {
+    "vehicleIdentityCoverage": 100,
+    "vinCoverage": 96.8,
+    "applicationResolutionCoverage": 12.5,
+    "candidateCoverage": 12.5
+  },
+  "familyCount": 735,
+  "topFamilies": [
+    {
+      "key": "VW GOLF",
+      "vehicles": 102,
+      "withVin": 102,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 102,
+      "dataGap": 100,
+      "value": 204
+    },
+    {
+      "key": "TOYOTA RAV4",
+      "vehicles": 83,
+      "withVin": 81,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 83,
+      "dataGap": 100,
+      "value": 166
+    },
+    {
+      "key": "TOYOTA COROLLA",
+      "vehicles": 69,
+      "withVin": 68,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 69,
+      "dataGap": 100,
+      "value": 138
+    },
+    {
+      "key": "NISSAN LEAF H",
+      "vehicles": 62,
+      "withVin": 62,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 62,
+      "dataGap": 100,
+      "value": 124
+    },
+    {
+      "key": "BMW I I3",
+      "vehicles": 55,
+      "withVin": 55,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 55,
+      "dataGap": 100,
+      "value": 110
+    },
+    {
+      "key": "NISSAN ARIYA",
+      "vehicles": 53,
+      "withVin": 53,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 53,
+      "dataGap": 100,
+      "value": 106
+    },
+    {
+      "key": "VW TRANSPORTER",
+      "vehicles": 40,
+      "withVin": 38,
+      "applicationFound": 30,
+      "multiVariant": 30,
+      "singleVariant": 0,
+      "noCandidate": 10,
+      "dataGap": 25,
+      "value": 100
+    },
+    {
+      "key": "TESLA MODEL Y",
+      "vehicles": 48,
+      "withVin": 48,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 48,
+      "dataGap": 100,
+      "value": 96
+    },
+    {
+      "key": "BMW I4 M50",
+      "vehicles": 44,
+      "withVin": 44,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 44,
+      "dataGap": 100,
+      "value": 88
+    },
+    {
+      "key": "VW PASSAT",
+      "vehicles": 43,
+      "withVin": 40,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 43,
+      "dataGap": 100,
+      "value": 86
+    },
+    {
+      "key": "MITSUBISHI OUTLANDER",
+      "vehicles": 38,
+      "withVin": 37,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 38,
+      "dataGap": 100,
+      "value": 76
+    },
+    {
+      "key": "TESLA MODEL 3",
+      "vehicles": 72,
+      "withVin": 72,
+      "applicationFound": 72,
+      "multiVariant": 0,
+      "singleVariant": 72,
+      "noCandidate": 0,
+      "dataGap": 0,
+      "value": 72
+    },
+    {
+      "key": "SKODA OCTAVIA",
+      "vehicles": 35,
+      "withVin": 35,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 35,
+      "dataGap": 100,
+      "value": 70
+    },
+    {
+      "key": "NISSAN LEAF",
+      "vehicles": 32,
+      "withVin": 31,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 32,
+      "dataGap": 100,
+      "value": 64
+    },
+    {
+      "key": "VOLVO V70",
+      "vehicles": 32,
+      "withVin": 32,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 32,
+      "dataGap": 100,
+      "value": 64
+    },
+    {
+      "key": "VW POLO",
+      "vehicles": 30,
+      "withVin": 30,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 30,
+      "dataGap": 100,
+      "value": 60
+    },
+    {
+      "key": "FORD FOCUS",
+      "vehicles": 26,
+      "withVin": 26,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 26,
+      "dataGap": 100,
+      "value": 52
+    },
+    {
+      "key": "TOYOTA AURIS",
+      "vehicles": 26,
+      "withVin": 26,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 26,
+      "dataGap": 100,
+      "value": 52
+    },
+    {
+      "key": "VOLVO XC40",
+      "vehicles": 26,
+      "withVin": 26,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 26,
+      "dataGap": 100,
+      "value": 52
+    },
+    {
+      "key": "VW TOURAN",
+      "vehicles": 25,
+      "withVin": 23,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 25,
+      "dataGap": 100,
+      "value": 50
+    },
+    {
+      "key": "TOYOTA YARIS",
+      "vehicles": 25,
+      "withVin": 22,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 25,
+      "dataGap": 100,
+      "value": 50
+    },
+    {
+      "key": "VOLVO C40",
+      "vehicles": 24,
+      "withVin": 24,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 24,
+      "dataGap": 100,
+      "value": 48
+    },
+    {
+      "key": "VOLVO XC70",
+      "vehicles": 23,
+      "withVin": 23,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 23,
+      "dataGap": 100,
+      "value": 46
+    },
+    {
+      "key": "FORD MONDEO",
+      "vehicles": 23,
+      "withVin": 23,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 23,
+      "dataGap": 100,
+      "value": 46
+    },
+    {
+      "key": "TOYOTA AVENSIS",
+      "vehicles": 22,
+      "withVin": 22,
+      "applicationFound": 0,
+      "multiVariant": 0,
+      "singleVariant": 0,
+      "noCandidate": 22,
+      "dataGap": 100,
+      "value": 44
+    }
+  ],
+  "dataAcquisitionPriority": [
+    {
+      "family": "VW GOLF",
+      "vehicles": 102,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "TOYOTA RAV4",
+      "vehicles": 83,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "TOYOTA COROLLA",
+      "vehicles": 69,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "NISSAN LEAF H",
+      "vehicles": 62,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "BMW I I3",
+      "vehicles": 55,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "NISSAN ARIYA",
+      "vehicles": 53,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "VW TRANSPORTER",
+      "vehicles": 40,
+      "dataGapPct": 25,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "TESLA MODEL Y",
+      "vehicles": 48,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "BMW I4 M50",
+      "vehicles": 44,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "VW PASSAT",
+      "vehicles": 43,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "MITSUBISHI OUTLANDER",
+      "vehicles": 38,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "SKODA OCTAVIA",
+      "vehicles": 35,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "NISSAN LEAF",
+      "vehicles": 32,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "VOLVO V70",
+      "vehicles": 32,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    },
+    {
+      "family": "VW POLO",
+      "vehicles": 30,
+      "dataGapPct": 100,
+      "why": "mange biler × manglende applikasjon/OE-data → TecDoc/EPC-fokus"
+    }
+  ]
+}
