@@ -1,6 +1,6 @@
-# FASE 3–5 — Media, kundebilder og AI/CV (design)
+# FASE 3–5 — Media, kundebilder og AI/CV (parkert design)
 
-> KLA-301 · Status: **DESIGN KLART — kode ikke bygget** (dokumentert ærlig; bygges når R2 + bilde-lisens + CV-modellvalg er besluttet). Ingen ytelses-/presisjonstall er MÅLT.
+> KLA-301 · Status 2026-08-18: **PARKERT**. Tom har besluttet a avvente bildeopplasting, kunde-chat og speech. Dette dokumentet beholdes som designhistorikk, ikke aktiv implementeringsplan. Ingen produksjonsdeploy av disse fasene uten ny eksplisitt beslutning.
 
 ## FASE 3 — Bildeinnhenting (mediaflyt)
 

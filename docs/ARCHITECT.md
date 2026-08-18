@@ -12,8 +12,8 @@
 
 ## Roller
 
-- **Hermes:** arkitektur + drift (chief-architect-ops)
-- **Codex:** implementering (senior-developer)
+- **Codex:** hovedarkitekt, prosjektleder og ansvarlig implementering/verifisering i dette repoet
+- **Hermes:** hjelpeagent for forslag, rapporter og avgrensede arbeidsoppgaver nar Tom/Codex ber om det
 - **Kimi:** research (research-analyst)
 - **Tom:** prioritering (eneste som flytter Ready for Tom → Approved)
 
