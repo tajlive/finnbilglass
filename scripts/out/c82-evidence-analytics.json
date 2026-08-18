@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-18T05:47:23.270Z",
+    "korpus": 774,
+    "prinsipp": "Læringsmuligheter = markedsvolum × manuell-gap × evidence-mangel. Katalog foreslår, evidens bestemmer."
+  },
+  "topp": [
+    {
+      "familie": "3-SERIE",
+      "sok": 78,
+      "manuell": 78,
+      "markedsVolum": 0,
+      "manglendeFeatures": [],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 1,
+      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+    },
+    {
+      "familie": "1-SERIE",
+      "sok": 35,
+      "manuell": 35,
+      "markedsVolum": 0,
+      "manglendeFeatures": [],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 2,
+      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+    },
+    {
+      "familie": "LEAF",
+      "sok": 94,
+      "manuell": 94,
+      "markedsVolum": 0,
+      "manglendeFeatures": [],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 3,
+      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+    },
+    {
+      "familie": "MODEL-3",
+      "sok": 72,
+      "manuell": 72,
+      "markedsVolum": 0,
+      "manglendeFeatures": [],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 4,
+      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+    },
+    {
+      "familie": "MODEL-Y",
+      "sok": 50,
+      "manuell": 50,
+      "markedsVolum": 0,
+      "manglendeFeatures": [],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 5,
+      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+    },
+    {
+      "familie": "COROLLA",
+      "sok": 76,
+      "manuell": 76,
+      "markedsVolum": 0,
+      "manglendeFeatures": [],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 6,
+      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+    },
+    {
+      "familie": "RAV4",
+      "sok": 83,
+      "manuell": 83,
+      "markedsVolum": 0,
+      "manglendeFeatures": [],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 7,
+      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+    },
+    {
+      "familie": "TRANSPORTER",
+      "sok": 79,
+      "manuell": 0,
+      "markedsVolum": 0,
+      "manglendeFeatures": [
+        "antenna",
+        "coated",
+        "encapsulated",
+        "rainSensor"
+      ],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 8,
+      "anbefaling": "samle antenna/coated/encapsulated/rainSensor-evidens via kundesamtale + C8-fixtures (79/79 har kandidater)"
+    },
+    {
+      "familie": "PASSAT",
+      "sok": 44,
+      "manuell": 44,
+      "markedsVolum": 0,
+      "manglendeFeatures": [],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 9,
+      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+    },
+    {
+      "familie": "GOLF",
+      "sok": 111,
+      "manuell": 0,
+      "markedsVolum": 0,
+      "manglendeFeatures": [
+        "encapsulated",
+        "rainSensor"
+      ],
+      "feilglass": 0,
+      "verdifulleFixtures": 0,
+      "læringsscore": 0,
+      "rang": 10,
+      "anbefaling": "samle encapsulated/rainSensor-evidens via kundesamtale + C8-fixtures (111/111 har kandidater)"
+    }
+  ],
+  "oppsummering": {
+    "familierMedKandidater": 2,
+    "familierUtenKandidater": 10,
+    "manglendeFeaturesUnike": [
+      "antenna",
+      "coated",
+      "encapsulated",
+      "rainSensor"
+    ]
+  }
+}
