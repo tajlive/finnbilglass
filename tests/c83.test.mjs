@@ -5,7 +5,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { manglendeEvidens, featuresMedFlestSpoersmaal, glassMedMestUsikkerhet, installasjonerMedMestVerdi } from '../src/learning-v1/dashboard.js';
 
@@ -63,8 +65,9 @@ test('C8.3-4: installasjonerMedMestVerdi — korroberte installasjoner × marked
 });
 
 test('C8.3-5: script-integritet — dashboard-HTML genereres med alle fire seksjoner', () => {
-  execFileSync('node', ['--import', 'tsx', 'scripts/c83-evidence-dashboard.mjs'], { cwd: ROOT });
-  const html = readFileSync(fileURLToPath(new URL('../scripts/out/evidence-dashboard.html', import.meta.url)), 'utf8');
+  const output = join(mkdtempSync(join(tmpdir(), 'finnbilglass-c83-')), 'dashboard.html');
+  execFileSync('node', ['--import', 'tsx', 'scripts/c83-evidence-dashboard.mjs', '--out', output], { cwd: ROOT });
+  const html = readFileSync(output, 'utf8');
   assert.match(html, /Evidence Dashboard/);
   assert.match(html, /Hvilke biler mangler evidens/);
   assert.match(html, /Hvilke features skaper mest spørsmål/);

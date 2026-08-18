@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { EvidenceKernel } from '../src/fitment-v1/policy/kernel.js';
 import { ApplicationResolver } from '../src/fitment-v1/application-resolver.js';
 import { buildDefaultGenerationRegistry } from '../src/fitment-v1/generation-registry.js';
@@ -15,7 +16,8 @@ const challenge = JSON.parse(readFileSync(new URL('../data/fitment-challenge.jso
 const kernel = new EvidenceKernel();
 const appResolver = new ApplicationResolver({ families: buildDefaultGenerationRegistry() });
 // CLASS_D-kandidatindeks (gt-prislisten) — kandidatmateriale, aldri fasit
-const gtRaw = JSON.parse(readFileSync(new URL('../data/gt-ekspansjon/prisliste-alle-glass.json', import.meta.url), 'utf8'));
+const fixtureCatalogue = fileURLToPath(new URL('./fixtures/analytics/catalogue.json', import.meta.url));
+const gtRaw = JSON.parse(readFileSync(fixtureCatalogue, 'utf8'));
 const classDIndex = buildClassDCandidates(gtRaw[0].results);
 
 function runCase(c) {
