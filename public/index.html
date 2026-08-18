@@ -134,6 +134,9 @@
     <span class="beta" aria-label="Åpner etter beta">Åpner etter beta</span>
   </header>
 
+  <!-- Diskret beta-merkelapp (C2) — under header, over hovedinnhold -->
+  <p class="beta-merknad">Beta — vi tester tjenesten. Alle valg og priser bekreftes manuelt.</p>
+
   <!-- Skjerm 1: Start / søk -->
   <section id="screen-start" class="screen" aria-label="Søk etter bilglass">
     <div class="hero-stripe" aria-hidden="true"></div>
@@ -266,9 +269,33 @@
       <p class="note note-tilbehor">Tilbehørspriser vises når beta åpner.</p>
     </div>
     <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Glasset sendes direkte til deg — eller til et av våre avtaleverksteder for montering. Montering og frakt tilkommer.</p>
-    <button id="btn-bestill" class="prim" type="button" disabled title="Åpner etter beta" aria-disabled="true">
-      Bestill glass + tilbehør — åpner etter beta
+    <button id="btn-inquiry" class="prim" type="button">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-epost"/></svg>
+      Få tilbud og bekreftelse
     </button>
+    <div id="inquiry-form" class="inquiry hidden" aria-label="Forespørsel om tilbud">
+      <h3>Få tilbud og bekreftelse</h3>
+      <p class="note">Vi kontakter deg for å bekrefte riktig glass og gi deg pris.</p>
+      <label class="felt">
+        <span>Registreringsnummer</span>
+        <input id="inquiry-regnr" type="text" readonly aria-readonly="true">
+      </label>
+      <label class="felt">
+        <span>Navn</span>
+        <input id="inquiry-navn" type="text" autocomplete="name" maxlength="80" placeholder="Fornavn og etternavn">
+      </label>
+      <label class="felt">
+        <span>Telefon eller e-post</span>
+        <input id="inquiry-kontakt" type="text" autocomplete="tel email" maxlength="120" placeholder="F.eks. 40 40 82 41 eller navn@epost.no">
+      </label>
+      <label class="felt">
+        <span>Melding (valgfri)</span>
+        <textarea id="inquiry-melding" rows="3" maxlength="500" placeholder="Eventuelle spørsmål eller kommentarer"></textarea>
+      </label>
+      <p id="inquiry-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
+      <button id="btn-inquiry-send" class="sek" type="button">Send forespørsel</button>
+      <p id="inquiry-bekreftet" class="note status hidden" role="status" aria-live="polite"></p>
+    </div>
     <button class="link" type="button" data-tilbake="spm">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Nytt søk
@@ -297,7 +324,7 @@
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass — bilglass til riktig pris. Leveres over hele Norge.</p>
+    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Alle glassvalg bekreftes manuelt av vårt team.</p>
   </footer>
 
 </div><!-- /.wrap -->

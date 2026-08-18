@@ -559,6 +559,8 @@
   function renderResultat(data) {
     visRegnr();
     $('tilbehor-seksjon').classList.remove('hidden');
+    // Forhåndsutfyll henvendelsesskjema med kjennemerket (låst) — beta-tilbudsflyt.
+    $('inquiry-regnr').value = state.regnr || '';
     var a = data && data.anbefaling;
     if (!a) {
       tomtVis('Fant ingen treff', 'Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss så hjelper vi deg manuelt.');
@@ -566,13 +568,13 @@
     }
     var st = $('resultat-status');
     if (data.pinpoint) {
-      st.textContent = 'Vi har funnet en eksakt match til bilen din.';
+      st.textContent = 'Dette er vårt beste forslag basert på bilen din. En av våre fagfolk kontrollerer valget manuelt og bekrefter riktig glass og pris før noe bestilles.';
       st.className = 'note status pinpoint';
     } else if (data && data.meta && data.meta.resolver) {
-      st.textContent = 'Vi har funnet flere mulige varianter. Dette er nærmeste pris og beste kandidat akkurat nå, og vi dobbeltsjekker riktig rute for bilen din før sending.';
+      st.textContent = 'Disse variantene kan passe din bil. Riktig valg avhenger av utstyr og sensorer, og bekreftes alltid manuelt av en fagperson før noe bestilles.';
       st.className = 'note status verify';
     } else {
-      st.textContent = 'Vi har funnet beste kandidat ut fra bildataene dine. Vi dobbeltsjekker riktig rute før sending.';
+      st.textContent = 'Vi har funnet beste kandidat ut fra bildataene dine. En fagperson kontrollerer valget manuelt før sending.';
       st.className = 'note status';
     }
     st.classList.remove('hidden');
@@ -627,7 +629,7 @@
       });
       var avslutning = document.createElement('p');
       avslutning.className = 'varianter-avslutning';
-      avslutning.textContent = 'Vi dobbeltsjekker riktig variant for bilen din før levering.';
+      avslutning.textContent = 'Vi dobbeltsjekker riktig variant manuelt for bilen din før levering.';
       alt.appendChild(avslutning);
     }
   }
@@ -660,6 +662,59 @@
     cb.addEventListener('change', function () {
       loggHendelse('tilbehor_valg', { valg: cb.value, avkrysset: cb.checked });
     });
+  });
+
+  // Beta-henvendelse: knapp → skjema → validering → POST → bekreftelse.
+  $('btn-inquiry').addEventListener('click', function () {
+    $('inquiry-form').classList.remove('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    $('inquiry-feil').classList.add('hidden');
+  });
+
+  function inquiryFeil(msg) {
+    var el = $('inquiry-feil');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  // Enkel regex: ser ut som telefon (minst 8 siffer) ELLER e-post (inneholder @ og .).
+  function gyldigKontakt(s) {
+    var v = (s || '').trim();
+    if (!v) return false;
+    var sifre = v.replace(/[^0-9]/g, '');
+    if (sifre.length >= 8) return true;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  }
+
+  $('btn-inquiry-send').addEventListener('click', function () {
+    var regnr = $('inquiry-regnr').value.trim();
+    var navn = $('inquiry-navn').value.trim();
+    var kontakt = $('inquiry-kontakt').value.trim();
+    var melding = $('inquiry-melding').value.trim();
+    if (!navn || navn.length < 2) { inquiryFeil('Skriv inn navnet ditt (minst 2 tegn).'); return; }
+    if (!gyldigKontakt(kontakt)) { inquiryFeil('Skriv inn en gyldig telefon eller e-post.'); return; }
+    if (melding.length > 500) { inquiryFeil('Meldingen er for lang (maks 500 tegn).'); return; }
+    var knapp = this;
+    var org = knapp.textContent;
+    knapp.disabled = true;
+    knapp.textContent = 'Sender…';
+    loggHendelse('tilbud_foresporsel', { regnr: regnr, navnLengde: navn.length, kontaktType: /@/.test(kontakt) ? 'epost' : 'telefon' });
+    fetch('/api/inquiry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (r) {
+        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende forespørselen.');
+        $('inquiry-form').classList.add('hidden');
+        var b = $('inquiry-bekreftet');
+        b.textContent = 'Takk! Vi har mottatt forespørselen og en fagperson kontakter deg for å bekrefte glass og pris.';
+        b.className = 'note status pinpoint';
+        b.classList.remove('hidden');
+      })
+      .catch(function (e) { inquiryFeil(e.message || 'Kunne ikke sende forespørselen. Prøv igjen.'); })
+      .finally(function () { knapp.disabled = false; knapp.textContent = org; });
   });
 
   // Service worker: cache-first statisk + network-first HTML (80 % mobil = raske gjentatte besøk).

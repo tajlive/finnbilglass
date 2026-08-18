@@ -118,6 +118,16 @@ body {
   border-radius: 999px;
 }
 
+/* Diskret beta-merkelapp under header — nøytral, ikke advarsel */
+.beta-merknad {
+  margin: 0 0 4px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-3);
+  text-align: center;
+  padding: 8px 12px;
+}
+
 /* ── SKJERM-VEKSLING ───────────────────────────────────────── */
 .hidden { display: none !important; }
 .screen { animation: fadeUp var(--dur) var(--ease) both; }
@@ -361,6 +371,31 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
 .tilbehor-valg .ikon { width: 20px; height: 20px; color: var(--brand-deep); flex: 0 0 auto; }
 .tilbehor-valg span { font-size: 15px; font-weight: 600; }
 .note-tilbehor { opacity: .75; }
+
+/* Henvendelsesskjema (beta) */
+.inquiry {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card, #fff);
+}
+.inquiry h3 { font-size: 17px; font-weight: 800; margin: 0 0 4px; }
+.inquiry .felt { display: block; margin: 12px 0; }
+.inquiry .felt span { display: block; font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); margin-bottom: 4px; }
+.inquiry .felt input, .inquiry .felt textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--ink);
+}
+.inquiry .felt input[readonly] { background: var(--brand-subtle); color: var(--text-2); cursor: not-allowed; }
+.inquiry .felt textarea { resize: vertical; }
 .ikon-inline { width: 15px; height: 15px; vertical-align: -2px; margin-right: 2px; }
 
 /* Ikoner (SVG-sprite, lucide-stil) */

@@ -260,6 +260,38 @@ export default {
       return json({ ok: true });
     }
 
+    if (method === 'POST' && path === '/api/inquiry') {
+      // Beta-henvendelse: kunden ber om tilbud/bekreftelse. Kun mottak + lagring.
+      // Ingen prisberegning, ingen ordrebekreftelse, ingen automatisk beslutning.
+      let body: unknown;
+      try {
+        body = await request.json();
+      } catch {
+        return json({ ok: false, error: 'Ugyldig JSON' }, 400);
+      }
+      const b = body as Record<string, unknown>;
+      const regnr = typeof b.regnr === 'string' ? b.regnr.trim().slice(0, 10) : '';
+      const navn = typeof b.navn === 'string' ? b.navn.trim() : '';
+      const kontakt = typeof b.kontakt === 'string' ? b.kontakt.trim() : '';
+      const melding = typeof b.melding === 'string' ? b.melding.trim().slice(0, 500) : '';
+      if (!navn || navn.length < 2) return json({ ok: false, error: 'Navn påkrevd (minst 2 tegn)' }, 400);
+      if (!kontakt) return json({ ok: false, error: 'Telefon eller e-post påkrevd' }, 400);
+      // Enkel validering: minst 8 siffer ELLER e-postformat.
+      const sifre = kontakt.replace(/[^0-9]/g, '');
+      const erTelefon = sifre.length >= 8;
+      const erEpost = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt);
+      if (!erTelefon && !erEpost) return json({ ok: false, error: 'Ugyldig telefon eller e-post' }, 400);
+      try {
+        await env.FINNBILGLASS_DB.prepare(
+          'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id) VALUES (?, ?, ?, ?, ?)'
+        ).bind(regnr, navn, kontakt, melding, sessionId(body, request)).run();
+      } catch (e) {
+        console.error('inquiry-lagring feilet:', e);
+        return json({ ok: false, error: 'Kunne ikke lagre forespørselen. Prøv igjen.' }, 500);
+      }
+      return json({ ok: true }, 201);
+    }
+
     if (method === 'POST' && path === '/api/regnr') {
       let body: unknown;
       try {
