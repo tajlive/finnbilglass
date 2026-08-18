@@ -13,6 +13,7 @@ import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
 import { createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
+import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
 
 const CORS_HEADERS = {
@@ -281,15 +282,56 @@ export default {
       const erTelefon = sifre.length >= 8;
       const erEpost = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt);
       if (!erTelefon && !erEpost) return json({ ok: false, error: 'Ugyldig telefon eller e-post' }, 400);
+      // G9: frosset kundereise-snapshot — best-effort, aldri blokkerende.
+      // Kunden så en bil + resolver-utfall + pris; fryses ved innsending slik at
+      // saksbehandling i /ops har kontekst selv om session_id forsvinner.
+      let vehicleJson: string | null = null;
+      if (regnr) {
+        try {
+          const normRegnr = regnr.toUpperCase().replace(/[\s\-–—.]+/g, '');
+          const bilSnap = await svvLookup(normRegnr, env.SVV_API_KEY);
+          if (bilSnap) {
+            let resolverSnap: unknown = null;
+            try {
+              resolverSnap = await resolveFrontrute(env, {
+                merke: bilSnap.merke,
+                modell: bilSnap.modell ?? undefined,
+                aar: bilSnap.aar ?? undefined,
+                vin: bilSnap.vin ?? undefined,
+              });
+            } catch {
+              /* resolver-snapshot er ikke kritisk */
+            }
+            vehicleJson = JSON.stringify({
+              bil: { merke: bilSnap.merke, modell: bilSnap.modell ?? null, aar: bilSnap.aar ?? null, vin: bilSnap.vin ?? null },
+              resolver: resolverSnap,
+              tattVedInnsending: Date.now(),
+            });
+          }
+        } catch {
+          /* kundereise-snapshot er best-effort */
+        }
+      }
       try {
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id) VALUES (?, ?, ?, ?, ?)'
-        ).bind(regnr, navn, kontakt, melding, sessionId(body, request)).run();
+        const inserted = await env.FINNBILGLASS_DB.prepare(
+          'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
+        ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson).run();
+        // Append-only 'created'-hendelse — starten på tidslinjen (G5).
+        const id = inserted.meta?.last_row_id;
+        if (id) {
+          try {
+            await env.FINNBILGLASS_DB.prepare(
+              "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'created', NULL, 'NEW', ?, ?, 'kunde')"
+            ).bind(`created-${id}-${crypto.randomUUID()}`, id, melding || null, Date.now()).run();
+          } catch (e) {
+            console.error('inquiry-created-event feilet:', e);
+          }
+        }
+        return json({ ok: true, inquiryId: id ?? null }, 201);
       } catch (e) {
         console.error('inquiry-lagring feilet:', e);
         return json({ ok: false, error: 'Kunne ikke lagre forespørselen. Prøv igjen.' }, 500);
       }
-      return json({ ok: true }, 201);
     }
 
     if (method === 'POST' && path === '/api/regnr') {
@@ -514,13 +556,84 @@ export default {
       let aiObservations = 0;
       try { aiObservations = (await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM evidence_events').first<{ n: number }>())?.n ?? 0; } catch { /* ledger may be intentionally absent in a new staging database */ }
       let inquiries = 0;
-      let latestInquiries: { id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string }[] = [];
+      let latestInquiries: { id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string; status: string }[] = [];
+      let inquiryStatus: Record<string, number> = {};
       try {
-        const q = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, created_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 10').all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string }>();
+        const q = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, created_at, status FROM beta_inquiries ORDER BY (status = \'NEW\') DESC, created_at DESC LIMIT 10').all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string; status: string }>();
         latestInquiries = q.results;
         inquiries = (await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM beta_inquiries').first<{ n: number }>())?.n ?? latestInquiries.length;
+        const st = await env.FINNBILGLASS_DB.prepare('SELECT status, COUNT(*) AS n FROM beta_inquiries GROUP BY status').all<{ status: string; n: number }>();
+        for (const r of st.results) inquiryStatus[r.status] = r.n;
       } catch { /* beta_inquiries krever migrasjon 0017 — eldre staging-DB uten tabellen er ok */ }
-      return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, inquiries, latestInquiries, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
+      return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, inquiries, inquiryStatus, latestInquiries, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
+    }
+    if (method === 'GET' && path === '/api/ops/inquiries') {
+      // Beta-henvendelser med statusfilter + paginering (G8). Lesing er åpent i staging+prod (som summary).
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const url = new URL(request.url);
+      const statusFilter = url.searchParams.get('status') ?? '';
+      const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? '50') || 50, 1), 200);
+      const offset = Math.max(Number(url.searchParams.get('offset') ?? '0') || 0, 0);
+      let where = '';
+      const bind: unknown[] = [];
+      if (statusFilter) {
+        if (!isInquiryStatus(statusFilter)) return json({ ok: false, error: 'Ugyldig statusfilter' }, 400);
+        where = 'WHERE status = ?';
+        bind.push(statusFilter);
+      }
+      bind.push(limit, offset);
+      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; created_at: string; updated_at: number | null }>();
+      return json({ ok: true, inquiries: rows.results.map(r => ({ ...r, status: isInquiryStatus(r.status) ? r.status : 'NEW' })) });
+    }
+    if (method === 'GET' && path.startsWith('/api/ops/inquiries/')) {
+      // Saksdetalj: én inquiry + append-only tidslinje + kundereise-kontekst (G3, G5, G9).
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const idRaw = path.slice('/api/ops/inquiries/'.length).split('/')[0];
+      if (!/^\d+$/.test(idRaw)) return json({ ok: false, error: 'Ugyldig id' }, 400);
+      const id = Number(idRaw);
+      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null }>();
+      if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+      const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string }>();
+      let vehicle = null;
+      try { if (row.vehicle_json) vehicle = JSON.parse(row.vehicle_json); } catch { /* ugyldig snapshot = ignorert */ }
+      return json({ ok: true, inquiry: { ...row, status: isInquiryStatus(row.status) ? row.status : 'NEW', vehicle, history: events.results } });
+    }
+    const inquiryStatusMatch = /^\/api\/ops\/inquiries\/(\d+)\/status$/.exec(path);
+    if (method === 'POST' && inquiryStatusMatch) {
+      // Statusendring er skriving — staging-only (prod = lesetilgang) inntil Tom åpner den.
+      if (env.ENVIRONMENT !== 'staging') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
+      if (!isInquiryStatus(to) || !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
+      const id = Number(inquiryStatusMatch[1]);
+      const row = await env.FINNBILGLASS_DB.prepare('SELECT status FROM beta_inquiries WHERE id = ?').bind(id).first<{ status: string }>();
+      if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+      const from: InquiryStatus = isInquiryStatus(row.status) ? row.status : 'NEW';
+      if (!canTransitionInquiry(from, to)) return json({ ok: false, error: `Overgang fra ${from} til ${to} er ikke tillatt.` }, 409);
+      const meta = typeof body.meta === 'object' && body.meta !== null ? JSON.stringify(body.meta) : '{}';
+      const now = Date.now();
+      await env.FINNBILGLASS_DB.batch([
+        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, meta),
+        env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind(to, now, actor, id),
+      ]);
+      return json({ ok: true, status: to });
+    }
+    const inquiryNoteMatch = /^\/api\/ops\/inquiries\/(\d+)\/notes$/.exec(path);
+    if (method === 'POST' && inquiryNoteMatch) {
+      // Internt notat — append-only, aldri synlig i kundeflyten. Staging-only som status.
+      if (env.ENVIRONMENT !== 'staging') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const actor = typeof body.actor === 'string' ? body.actor.trim() : '', note = body.note;
+      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(note)) return json({ ok: false, error: 'Ansvarlig og notat er påkrevd.' }, 400);
+      const id = Number(inquiryNoteMatch[1]);
+      const row = await env.FINNBILGLASS_DB.prepare('SELECT id FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number }>();
+      if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+      const now = Date.now();
+      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
+      return json({ ok: true });
     }
     if (method === 'GET' && path === '/support/evidence') {
       // Behandlingsflaten (statusendring/sjekkliste) er staging-only i denne fasen.
