@@ -5,6 +5,7 @@
  * Alle verktøy validerer på server-siden; kundetekst er UTRYKTET INPUT (prompt-injection-barriere).
  */
 import type { Candidate, FitmentResult } from '../fitment-v1/domain.js';
+import { rankQuestions } from '../fitment-v1/question-optimizer.js';
 import { EvidenceKernel } from '../fitment-v1/policy/kernel.js';
 import { evaluateObservationGate } from '../fitment-v1/policy/gate.js';
 import type { FitmentSession, IdentifierObservation, SessionQuestion } from './session.js';
@@ -84,8 +85,22 @@ export function getNextQuestion(session: FitmentSession): SessionQuestion | null
   }
   // 2) Resolver-definerte fitment-spørsmål — hopp over besvarte
   const answered = new Set(session.observations.filter((o) => o.status === 'ACTIVE').map((o) => o.questionId.split('-')[1]));
-  const kernelQuestions = kernelQuestionsFor(session).filter((kq) => !answered.has(kq.discriminates[0]));
+  // C9.2: aldri spør om OE på nytt når kunden allerede har gitt/bekreftet en OE-identifikator (1176700500 → 2 kandidater → skill på acoustic)
+  const harBekreftetOe = session.identifierObservations.some((i) => i.identifierType === 'OE' && i.state === 'CONFIRMED');
+  const kernelQuestions = kernelQuestionsFor(session)
+    .filter((kq) => !answered.has(kq.discriminates[0]))
+    .filter((kq) => !(kq.discriminates[0] === 'OE' && harBekreftetOe));
   if (kernelQuestions.length > 0) {
+    // C9.2 Question Intelligence: still spørsmålet med høyest Question Value først
+    // (eliminering × feilkostnad × svarbarhet). OE-ID øverst når kandidater HAR OE — én
+    // lesning av merkingen kan erstatte flere feature-spørsmål (Evidence Priority 1).
+    const valueByFeature = new Map(rankQuestions(session.candidateSet).map((r) => [r.feature, r.questionValue]));
+    const harOe = session.candidateSet.some((c) => (c.glavista as { oes?: string[] } | null | undefined)?.oes?.length);
+    kernelQuestions.sort((a, b) => {
+      const av = a.discriminates[0] === 'OE' ? (harOe ? Number.MAX_VALUE : -Number.MAX_VALUE) : (valueByFeature.get(a.discriminates[0]) ?? 0);
+      const bv = b.discriminates[0] === 'OE' ? (harOe ? Number.MAX_VALUE : -Number.MAX_VALUE) : (valueByFeature.get(b.discriminates[0]) ?? 0);
+      return bv - av;
+    });
     const kq = kernelQuestions[0];
     const discriminator = kq.discriminates[0];
     const q: SessionQuestion = {

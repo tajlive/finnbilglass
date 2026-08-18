@@ -97,7 +97,7 @@ test('C9.1-2: svarbarhet-straff — spørsmål kunden sjelden kan svare på nedp
   assert.equal(order[1], 'coated');
 });
 
-test('C9.1-3: C9.1-benchmark — 5 klasser, FEILBESTILLING = 0, wrong_glass_risk i [0,100]', () => {
+test('C9.1-3: C9.1-benchmark — 5 klasser, FEILBESTILLING = 0, Safety/Covery-KPI', () => {
   execFileSync('node', ['--import', 'tsx', 'scripts/c91-benchmark.mjs'], { cwd: new URL('..', import.meta.url).pathname });
   const rep = JSON.parse(readFileSync(new URL('../scripts/out/c91-benchmark.json', import.meta.url), 'utf8'));
   const f = rep.fordeling;
@@ -105,7 +105,11 @@ test('C9.1-3: C9.1-benchmark — 5 klasser, FEILBESTILLING = 0, wrong_glass_risk
   assert.equal(total, rep.meta.sok, '5 klasser må summere til 1000');
   assert.equal(f.FEILBESTILLING.antall, 0, 'systemet feilbestiller aldri — «jeg vet ikke» er bedre enn feil');
   assert.ok(rep.metrikker.wrong_glass_risk >= 0 && rep.metrikker.wrong_glass_risk <= 100);
-  assert.equal(rep.metrikker.accuracy_score, 100, '0 feil = 100 % accuracy');
+  // Safety Accuracy = aldri feilbestilling (100 %); Coverage Accuracy = løst automatisk
+  assert.equal(rep.metrikker.safety_accuracy, 100, '0 feil = 100 % safety');
+  const coverage = Math.round(((f.EXACT_UTEN_SPORSMAL.antall + f.EXACT_ETTER_AI_SPORSMAL.antall + f.EXACT_ETTER_BILDE_OE.antall) / rep.meta.sok) * 1000) / 10;
+  assert.equal(rep.metrikker.coverage_accuracy, coverage);
+  assert.ok(rep.metrikker.coverage_accuracy > 0 && rep.metrikker.coverage_accuracy < 100, 'coverage øker via C8-data');
   for (const pf of rep.perFamilie) {
     const s = pf.EXACT_UTEN_SPORSMAL + pf.EXACT_ETTER_AI_SPORSMAL + pf.EXACT_ETTER_BILDE_OE + pf.MANUELL + pf.FEILBESTILLING;
     assert.equal(s, pf.sok, `summen for ${pf.familie} stemmer ikke`);

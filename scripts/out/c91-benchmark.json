@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-08-18T03:34:03.004Z",
+    "generatedAt": "2026-08-18T03:41:56.401Z",
     "sok": 1000,
     "prinsipp": "Feilbestilling er dyrere enn «jeg vet ikke». Kandidater fra katalog er kapabilitet, aldri fasit. Evidence Priority: OE-bilde > montør > kundefunksjoner > AI-spørsmål > katalogkandidat."
   },
@@ -27,10 +27,12 @@
     }
   },
   "metrikker": {
-    "accuracy_score": 100,
+    "safety_accuracy": 100,
+    "coverage_accuracy": 19,
     "questions_per_solution": 0.02,
     "customer_friction": 1,
-    "wrong_glass_risk": 17.2
+    "wrong_glass_risk": 17.2,
+    "mal": "Coverage øker via C8-data; Safety forblir 100 %."
   },
   "perFamilie": [
     {

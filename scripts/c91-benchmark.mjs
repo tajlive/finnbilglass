@@ -106,10 +106,12 @@ const report = {
   },
   fordeling: Object.fromEntries(KLASSER.map((k) => [k, { antall: utfall[k], pct: Math.round((utfall[k] / n) * 1000) / 10 }])),
   metrikker: {
-    accuracy_score: Math.round(((n - utfall.FEILBESTILLING) / n) * 1000) / 10, // andel løst UTEN feil (jeg-vet-ikke teller ikke som feil)
+    safety_accuracy: Math.round(((n - utfall.FEILBESTILLING) / n) * 1000) / 10, // aldri feilbestilling — «jeg vet ikke» er aldri straffet
+    coverage_accuracy: Math.round(((utfall.EXACT_UTEN_SPORSMAL + utfall.EXACT_ETTER_AI_SPORSMAL + utfall.EXACT_ETTER_BILDE_OE) / n) * 1000) / 10, // ordre løst automatisk
     questions_per_solution: Math.round((sumSporsmal / Math.max(1, n - utfall.MANUELL)) * 100) / 100,
     customer_friction: Math.round(((sumSporsmal + sumBilder) / Math.max(1, n - utfall.MANUELL)) * 100) / 100, // handlinger per løst
     wrong_glass_risk: Math.round((sumVektetRisiko / n) * 1000) / 10, // vektet feilsjanse i % hvis vi gjettet
+    mal: 'Coverage øker via C8-data; Safety forblir 100 %.',
   },
   perFamilie: [...perFamilie.values()].sort((a, b) => b.sok - a.sok).slice(0, 14),
 };
