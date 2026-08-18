@@ -1,0 +1,169 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-18T03:34:03.004Z",
+    "sok": 1000,
+    "prinsipp": "Feilbestilling er dyrere enn «jeg vet ikke». Kandidater fra katalog er kapabilitet, aldri fasit. Evidence Priority: OE-bilde > montør > kundefunksjoner > AI-spørsmål > katalogkandidat."
+  },
+  "fordeling": {
+    "EXACT_UTEN_SPORSMAL": {
+      "antall": 0,
+      "pct": 0
+    },
+    "EXACT_ETTER_AI_SPORSMAL": {
+      "antall": 3,
+      "pct": 0.3
+    },
+    "EXACT_ETTER_BILDE_OE": {
+      "antall": 187,
+      "pct": 18.7
+    },
+    "MANUELL": {
+      "antall": 810,
+      "pct": 81
+    },
+    "FEILBESTILLING": {
+      "antall": 0,
+      "pct": 0
+    }
+  },
+  "metrikker": {
+    "accuracy_score": 100,
+    "questions_per_solution": 0.02,
+    "customer_friction": 1,
+    "wrong_glass_risk": 17.2
+  },
+  "perFamilie": [
+    {
+      "familie": "ANNEN",
+      "sok": 337,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 337,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    },
+    {
+      "familie": "GOLF",
+      "sok": 111,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 3,
+      "EXACT_ETTER_BILDE_OE": 108,
+      "MANUELL": 0,
+      "FEILBESTILLING": 0,
+      "sporsmal": 3,
+      "bilder": 108,
+      "risiko": 103.84477068824886
+    },
+    {
+      "familie": "LEAF",
+      "sok": 94,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 94,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    },
+    {
+      "familie": "RAV4",
+      "sok": 83,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 83,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    },
+    {
+      "familie": "TRANSPORTER",
+      "sok": 79,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 79,
+      "MANUELL": 0,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 79,
+      "risiko": 67.77499999999999
+    },
+    {
+      "familie": "3-SERIE",
+      "sok": 78,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 78,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    },
+    {
+      "familie": "MODEL-3",
+      "sok": 72,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 72,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    },
+    {
+      "familie": "MODEL-Y",
+      "sok": 50,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 50,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    },
+    {
+      "familie": "XC60",
+      "sok": 49,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 49,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    },
+    {
+      "familie": "PASSAT",
+      "sok": 44,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 44,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    },
+    {
+      "familie": "VITO",
+      "sok": 3,
+      "EXACT_UTEN_SPORSMAL": 0,
+      "EXACT_ETTER_AI_SPORSMAL": 0,
+      "EXACT_ETTER_BILDE_OE": 0,
+      "MANUELL": 3,
+      "FEILBESTILLING": 0,
+      "sporsmal": 0,
+      "bilder": 0,
+      "risiko": 0
+    }
+  ]
+}

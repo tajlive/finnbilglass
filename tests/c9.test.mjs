@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { rankQuestions, optimalQuestionOrder, rankedEvidenceRequests } from '../src/fitment-v1/question-optimizer.js';
+import { rankQuestions, optimalQuestionOrder, rankedEvidenceRequests, FEATURE_COST, FEATURE_ANSWERABILITY } from '../src/fitment-v1/question-optimizer.js';
 import { buildEvidenceRequests } from '../src/fitment-v1/differentiation.js';
 
 // Toms eksempel: Glass A (regnsensor+antenne), Glass B (regnsensor), Glass C (ingen)
@@ -61,5 +61,53 @@ test('C9-4: 1000-søk-målingen produserer ærlig fordeling (0 EXACT direkte ute
   for (const f of rep.perFamilie) {
     const s = f.EXACT_DIREKTE + f.ETT_SPORSMAL + f.FOTO_OE + f.HANDOFF;
     assert.equal(s, f.sok, `summen for ${f.familie} stemmer ikke`);
+  }
+});
+
+// ── C9.1 Question Intelligence ──
+test('C9.1-1: Question Value = eliminering × feilkostnad × svarbarhet (Toms kamera-vs-HUD-eksempel)', () => {
+  // Kamera: eliminerer 8/10, svarbarhet 0.95 — HUD: eliminerer 3/10, svarbarhet 0.5
+  const kandidater = [];
+  for (let i = 0; i < 10; i++) kandidater.push({ varenr: `K${i}`, eurokode: `K${i}`, features: [i < 8 ? 'camera' : null, i < 3 ? 'hud' : null].filter(Boolean) });
+  // → camera skiller (8 ja / 2 nei), hud skiller (3 ja / 7 nei)
+  const ranks = rankQuestions(kandidater);
+  const kamera = ranks.find((r) => r.feature === 'camera');
+  const hud = ranks.find((r) => r.feature === 'hud');
+  assert.ok(kamera, 'kamera må være informativ');
+  assert.ok(hud, 'hud må være informativ');
+  assert.equal(kamera.potensial, 8);
+  assert.equal(hud.potensial, 3);
+  assert.equal(kamera.questionValue, 8 * FEATURE_COST.camera * FEATURE_ANSWERABILITY.camera);
+  assert.equal(hud.questionValue, 3 * (FEATURE_COST.hud ?? 0.5) * (FEATURE_ANSWERABILITY.hud ?? 0.5));
+  assert.ok(kamera.questionValue > hud.questionValue, 'kamera-spørsmålet må ha høyest verdi');
+  assert.equal(optimalQuestionOrder(kandidater)[0], 'camera');
+});
+
+test('C9.1-2: svarbarhet-straff — spørsmål kunden sjelden kan svare på nedprioriteres', () => {
+  // coated: 2 kandidater med, 2 uten (potensial 2) — kamera: 2 med, 2 uten (potensial 2)
+  const kandidater = [
+    { varenr: 'a', eurokode: 'a', features: ['coated', 'camera'] },
+    { varenr: 'b', eurokode: 'b', features: ['coated', 'camera'] },
+    { varenr: 'c', eurokode: 'c', features: [] },
+    { varenr: 'd', eurokode: 'd', features: [] },
+  ];
+  const order = optimalQuestionOrder(kandidater);
+  // kamera (svarbarhet 0.95) må komme før coated (svarbarhet 0.4) ved lik eliminering
+  assert.equal(order[0], 'camera');
+  assert.equal(order[1], 'coated');
+});
+
+test('C9.1-3: C9.1-benchmark — 5 klasser, FEILBESTILLING = 0, wrong_glass_risk i [0,100]', () => {
+  execFileSync('node', ['--import', 'tsx', 'scripts/c91-benchmark.mjs'], { cwd: new URL('..', import.meta.url).pathname });
+  const rep = JSON.parse(readFileSync(new URL('../scripts/out/c91-benchmark.json', import.meta.url), 'utf8'));
+  const f = rep.fordeling;
+  const total = f.EXACT_UTEN_SPORSMAL.antall + f.EXACT_ETTER_AI_SPORSMAL.antall + f.EXACT_ETTER_BILDE_OE.antall + f.MANUELL.antall + f.FEILBESTILLING.antall;
+  assert.equal(total, rep.meta.sok, '5 klasser må summere til 1000');
+  assert.equal(f.FEILBESTILLING.antall, 0, 'systemet feilbestiller aldri — «jeg vet ikke» er bedre enn feil');
+  assert.ok(rep.metrikker.wrong_glass_risk >= 0 && rep.metrikker.wrong_glass_risk <= 100);
+  assert.equal(rep.metrikker.accuracy_score, 100, '0 feil = 100 % accuracy');
+  for (const pf of rep.perFamilie) {
+    const s = pf.EXACT_UTEN_SPORSMAL + pf.EXACT_ETTER_AI_SPORSMAL + pf.EXACT_ETTER_BILDE_OE + pf.MANUELL + pf.FEILBESTILLING;
+    assert.equal(s, pf.sok, `summen for ${pf.familie} stemmer ikke`);
   }
 });
