@@ -416,6 +416,9 @@ export default {
     }
 
     if (method === 'POST' && path === '/api/evidence-capture') {
+      if (env.ENVIRONMENT === 'production') {
+        return json({ ok: false, error: 'Kundebilder til support er ikke aktivert' }, 404);
+      }
       let body: unknown;
       try { body = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const b = isRecord(body) ? body : null;
