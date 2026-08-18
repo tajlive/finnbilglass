@@ -282,6 +282,30 @@ export default {
       const erTelefon = sifre.length >= 8;
       const erEpost = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt);
       if (!erTelefon && !erEpost) return json({ ok: false, error: 'Ugyldig telefon eller e-post' }, 400);
+      // G12: abuse-beskyttelse — maks 5 henvendelser per IP per 10 min. Aldri blokkerende.
+      try {
+        const ip = geoAv(request).ip ?? 'ukjent';
+        if (ip !== 'ukjent') {
+          const WINDOW_MS = 10 * 60 * 1000;
+          const MAX_PER_WINDOW = 5;
+          const nowRl = Date.now();
+          const rl = await env.FINNBILGLASS_DB.prepare('SELECT window_start, count FROM inquiry_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
+          if (rl && nowRl - rl.window_start < WINDOW_MS && rl.count >= MAX_PER_WINDOW) {
+            return json({ ok: false, error: 'For mange forespørsler. Prøv igjen senere.' }, 429);
+          }
+          if (rl) {
+            if (nowRl - rl.window_start >= WINDOW_MS) {
+              await env.FINNBILGLASS_DB.prepare('UPDATE inquiry_rate_limits SET window_start = ?, count = 1 WHERE ip = ?').bind(nowRl, ip).run();
+            } else {
+              await env.FINNBILGLASS_DB.prepare('UPDATE inquiry_rate_limits SET count = count + 1 WHERE ip = ?').bind(ip).run();
+            }
+          } else {
+            await env.FINNBILGLASS_DB.prepare('INSERT INTO inquiry_rate_limits (ip, window_start, count) VALUES (?, ?, 1)').bind(ip, nowRl).run();
+          }
+        }
+      } catch (e) {
+        console.error('rate-limit feilet (non-blokkerende):', e);
+      }
       // G9: frosset kundereise-snapshot — best-effort, aldri blokkerende.
       // Kunden så en bil + resolver-utfall + pris; fryses ved innsending slik at
       // saksbehandling i /ops har kontekst selv om session_id forsvinner.
