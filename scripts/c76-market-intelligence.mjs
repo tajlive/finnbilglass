@@ -11,10 +11,11 @@ import { buildDefaultGenerationRegistry } from '../src/fitment-v1/generation-reg
 import { buildClassDCandidates, matchClassDCandidates } from '../src/fitment-v1/catalogue-candidates.js';
 import { FAMILIER } from '../src/fitment-v1/catalogue-candidates.js';
 
-const OUT = resolve('scripts/out/c76-market-intelligence.json');
+const OUT = resolve(process.env.C76_OUTPUT_FILE ?? 'scripts/out/c76-market-intelligence.json');
+const FIXTURE_DIR = process.env.C76_FIXTURE_DIR ? resolve(process.env.C76_FIXTURE_DIR) : null;
 
 // ── 1) Finn.no-annonser = markedsindikator ──
-const FINN_FILES = [
+const FINN_FILES = FIXTURE_DIR ? [resolve(FIXTURE_DIR, 'market.ndjson')] : [
   'data/finn-100.jsonl',
   'data/finn-modeller/svv-verifisert.ndjson',
   'data/finn-modeller/tesla-model-3-annonser.ndjson',
@@ -35,18 +36,24 @@ for (const f of FINN_FILES) {
     const model = String(r.modell ?? r.model ?? '').toUpperCase();
     const fam = FAMILIER.find((x) => x.merke === make && x.re.test(model));
     if (!fam) continue;
-    marketAds++;
-    market.set(fam.familie, (market.get(fam.familie) ?? 0) + 1);
+    // The compact checked-in fixture represents ten equivalent ads per row so
+    // the recommendation threshold is exercised without committing scraped ads.
+    const weight = FIXTURE_DIR ? 10 : 1;
+    marketAds += weight;
+    market.set(fam.familie, (market.get(fam.familie) ?? 0) + weight);
   }
 }
 
 // ── 2) SVV-korpus (truth) + CLASS_D-kandidater (candidate) per familie ──
 const resolver = new ApplicationResolver({ families: buildDefaultGenerationRegistry() });
-const gtRaw = JSON.parse(readFileSync('data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
+const catalogueFile = FIXTURE_DIR
+  ? resolve(FIXTURE_DIR, 'catalogue.json')
+  : 'data/gt-ekspansjon/prisliste-alle-glass.json';
+const gtRaw = JSON.parse(readFileSync(catalogueFile, 'utf8'));
 const classDIndex = buildClassDCandidates(gtRaw[0].results);
 
 const truth = new Map(); // familie → {svvBiler, medApplikasjon, medKandidater}
-const CORPUS = [
+const CORPUS = FIXTURE_DIR ? [] : [
   'data/finn-modeller/svv-verifisert.ndjson',
   'data/test-500-gt-detaljer.jsonl',
   '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson',
