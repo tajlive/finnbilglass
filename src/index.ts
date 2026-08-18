@@ -8,6 +8,7 @@ import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
 import { resolverModus } from './kill-switch';
 import { svvLookup, svvLookupVin } from './svv';
+import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { lesSkilt } from './les-skilt';
 
 const CORS_HEADERS = {
@@ -384,6 +385,16 @@ export default {
         console.error('les-skilt feilet:', e);
         return json({ ok: false, error: 'Intern feil' }, 500);
       }
+    }
+
+    // STAGING-ONLY: konversasjonell fitment-assistent (fitment-v1/conversation-v1).
+    // Aktiv kun når env ASSISTANT_ENABLED=true|staging. Berører ALDRI prod-resolveren.
+    const assistantEnabled = env.ASSISTANT_ENABLED === 'true' || env.ASSISTANT_ENABLED === 'staging';
+    if (assistantEnabled && path.startsWith('/api/assistant')) {
+      return await handleAssistant(request, env);
+    }
+    if (assistantEnabled && method === 'GET' && path === '/assistant') {
+      return assistantUi();
     }
 
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
