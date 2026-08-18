@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-18T02:46:46.094Z",
+    "vehicles": 3076,
+    "privacy": "kun sha256-hash"
+  },
+  "before": {
+    "vehicleIdentityCoverage": 100,
+    "vinCoverage": 96.8,
+    "applicationCoverage": 6.9,
+    "oeCoverage": 6.9,
+    "glassCoverage": 6.9,
+    "exactCoverage": 0,
+    "_counts": {
+      "vehicleIdentity": 3076,
+      "withVin": 2979,
+      "application": 211,
+      "oe": 211,
+      "glass": 211,
+      "exact": 0
+    }
+  },
+  "after": {
+    "vehicleIdentityCoverage": 100,
+    "vinCoverage": 96.8,
+    "applicationCoverage": 12.4,
+    "oeCoverage": 12.4,
+    "glassCoverage": 12.4,
+    "exactCoverage": 0,
+    "_counts": {
+      "vehicleIdentity": 3076,
+      "withVin": 2979,
+      "application": 380,
+      "oe": 380,
+      "glass": 380,
+      "exact": 0
+    }
+  },
+  "delta": {
+    "applicationCoverage": 5.5,
+    "oeCoverage": 5.5,
+    "glassCoverage": 5.5
+  },
+  "note": "OE_COVERAGE krever autoritativ applikasjon→OE-kant (TecDoc/EPC). EXACT_COVERAGE krever kunde-OE/foto — aldri katalog alene."
+}

@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "navn": "FINNBILGLASS FITMENT CHALLENGE v1",
+    "formål": "Permanent regresjons-benchmark (flyinstrumentpanel). Måler: finner den riktig? spør den riktig? spør den minst mulig? foreslår den riktig tilbehør?",
+    "opprettet": "2026-08-18",
+    "kategorier": "A enkle biler · B variantfeller · C sensor/kamera · D facelift · E varebil · F elbil"
+  },
+  "cases": [
+    { "id": "A-01", "kategori": "A", "beskrivelse": "Golf III enkel", "make": "VW", "model": "Golf", "year": 1994, "krav": { "applikasjoner": 1, "generasjon": "Golf III (Typ 1H)", "sporsmal": "kun-informative" } },
+    { "id": "A-02", "kategori": "A", "beskrivelse": "Golf VII enkel", "make": "VW", "model": "Golf", "year": 2015, "krav": { "applikasjoner": 1, "generasjon": "Golf VII (Typ 5G)", "sporsmal": "kun-informative" } },
+    { "id": "A-03", "kategori": "A", "beskrivelse": "Polo V enkel", "make": "VW", "model": "Polo", "year": 2012, "krav": { "applikasjoner": 1, "generasjon": "Polo V", "sporsmal": "kun-informative" } },
+    { "id": "B-01", "kategori": "B", "beskrivelse": "T5 variantfelle — SU18018", "make": "VW", "model": "Transporter", "year": 2005, "krav": { "applikasjoner": 2, "flereKandidater": true, "sporsmal": "skillende", "kjentUtfall": "2525GYA via OE 7H0845101H" } },
+    { "id": "B-02", "kategori": "B", "beskrivelse": "CLA variantfelle — AJ95429", "make": "Mercedes", "model": "CLA", "year": 2016, "krav": { "applikasjoner": 1, "generasjon": "C117", "flereKandidater": true, "sporsmal": "skillende" } },
+    { "id": "C-01", "kategori": "C", "beskrivelse": "T5 sensor/kamera-spørsmål", "make": "VW", "model": "Transporter", "year": 2005, "krav": { "sporsmalInkluderer": ["rainSensor"], "aldriGeneriskeTilbehorssporsmal": true } },
+    { "id": "D-01", "kategori": "D", "beskrivelse": "T5 pre-facelift", "make": "VW", "model": "Transporter", "year": 2008, "facelift": "pre-facelift", "krav": { "kunPreFaceliftApplikasjon": true } },
+    { "id": "D-02", "kategori": "D", "beskrivelse": "CLA post-facelift (1T)", "make": "Mercedes", "model": "CLA", "year": 2016, "krav": { "applikasjoner": 1, "generasjon": "C117", "flereKandidater": true } },
+    { "id": "E-01", "kategori": "E", "beskrivelse": "Transporter varebil", "make": "VW", "model": "Transporter", "year": 2010, "krav": { "flereKandidater": true, "sporsmal": "skillende" } },
+    { "id": "E-02", "kategori": "E", "beskrivelse": "Sprinter — ingen data = ærlig UNKNOWN", "make": "Mercedes", "model": "Sprinter", "year": 2020, "krav": { "ingenGjett": true } },
+    { "id": "F-01", "kategori": "F", "beskrivelse": "Tesla Model 3 — ingen data = ærlig UNKNOWN", "make": "Tesla", "model": "Model 3", "year": 2021, "krav": { "ingenGjett": true, "nullSporsmal": true } },
+    { "id": "F-02", "kategori": "F", "beskrivelse": "Nissan Leaf — ingen data = ærlig UNKNOWN", "make": "Nissan", "model": "Leaf", "year": 2019, "krav": { "ingenGjett": true, "nullSporsmal": true } }
+  ]
+}

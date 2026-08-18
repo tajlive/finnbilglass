@@ -69,6 +69,10 @@ export class ApplicationResolver {
       if (v.modelYear != null && interval) { reasons.push(`produksjonsintervall ${interval.from}–${interval.to} rommer år ${v.modelYear}`); if (evidenceClass === 'HEURISTIC') evidenceClass = 'INFERRED'; }
       if (v.facelift && fam.faceliftSplit) {
         const fl = v.facelift;
+        // Evidens ELIMINERER motstridende applikasjon — ikke bare styrker den
+        if ((fl === 'pre-facelift' && fam.faceliftSplit !== 'pre-facelift') || (fl === 'post-facelift' && fam.faceliftSplit !== 'post-facelift')) {
+          continue;
+        }
         reasons.push(`facelift: ${fl}`);
         if (fl === 'pre-facelift' && fam.faceliftSplit === 'pre-facelift') evidenceClass = 'AUTHORITATIVE';
         if (fl === 'post-facelift' && fam.faceliftSplit === 'post-facelift') evidenceClass = 'AUTHORITATIVE';
