@@ -549,6 +549,16 @@ export default {
       const html = await env.ASSETS.fetch(new Request(url.origin + path + '.html'));
       if (html.ok) return html;
     }
+    if (method === 'GET' && path === '/') {
+      const index = await env.ASSETS.fetch(request);
+      return new Response(index.body, {
+        status: index.status,
+        headers: {
+          ...Object.fromEntries(index.headers),
+          'Cache-Control': 'no-store',
+        },
+      });
+    }
 
     // Alt annet (/, index.html, styles.css, app.js, …) → statiske assets fra public/
     const asset = await env.ASSETS.fetch(request);

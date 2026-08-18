@@ -336,49 +336,6 @@
     show('glass');
   }
 
-  // Evidence Capture v0.1: supportmateriale, separat fra beslutningsmotoren.
-  // Ingen respons herfra brukes i resolveren eller kan sette EXACT.
-  function lesFilSomDataUrl(fil) {
-    return new Promise(function (resolve, reject) {
-      var r = new FileReader();
-      r.onerror = reject;
-      r.onload = function () { resolve(String(r.result)); };
-      r.readAsDataURL(fil);
-    });
-  }
-
-  $('btn-evidence-submit').addEventListener('click', function () {
-    var felt = [
-      ['plate', $('evidence-plate')],
-      ['windshield', $('evidence-windshield')],
-      ['mirror_sensor', $('evidence-mirror')],
-      ['interior_optional', $('evidence-interior')]
-    ];
-    var valgt = felt.filter(function (p) { return p[1].files && p[1].files[0]; });
-    var resultat = $('evidence-result');
-    if (!valgt.length) { resultat.textContent = 'Velg minst ett bilde først.'; resultat.classList.remove('hidden'); return; }
-    if (valgt.some(function (p) { var f = p[1].files[0]; return !f.type.startsWith('image/') || f.size > 5 * 1024 * 1024; })) {
-      resultat.textContent = 'Hvert bilde må være en bildefil på maks 5 MB.'; resultat.classList.remove('hidden'); return;
-    }
-    var knapp = this;
-    knapp.disabled = true;
-    knapp.textContent = 'Sender bilder…';
-    Promise.all(valgt.map(function (p) { return lesFilSomDataUrl(p[1].files[0]).then(function (data) { return { type: p[0], data: data }; }); }))
-      .then(function (images) {
-        return fetch('/api/evidence-capture', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regnr: state.regnr, sessionId: sessionId, images: images }) });
-      })
-      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
-      .then(function (r) {
-        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende bildene.');
-        resultat.textContent = 'Takk. Support-sak ' + r.data.caseId + ' er opprettet med status NY. Dette påvirker ikke glassvalget.';
-        resultat.classList.remove('hidden');
-        valgt.forEach(function (p) { p[1].value = ''; });
-        loggHendelse('evidence_capture_sent', { caseId: r.data.caseId, imageCount: r.data.imageCount });
-      })
-      .catch(function (e) { resultat.textContent = e.message || 'Kunne ikke sende bildene. Prøv igjen.'; resultat.classList.remove('hidden'); })
-      .finally(function () { knapp.disabled = false; knapp.textContent = 'Send bilder til support'; });
-  });
-
   // Detaljlinjer fra SVV (førstegangsregistrert + VIN + import-merkelapp) på glassvalg-skjermen.
   function renderGlassDet() {
     var det = $('glass-det');
