@@ -12,6 +12,8 @@ import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.j
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
 import { createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash } from './evidence-capture-v01';
+import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
+import { operationsCenterUi } from './ops-center-ui';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -137,9 +139,13 @@ function supportAuthorised(request: Request, env: Env): boolean {
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
 }
 
-function supportEvidenceUi(): Response {
+function supportEvidenceUiLegacy(): Response {
   // The token is deliberately requested at runtime and is never embedded in an asset.
   return new Response(`<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finnbilglass support – Evidence</title><style>body{font:16px system-ui;margin:2rem;background:#f8fafc;color:#0f172a}main{max-width:900px;margin:auto}button,input{font:inherit;padding:.65rem}button{background:#f59e0b;border:0;border-radius:.4rem;font-weight:700}.case{background:white;border:1px solid #e2e8f0;border-radius:.6rem;padding:1rem;margin:1rem 0}.images{display:flex;gap:.7rem;flex-wrap:wrap}.images img{width:180px;max-height:140px;object-fit:cover;border-radius:.4rem;border:1px solid #e2e8f0}.muted{color:#64748b}</style><main><h1>Evidence Capture</h1><p class="muted">Internt supportverktøy. Bildene er evidens for manuell oppfølging, ikke en fitment-beslutning.</p><p><input id="token" type="password" placeholder="Support-token" autocomplete="current-password"><button id="load">Last saker</button></p><div id="out"></div><script>const out=document.querySelector('#out'),token=document.querySelector('#token');document.querySelector('#load').onclick=async()=>{out.textContent='Laster…';const h={Authorization:'Bearer '+token.value};const r=await fetch('/api/support/evidence',{headers:h});if(!r.ok){out.textContent=r.status===401?'Ingen tilgang.':'Kunne ikke hente saker.';return}const d=await r.json();out.innerHTML='';d.cases.forEach(c=>{const e=document.createElement('article');e.className='case';e.innerHTML='<b>'+c.caseId+'</b> · '+c.status+'<br><span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+' · '+c.imageCount+' bilde(r)</span>';const imgs=document.createElement('div');imgs.className='images';c.images.forEach(i=>{const a=document.createElement('a');a.href='/api/support/evidence/'+encodeURIComponent(c.caseId)+'/'+encodeURIComponent(i.imageId);a.target='_blank';const img=document.createElement('img');img.alt=i.imageType;fetch(a.href,{headers:h}).then(x=>x.blob()).then(b=>img.src=URL.createObjectURL(b));a.append(img);imgs.append(a)});e.append(imgs);out.append(e)});if(!d.cases.length)out.textContent='Ingen innsendte saker ennå.'}</script></main></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+}
+
+function supportEvidenceUi(): Response {
+  return new Response(`<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finnbilglass support – Evidence</title><style>body{font:16px system-ui;margin:2rem;background:#f8fafc;color:#0f172a}main{max-width:960px;margin:auto}.case{background:#fff;border:1px solid #e2e8f0;border-radius:.6rem;padding:1rem;margin:1rem 0}.images{display:flex;gap:.7rem;flex-wrap:wrap}.images img{width:180px;max-height:140px;object-fit:cover;border-radius:.4rem;border:1px solid #e2e8f0}.muted{color:#64748b}.warn{color:#9a3412;font-weight:600}button,input,select,textarea{font:inherit;padding:.6rem}textarea{width:100%;box-sizing:border-box}button{background:#f59e0b;border:0;border-radius:.4rem;font-weight:700}label{display:block;margin:.5rem 0}.check{display:inline-block;margin-right:1rem}</style><main><h1>Evidence Capture</h1><p class="warn">Intern support. Kandidater er kun støtte og aldri en beslutning om glassvalg.</p><p><input id="token" type="password" placeholder="Support-token" autocomplete="current-password"><button id="load">Last saker</button></p><div id="out"></div><script>const out=document.querySelector('#out'),token=document.querySelector('#token'),statuses=['NEW','UNDER_REVIEW','NEEDS_CUSTOMER_INFO','CONFIRMED','REJECTED'];const h=()=>({Authorization:'Bearer '+token.value,'Content-Type':'application/json'});function esc(s){const e=document.createElement('span');e.textContent=s;return e.innerHTML}async function load(){out.textContent='Laster…';const r=await fetch('/api/support/evidence',{headers:h()});if(!r.ok){out.textContent=r.status===401?'Ingen tilgang.':'Kunne ikke hente saker.';return}const d=await r.json();out.innerHTML='';d.cases.forEach(c=>{const e=document.createElement('article');e.className='case';e.innerHTML='<b>'+esc(c.caseId)+'</b> · '+esc(c.status)+'<br><span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+' · '+c.imageCount+' bilde(r)</span><div class="images"></div><p><b>Sjekkliste</b><br>'+['Kjennemerke synlig','Frontrute synlig og skarp','Speil-/sensorområde synlig','Innvendig bilde vedlagt'].map((x,i)=>'<label class="check"><input type="checkbox" data-check="'+i+'" '+(c.checklist[i]?'checked':'')+'>'+x+'</label>').join('')+'</p><label>Status <select>'+statuses.map(s=>'<option '+(s===c.status?'selected':'')+'>'+s+'</option>').join('')+'</select></label><label>Ansvarlig <input value="support" maxlength="64"></label><label>Begrunnelse (maks 3 setninger)<textarea maxlength="600" placeholder="Kort begrunnelse for statusendringen"></textarea></label><button>Oppdater status</button><p class="muted">Kandidater: '+(c.candidates.length?c.candidates.map(x=>esc(x.varenr)).join(', '):'Ikke knyttet til saken')+' — ikke beslutning.</p><details><summary>Revisjonsspor</summary>'+c.history.map(x=>'<p>'+new Date(x.createdAt).toLocaleString('nb-NO')+' · '+esc(x.createdBy)+' · '+esc(x.previousStatus)+' → '+esc(x.status)+'<br>'+esc(x.reason)+'</p>').join('')+'</details>';const images=e.querySelector('.images');c.images.forEach(i=>{const a=document.createElement('a');a.href='/api/support/evidence/'+encodeURIComponent(c.caseId)+'/'+encodeURIComponent(i.imageId);a.target='_blank';const img=document.createElement('img');img.alt=i.imageType;fetch(a.href,{headers:h()}).then(x=>x.blob()).then(b=>img.src=URL.createObjectURL(b));a.append(img);images.append(a)});e.querySelector('button').onclick=async()=>{const status=e.querySelector('select').value,actor=e.querySelector('input').value,reason=e.querySelector('textarea').value,checklist=[0,1,2,3].map(i=>e.querySelector('[data-check="'+i+'"]').checked);const r=await fetch('/api/support/evidence/'+encodeURIComponent(c.caseId)+'/status',{method:'POST',headers:h(),body:JSON.stringify({status,actor,reason,checklist})});if(!r.ok){alert((await r.json()).error||'Kunne ikke oppdatere');return}load()};out.append(e)});if(!d.cases.length)out.textContent='Ingen innsendte saker ennå.'}document.querySelector('#load').onclick=load;</script></main>`,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
 }
 
 /** Lagre bilde til R2 + metadata til D1 — aldri blokkerende. */
@@ -421,12 +427,23 @@ export default {
       const hash = await registrationHash(registration);
       const caseId = createCaseId(new Date(createdAt));
       const sid = sessionId(body, request);
+      let candidateSnapshot: unknown[] = [];
+      const vehicle = isRecord(b?.vehicle) ? b.vehicle : null;
+      if (typeof vehicle?.merke === 'string' && vehicle.merke.trim()) {
+        try {
+          const resolved = await resolveFrontrute(env, { merke: vehicle.merke.trim(), modell: typeof vehicle.modell === 'string' ? vehicle.modell.trim() : undefined, aar: typeof vehicle.aar === 'number' ? vehicle.aar : undefined });
+          candidateSnapshot = (resolved.kandidater ?? []).slice(0, 12).map(k => ({ varenr: k.varenr, varenavn: k.varenavn, eurokode: k.eurokode, attributter: k.attributter }));
+        } catch { /* Candidate support is optional and never blocks image capture. */ }
+      }
       const records = decoded.map((image, index) => ({ image, imageId: `${caseId}-${index + 1}`, r2Key: `evidence-capture/${caseId}/${image.type}.${image.ext}` }));
       try {
         await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_cases (case_id, registration_hash, vehicle_identity_hash, created_at, session_id, status) VALUES (?, ?, ?, ?, ?, ?)')
           .bind(caseId, hash, hash, createdAt, sid, 'NEW').run();
         await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_status_events (event_id, case_id, status, created_at, created_by) VALUES (?, ?, ?, ?, ?)')
           .bind(`${caseId}-NEW`, caseId, 'NEW', createdAt, 'customer').run();
+        await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_review_events (event_id, case_id, previous_status, status, created_at, created_by, reason, checklist_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+          .bind(`${caseId}-NEW`, caseId, 'NEW', 'NEW', createdAt, 'customer', 'Kunde sendte inn dokumentasjon.', '{}').run();
+        if (candidateSnapshot.length) await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_candidate_snapshots (case_id, created_at, candidates_json) VALUES (?, ?, ?)').bind(caseId, createdAt, JSON.stringify(candidateSnapshot)).run();
         for (const record of records) {
           await env.OPPLAERING_BUCKET.put(record.r2Key, record.image.bytes, { httpMetadata: { contentType: record.image.mime } });
           await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_images (image_id, case_id, image_type, r2_key, mime, created_at) VALUES (?, ?, ?, ?, ?, ?)')
@@ -439,18 +456,68 @@ export default {
       return json({ ok: true, caseId, status: 'NEW', imageCount: records.length, decisionAuthority: 'NONE' }, 201);
     }
 
-    if (method === 'GET' && path === '/support/evidence') return supportEvidenceUi();
+    if (method === 'GET' && path === '/ops') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      return operationsCenterUi();
+    }
+    if (method === 'GET' && path === '/api/ops/summary') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const statuses = await env.FINNBILGLASS_DB.prepare(`WITH review_latest AS (
+        SELECT case_id, status, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY created_at DESC) AS n
+        FROM evidence_case_review_events
+      ),
+      all_cases AS (
+        SELECT c.case_id,
+               COALESCE(r.status, CASE c.status WHEN 'REVIEWING' THEN 'UNDER_REVIEW' WHEN 'NEEDS_MORE_DATA' THEN 'NEEDS_CUSTOMER_INFO' WHEN 'COMPLETE' THEN 'CONFIRMED' ELSE 'NEW' END) AS status
+        FROM evidence_cases c
+        LEFT JOIN review_latest r ON r.case_id = c.case_id AND r.n = 1
+      )
+      SELECT status, COUNT(*) AS n FROM all_cases GROUP BY status`).all<{ status: string; n: number }>();
+      const byStatus = new Map(statuses.results.map(x => [x.status, x.n]));
+      const total = [...byStatus.values()].reduce((a, b) => a + b, 0);
+      let aiObservations = 0;
+      try { aiObservations = (await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM evidence_events').first<{ n: number }>())?.n ?? 0; } catch { /* ledger may be intentionally absent in a new staging database */ }
+      return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
+    }
+    if (method === 'GET' && path === '/support/evidence') {
+      // Behandlingsflaten (statusendring/sjekkliste) er staging-only i denne fasen.
+      // Prod har lesetilgang via /ops-panelet. B2B/montør kommer som egen fase.
+      if (env.ENVIRONMENT !== 'staging') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      return supportEvidenceUi();
+    }
     if (method === 'GET' && path === '/api/support/evidence') {
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
-      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT c.case_id, c.created_at, c.status, i.image_id, i.image_type
-        FROM evidence_cases c LEFT JOIN evidence_case_images i ON i.case_id = c.case_id ORDER BY c.created_at DESC LIMIT 100`).all<{ case_id: string; created_at: number; status: string; image_id: string | null; image_type: string | null }>();
-      const grouped = new Map<string, { caseId: string; createdAt: number; status: string; imageCount: number; images: { imageId: string; imageType: string }[] }>();
-      for (const row of rows.results) {
-        const item = grouped.get(row.case_id) ?? { caseId: row.case_id, createdAt: row.created_at, status: row.status, imageCount: 0, images: [] };
-        if (row.image_id && row.image_type) { item.imageCount++; item.images.push({ imageId: row.image_id, imageType: row.image_type }); }
-        grouped.set(row.case_id, item);
+      const cases = await env.FINNBILGLASS_DB.prepare('SELECT case_id, created_at, status FROM evidence_cases ORDER BY created_at DESC LIMIT 100').all<{ case_id: string; created_at: number; status: string }>();
+      const result = [];
+      for (const c of cases.results) {
+        const images = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string }>();
+        const events = await env.FINNBILGLASS_DB.prepare('SELECT previous_status, status, created_at, created_by, reason, checklist_json FROM evidence_case_review_events WHERE case_id = ? ORDER BY created_at DESC').bind(c.case_id).all<{ previous_status: string; status: string; created_at: number; created_by: string; reason: string; checklist_json: string }>();
+        const snapshot = await env.FINNBILGLASS_DB.prepare('SELECT candidates_json FROM evidence_case_candidate_snapshots WHERE case_id = ?').bind(c.case_id).first<{ candidates_json: string }>();
+        const current = events.results[0]?.status;
+        const checklist = events.results[0] ? (() => { try { const x = JSON.parse(events.results[0].checklist_json); return Array.isArray(x) ? x.map(Boolean).slice(0, 4) : []; } catch { return []; } })() : [];
+        const candidates = (() => { try { const x = snapshot ? JSON.parse(snapshot.candidates_json) : []; return Array.isArray(x) ? x : []; } catch { return []; } })();
+        result.push({ caseId: c.case_id, createdAt: c.created_at, status: isSupportCaseStatus(current) ? current : legacyStatus(c.status), imageCount: images.results.length, images: images.results.map(i => ({ imageId: i.image_id, imageType: i.image_type })), checklist, candidates, history: events.results.reverse().map(e => ({ previousStatus: e.previous_status, status: e.status, createdAt: e.created_at, createdBy: e.created_by, reason: e.reason })) });
       }
-      return json({ ok: true, cases: [...grouped.values()] });
+      return json({ ok: true, cases: result });
+    }
+    const statusMatch = /^\/api\/support\/evidence\/([^/]+)\/status$/.exec(path);
+    if (method === 'POST' && statusMatch) {
+      // Statusendring er skriving — staging-only i denne fasen (prod = lesetilgang).
+      if (env.ENVIRONMENT !== 'staging') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
+      if (!isSupportCaseStatus(to) || !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validReviewReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
+      const c = await env.FINNBILGLASS_DB.prepare('SELECT status FROM evidence_cases WHERE case_id = ?').bind(statusMatch[1]).first<{ status: string }>();
+      if (!c) return json({ ok: false, error: 'Saken finnes ikke.' }, 404);
+      const latest = await env.FINNBILGLASS_DB.prepare('SELECT status FROM evidence_case_review_events WHERE case_id = ? ORDER BY created_at DESC LIMIT 1').bind(statusMatch[1]).first<{ status: string }>();
+      const from: SupportCaseStatus = isSupportCaseStatus(latest?.status) ? latest.status : legacyStatus(c.status);
+      if (!canTransition(from, to)) return json({ ok: false, error: `Overgang fra ${from} til ${to} er ikke tillatt.` }, 409);
+      const checklist = Array.isArray(body.checklist) ? body.checklist.slice(0, 4).map(Boolean) : [];
+      const now = Date.now();
+      await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_review_events (event_id, case_id, previous_status, status, created_at, created_by, reason, checklist_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(`${statusMatch[1]}-${now}-${crypto.randomUUID()}`, statusMatch[1], from, to, now, actor, reason.trim(), JSON.stringify(checklist)).run();
+      return json({ ok: true, status: to, decisionAuthority: 'NONE' });
     }
     const imageMatch = /^\/api\/support\/evidence\/([^/]+)\/([^/]+)$/.exec(path);
     if (method === 'GET' && imageMatch) {
