@@ -7,6 +7,7 @@ import type { Channel } from './session.js';
 import { FitmentSession, generateSessionId } from './session.js';
 import * as T from './tools.js';
 import { policyPhrase, stateLabel } from './policy.js';
+import { EvidenceCapture } from './evidence-capture.js';
 
 export const ASSISTANT_SESSION_TTL_MS = 30 * 60 * 1000;   // 30 min inaktivitet
 export const MAX_MESSAGE_CHARS = 4096;
@@ -23,6 +24,8 @@ export class AssistantApi {
   private sessions = new Map<string, FitmentSession>();
   private rate = new Map<string, RateBucket>();
   private duplicatePhotos = new Map<string, string>(); // imageId → sessionId (duplisert-foto-håndtering)
+  /** C8: AI-agenten som kunnskapsinnsamler — samtaleobservasjoner fanges deterministisk. */
+  readonly evidenceCapture = new EvidenceCapture();
 
   constructor(opts: { ttlMs?: number } = {}) { this.ttlMs = opts.ttlMs ?? ASSISTANT_SESSION_TTL_MS; }
   private readonly ttlMs: number;
@@ -126,6 +129,7 @@ export class AssistantApi {
     }
     const oeMatch = text.toUpperCase().replace(/\s+/g, '').match(/\b\d[A-Z0-9]{8,14}\b/);
     if (oeMatch && s.vehicleIdentity) {
+      this.evidenceCapture.captureOeTyped(s, oeMatch[0]); // C8: kundeobservasjon (svak, oppgraderes ved echo)
       const r = T.submitIdentifierCandidate(s, oeMatch[0], 'OE', { modality: 'TYPED' });
       if (r.ok && r.echoBack) return { ok: true, reply: `Jeg leste ${r.echoBack}. Stemmer det?`, stateLabel: stateLabel(s) };
     }
@@ -136,6 +140,7 @@ export class AssistantApi {
   observation(sessionId: string, questionId: string, value: string | boolean): { ok: boolean; reply?: string; error?: string } {
     const s = this.getSession(sessionId);
     if (!s) return { ok: false, error: 'SESSION_NOT_FOUND_OR_EXPIRED' };
+    this.evidenceCapture.captureFeature(s, questionId, value, null); // C8: kundeobservasjon
     const r = T.submitObservation(s, questionId, value, { modality: s.channel });
     if (!r.ok) return { ok: false, error: r.error };
     T.resolveFitment(s);
@@ -171,7 +176,10 @@ export class AssistantApi {
     if (!s) return { ok: false, error: 'SESSION_NOT_FOUND_OR_EXPIRED' };
     const r = T.confirmIdentifierTool(s, parsedValue, { confirmed });
     if (!r.ok) return { ok: false, error: r.error };
-    if (confirmed) T.resolveFitment(s);
+    if (confirmed) {
+      this.evidenceCapture.captureOeConfirmed(s, parsedValue, null); // C8: echo-bekreftet OE = høyeste kundeobservasjon
+      T.resolveFitment(s);
+    }
     if (!confirmed) {
       const next = T.getNextQuestion(s);
       return { ok: true, reply: `Beklager feillesningen. ${next?.customerFriendlyMeaning ?? policyPhrase(s)}` };
