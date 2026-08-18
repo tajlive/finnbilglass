@@ -17,6 +17,10 @@ binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db-staging"
 database_id = "6c8c3eeb-e4bb-41c7-831f-25e5a735717c"
 
+[[r2_buckets]]
+binding = "OPPLAERING_BUCKET"
+bucket_name = "finnbilglass-opplaering-staging"
+
 [vars]
 ENVIRONMENT = "staging"
 

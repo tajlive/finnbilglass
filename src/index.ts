@@ -11,6 +11,7 @@ import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
+import { createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash } from './evidence-capture-v01';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -129,6 +130,16 @@ function dataUrlTilBytes(dataUrl: string): { bytes: Uint8Array; mime: string; ex
   } catch {
     return null;
   }
+}
+
+function supportAuthorised(request: Request, env: Env): boolean {
+  const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+  return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
+}
+
+function supportEvidenceUi(): Response {
+  // The token is deliberately requested at runtime and is never embedded in an asset.
+  return new Response(`<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finnbilglass support – Evidence</title><style>body{font:16px system-ui;margin:2rem;background:#f8fafc;color:#0f172a}main{max-width:900px;margin:auto}button,input{font:inherit;padding:.65rem}button{background:#f59e0b;border:0;border-radius:.4rem;font-weight:700}.case{background:white;border:1px solid #e2e8f0;border-radius:.6rem;padding:1rem;margin:1rem 0}.images{display:flex;gap:.7rem;flex-wrap:wrap}.images img{width:180px;max-height:140px;object-fit:cover;border-radius:.4rem;border:1px solid #e2e8f0}.muted{color:#64748b}</style><main><h1>Evidence Capture</h1><p class="muted">Internt supportverktøy. Bildene er evidens for manuell oppfølging, ikke en fitment-beslutning.</p><p><input id="token" type="password" placeholder="Support-token" autocomplete="current-password"><button id="load">Last saker</button></p><div id="out"></div><script>const out=document.querySelector('#out'),token=document.querySelector('#token');document.querySelector('#load').onclick=async()=>{out.textContent='Laster…';const h={Authorization:'Bearer '+token.value};const r=await fetch('/api/support/evidence',{headers:h});if(!r.ok){out.textContent=r.status===401?'Ingen tilgang.':'Kunne ikke hente saker.';return}const d=await r.json();out.innerHTML='';d.cases.forEach(c=>{const e=document.createElement('article');e.className='case';e.innerHTML='<b>'+c.caseId+'</b> · '+c.status+'<br><span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+' · '+c.imageCount+' bilde(r)</span>';const imgs=document.createElement('div');imgs.className='images';c.images.forEach(i=>{const a=document.createElement('a');a.href='/api/support/evidence/'+encodeURIComponent(c.caseId)+'/'+encodeURIComponent(i.imageId);a.target='_blank';const img=document.createElement('img');img.alt=i.imageType;fetch(a.href,{headers:h}).then(x=>x.blob()).then(b=>img.src=URL.createObjectURL(b));a.append(img);imgs.append(a)});e.append(imgs);out.append(e)});if(!d.cases.length)out.textContent='Ingen innsendte saker ennå.'}</script></main></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
 
 /** Lagre bilde til R2 + metadata til D1 — aldri blokkerende. */
@@ -386,6 +397,70 @@ export default {
         console.error('les-skilt feilet:', e);
         return json({ ok: false, error: 'Intern feil' }, 500);
       }
+    }
+
+    if (method === 'POST' && path === '/api/evidence-capture') {
+      let body: unknown;
+      try { body = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const b = isRecord(body) ? body : null;
+      const registration = typeof b?.regnr === 'string' ? b.regnr : '';
+      const images = Array.isArray(b?.images) ? b.images : [];
+      if (!registration.trim()) return json({ ok: false, error: 'Kjennemerke påkrevd' }, 400);
+      if (!images.length || images.length > 4) return json({ ok: false, error: 'Legg ved minst ett og maksimalt fire bilder' }, 400);
+      if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
+      const decoded: { type: 'plate' | 'windshield' | 'mirror_sensor' | 'interior_optional'; bytes: Uint8Array; mime: string; ext: string }[] = [];
+      for (const image of images) {
+        if (!isRecord(image) || !isEvidenceImageType(image.type) || typeof image.data !== 'string') return json({ ok: false, error: 'Ugyldig bildedata' }, 400);
+        if (image.data.length > 7_000_000) return json({ ok: false, error: 'Et bilde er for stort (maks 5 MB)' }, 413);
+        const parsed = dataUrlTilBytes(image.data);
+        if (!parsed || !parsed.mime.startsWith('image/') || parsed.bytes.byteLength > MAX_EVIDENCE_IMAGE_BYTES) return json({ ok: false, error: 'Ugyldig bilde eller filen er for stor' }, 400);
+        decoded.push({ type: image.type, ...parsed });
+      }
+      if (new Set(decoded.map((image) => image.type)).size !== decoded.length) return json({ ok: false, error: 'Hver bildetype kan bare sendes én gang' }, 400);
+      const createdAt = Date.now();
+      const hash = await registrationHash(registration);
+      const caseId = createCaseId(new Date(createdAt));
+      const sid = sessionId(body, request);
+      const records = decoded.map((image, index) => ({ image, imageId: `${caseId}-${index + 1}`, r2Key: `evidence-capture/${caseId}/${image.type}.${image.ext}` }));
+      try {
+        await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_cases (case_id, registration_hash, vehicle_identity_hash, created_at, session_id, status) VALUES (?, ?, ?, ?, ?, ?)')
+          .bind(caseId, hash, hash, createdAt, sid, 'NEW').run();
+        await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_status_events (event_id, case_id, status, created_at, created_by) VALUES (?, ?, ?, ?, ?)')
+          .bind(`${caseId}-NEW`, caseId, 'NEW', createdAt, 'customer').run();
+        for (const record of records) {
+          await env.OPPLAERING_BUCKET.put(record.r2Key, record.image.bytes, { httpMetadata: { contentType: record.image.mime } });
+          await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_images (image_id, case_id, image_type, r2_key, mime, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+            .bind(record.imageId, caseId, record.image.type, record.r2Key, record.image.mime, createdAt).run();
+        }
+      } catch (e) {
+        console.error('evidence-capture lagring feilet:', e);
+        return json({ ok: false, error: 'Kunne ikke lagre bildene. Prøv igjen.' }, 500);
+      }
+      return json({ ok: true, caseId, status: 'NEW', imageCount: records.length, decisionAuthority: 'NONE' }, 201);
+    }
+
+    if (method === 'GET' && path === '/support/evidence') return supportEvidenceUi();
+    if (method === 'GET' && path === '/api/support/evidence') {
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT c.case_id, c.created_at, c.status, i.image_id, i.image_type
+        FROM evidence_cases c LEFT JOIN evidence_case_images i ON i.case_id = c.case_id ORDER BY c.created_at DESC LIMIT 100`).all<{ case_id: string; created_at: number; status: string; image_id: string | null; image_type: string | null }>();
+      const grouped = new Map<string, { caseId: string; createdAt: number; status: string; imageCount: number; images: { imageId: string; imageType: string }[] }>();
+      for (const row of rows.results) {
+        const item = grouped.get(row.case_id) ?? { caseId: row.case_id, createdAt: row.created_at, status: row.status, imageCount: 0, images: [] };
+        if (row.image_id && row.image_type) { item.imageCount++; item.images.push({ imageId: row.image_id, imageType: row.image_type }); }
+        grouped.set(row.case_id, item);
+      }
+      return json({ ok: true, cases: [...grouped.values()] });
+    }
+    const imageMatch = /^\/api\/support\/evidence\/([^/]+)\/([^/]+)$/.exec(path);
+    if (method === 'GET' && imageMatch) {
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
+      const row = await env.FINNBILGLASS_DB.prepare('SELECT r2_key, mime FROM evidence_case_images WHERE case_id = ? AND image_id = ?').bind(imageMatch[1], imageMatch[2]).first<{ r2_key: string; mime: string }>();
+      if (!row) return json({ ok: false, error: 'Ikke funnet' }, 404);
+      const object = await env.OPPLAERING_BUCKET.get(row.r2_key);
+      if (!object) return json({ ok: false, error: 'Bilde mangler' }, 404);
+      return new Response(object.body, { headers: { 'Content-Type': row.mime, 'Cache-Control': 'private, no-store' } });
     }
 
     // STAGING-ONLY: konversasjonell fitment-assistent (fitment-v1/conversation-v1).
