@@ -58,6 +58,20 @@
 3. **Rens eksisterende datasett** (fjern selv-relasjoner, relatert-glass, feil type) → seed accessory-v1-katalogen med MOULDING_TRIM/CLIP-kategorier, alle COMPATIBLE default.
 4. **Wiper-guard** på plass før eventuell wiper-import.
 
+## 6B. DYBDE-KARTLEGGING AV VAREKORT-MODELLEN (2026-08-18, tillegg)
+
+Fullstendig kartlegging utført — svar på Toms spørsmål:
+
+| Spørsmål | Funn |
+|---|---|
+| Hvordan identifiseres glassproduktet? | **SKU = varenummer/eurokode i tittelen** (f.eks. `DQ12207YP`, `1526BZ`). WP REST `title` = SKU. Produkt-ID-er i WP er numeriske (192244 osv.); accessory-map-nøklene (2304, 3355…) er **base-nummer** som deles mellom glass og tilbehør (2304 + suffiks) |
+| Hvordan lagres relasjonen? | **ACF/meta-felt på product-posttypen** (REST-skjema viser `acf`- og `meta`-nøkler, men innholdet er tomt anonymt → krever autentisering). WooCommerce `wc/v2`-navnerom finnes (68 ruter) men gir **401 uten API-nøkler**. **`maco/v1`-navnerommet = UNI Micro-synk-plugin** (`maco_unimicro_discount/*`, `maco_updated_objects/products/orders/refunds`) — 401 uten auth. Importkjede: **UNI Micro (ERP) → MACO-plugin → WooCommerce** (`scripts/import-uni-micro.py` finnes i repoet) |
+| Hvilke kategorier finnes? | Fanget i accessory-map: lim (47), pyntelist (28), bunnlist (4), gummilist (4), klips (2), sensortape (2) → klassifiseres MOULDING_TRIM/CLIP/SENSOR_GEL/SENSOR_TAPE/OTHER(lim=INSTALLATION_CONSUMABLE). **Viskere: 0 fanget** (seksjonen fantes ikke i den fangede DOM-en; Tom bekrefter at varekortet viser dem) |
+| Skiller varekortet inkludert/anbefalt/nødvendig? | **Ikke verifisert.** Scraperen fanget `required`-flagg (8/87=true) fra produktkortet, men kilde-semantikken er ikke bekreftet → default COMPATIBLE (Tom-beslutning). `glass_catalog.accessory_skus` (JSON-kolonne i B2B-D1) lagrer de fangede relasjonene; konsumeres av `search.ts:1335` |
+| Konklusjon | **Beste strukturerte kilde = autentisert ACF/meta via WP REST (min-konto) eller wc/v2 med API-nøkler fra Autoglass.** DOM-scraping er unødvendig hvis MACO/ACF-data kan nås strukturert. Repoet har allerede `glass_catalog.accessory_skus` + 2 fangede datasett som base |
+
+**⚠ SIKKERHETSFUNN:** `scripts/scrape-accessories-*.mjs` (commit `97bea8f9`) inneholder **hardkodede min-konto-credentials** (`post@alfadrift.no` / passord i klartekst) — bryter regelen «verdier ALDRI i repo, kun BWS-refs». Anbefaler: fjern credentials fra repoet, roter passordet, bruk BWS/env.
+
 ## 7. KOMMERSIELL SLUTTFLYT (bekreftet)
 
 Finn eksakt rute → slå opp varekort-relasjoner → legg til kun relevante lister/klips → fjern det som allerede følger med ruta (INCLUDED_WITH_GLASS, EMB) → skjul vindusviskere → presentér ferdig korrekt ordre. Eksakt rutesøk forblir P0; tilbehør blir korrekt nesten automatisk når ruta er identifisert.

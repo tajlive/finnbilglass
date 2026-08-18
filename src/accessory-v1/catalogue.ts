@@ -9,12 +9,14 @@
  *  4. EXPERT_TEACHING (PROVISIONAL): sensorgel S1/S2/S3/S1C for sensor-glass
  *     (Tom-vedtak, autoglass-vareseddel) — UNKNOWN inntil VERIFIED under C3-policy.
  */
-import type { Accessory, AccessoryRelation, AccessoryRelationProvenance } from './schema.js';
+import type { Accessory, AccessoryRelation, AccessoryRelationProvenance, PromotionEvidence } from './schema.js';
 
 const P_GT: AccessoryRelationProvenance = { source: 'GT_AUTO_PRISLISTE', sourceRecord: 'data/gt-ekspansjon/prisliste-alle-glass.json', authority: 'SUPPLIER_DATA' };
 const P_EMB: AccessoryRelationProvenance = { source: 'CATALOGUE_COMMENT', sourceRecord: 'gt-auto-prisliste kommentar «EMB=101» på 2525GYA', authority: 'SUPPLIER_DATA' };
 const P_GLAV: AccessoryRelationProvenance = { source: 'GLAVISTA_ALLEKODER', sourceRecord: 'data/glavista-index.json alleKoder (4618/4618)', authority: 'SUPPLIER_DATA' };
 const P_EXPERT: AccessoryRelationProvenance = { source: 'EXPERT_TEACHING', sourceRecord: 'Tom-vedtak 2026-08-13: sensorgel = sensortape (S1/S2/S3/S1C), tilbehør på varekort', authority: 'EXPERT_TEACHING_PROVISIONAL' };
+/** AUTO_GLASS_PRODUCT_RELATION: eksplisitt varekort-relasjon (fanget fra autentisert produktkort, Playwright juni 2026; commit 70b75039). Beviser COMPATIBILITY. */
+const P_VAREKORT = (sku: string): AccessoryRelationProvenance => ({ source: 'AUTO_GLASS_PRODUCT_RELATION', sourceRecord: `data/accessory-map.json → ${sku} (varekort auto-glass.no)`, authority: 'SUPPLIER_CATALOGUE_RELATION' });
 
 /** 163 ekte klips/PY/GU-tilbehørsrader fra gt-auto-prislisten (eurokode-koblet). */
 export function buildGtAccessoryRelations(): AccessoryRelation[] {
@@ -49,6 +51,10 @@ export const GLUE_KIT: Accessory = { productId: 'SCHEIBENKLEBESET', name: 'Lim-k
 
 export const SENSOR_GEL: Accessory = { productId: 'SENSORGEL-S1', name: 'Sensorgel (S1)', category: 'sensor_gel', kind: 'FITMENT_ACCESSORY' };
 
+export const SENSOR_TAPE: Accessory = { productId: 'SENSORTAPE', name: 'Sensortape', category: 'sensor_tape', kind: 'FITMENT_ACCESSORY' };
+
+export const WIPER: Accessory = { productId: 'WIPER', name: 'Vindusvisker', category: 'wiper', kind: 'FITMENT_ACCESSORY' };
+
 /** Komplett relasjonssett (seed). */
 export function defaultRelations(): AccessoryRelation[] {
   return [
@@ -56,5 +62,21 @@ export function defaultRelations(): AccessoryRelation[] {
     { relationId: 'emb-2525GYA', accessory: { productId: 'MOULDING-2525GYA', name: 'Innkapslet list (medfølger glasset)', category: 'mouldings', kind: 'FITMENT_ACCESSORY', varenr: '2525GYA' }, linkedVarenr: '2525GYA', stateWhenApplicable: 'INCLUDED_WITH_GLASS', provenance: P_EMB },
     { relationId: 'gluekit-universal', accessory: GLUE_KIT, stateWhenApplicable: 'OPTIONAL_COMPATIBLE', provenance: P_GLAV },
     { relationId: 'sensorgel-sensor', accessory: SENSOR_GEL, featureRequirement: { feature: 'sensor', value: true }, featureExclusion: { feature: 'sensor', value: false }, stateWhenApplicable: 'REQUIRED_SEPARATE', provenance: P_EXPERT },
+    // ── AUTO_GLASS_PRODUCT_RELATION (varekort, eksakte glass; default OPTIONAL_COMPATIBLE) ──
+    { relationId: 'varekort-3355-pyntelist', accessory: { productId: '3355PYKIT', name: 'Pyntelist-kit V+H frontrute', category: 'mouldings', kind: 'FITMENT_ACCESSORY', varenr: '3355PYKIT' }, linkedVarenr: '3355', stateWhenApplicable: 'OPTIONAL_COMPATIBLE', provenance: P_VAREKORT('3355PYKIT') },
+    { relationId: 'varekort-2488-pyntelist', accessory: { productId: '2488ASGRT', name: 'Pyntelist topp frontrute', category: 'mouldings', kind: 'FITMENT_ACCESSORY', varenr: '2488ASGRT' }, linkedVarenr: '2488', stateWhenApplicable: 'OPTIONAL_COMPATIBLE', provenance: P_VAREKORT('2488ASGRT') },
+    { relationId: 'varekort-2492-pyntelist', accessory: { productId: '2492ASGRT', name: 'Pyntelist topp', category: 'mouldings', kind: 'FITMENT_ACCESSORY', varenr: '2492ASGRT' }, linkedVarenr: '2492', stateWhenApplicable: 'OPTIONAL_COMPATIBLE', provenance: P_VAREKORT('2492ASGRT') },
+    // Sensortape på varekortet KUN når det eksisterer for det eksakte glasset (Tom-verifisert 2026-08-18)
+    { relationId: 'varekort-sensortape-eksempel', accessory: SENSOR_TAPE, linkedVarenr: '2306', stateWhenApplicable: 'OPTIONAL_COMPATIBLE', provenance: P_VAREKORT('SENSORTAPE') },
+    // Vindusviskere: bevares som relasjon, men salesPolicy=DISABLED → aldri i kundeflyt
+    { relationId: 'varekort-visker-eksempel', accessory: WIPER, linkedVarenr: '2492', stateWhenApplicable: 'OPTIONAL_COMPATIBLE', salesPolicy: 'DISABLED', provenance: P_VAREKORT('WIPER') },
   ];
+}
+
+/** Promotion-guard: AUTO_GLASS_PRODUCT_RELATION kan KUN bli REQUIRED_SEPARATE med eksplisitt bevis. */
+export function canPromoteToRequired(rel: AccessoryRelation, evidence: PromotionEvidence | null): boolean {
+  if (rel.provenance.authority !== 'SUPPLIER_CATALOGUE_RELATION') return false;
+  if (!evidence) return false;
+  if (evidence.kind === 'SOURCE_SEMANTICS' && !evidence.sourceRecord) return false;
+  return true;
 }

@@ -14,15 +14,38 @@ import { parseEmcComment } from './catalogue.js';
 export class AccessoryApplicabilityEngine {
   constructor(private readonly relations: AccessoryRelation[]) {}
 
+  /** AUTO_GLASS_PRODUCT_RELATION matcher på base-nummer-prefiks (varekort-kobling); ellers eksakt. */
+  private relMatches(rel: AccessoryRelation, glass: AccessoryEngineInput['selectedGlass']): boolean {
+    if (!glass) return false;
+    if (rel.linkedVarenr) {
+      if (rel.provenance.source === 'AUTO_GLASS_PRODUCT_RELATION') return glass.varenr?.startsWith(rel.linkedVarenr) ?? false;
+      return glass.varenr === rel.linkedVarenr;
+    }
+    if (rel.linkedEurocode) return glass.glass === rel.linkedEurocode;
+    return false;
+  }
+
   evaluate(input: AccessoryEngineInput): AccessoryApplicability[] {
     const out: AccessoryApplicability[] = [];
     const glass = input.selectedGlass;
     const features = input.glassFeatures ?? {};
 
     for (const rel of this.relations) {
+      // 0) salesPolicy=DISABLED (viskere): bevares som relasjon, men ALDRI i kundeflyt
+      if (rel.salesPolicy === 'DISABLED') {
+        const linked = this.relMatches(rel, glass);
+        if (linked) out.push({
+          accessory: rel.accessory,
+          state: 'EXCLUDED_FROM_FINNBILGLASS_FOR_NOW',
+          reason: 'salesPolicy=DISABLED (vindusviskere utenfor scope inntil Tom endrer policy)',
+          provenance: rel.provenance,
+        });
+        continue;
+      }
+
       // 1) Glass-spesifikk kobling (eurokode/varenr) — ingen match → relasjonen finnes ikke for dette glasset
       if (rel.linkedEurocode || rel.linkedVarenr) {
-        const linked = rel.linkedVarenr ? glass?.varenr === rel.linkedVarenr : glass?.glass === rel.linkedEurocode;
+        const linked = this.relMatches(rel, glass);
         if (!linked) continue; // usynlig — ingen placeholder, ingen upsell
         out.push({
           accessory: rel.accessory,

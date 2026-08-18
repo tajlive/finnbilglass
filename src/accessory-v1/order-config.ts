@@ -33,6 +33,9 @@ export function buildOrderConfiguration(input: {
   const included = accessories.filter((a) => a.state === 'INCLUDED_WITH_GLASS');
   const optional = accessories.filter((a) => a.state === 'OPTIONAL_COMPATIBLE');
   const unresolved = accessories.filter((a) => a.state === 'UNKNOWN' || a.state === 'AMBIGUOUS');
+  // EXCLUDED_FROM_FINNBILGLASS_FOR_NOW (viskere) kommer ALDRI inn i ordrekonfigurasjonen
+  const excluded = accessories.filter((a) => a.state === 'EXCLUDED_FROM_FINNBILGLASS_FOR_NOW');
+  void excluded; // bevisst ignorert — salesPolicy=DISABLED
 
   let checkoutAllowed = false;
   let blockedReason: string | null = null;

@@ -13,7 +13,7 @@ import { LocalTecDocProbeProvider, VEHICLE_TO_OE_GAP } from '../src/fitment-v1/p
 import { candidateDifferences, buildEvidenceRequests, isIrrelevantQuestion } from '../src/fitment-v1/differentiation.js';
 import { R1Pipeline } from '../src/fitment-v1/pipeline.js';
 import { AccessoryApplicabilityEngine, featuresFromGlass } from '../src/accessory-v1/engine.js';
-import { defaultRelations } from '../src/accessory-v1/catalogue.js';
+import { defaultRelations, canPromoteToRequired } from '../src/accessory-v1/catalogue.js';
 import { buildOrderConfiguration } from '../src/accessory-v1/order-config.js';
 import { auditCurrentUiFindings } from '../src/accessory-v1/audit.js';
 import { DeepSeekExpert, buildExpertSystemPrompt, DEEPSEEK_ALLOWED_TOOLS, DEEPSEEK_PROHIBITIONS } from '../src/conversation-v1/deepseek.js';
@@ -255,4 +255,91 @@ test('R1-21: tilbehørs-audit av nåværende UI — eksakte funn, ingen prod-end
   assert.ok(findings.some((f) => f.id === 'AUD-03' && f.severity === 'HIGH'), 'klips uten dokumentert relasjon');
   assert.ok(findings.some((f) => f.id === 'AUD-04'), 'pyntelist vs EMB-inkludert list');
   assert.ok(findings.every((f) => f.location && f.evidence));
+});
+
+// ── R1-tillegg 2026-08-18: AUTO_GLASS_PRODUCT_RELATION + sensorgel/sensortape + viskere ──
+
+test('R1-22: varekort-relasjon (AUTO_GLASS_PRODUCT_RELATION) → default OPTIONAL_COMPATIBLE, aldri generiske spørsmål', () => {
+  const acc = accEngine.evaluate({
+    vehicleIdentity: { make: 'BMW', model: 'X1', modelYear: 2016 },
+    applicationIdentity: { applicationId: 'app-bmw-x1', evidenceClass: 'AUTHORITATIVE' },
+    selectedGlass: { glass: '3355A', varenr: '3355' },
+    glassFeatures: {},
+    fitmentStatus: 'EXACT', verificationMode: 'CUSTOMER_OBSERVATION',
+  });
+  const list = acc.find((a) => a.accessory.productId === '3355PYKIT')!;
+  assert.ok(list, 'varekort-relasjon må returneres for eksakt glass');
+  assert.equal(list.state, 'OPTIONAL_COMPATIBLE');
+  assert.equal(list.provenance.authority, 'SUPPLIER_CATALOGUE_RELATION');
+  assert.equal(list.provenance.source, 'AUTO_GLASS_PRODUCT_RELATION');
+  // og IKKE for et annet glass uten relasjon
+  const acc2 = accEngine.evaluate({
+    vehicleIdentity: { make: 'VW', model: 'Transporter', modelYear: 2005 },
+    applicationIdentity: null,
+    selectedGlass: { glass: '8579AGSGYAVZ1B', varenr: '2525GYA' },
+    glassFeatures: {}, fitmentStatus: 'EXACT', verificationMode: 'CUSTOMER_OBSERVATION',
+  });
+  assert.equal(acc2.find((a) => a.accessory.productId === '3355PYKIT'), undefined);
+});
+
+test('R1-23: promotion til REQUIRED_SEPARATE krever eksplisitt bevis — aldri bare fordi katalogen viser den', () => {
+  const rel = defaultRelations().find((r) => r.relationId === 'varekort-3355-pyntelist')!;
+  assert.equal(canPromoteToRequired(rel, null), false);
+  assert.equal(canPromoteToRequired(rel, { kind: 'TOM_EXPERT_RULE', ruleId: 'r-1' }), true);
+  assert.equal(canPromoteToRequired(rel, { kind: 'SOURCE_SEMANTICS', sourceRecord: '' }), false);
+  // GT-kilde (SUPPLIER_DATA) promoteres IKKE via denne regelen
+  const gt = defaultRelations().find((r) => r.relationId === 'gt-1207K')!;
+  assert.equal(canPromoteToRequired(gt, { kind: 'VERIFIED_INSTALLATION', installationId: 'i-1' }), false);
+});
+
+test('R1-24: sensortape/sensorgel kommer KUN fra eksakt glass-varekort — aldri generelle spørsmål', () => {
+  // glass med varekort-relasjon til sensortape
+  const acc = accEngine.evaluate({
+    vehicleIdentity: { make: 'X', model: 'Y', modelYear: 2020 },
+    applicationIdentity: null,
+    selectedGlass: { glass: '2306A', varenr: '2306' },
+    glassFeatures: {}, fitmentStatus: 'EXACT', verificationMode: 'MANUAL_VERIFICATION',
+  });
+  const tape = acc.find((a) => a.accessory.category === 'sensor_tape')!;
+  assert.ok(tape, 'sensortape fra varekort-relasjonen');
+  assert.equal(tape.state, 'OPTIONAL_COMPATIBLE');
+  // glass UTEN sensortape-relasjon → usynlig
+  const acc2 = accEngine.evaluate({
+    vehicleIdentity: { make: 'VW', model: 'Transporter', modelYear: 2005 },
+    applicationIdentity: null,
+    selectedGlass: { glass: '8579AGSGYAVZ1B', varenr: '2525GYA' },
+    glassFeatures: {}, fitmentStatus: 'EXACT', verificationMode: 'CUSTOMER_OBSERVATION',
+  });
+  assert.equal(acc2.find((a) => a.accessory.category === 'sensor_tape'), undefined);
+});
+
+test('R1-25: vindusviskere — EXCLUDED_FROM_FINNBILGLASS_FOR_NOW, aldri i kundeoutput/checkout', () => {
+  const acc = accEngine.evaluate({
+    vehicleIdentity: { make: 'BMW', model: 'X5', modelYear: 2020 },
+    applicationIdentity: { applicationId: 'app-bmw-x5', evidenceClass: 'AUTHORITATIVE' },
+    selectedGlass: { glass: '2492A', varenr: '2492' },
+    glassFeatures: { sensor: false }, fitmentStatus: 'EXACT', verificationMode: 'CUSTOMER_OBSERVATION',
+  });
+  const wiper = acc.find((a) => a.accessory.category === 'wiper')!;
+  assert.ok(wiper);
+  assert.equal(wiper.state, 'EXCLUDED_FROM_FINNBILGLASS_FOR_NOW');
+  // ordrekonfigurasjon inneholder ALDRI viskeren
+  const order = buildOrderConfiguration({ fitmentStatus: 'EXACT', verificationMode: 'CUSTOMER_OBSERVATION', selectedGlass: '2492A', accessories: acc });
+  assert.ok(order.ok);
+  const all = [...order.config!.requiredAccessories, ...order.config!.includedAccessories, ...order.config!.optionalCompatibleAccessories, ...order.config!.unresolvedInstallationItems];
+  assert.equal(all.some((a) => a.accessory.category === 'wiper'), false, 'visker aldri i ordrekonfigurasjon');
+});
+
+test('R1-26: varekort-relasjon (AUTO_GLASS) er mer autoritativ for tilbehør enn generisk kategorimatching', () => {
+  // 3355: varekortet har pyntelist-kit (eksplisitt relasjon); generisk matching (163 GT-rader) har ingen 3355-treff
+  const acc = accEngine.evaluate({
+    vehicleIdentity: { make: 'BMW', model: 'X1', modelYear: 2016 },
+    applicationIdentity: null,
+    selectedGlass: { glass: '3355A', varenr: '3355' },
+    glassFeatures: {}, fitmentStatus: 'EXACT', verificationMode: 'MANUAL_VERIFICATION',
+  });
+  const list = acc.find((a) => a.accessory.productId === '3355PYKIT')!;
+  assert.equal(list.state, 'OPTIONAL_COMPATIBLE');
+  // og varekort-relasjonen bærer kilde-bevis (sourceRecord peker på accessory-map.json)
+  assert.ok(list.provenance.sourceRecord.includes('accessory-map.json'));
 });
