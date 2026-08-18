@@ -164,7 +164,7 @@
         Finn glass
       </button>
     </form>
-    <input id="regnr-fil" type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1">
+    <input id="regnr-fil" type="file" accept="image/*" class="hidden" aria-hidden="true" tabindex="-1">
     <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
     <p class="svv-badge" aria-label="Vi henter bilopplysningene fra Statens vegvesen">
       <svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-skjold"/></svg>
@@ -189,11 +189,11 @@
 
     <section class="evidence-capture" aria-labelledby="evidence-title">
       <h3 id="evidence-title">Hjelp oss å dobbeltsjekke</h3>
-      <p>Valgfritt: legg ved bilder til support. Bildene brukes kun som dokumentasjon og bestemmer aldri hvilket glass vi velger.</p>
-      <label><span>Kjennemerke</span><input id="evidence-plate" type="file" accept="image/*" capture="environment"></label>
-      <label><span>Hele frontruten</span><input id="evidence-windshield" type="file" accept="image/*" capture="environment"></label>
-      <label><span>Nærbilde rundt speil/sensorområde</span><input id="evidence-mirror" type="file" accept="image/*" capture="environment"></label>
-      <label><span>Valgfritt bilde innenfra</span><input id="evidence-interior" type="file" accept="image/*" capture="environment"></label>
+      <p>Valgfritt: ta et bilde eller velg et fra bildebiblioteket. Bildene brukes kun som dokumentasjon og bestemmer aldri hvilket glass vi velger.</p>
+      <label><span>Kjennemerke</span><input id="evidence-plate" type="file" accept="image/*"></label>
+      <label><span>Hele frontruten</span><input id="evidence-windshield" type="file" accept="image/*"></label>
+      <label><span>Nærbilde rundt speil/sensorområde</span><input id="evidence-mirror" type="file" accept="image/*"></label>
+      <label><span>Valgfritt bilde innenfra</span><input id="evidence-interior" type="file" accept="image/*"></label>
       <button id="btn-evidence-submit" class="sek" type="button">Send bilder til support</button>
       <p id="evidence-result" class="note hidden" role="status" aria-live="polite"></p>
     </section>
