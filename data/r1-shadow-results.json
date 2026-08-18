@@ -1,0 +1,286 @@
+{
+  "metrics": {
+    "cases": 16,
+    "irrelevantQuestionTotal": 0,
+    "averageInitialCandidates": 1.13,
+    "averageLegacyCandidates": 0,
+    "exactRate": 0,
+    "ambiguousRate": 0.1875,
+    "unknownRate": 0.8125,
+    "applicationResolutionCoverage": 0.125
+  },
+  "rows": [
+    {
+      "vehicle": "VW Transporter T5 2005 (2005)",
+      "legacyUtfall": "VERIFY",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 6,
+      "r1Applications": 1,
+      "r1Questions": [
+        "coated",
+        "antenna",
+        "OE",
+        "rainSensor"
+      ],
+      "irrelevantQuestions": 0,
+      "r1Status": "AMBIGUOUS",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "Mercedes CLA 200 D 4MATIC (2016)",
+      "legacyUtfall": "VERIFY",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 6,
+      "r1Applications": 1,
+      "r1Questions": [
+        "camera",
+        "acoustic",
+        "calibrated",
+        "OE",
+        "variant"
+      ],
+      "irrelevantQuestions": 0,
+      "r1Status": "AMBIGUOUS",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "BORGWARD ISABELLA SED+STV (1955)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "MAN H8 TRUCK (1959)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "MORGAN +4 ROADSTER (1958)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "SIMCA ARONDE 9+90A (1954)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "VW TRANSPORTER (1951)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 6,
+      "r1Applications": 0,
+      "r1Questions": [
+        "coated",
+        "antenna",
+        "OE",
+        "rainSensor"
+      ],
+      "irrelevantQuestions": 0,
+      "r1Status": "AMBIGUOUS",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "AUTO F94 (1962)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "BMW 700 (1961)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "BUICK RIVIERA (1964)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "FIAT 1100T VAN (1964)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "FIAT 2300S+N CPE (1962)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "FORD BRONCO (1969)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "GINETTA G11 (1967)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "JEEP WILLYS (1962)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    },
+    {
+      "vehicle": "VW KARMANN GHIA \"\"LILLE\"\" (1961)",
+      "legacyUtfall": "PINPOINT",
+      "legacyCandidates": 0,
+      "r1InitialCandidates": 0,
+      "r1Applications": 0,
+      "r1Questions": [],
+      "irrelevantQuestions": 0,
+      "r1Status": "UNKNOWN",
+      "r1VerificationMode": "HEURISTIC_ONLY",
+      "vehicleToOeGap": true,
+      "accessoryStates": [
+        "SCHEIBENKLEBESET:OPTIONAL_COMPATIBLE",
+        "SENSORGEL-S1:UNKNOWN"
+      ]
+    }
+  ]
+}
