@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-08-18T03:41:56.401Z",
+    "generatedAt": "2026-08-18T03:54:20.072Z",
     "sok": 1000,
     "prinsipp": "Feilbestilling er dyrere enn «jeg vet ikke». Kandidater fra katalog er kapabilitet, aldri fasit. Evidence Priority: OE-bilde > montør > kundefunksjoner > AI-spørsmål > katalogkandidat."
   },
@@ -45,7 +45,8 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 337
     },
     {
       "familie": "GOLF",
@@ -69,7 +70,8 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 94
     },
     {
       "familie": "RAV4",
@@ -81,7 +83,8 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 83
     },
     {
       "familie": "TRANSPORTER",
@@ -105,7 +108,8 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 78
     },
     {
       "familie": "MODEL-3",
@@ -117,7 +121,8 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 72
     },
     {
       "familie": "MODEL-Y",
@@ -129,7 +134,8 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 50
     },
     {
       "familie": "XC60",
@@ -141,7 +147,8 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 49
     },
     {
       "familie": "PASSAT",
@@ -153,7 +160,8 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 44
     },
     {
       "familie": "VITO",
@@ -165,7 +173,14 @@
       "FEILBESTILLING": 0,
       "sporsmal": 0,
       "bilder": 0,
-      "risiko": 0
+      "risiko": 0,
+      "manuell_INGEN_KANDIDATER": 3
     }
-  ]
+  ],
+  "c8_kobling": {
+    "selvforbedrendeLoop": "benchmark → MANUELL-årsaker → C8-fixtures (evidence_ledger) → ny benchmark → Coverage øker",
+    "manuellTotalt": 810,
+    "manuellUtenKandidater": 810,
+    "note": "MANUELL-årsaker per familie styrer hvor C8-fixtures samles (kandidatgenerering er gratis; evidens krever installasjoner)."
+  }
 }

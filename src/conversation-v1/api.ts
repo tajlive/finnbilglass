@@ -8,6 +8,7 @@ import { FitmentSession, generateSessionId } from './session.js';
 import * as T from './tools.js';
 import { policyPhrase, stateLabel } from './policy.js';
 import { EvidenceCapture } from './evidence-capture.js';
+import type { LedgerStore } from '../learning-v1/evidence-ledger.js';
 
 export const ASSISTANT_SESSION_TTL_MS = 30 * 60 * 1000;   // 30 min inaktivitet
 export const MAX_MESSAGE_CHARS = 4096;
@@ -25,9 +26,12 @@ export class AssistantApi {
   private rate = new Map<string, RateBucket>();
   private duplicatePhotos = new Map<string, string>(); // imageId → sessionId (duplisert-foto-håndtering)
   /** C8: AI-agenten som kunnskapsinnsamler — samtaleobservasjoner fanges deterministisk. */
-  readonly evidenceCapture = new EvidenceCapture();
+  readonly evidenceCapture: EvidenceCapture;
 
-  constructor(opts: { ttlMs?: number } = {}) { this.ttlMs = opts.ttlMs ?? ASSISTANT_SESSION_TTL_MS; }
+  constructor(opts: { ttlMs?: number; ledger?: LedgerStore } = {}) {
+    this.ttlMs = opts.ttlMs ?? ASSISTANT_SESSION_TTL_MS;
+    this.evidenceCapture = new EvidenceCapture(undefined, opts.ledger ?? null);
+  }
   private readonly ttlMs: number;
 
   // ── abuse-guards ──

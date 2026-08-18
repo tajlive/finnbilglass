@@ -34,6 +34,7 @@
     "test:c8": "node --import tsx --test tests/evidence-growth.test.mjs",
     "test:c9": "node --import tsx --test tests/c9.test.mjs",
     "test:c92": "node --import tsx --test tests/c92.test.mjs",
+    "test:c81": "node --import tsx --test tests/evidence-ledger.test.mjs",
     "test:challenge": "node --import tsx --test tests/fitment-challenge.test.mjs"
   },
   "devDependencies": {

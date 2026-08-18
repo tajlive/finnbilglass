@@ -7,8 +7,15 @@
  */
 import { AssistantApi, ASSISTANT_SESSION_TTL_MS } from './api.js';
 import { FitmentSession, type Channel } from './session.js';
+import { D1EvidenceLedger } from '../learning-v1/d1-ledger.js';
 
-const api = new AssistantApi();
+const memoryApi = new AssistantApi();
+
+/** C8.1: ledger-instans per isolate — D1-evidens (append-only) når DB-binding finnes. */
+function apiWithLedger(env: Env): AssistantApi {
+  if (env.FINNBILGLASS_DB) return new AssistantApi({ ledger: new D1EvidenceLedger(env.FINNBILGLASS_DB) });
+  return memoryApi;
+}
 
 function clientIp(request: Request): string {
   return request.headers.get('CF-Connecting-IP') ?? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
@@ -56,6 +63,7 @@ export async function handleAssistant(request: Request, env: Env): Promise<Respo
   const method = request.method;
   const ip = clientIp(request);
   const store = new D1SessionStore(env.FINNBILGLASS_DB);
+  const api = apiWithLedger(env); // C8.1: D1-evidens-ledger når DB-binding finnes (staging)
 
   const load = async (id: string): Promise<boolean> => {
     if (api.peek(id)) return true;

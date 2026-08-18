@@ -61,9 +61,10 @@ for (const b of utvalg) {
   const row = perFamilie.get(fam) ?? { familie: fam, sok: 0, ...Object.fromEntries(KLASSER.map((k) => [k, 0])), sporsmal: 0, bilder: 0, risiko: 0 };
   row.sok++;
 
-  let kategori, sporsmal = 0, bilder = 0, risiko = 0;
+  let kategori, sporsmal = 0, bilder = 0, risiko = 0, manuellAarsak = null;
   if (cands.length === 0) {
     kategori = 'MANUELL'; // ingen kandidater → menneskelig behandling (aldri gjetting)
+    manuellAarsak = 'INGEN_KANDIDATER';
   } else {
     const harAutoritativ = kres.candidates?.some((c) => c.glavista?.oes?.length && cands.length === 1);
     if (harAutoritativ) {
@@ -91,6 +92,7 @@ for (const b of utvalg) {
   row.sporsmal += sporsmal;
   row.bilder += bilder;
   row.risiko += risiko;
+  if (manuellAarsak) row[`manuell_${manuellAarsak}`] = (row[`manuell_${manuellAarsak}`] ?? 0) + 1;
   sumSporsmal += sporsmal;
   sumBilder += bilder;
   sumVektetRisiko += risiko;
@@ -114,6 +116,12 @@ const report = {
     mal: 'Coverage øker via C8-data; Safety forblir 100 %.',
   },
   perFamilie: [...perFamilie.values()].sort((a, b) => b.sok - a.sok).slice(0, 14),
+  c8_kobling: {
+    selvforbedrendeLoop: 'benchmark → MANUELL-årsaker → C8-fixtures (evidence_ledger) → ny benchmark → Coverage øker',
+    manuellTotalt: utfall.MANUELL,
+    manuellUtenKandidater: [...perFamilie.values()].reduce((s, r) => s + (r.manuell_INGEN_KANDIDATER ?? 0), 0),
+    note: 'MANUELL-årsaker per familie styrer hvor C8-fixtures samles (kandidatgenerering er gratis; evidens krever installasjoner).',
+  },
 };
 
 mkdirSync(dirname(OUT), { recursive: true });
