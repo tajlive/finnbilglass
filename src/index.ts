@@ -618,15 +618,16 @@ export default {
       const id = Number(idRaw);
       const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
-      const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string }>();
+      const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
       let vehicle = null;
       try { if (row.vehicle_json) vehicle = JSON.parse(row.vehicle_json); } catch { /* ugyldig snapshot = ignorert */ }
-      return json({ ok: true, inquiry: { ...row, status: isInquiryStatus(row.status) ? row.status : 'NEW', vehicle, history: events.results } });
+      return json({ ok: true, inquiry: { ...row, status: isInquiryStatus(row.status) ? row.status : 'NEW', vehicle, history: events.results.map(e => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta = ignorert */ } return { ...e, meta }; }) } });
     }
     const inquiryStatusMatch = /^\/api\/ops\/inquiries\/(\d+)\/status$/.exec(path);
     if (method === 'POST' && inquiryStatusMatch) {
-      // Statusendring er skriving — staging-only (prod = lesetilgang) inntil Tom åpner den.
-      if (env.ENVIRONMENT !== 'staging') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      // Statusendring er skriving — åpen i staging+prod (beta er live, Tom er eneste operatør).
+      // Beskyttet av support-token + append-only-displin. Aldri fitment-autoritet.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
@@ -646,8 +647,8 @@ export default {
     }
     const inquiryNoteMatch = /^\/api\/ops\/inquiries\/(\d+)\/notes$/.exec(path);
     if (method === 'POST' && inquiryNoteMatch) {
-      // Internt notat — append-only, aldri synlig i kundeflyten. Staging-only som status.
-      if (env.ENVIRONMENT !== 'staging') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      // Internt notat — append-only, aldri synlig i kundeflyten. Åpen i staging+prod som status.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const actor = typeof body.actor === 'string' ? body.actor.trim() : '', note = body.note;
