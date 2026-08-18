@@ -1,0 +1,233 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-18T03:04:32.457Z",
+    "marketAds": 1385,
+    "prinsipp": "Finn.no = markedsignal, aldri sannhet. SVV = truth. Katalog = kandidater. Kun evidens gir EXACT."
+  },
+  "marketCoverage": [
+    {
+      "familie": "GOLF",
+      "annonser": 188
+    },
+    {
+      "familie": "LEAF",
+      "annonser": 135
+    },
+    {
+      "familie": "3-SERIE",
+      "annonser": 133
+    },
+    {
+      "familie": "RAV4",
+      "annonser": 131
+    },
+    {
+      "familie": "MODEL-3",
+      "annonser": 99
+    },
+    {
+      "familie": "COROLLA",
+      "annonser": 93
+    },
+    {
+      "familie": "XC60",
+      "annonser": 91
+    },
+    {
+      "familie": "TRANSPORTER",
+      "annonser": 89
+    },
+    {
+      "familie": "MODEL-Y",
+      "annonser": 88
+    },
+    {
+      "familie": "PASSAT",
+      "annonser": 76
+    },
+    {
+      "familie": "HILUX",
+      "annonser": 53
+    },
+    {
+      "familie": "POLO",
+      "annonser": 46
+    },
+    {
+      "familie": "XC90",
+      "annonser": 45
+    },
+    {
+      "familie": "1-SERIE",
+      "annonser": 42
+    },
+    {
+      "familie": "MINI",
+      "annonser": 23
+    }
+  ],
+  "roiPriority": [
+    {
+      "familie": "LEAF",
+      "marketAds": 135,
+      "svvBiler": 94,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 135
+    },
+    {
+      "familie": "3-SERIE",
+      "marketAds": 133,
+      "svvBiler": 86,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 133
+    },
+    {
+      "familie": "RAV4",
+      "marketAds": 131,
+      "svvBiler": 83,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 131
+    },
+    {
+      "familie": "MODEL-3",
+      "marketAds": 99,
+      "svvBiler": 72,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 99
+    },
+    {
+      "familie": "COROLLA",
+      "marketAds": 93,
+      "svvBiler": 76,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 93
+    },
+    {
+      "familie": "XC60",
+      "marketAds": 91,
+      "svvBiler": 49,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 91
+    },
+    {
+      "familie": "MODEL-Y",
+      "marketAds": 88,
+      "svvBiler": 50,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 88
+    },
+    {
+      "familie": "HILUX",
+      "marketAds": 53,
+      "svvBiler": 52,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 53
+    },
+    {
+      "familie": "XC90",
+      "marketAds": 45,
+      "svvBiler": 21,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 0,
+      "roiScore": 45
+    },
+    {
+      "familie": "TRANSPORTER",
+      "marketAds": 89,
+      "svvBiler": 79,
+      "applikasjonsGapPct": 49,
+      "oeGapPct": 100,
+      "roiScore": 43.6
+    },
+    {
+      "familie": "1-SERIE",
+      "marketAds": 42,
+      "svvBiler": 33,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 42
+    },
+    {
+      "familie": "CORSA",
+      "marketAds": 15,
+      "svvBiler": 6,
+      "applikasjonsGapPct": 67,
+      "oeGapPct": 100,
+      "roiScore": 10.1
+    },
+    {
+      "familie": "VITO",
+      "marketAds": 6,
+      "svvBiler": 3,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 6
+    },
+    {
+      "familie": "SPRINTER",
+      "marketAds": 5,
+      "svvBiler": 0,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 0,
+      "roiScore": 5
+    },
+    {
+      "familie": "TRANSIT",
+      "marketAds": 3,
+      "svvBiler": 2,
+      "applikasjonsGapPct": 100,
+      "oeGapPct": 100,
+      "roiScore": 3
+    }
+  ],
+  "tecdocBuyRecommendation": [
+    {
+      "familie": "LEAF",
+      "roiScore": 135,
+      "why": "135 annonser × 100% applikasjons-gap"
+    },
+    {
+      "familie": "3-SERIE",
+      "roiScore": 133,
+      "why": "133 annonser × 100% applikasjons-gap"
+    },
+    {
+      "familie": "RAV4",
+      "roiScore": 131,
+      "why": "131 annonser × 100% applikasjons-gap"
+    },
+    {
+      "familie": "MODEL-3",
+      "roiScore": 99,
+      "why": "99 annonser × 100% applikasjons-gap"
+    },
+    {
+      "familie": "COROLLA",
+      "roiScore": 93,
+      "why": "93 annonser × 100% applikasjons-gap"
+    },
+    {
+      "familie": "XC60",
+      "roiScore": 91,
+      "why": "91 annonser × 100% applikasjons-gap"
+    },
+    {
+      "familie": "MODEL-Y",
+      "roiScore": 88,
+      "why": "88 annonser × 100% applikasjons-gap"
+    },
+    {
+      "familie": "HILUX",
+      "roiScore": 53,
+      "why": "53 annonser × 100% applikasjons-gap"
+    }
+  ]
+}

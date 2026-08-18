@@ -44,7 +44,7 @@ const MERKE_ALIAS: Record<string, string[]> = {
 };
 
 /** Familie-regler: (merke, regex på modell-token) → familie-nøkkel + generasjons-hint-fra-varenavn */
-const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
+export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'VW', re: /GOLF/, familie: 'GOLF' },
   { merke: 'VW', re: /PASSAT/, familie: 'PASSAT' },
   { merke: 'VW', re: /POLO/, familie: 'POLO' },

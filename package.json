@@ -30,6 +30,7 @@
     "test:learning-v1": "node --import tsx --test tests/learning-v1.test.ts",
     "test:r1": "node --import tsx --test tests/r1.test.ts",
     "test:c6": "node --test tests/c6.test.mjs",
+    "test:c76": "node --test tests/c76.test.mjs",
     "test:challenge": "node --import tsx --test tests/fitment-challenge.test.mjs"
   },
   "devDependencies": {
