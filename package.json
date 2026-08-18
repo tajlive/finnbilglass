@@ -26,7 +26,8 @@
     "test:resolver": "node --import tsx --test tests/resolver-sporsmaal.test.mjs",
     "test:kill-switch": "node --import tsx --test tests/kill-switch.test.mjs",
     "test:fitment-v1": "node --import tsx --test tests/fitment-v1.test.ts",
-    "test:conversation-v1": "node --import tsx --test tests/conversation-v1.test.ts"
+    "test:conversation-v1": "node --import tsx --test tests/conversation-v1.test.ts",
+    "test:learning-v1": "node --import tsx --test tests/learning-v1.test.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",

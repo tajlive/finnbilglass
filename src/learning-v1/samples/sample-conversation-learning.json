@@ -1,0 +1,37 @@
+{
+  "title": "Eksempel: konversasjons-avledet læring (strukturerte signaler, ikke transkript)",
+  "sessionSignals": {
+    "sessionId": "fs-1740…",
+    "channel": "WEB_CHAT",
+    "vehicle": { "registrationNumber": "SU18018", "make": "VW", "model": "Transporter T5 2005", "modelYear": 2005 },
+    "questionsAsked": 3,
+    "questionsAnswered": 3,
+    "customerDidNotUnderstand": true,
+    "customerCorrections": ["antenne=nei korrigert til antenne=ja"],
+    "agentCorrections": [],
+    "photosRequested": 1,
+    "photoRetakes": 0,
+    "manualHandoff": false,
+    "resolutionMethod": "CUSTOMER_OBSERVATION",
+    "finalFitmentStatus": "EXACT",
+    "verificationMode": "CUSTOMER_OBSERVATION",
+    "orderCreated": true,
+    "laterInstallationOutcome": null,
+    "turns": 6
+  },
+  "reusableLearning": [
+    {
+      "pattern": "Kunder forveksler regnsensor og ADAS-kamera.",
+      "evidenceCount": 2,
+      "example": "«Kunde spurte om regnsensor var det samme som kameraet bak speilet» [anonymisert]",
+      "category": "misunderstanding"
+    },
+    {
+      "pattern": "Kunder svarer feil på «antenne»-spørsmålet for T5 fordi de tenker takantenne, ikke ruteantenne.",
+      "evidenceCount": 1,
+      "example": "«Nei, bilen har ingen antenne» → korrigert: ruteantenne [anonymisert]",
+      "category": "correction"
+    }
+  ],
+  "rule": "Råtranskriptet er ALDRI sannhet. Kun strukturerte signaler + anonymiserte mønstre lagres; kundeidentifiserende data skilles ut (data-minimering)."
+}

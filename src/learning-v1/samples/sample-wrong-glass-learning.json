@@ -1,0 +1,26 @@
+{
+  "title": "Eksempel: feil-glass-læringshendelse (kritisk negativt eksempel)",
+  "outcome": {
+    "outcomeId": "out-2026-08-18-0001",
+    "sessionId": "fs-…",
+    "registrationNumber": "SU18018",
+    "vin": "WV1ZZZ7HZ5H060934",
+    "selectedGlass": "8579AGSVZ1B",
+    "selectedVarenr": "2525GY",
+    "outcome": "WRONG_GLASS",
+    "observedAt": "2026-08-18T14:30:00Z",
+    "reportedBy": "installatør (Autoglass-samarbeidspartner)",
+    "notes": "Kunden hadde regnsensor — 2525GY uten sensor passet ikke; korrekt var 2525GYM (8579AGSGYMVZ1B). Kundeobservasjonen 'nei, ingen regnsensor' var feil.",
+    "promotedToVerifiedFitment": false,
+    "promotionEvidence": null
+  },
+  "criticalNegativeExample": "FEIL GLASS: SU18018 — forventet 8579AGSVZ1B, utfallet var WRONG_GLASS (kunden hadde regnsensor)",
+  "pipelineActions": [
+    "Registrer som kritisk negativt eksempel (trening/evaluering)",
+    "Marker tilhørende kundeobservasjon som upålitelig (KPI: customer-observation reliability)",
+    "Foreslå KnowledgeCandidate CAPTURED: «Kundeobservasjon av regnsensor er upålitelig for T5 — verifiser fysisk eller via OE»",
+    "Registrer retur i utfallskjeden (RETURNED → FITMENT_CORRECTED)",
+    "Ingen automatisk ACTIVE — krever evidensgjennomgang og policy-validering"
+  ],
+  "rule": "Et feil-glass-utfall er ALDRI en positiv regel. Det er kritisk negativt trenings-/evalueringsmateriale og trigger for manuell gjennomgang."
+}

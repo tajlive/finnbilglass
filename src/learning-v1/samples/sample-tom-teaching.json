@@ -1,0 +1,19 @@
+{
+  "title": "Eksempel: Tom-undervisningssesjon (Teacher Mode)",
+  "description": "Hvordan en Tom-undervisningshendelse blir KnowledgeCandidate — aldri umiddelbar sannhet.",
+  "teachingEvents": [
+    {
+      "teacher": "Tom Arne Jensen",
+      "sourceSessionId": "fs-a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+      "statement": "For VW Transporter T5 (2003-2015) skiller antennefestet: 'ANTENNEFESTE MIDT PÅ' i katalogen betyr antenne i ruta; sensorvariantene 2525GYAM/2525GYM har regnsensor, og GYA har kun antenne.",
+      "reason": "Kunder svarer feil på 'har bilen antenne' fordi de tenker på takantenne, ikke ruteantenne.",
+      "scope": { "make": "VW", "modelFamily": "Transporter T5", "generation": "T5", "productionInterval": { "from": "2003", "to": "2015" }, "market": "EU", "catalogueVersion": "gt-auto-prisliste-2026" },
+      "examples": [{ "vehicle": "SU18018", "glass": "8579AGSGYAVZ1B", "note": "2525GYA — antenne, ikke regnsensor" }],
+      "counterexamples": [{ "vehicle": "SU18018", "glass": "8579AGSGYMVZ1B", "note": "2525GYM — regnsensor, ikke antenne" }],
+      "affectedKnowledgeClass": "FITMENT_RULE",
+      "proposedAuthority": "VERIFIED_EXPERT_RULE",
+      "result": "KnowledgeCandidate cand-… status PROVISIONAL — krever REVIEWED→VERIFIED→ACTIVE"
+    }
+  ],
+  "rule": "Hver hendelse logges med teacher/timestamp/kilde/statement/reason/scope/examples/counterexamples/klasse/autoritet/status. Prod-policy endres ALDRI umiddelbart."
+}
