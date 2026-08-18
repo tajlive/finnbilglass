@@ -17,6 +17,18 @@
     { "id": "E-01", "kategori": "E", "beskrivelse": "Transporter varebil", "make": "VW", "model": "Transporter", "year": 2010, "krav": { "flereKandidater": true, "sporsmal": "skillende" } },
     { "id": "E-02", "kategori": "E", "beskrivelse": "Sprinter — ingen data = ærlig UNKNOWN", "make": "Mercedes", "model": "Sprinter", "year": 2020, "krav": { "ingenGjett": true } },
     { "id": "F-01", "kategori": "F", "beskrivelse": "Tesla Model 3 — ingen data = ærlig UNKNOWN", "make": "Tesla", "model": "Model 3", "year": 2021, "krav": { "ingenGjett": true, "nullSporsmal": true } },
-    { "id": "F-02", "kategori": "F", "beskrivelse": "Nissan Leaf — ingen data = ærlig UNKNOWN", "make": "Nissan", "model": "Leaf", "year": 2019, "krav": { "ingenGjett": true, "nullSporsmal": true } }
+    { "id": "F-02", "kategori": "F", "beskrivelse": "Nissan Leaf — ingen data = ærlig UNKNOWN", "make": "Nissan", "model": "Leaf", "year": 2019, "krav": { "ingenGjett": true, "nullSporsmal": true } },
+    { "id": "H-01", "kategori": "H", "beskrivelse": "Golf VIII (hard)", "make": "VW", "model": "Golf", "year": 2020, "krav": { "applikasjoner": 1, "generasjon": "Golf VIII (Typ CD1)", "kandidaterFraKatalogEllerUnknown": true } },
+    { "id": "H-02", "kategori": "H", "beskrivelse": "Passat B8 (hard)", "make": "VW", "model": "Passat", "year": 2016, "krav": { "applikasjoner": 1, "generasjon": "Passat B8", "kandidaterFraKatalogEllerUnknown": true } },
+    { "id": "H-03", "kategori": "H", "beskrivelse": "Transporter T6 (hard)", "make": "VW", "model": "Transporter", "year": 2017, "krav": { "applikasjoner": 2, "generasjon": "T6", "flereKandidater": true, "sporsmal": "skillende" } },
+    { "id": "H-04", "kategori": "H", "beskrivelse": "CLA facelift (hard)", "make": "Mercedes", "model": "CLA", "year": 2017, "krav": { "applikasjoner": 1, "generasjon": "C117", "flereKandidater": true } },
+    { "id": "H-05", "kategori": "H", "beskrivelse": "Sprinter (hard)", "make": "Mercedes", "model": "Sprinter", "year": 2020, "krav": { "ingenGjett": true } },
+    { "id": "H-06", "kategori": "H", "beskrivelse": "Vito (hard)", "make": "Mercedes", "model": "Vito", "year": 2018, "krav": { "ingenGjett": true } },
+    { "id": "H-07", "kategori": "H", "beskrivelse": "BMW 3-serie kamera/HUD (hard)", "make": "BMW", "model": "320D", "year": 2018, "krav": { "kandidaterFraKatalogEllerUnknown": true } },
+    { "id": "H-08", "kategori": "H", "beskrivelse": "Volvo XC60 kamera (hard)", "make": "Volvo", "model": "XC60", "year": 2019, "krav": { "kandidaterFraKatalogEllerUnknown": true } },
+    { "id": "H-09", "kategori": "H", "beskrivelse": "Tesla Model 3 (hard)", "make": "Tesla", "model": "Model 3", "year": 2021, "krav": { "kandidaterFraKatalogEllerUnknown": true } },
+    { "id": "H-10", "kategori": "H", "beskrivelse": "Tesla Model Y (hard)", "make": "Tesla", "model": "Model Y", "year": 2022, "krav": { "kandidaterFraKatalogEllerUnknown": true } },
+    { "id": "H-11", "kategori": "H", "beskrivelse": "Nissan Leaf (hard)", "make": "Nissan", "model": "Leaf", "year": 2019, "krav": { "kandidaterFraKatalogEllerUnknown": true } },
+    { "id": "H-12", "kategori": "H", "beskrivelse": "Toyota RAV4 (hard)", "make": "Toyota", "model": "RAV4", "year": 2018, "krav": { "kandidaterFraKatalogEllerUnknown": true } }
   ]
 }

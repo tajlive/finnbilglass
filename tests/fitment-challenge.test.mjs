@@ -9,10 +9,14 @@ import { EvidenceKernel } from '../src/fitment-v1/policy/kernel.js';
 import { ApplicationResolver } from '../src/fitment-v1/application-resolver.js';
 import { buildDefaultGenerationRegistry } from '../src/fitment-v1/generation-registry.js';
 import { buildEvidenceRequests, isIrrelevantQuestion } from '../src/fitment-v1/differentiation.js';
+import { buildClassDCandidates, matchClassDCandidates } from '../src/fitment-v1/catalogue-candidates.js';
 
 const challenge = JSON.parse(readFileSync(new URL('../data/fitment-challenge.json', import.meta.url), 'utf8'));
 const kernel = new EvidenceKernel();
 const appResolver = new ApplicationResolver({ families: buildDefaultGenerationRegistry() });
+// CLASS_D-kandidatindeks (gt-prislisten) — kandidatmateriale, aldri fasit
+const gtRaw = JSON.parse(readFileSync(new URL('../data/gt-ekspansjon/prisliste-alle-glass.json', import.meta.url), 'utf8'));
+const classDIndex = buildClassDCandidates(gtRaw[0].results);
 
 function runCase(c) {
   const v = { make: c.make, model: c.model, modelYear: c.year, facelift: c.facelift ?? null };
@@ -20,7 +24,8 @@ function runCase(c) {
   const kernelRes = kernel.resolve({ registrationNumber: 'CH-' + c.id, vin: null, make: c.make, model: c.model, modelYear: c.year });
   const requests = buildEvidenceRequests(kernelRes.candidates);
   const irrelevant = requests.filter((q) => isIrrelevantQuestion(q, kernelRes.candidates)).length;
-  return { apps, candidates: kernelRes.candidates, requests, irrelevant, status: kernelRes.status ?? 'UNKNOWN' };
+  const classD = matchClassDCandidates(classDIndex, c.make, c.model, c.year);
+  return { apps, candidates: kernelRes.candidates, requests, irrelevant, status: kernelRes.status ?? 'UNKNOWN', classD };
 }
 
 for (const c of challenge.cases) {
@@ -45,6 +50,11 @@ for (const c of challenge.cases) {
     if (k.sporsmal === 'skillende') {
       assert.ok(r.requests.length > 0, 'kandidatforskjeller må gi spørsmål');
     }
+    if (k.kandidaterFraKatalogEllerUnknown) {
+      assert.ok(r.classD.length > 0 || r.status === 'UNKNOWN', 'CLASS_D-kandidater ELLER ærlig UNKNOWN');
+      // CLASS_D-merking er aldri fasit: klassifisering må være eksplisitt
+      for (const c of r.classD) assert.equal(c.klassifisering, 'CLASS_D_CATALOGUE_CANDIDATE');
+    }
     if (k.sporsmalInkluderer) {
       const features = r.requests.map((q) => q.feature);
       for (const f of k.sporsmalInkluderer) assert.ok(features.includes(f), `spørsmål om ${f} mangler`);
@@ -56,7 +66,7 @@ for (const c of challenge.cases) {
   });
 }
 
-test('CH-STATUS: challenge-settet dekker alle kategorier A–F', () => {
+test('CH-STATUS: challenge-settet dekker alle kategorier A–F + H (hard set)', () => {
   const kats = new Set(challenge.cases.map((c) => c.kategori));
-  for (const k of ['A', 'B', 'C', 'D', 'E', 'F']) assert.ok(kats.has(k), `kategori ${k} mangler`);
+  for (const k of ['A', 'B', 'C', 'D', 'E', 'F', 'H']) assert.ok(kats.has(k), `kategori ${k} mangler`);
 });

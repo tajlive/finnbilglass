@@ -1,0 +1,182 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-18T02:55:39.149Z",
+    "vehicles": 3076,
+    "privacy": "kun sha256-hash",
+    "klassifisering": "CLASS_D_CATALOGUE_CANDIDATE — aldri fasit, aldri EXACT, aldri automatisk OE-aksept"
+  },
+  "coverage": {
+    "applicationCoverage": 8.3,
+    "glassCoverageBefore": 8.3,
+    "glassCoverageAfterClassD": 29,
+    "multiCandidateShare": 100,
+    "stopsAtApplicationToOe": 893
+  },
+  "perFamily": [
+    {
+      "family": "TESLA MODEL",
+      "vehicles": 135,
+      "withCandidates": 120
+    },
+    {
+      "family": "NISSAN LEAF",
+      "vehicles": 94,
+      "withCandidates": 94
+    },
+    {
+      "family": "TOYOTA RAV4",
+      "vehicles": 90,
+      "withCandidates": 90
+    },
+    {
+      "family": "TOYOTA COROLLA",
+      "vehicles": 72,
+      "withCandidates": 72
+    },
+    {
+      "family": "BMW I4",
+      "vehicles": 67,
+      "withCandidates": 0
+    },
+    {
+      "family": "Golf VII (Typ 5G)",
+      "vehicles": 66,
+      "withCandidates": 66
+    },
+    {
+      "family": "BMW I I3",
+      "vehicles": 55,
+      "withCandidates": 0
+    },
+    {
+      "family": "NISSAN ARIYA",
+      "vehicles": 53,
+      "withCandidates": 0
+    },
+    {
+      "family": "TOYOTA HILUX",
+      "vehicles": 52,
+      "withCandidates": 52
+    },
+    {
+      "family": "VOLVO XC60",
+      "vehicles": 48,
+      "withCandidates": 48
+    },
+    {
+      "family": "MITSUBISHI OUTLANDER",
+      "vehicles": 40,
+      "withCandidates": 0
+    },
+    {
+      "family": "TOYOTA YARIS",
+      "vehicles": 35,
+      "withCandidates": 0
+    },
+    {
+      "family": "MERCEDES E",
+      "vehicles": 35,
+      "withCandidates": 0
+    },
+    {
+      "family": "SKODA OCTAVIA",
+      "vehicles": 35,
+      "withCandidates": 0
+    },
+    {
+      "family": "VOLVO V70",
+      "vehicles": 33,
+      "withCandidates": 0
+    },
+    {
+      "family": "AUDI A3",
+      "vehicles": 32,
+      "withCandidates": 0
+    },
+    {
+      "family": "VOLVO V60",
+      "vehicles": 31,
+      "withCandidates": 0
+    },
+    {
+      "family": "Golf VI (Typ 5K)",
+      "vehicles": 29,
+      "withCandidates": 29
+    },
+    {
+      "family": "AUDI A4",
+      "vehicles": 29,
+      "withCandidates": 0
+    },
+    {
+      "family": "MERCEDES C",
+      "vehicles": 29,
+      "withCandidates": 0
+    }
+  ],
+  "tecdocRequirement": {
+    "rationale": "Saker med kandidater men ingen autoritativ Application→OE-kant krever TecDoc/EPC (eller kunde-OE/foto).",
+    "familiesNeedingOeData": [
+      {
+        "family": "TESLA MODEL",
+        "vehicles": 135,
+        "candidatesFound": 120
+      },
+      {
+        "family": "NISSAN LEAF",
+        "vehicles": 94,
+        "candidatesFound": 94
+      },
+      {
+        "family": "TOYOTA RAV4",
+        "vehicles": 90,
+        "candidatesFound": 90
+      },
+      {
+        "family": "TOYOTA COROLLA",
+        "vehicles": 72,
+        "candidatesFound": 72
+      },
+      {
+        "family": "Golf VII (Typ 5G)",
+        "vehicles": 66,
+        "candidatesFound": 66
+      },
+      {
+        "family": "TOYOTA HILUX",
+        "vehicles": 52,
+        "candidatesFound": 52
+      },
+      {
+        "family": "VOLVO XC60",
+        "vehicles": 48,
+        "candidatesFound": 48
+      },
+      {
+        "family": "Golf VI (Typ 5K)",
+        "vehicles": 29,
+        "candidatesFound": 29
+      },
+      {
+        "family": "VW CARAVELLE",
+        "vehicles": 27,
+        "candidatesFound": 27
+      },
+      {
+        "family": "BMW 320D",
+        "vehicles": 24,
+        "candidatesFound": 24
+      },
+      {
+        "family": "T5",
+        "vehicles": 24,
+        "candidatesFound": 24
+      },
+      {
+        "family": "Polo V",
+        "vehicles": 20,
+        "candidatesFound": 20
+      }
+    ]
+  }
+}

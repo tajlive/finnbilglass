@@ -15,6 +15,9 @@ export function buildDefaultGenerationRegistry(): FamilyKnowledge[] {
     // ── VW Transporter T5 (eksisterende, med facelift-split) ──
     { applicationId: 'app-vw-t5-2003', make: 'VW', model: 'Transporter', generation: 'T5', body: 'van', productionInterval: { from: 2003, to: 2015 }, faceliftSplit: 'post-facelift' },
     { applicationId: 'app-vw-t5-2003-prefacelift', make: 'VW', model: 'Transporter', generation: 'T5', body: 'van', productionInterval: { from: 2003, to: 2010 }, faceliftSplit: 'pre-facelift' },
+    // ── VW Transporter T6 / T6.1 (2015–2024; T6.1 = facelift fra 2019) ──
+    { applicationId: 'app-vw-t6-2015', make: 'VW', model: 'Transporter', generation: 'T6', body: 'van', productionInterval: { from: 2015, to: 2024 }, faceliftSplit: 'post-facelift' },
+    { applicationId: 'app-vw-t6-2015-prefacelift', make: 'VW', model: 'Transporter', generation: 'T6', body: 'van', productionInterval: { from: 2015, to: 2019 }, faceliftSplit: 'pre-facelift' },
     // ── Mercedes CLA (eksisterende) ──
     { applicationId: 'app-mb-cla-2013', make: 'Mercedes', model: 'CLA', generation: 'C117', productionInterval: { from: 2013, to: 2019 } },
     { applicationId: 'app-mb-cla-2019', make: 'Mercedes', model: 'CLA', generation: 'C118', productionInterval: { from: 2019, to: null } },
