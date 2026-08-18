@@ -110,9 +110,10 @@ export class AssistantApi {
     }
 
     // Frittstående regnr/OE i tekst — tolket via identifikator-pipeline (aldri direkte autoritativt)
-    const regnrMatch = text.toUpperCase().replace(/\s+/g, '').match(/\b[A-ZÆØÅ]{2}\d{5}\b/);
+    // Beholder mellomrom slik at ordgrenser fungerer: «trenger frontrute til SU 18018» → SU18018
+    const regnrMatch = text.toUpperCase().match(/\b[A-ZÆØÅ]{2}\s?\d{5}\b/);
     if (regnrMatch && !s.vehicleIdentity) {
-      const r = T.identifyVehicle(s, regnrMatch[0]);
+      const r = T.identifyVehicle(s, regnrMatch[0].replace(/\s+/g, ''));
       if (r.ok && r.known) {
         T.bootstrapCandidates(s);
         const next = T.getNextQuestion(s);

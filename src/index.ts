@@ -9,6 +9,7 @@ import { resolveFrontrute } from './vin-resolver';
 import { resolverModus } from './kill-switch';
 import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
+import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
 
 const CORS_HEADERS = {
@@ -395,6 +396,9 @@ export default {
     }
     if (assistantEnabled && method === 'GET' && path === '/assistant') {
       return assistantUi();
+    }
+    if (assistantEnabled && method === 'GET' && path === '/ai') {
+      return customerChatUi();
     }
 
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
