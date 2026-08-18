@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "generatedAt": "2026-08-18T06:03:48.164Z",
+    "prinsipp": "Finn = markedssensor (aldri sannhet). Katalog/Glavista = kandidater (aldri EXACT). Glavista beviser OE→glass, ikke at bilen har OE.",
+    "kilde": {
+      "finnAnnonser": 4689,
+      "svvSvar": 2335
+    },
+    "oppdrag": "C9.5 Phase 1 — kun topp 3 (BMW 3-SERIE, NISSAN LEAF, TESLA MODEL-Y). Ikke bygget bredt."
+  },
+  "familier": [
+    {
+      "familie": "BMW 3-SERIE",
+      "annonser": 253,
+      "dekningsgrad": 42,
+      "snittKandidater": 24.1,
+      "glavistaAndel": 25,
+      "skillendeFeatures": [
+        "camera",
+        "encapsulated"
+      ],
+      "aarSpenn": [
+        1974,
+        2026
+      ]
+    },
+    {
+      "familie": "MODEL-Y",
+      "annonser": 40,
+      "dekningsgrad": 100,
+      "snittKandidater": 6,
+      "glavistaAndel": 0,
+      "skillendeFeatures": [],
+      "aarSpenn": [
+        2021,
+        2025
+      ]
+    },
+    {
+      "familie": "LEAF",
+      "annonser": 36,
+      "dekningsgrad": 100,
+      "snittKandidater": 8.9,
+      "glavistaAndel": 100,
+      "skillendeFeatures": [],
+      "aarSpenn": [
+        2012,
+        2024
+      ]
+    }
+  ],
+  "konklusjon": [
+    {
+      "familie": "BMW 3-SERIE",
+      "dekning": "42%",
+      "tiltak": "kandidatgap — bygg applikasjonskandidater (Glavista-modellnavn → SVV) + samle OE/installasjoner"
+    },
+    {
+      "familie": "MODEL-Y",
+      "dekning": "100%",
+      "tiltak": "kandidater finnes (gt/Glavista) — samle evidens via C8: OE-bilde"
+    },
+    {
+      "familie": "LEAF",
+      "dekning": "100%",
+      "tiltak": "kandidater finnes (gt/Glavista) — samle evidens via C8: OE-bilde"
+    }
+  ]
+}

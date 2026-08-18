@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-08-18T05:47:23.270Z",
+    "generatedAt": "2026-08-18T06:03:48.986Z",
     "korpus": 774,
     "prinsipp": "Læringsmuligheter = markedsvolum × manuell-gap × evidence-mangel. Katalog foreslår, evidens bestemmer."
   },
@@ -8,86 +8,115 @@
     {
       "familie": "3-SERIE",
       "sok": 78,
-      "manuell": 78,
+      "manuell": 0,
       "markedsVolum": 0,
-      "manglendeFeatures": [],
+      "manglendeFeatures": [
+        "encapsulated"
+      ],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 1,
-      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 78 observasjoner",
+      "anbefaling": "samle encapsulated-evidens via kundesamtale + C8-fixtures (78/78 har kandidater)"
     },
     {
       "familie": "1-SERIE",
       "sok": 35,
-      "manuell": 35,
+      "manuell": 2,
       "markedsVolum": 0,
       "manglendeFeatures": [],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 2,
-      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 35 observasjoner",
+      "anbefaling": "kandidater finnes — samle installasjonsfixtures for å styrke EXACT-kjeden"
     },
     {
       "familie": "LEAF",
       "sok": 94,
-      "manuell": 94,
+      "manuell": 0,
       "markedsVolum": 0,
       "manglendeFeatures": [],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 3,
-      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 94 observasjoner",
+      "anbefaling": "kandidater finnes — samle installasjonsfixtures for å styrke EXACT-kjeden"
     },
     {
       "familie": "MODEL-3",
       "sok": 72,
-      "manuell": 72,
+      "manuell": 0,
       "markedsVolum": 0,
-      "manglendeFeatures": [],
+      "manglendeFeatures": [
+        "camera"
+      ],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 4,
-      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 72 observasjoner",
+      "anbefaling": "samle camera-evidens via kundesamtale + C8-fixtures (72/72 har kandidater)"
     },
     {
       "familie": "MODEL-Y",
       "sok": 50,
-      "manuell": 50,
+      "manuell": 0,
       "markedsVolum": 0,
       "manglendeFeatures": [],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 5,
-      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 50 observasjoner",
+      "anbefaling": "kandidater finnes — samle installasjonsfixtures for å styrke EXACT-kjeden"
     },
     {
       "familie": "COROLLA",
       "sok": 76,
-      "manuell": 76,
+      "manuell": 0,
       "markedsVolum": 0,
-      "manglendeFeatures": [],
+      "manglendeFeatures": [
+        "encapsulated"
+      ],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 6,
-      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 76 observasjoner",
+      "anbefaling": "samle encapsulated-evidens via kundesamtale + C8-fixtures (76/76 har kandidater)"
     },
     {
       "familie": "RAV4",
       "sok": 83,
-      "manuell": 83,
+      "manuell": 0,
       "markedsVolum": 0,
-      "manglendeFeatures": [],
+      "manglendeFeatures": [
+        "heated"
+      ],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 7,
-      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 83 observasjoner",
+      "anbefaling": "samle heated-evidens via kundesamtale + C8-fixtures (83/83 har kandidater)"
     },
     {
       "familie": "TRANSPORTER",
@@ -102,21 +131,30 @@
       ],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 8,
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 79 observasjoner",
       "anbefaling": "samle antenna/coated/encapsulated/rainSensor-evidens via kundesamtale + C8-fixtures (79/79 har kandidater)"
     },
     {
       "familie": "PASSAT",
       "sok": 44,
-      "manuell": 44,
+      "manuell": 0,
       "markedsVolum": 0,
-      "manglendeFeatures": [],
+      "manglendeFeatures": [
+        "encapsulated",
+        "rainSensor"
+      ],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 9,
-      "anbefaling": "kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater"
+      "confidence": "LAV",
+      "confidenceAarsak": "bare 44 observasjoner",
+      "anbefaling": "samle encapsulated/rainSensor-evidens via kundesamtale + C8-fixtures (44/44 har kandidater)"
     },
     {
       "familie": "GOLF",
@@ -129,18 +167,23 @@
       ],
       "feilglass": 0,
       "verdifulleFixtures": 0,
+      "installasjoner": 0,
       "læringsscore": 0,
       "rang": 10,
+      "confidence": "MIDDELS",
+      "confidenceAarsak": "111 observasjoner",
       "anbefaling": "samle encapsulated/rainSensor-evidens via kundesamtale + C8-fixtures (111/111 har kandidater)"
     }
   ],
   "oppsummering": {
-    "familierMedKandidater": 2,
-    "familierUtenKandidater": 10,
+    "familierMedKandidater": 12,
+    "familierUtenKandidater": 1,
     "manglendeFeaturesUnike": [
       "antenna",
+      "camera",
       "coated",
       "encapsulated",
+      "heated",
       "rainSensor"
     ]
   }

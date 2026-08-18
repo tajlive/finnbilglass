@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { learningOpportunities } from '../src/learning-v1/analytics.js';
+import { learningOpportunities, confidenceFor } from '../src/learning-v1/analytics.js';
 
 function v(over) { return { make: 'VW', model: 'GOLF', year: 2018, familie: 'GOLF', kandidater: 5, skillendeFeatures: ['acoustic', 'camera'], ...over }; }
 
@@ -61,6 +61,24 @@ test('C8.2-4: WRONG_GLASS-fixtures teller feilglass; ≥3 korroberte installasjo
   assert.equal(opp[0].feilglass, 2, '2 WRONG_GLASS på 2525GYM');
 });
 
+test('C8.2-6: Learning Opportunity Confidence — aldri overreager på små datasett', () => {
+  assert.deepEqual(confidenceFor(78, 0), { confidence: 'LAV', aarsak: 'bare 78 observasjoner' }, 'Toms eksempel: BMW 3-serie 78 obs → lav');
+  assert.equal(confidenceFor(111, 0).confidence, 'MIDDELS', 'Golf 111 obs uten installasjoner → middels (ikke høy — ingen korroborert evidens ennå)');
+  assert.equal(confidenceFor(400, 12).confidence, 'HØY');
+  assert.match(confidenceFor(400, 12).aarsak, /400 observasjoner \+ 12 korroberte/);
+  const opp = learningOpportunities([v({ familie: 'GOLF' })], { GOLF: 100 }, { '2525GYA': { installed: 4, wrong: 0 } });
+  assert.equal(opp[0].confidence, 'MIDDELS', '111 søk + 4 korroberte → middels');
+  assert.ok(opp[0].confidenceAarsak.length > 0);
+});
+
+test('C8.2-7: confidenceAarsak er synlig i TOPP-rapporten (rapportering, ikke skjult)', () => {
+  execFileSync('node', ['--import', 'tsx', 'scripts/c82-evidence-analytics.mjs'], { cwd: new URL('..', import.meta.url).pathname });
+  const rep = JSON.parse(readFileSync(fileURLToPath(new URL('../scripts/out/c82-evidence-analytics.json', import.meta.url)), 'utf8'));
+  for (const r of rep.topp) {
+    assert.ok(['HØY', 'MIDDELS', 'LAV'].includes(r.confidence), `${r.familie}: gyldig confidence`);
+    assert.ok(r.confidenceAarsak.length > 0, `${r.familie}: årsak finnes`);
+  }
+});
 test('C8.2-5: script-integritet — TOPP-listen kommer fra SVV-korpuset, summerer korrekt', () => {
   execFileSync('node', ['--import', 'tsx', 'scripts/c82-evidence-analytics.mjs'], { cwd: new URL('..', import.meta.url).pathname });
   const rep = JSON.parse(readFileSync(fileURLToPath(new URL('../scripts/out/c82-evidence-analytics.json', import.meta.url)), 'utf8'));

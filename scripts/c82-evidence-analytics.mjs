@@ -5,7 +5,7 @@
  * Kryss med finn.no-markedsvolum (C7.6) → læringsscore → «hvor skal C9.5 lete».
  * Katalog foreslår · Evidens bestemmer · Installasjon lærer. Ingen produksjonsendring.
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { ApplicationResolver } from '../src/fitment-v1/application-resolver.js';
 import { buildDefaultGenerationRegistry } from '../src/fitment-v1/generation-registry.js';
@@ -53,18 +53,39 @@ const resolver = new ApplicationResolver({ families: buildDefaultGenerationRegis
 const gtRaw = JSON.parse(readFileSync('data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
 const classD = buildClassDCandidates(gtRaw[0].results);
 const kernel = new EvidenceKernel();
+// C9.5: Glavista-kandidatindeks (frontruter) — dekker moderne BMW 3 (F30) som gt mangler
+const glavistaRows = [];
+for (const f of (() => { try { return readdirSync('data/scrape/glavista'); } catch { return []; } })()) {
+  try {
+    const j = JSON.parse(readFileSync('data/scrape/glavista/' + f, 'utf8'));
+    if (String(j.produktgruppe ?? '').toLowerCase() !== 'windscreen') continue;
+    glavistaRows.push({ modell: String(j.modell ?? ''), merke: String(j.merke ?? ''), eurokode: j.eurokode });
+  } catch { /* hopp over korrupte filer */ }
+}
+const GLA_FAM = {
+  '3-SERIE': { merke: 'BMW', re: /3ER/i, ekskluder: /X[1-7]|I[0-9]|IX|M[0-9]|Z[0-9]|4ER|5ER|8ER|2ER|Gran Turismo/i },
+  LEAF: { merke: 'NISSAN', re: /LEAF/i, ekskluder: null },
+  'MODEL-Y': { merke: 'TESLA', re: /MODEL\s?Y/i, ekskluder: null },
+};
+const GLA_ALIAS = { '3-SERIE': 'BMW 3-SERIE', LEAF: 'NISSAN LEAF', 'MODEL-Y': 'TESLA MODEL-Y' };
 
 const vehicles = [];
 for (const b of biler) {
   const fam = famOf(b) ?? null;
   if (!fam) continue; // kun kjente Tier 1-familier — analytics styrer C8/C9.5
   const apps = resolver.resolve({ make: b.make, model: b.model, modelYear: b.year }).applications;
-  // Kandidatunion: evidens-kjernen (T5/CLA) + CLASS_D (katalog) — samme som C9-benchmark
+  // Kandidatunion: evidens-kjernen (T5/CLA) + CLASS_D (katalog) + Glavista (C9.5: BMW 3 F30) — samme som C9-benchmark
   const kres = kernel.resolve({ registrationNumber: 'X', vin: null, make: b.make, model: b.model, modelYear: b.year });
   const classDCands = matchClassDCandidates(classD, b.make, b.model, b.year);
+  const glaCands = (GLA_FAM[fam] ?? null)
+    ? glavistaRows
+        .filter((g) => g.merke.toUpperCase() === GLA_FAM[fam].merke && GLA_FAM[fam].re.test(g.modell))
+        .filter((g) => (GLA_FAM[fam].ekskluder ? !GLA_FAM[fam].ekskluder.test(g.modell) : true))
+    : [];
   const union = new Map();
   for (const c of kres.candidates ?? []) union.set(c.eurokode ?? c.varenr, { features: c.features ?? [] });
   for (const c of classDCands) if (!union.has(c.eurokode)) union.set(c.eurokode, { features: c.features ?? [] });
+  for (const g of glaCands) if (!union.has(g.eurokode)) union.set(g.eurokode, { features: [] });
   const cands = [...union.values()];
   let skillende = [];
   if (cands.length > 1) {

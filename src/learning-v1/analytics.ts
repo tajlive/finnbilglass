@@ -34,8 +34,18 @@ export interface LearningOpportunity {
   manglendeFeatures: string[]; // skillende features uten lagret evidens
   feilglass: number;        // WRONG_GLASS-fixtures totalt (0 = ingen feilbestillinger ennå)
   verdifulleFixtures: number; // korroberte INSTALLED_SUCCESSFULLY (≥3 = EXACT-klar)
+  installasjoner: number;   // totalt antall korroberte installasjoner (datasett-volum for confidence)
   læringsscore: number;     // markedsvolum × manuell-gap × evidence-mangel
+  confidence: 'HØY' | 'MIDDELS' | 'LAV'; // C8.2: datasett-størrelse — aldri overreager på små datasett
+  confidenceAarsak: string; // f.eks. «bare 78 observasjoner»
   anbefaling: string;
+}
+
+/** C8.2: Learning Opportunity Confidence — hindrer overreaksjon på små datasett. */
+export function confidenceFor(sok: number, korroberteInstallasjoner: number): { confidence: LearningOpportunity['confidence']; aarsak: string } {
+  if (sok >= 300 || korroberteInstallasjoner >= 10) return { confidence: 'HØY', aarsak: `${sok} observasjoner${korroberteInstallasjoner >= 10 ? ` + ${korroberteInstallasjoner} korroberte installasjoner` : ''}` };
+  if (sok >= 100 || korroberteInstallasjoner >= 3) return { confidence: 'MIDDELS', aarsak: `${sok} observasjoner${korroberteInstallasjoner >= 3 ? ` + ${korroberteInstallasjoner} korroberte installasjoner` : ''}` };
+  return { confidence: 'LAV', aarsak: `bare ${sok} observasjoner` };
 }
 
 /**
@@ -59,8 +69,10 @@ export function learningOpportunities(
   }
   const feilglass = new Map<string, number>();
   let verdifulle = 0;
+  let installasjoner = 0;
   for (const [varenr, c] of Object.entries(fixtures)) {
     if (c.installed >= 3) verdifulle++;
+    installasjoner += c.installed;
     feilglass.set(varenr, c.wrong);
   }
 
@@ -78,18 +90,24 @@ export function learningOpportunities(
         manglendeFeatures: manglende.sort(),
         feilglass: [...feilglass.values()].reduce((s, w) => s + w, 0),
         verdifulleFixtures: verdifulle,
+        installasjoner,
         læringsscore,
       };
     })
     .sort((a, b) => b.læringsscore - a.læringsscore);
 
-  return ut.slice(0, 10).map((o, i) => ({
-    ...o,
-    rang: i + 1,
-    anbefaling: o.manglendeFeatures.length
-      ? `samle ${o.manglendeFeatures.join('/')}-evidens via kundesamtale + C8-fixtures (${o.sok - o.manuell}/${o.sok} har kandidater)`
-      : o.manuell === o.sok
-        ? 'kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater'
-        : 'kandidater finnes — samle installasjonsfixtures for å styrke EXACT-kjeden',
-  }));
+  return ut.slice(0, 10).map((o, i) => {
+    const { confidence, aarsak } = confidenceFor(o.sok, o.installasjoner);
+    return {
+      ...o,
+      rang: i + 1,
+      confidence,
+      confidenceAarsak: aarsak,
+      anbefaling: o.manglendeFeatures.length
+        ? `samle ${o.manglendeFeatures.join('/')}-evidens via kundesamtale + C8-fixtures (${o.sok - o.manuell}/${o.sok} har kandidater)`
+        : o.manuell === o.sok
+          ? 'kandidatgenerering mangler — C9.5 Finn Vehicle Intelligence kan bygge applikasjonskandidater'
+          : 'kandidater finnes — samle installasjonsfixtures for å styrke EXACT-kjeden',
+    };
+  });
 }

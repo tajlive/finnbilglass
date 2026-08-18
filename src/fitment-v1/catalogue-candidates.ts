@@ -143,7 +143,10 @@ export function matchClassDCandidates(index: CatalogueCandidate[], make: string,
   if (year == null) return hits.slice(0, 6);
   return hits.filter((c) => {
     const y = year;
-    const r = /(\d{4})–(\d{4}|)$/.exec(c.matchReason.split(' ').slice(3).join(' '));
+    // C9.5-fix: match intervall på HELE matchReason — slice(3) krevde generasjon og ga tom
+    // array for «BMW 3-SERIE 1983–1990»/«NISSAN LEAF 2012–» (3 ord) → 0 kandidater for
+    // alle år-spesifikke biler uten generasjons-hint (moderne BMW 3, LEAF, Model Y).
+    const r = /(\d{4})–(\d{4}|)$/.exec(c.matchReason);
     // Katalog-rad UTEN produksjonsintervall er ikke kandidat-evidence for en år-spesifikk bil
     if (!r) return false;
     const fra = parseInt(r[1], 10);
