@@ -38,6 +38,7 @@
     "test:c82": "node --import tsx --test tests/c82.test.mjs",
     "test:c95": "node --import tsx --test tests/c95.test.mjs",
     "test:c83": "node --import tsx --test tests/c83.test.mjs",
+    "test:c84": "node --import tsx --test tests/c84.test.mjs",
     "test:challenge": "node --import tsx --test tests/fitment-challenge.test.mjs"
   },
   "devDependencies": {
