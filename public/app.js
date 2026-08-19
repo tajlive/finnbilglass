@@ -1,7 +1,7 @@
 /* Finnbilglass.no — frontend-flyt.
-   Flyt: kjennemerke (foto/skriv) → glassvalg (bil-info + glasstype) → utstyrs-spørsmål → resultat (API) → tomt.
+   Flyt: skiltnummer (foto/skriv) → glassvalg (bil-info + glasstype) → utstyrs-spørsmål → resultat (API) → tomt.
    API: POST /api/frontrute { merke, modell, aar, profil:{sensor,antenne} }
-        POST /api/regnr      { regnr }   ← ALLE kjennemerke lagres (læring).
+        POST /api/regnr      { regnr }   ← ALLE skiltnummer lagres (læring).
    Mock-fallback KUN ved file:// (offline demo), tydelig merket som DEMO. */
 (function () {
   'use strict';
@@ -99,7 +99,7 @@
     if (el) { el.textContent = t; el.classList.toggle('hidden', !t); }
   }
 
-  // Live-formatering av kjennemerke: SU18018 → SU 18018 (norsk format: 2 bokstaver + 4–5 siffer).
+  // Live-formatering av skiltnummer: SU18018 → SU 18018 (norsk format: 2 bokstaver + 4–5 siffer).
   // Formateres mens kunden skriver — reduserer tastefeil og ser proft ut.
   $('input-regnr').addEventListener('input', function () {
     var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
@@ -108,7 +108,7 @@
     if (this.value !== f) this.value = f;
   });
 
-  // 1. Start: kjennemerke → SVV-oppslag (kjennemerke → bil). ALLE kjennemerke lagres (læring).
+  // 1. Start: skiltnummer → SVV-oppslag (skiltnummer → bil). ALLE skiltnummer lagres (læring).
   //    Finner vi bilen → rett til bekreft. Finner vi den ikke → feilmelding med foto-forslag.
   $('form-regnr').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -130,15 +130,15 @@
         if (d && d.bil && d.bil.merke) {
           settBilFraSvv(d.bil, d.resolver || null, raw);
         } else {
-          visKontaktHandoff('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at kjennemerket er riktig.');
+          visKontaktHandoff('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at skiltnummeret er riktig.');
         }
         visRegnr();
       })
-      .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller ta bilde av kjennemerket.'); })
+      .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller ta bilde av skiltnummeret.'); })
       .finally(function () { btn.disabled = false; btn.textContent = orgTekst; });
   });
 
-  // 1b. Foto av kjennemerket → AI leser skiltet → SVV-oppslag (samme flyt som skrevet regnr).
+  // 1b. Foto av skiltnummeret → AI leser skiltet → SVV-oppslag (samme flyt som skrevet regnr).
   $('btn-foto-regnr').addEventListener('click', function () { $('regnr-fil').click(); });
   $('regnr-fil').addEventListener('change', function () {
     var fil = this.files && this.files[0];
@@ -151,7 +151,7 @@
       var btn = $('btn-foto-regnr');
       var org = btn.innerHTML;
       btn.disabled = true;
-      btn.textContent = 'Leser kjennemerket…';
+      btn.textContent = 'Leser skiltnummeret…';
       fetch('/api/les-skilt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -168,10 +168,10 @@
           } else if (d && d.error) {
             visStartFeil(d.error);
           } else {
-            visStartFeil('Kunne ikke lese kjennemerket. Prøv igjen i bedre lys, uten reflekser.');
+            visStartFeil('Kunne ikke lese skiltnummeret. Prøv igjen i bedre lys, uten reflekser.');
           }
         })
-        .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller skriv kjennemerket manuelt.'); })
+        .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller skriv skiltnummeret manuelt.'); })
         .finally(function () { btn.disabled = false; btn.innerHTML = org; });
     };
     leser.readAsDataURL(fil);
@@ -379,7 +379,7 @@
   }
 
   // 3. Glassvalg → videre. VIN-søk og manuell inngang er fjernet (Tom 2026-08-17):
-  //    kjennemerke (SVV) er eneste inngang; «Ikke min bil» → start; «Annet» → kontakt.
+  //    skiltnummer (SVV) er eneste inngang; «Ikke min bil» → start; «Annet» → kontakt.
   $('btn-ikke-min-bil').addEventListener('click', function () {
     loggHendelse('ikke_min_bil', { merke: state.merke, modell: state.modell, regnr: state.regnr });
     show('start');
@@ -575,7 +575,7 @@
   function renderResultat(data) {
     visRegnr();
     $('tilbehor-seksjon').classList.remove('hidden');
-    // Forhåndsutfyll henvendelsesskjema med kjennemerket (låst) — beta-tilbudsflyt.
+    // Forhåndsutfyll henvendelsesskjema med skiltnummeret (låst) — beta-tilbudsflyt.
     $('inquiry-regnr').value = state.regnr || '';
     var a = data && data.anbefaling;
     if (!a) {

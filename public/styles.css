@@ -288,7 +288,7 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
   gap: 7px;
 }
 
-/* Foto av kjennemerket — HOVEDhandling på startskjermen (stor primær-knapp) */
+/* Foto av skiltnummeret — HOVEDhandling på startskjermen (stor primær-knapp) */
 .foto-prim {
   display: flex;
   align-items: center;
@@ -311,13 +311,13 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
 .foto-prim:active { transform: scale(.98); }
 .foto-prim .ikon { width: 24px; height: 24px; }
 
-/* «Fotografer kjennemerket» er kun for touch-enheter (mobil/pad). Desktop skriver kjennemerket. */
+/* «Fotografer skiltnummeret» er kun for touch-enheter (mobil/pad). Desktop skriver skiltnummeret. */
 @media (hover: hover) and (pointer: fine) {
   .foto-prim { display: none; }
   .eller { display: none; }
 }
 
-/* «eller skriv kjennemerket»-separator */
+/* «eller skriv skiltnummeret»-separator */
 .eller {
   display: flex;
   align-items: center;
@@ -336,7 +336,7 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
   background: var(--border-strong);
 }
 
-/* VIN-fallback — vises kun når kjennemerke ikke finnes i SVV */
+/* VIN-fallback — vises kun når skiltnummer ikke finnes i SVV */
 .vin-fallback {
   margin-top: 10px;
   font-size: 15px;
