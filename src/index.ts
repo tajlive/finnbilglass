@@ -699,6 +699,59 @@ export default {
       if (!object) return json({ ok: false, error: 'Bilde mangler' }, 404);
       return new Response(object.body, { headers: { 'Content-Type': object.httpMetadata?.contentType ?? 'image/jpeg', 'Cache-Control': 'private, no-store' } });
     }
+    if (method === 'GET' && path === '/api/ops/ai-observasjoner') {
+      // AI-støtte-fanen: lese/triaging-flate over AI-observasjoner av opplastede
+      // bilder (skilt/43R) + siste operatør-review. Token-beskyttet, lesing.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const rows = await env.FINNBILGLASS_DB.prepare(
+        'SELECT id, session_id, type, r2_key, thumb_r2_key, lesing, utfall, created_at FROM opplaering_bilde ORDER BY id DESC LIMIT 200',
+      ).all<{ id: number; session_id: string | null; type: string; r2_key: string; thumb_r2_key: string | null; lesing: string | null; utfall: string; created_at: string }>();
+      const observasjoner = [];
+      for (const r of rows.results ?? []) {
+        let lesing: unknown = null;
+        try { if (r.lesing) lesing = JSON.parse(r.lesing); } catch { /* ugyldig JSON */ }
+        const review = await env.FINNBILGLASS_DB.prepare(
+          'SELECT decision, notat, actor, created_at FROM ai_observasjon_review WHERE bilde_id = ? ORDER BY id DESC LIMIT 1',
+        ).bind(r.id).first<{ decision: string; notat: string | null; actor: string; created_at: string }>();
+        observasjoner.push({
+          id: r.id,
+          type: r.type,
+          thumbUrl: `/api/ops/thumb?key=${encodeURIComponent(r.thumb_r2_key ?? r.r2_key)}`,
+          fullUrl: `/api/ops/thumb?key=${encodeURIComponent(r.r2_key)}`,
+          lesing,
+          utfall: r.utfall,
+          createdAt: r.created_at,
+          review: review ?? null,
+        });
+      }
+      return json({ ok: true, observasjoner });
+    }
+    if (method === 'POST' && path === '/api/ops/observasjon') {
+      // Operatør-gjennomgang av én AI-observasjon (append-only): godkjenn
+      // (→ evidens, evidence_events VERIFIED) eller avvis. Aldri en
+      // fitment-beslutning — kun om observasjonen kan brukes som evidens.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      let body: Record<string, unknown>;
+      try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const bildeId = Number(body.bilde_id);
+      const decision = String(body.decision ?? '');
+      const notat = typeof body.notat === 'string' ? body.notat.trim().slice(0, 600) : '';
+      const actor = typeof body.actor === 'string' ? body.actor.trim() : '';
+      if (!Number.isInteger(bildeId) || !['godkjenn', 'avvis'].includes(decision)) return json({ ok: false, error: 'Ugyldig bilde-id eller beslutning.' }, 400);
+      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor)) return json({ ok: false, error: 'Ansvarlig er påkrevd.' }, 400);
+      const bilde = await env.FINNBILGLASS_DB.prepare('SELECT id, type, session_id FROM opplaering_bilde WHERE id = ?').bind(bildeId).first<{ id: number; type: string; session_id: string | null }>();
+      if (!bilde) return json({ ok: false, error: 'Bildet finnes ikke.' }, 404);
+      await env.FINNBILGLASS_DB.prepare('INSERT INTO ai_observasjon_review (bilde_id, decision, notat, actor) VALUES (?, ?, ?, ?)').bind(bildeId, decision, notat || null, actor).run();
+      if (decision === 'godkjenn') {
+        const now = Date.now();
+        await env.FINNBILGLASS_DB.prepare(
+          "INSERT INTO evidence_events (id, vehicle_identity_hash, created_at, source_type, evidence_type, value, confidence, status, created_by, notes) VALUES (?, ?, ?, 'SYSTEM', 'OTHER', ?, 100, 'VERIFIED', ?, ?)",
+        ).bind(`evt-ai-${bildeId}-${now}`, `ai-obs-${bilde.session_id ?? 'anonym'}-${bilde.type}`, now, bilde.type, actor, `godkjent AI-observasjon (type=${bilde.type})${notat ? ' — ' + notat : ''}`).run();
+      }
+      return json({ ok: true, decision, bildeId });
+    }
     if (method === 'GET' && path === '/api/ops/sku-cases') {
       // SKU-beslutningsflate (Oppgave 3): henvendelser med kundereise-snapshot
       // (resolver-kandidater) + siste beslutning. Token-beskyttet, lesing.
