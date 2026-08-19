@@ -143,7 +143,7 @@
   // thumbnail og kvalitetssjekk (lysstyrke/størrelse) FØR opplasting. HEIC konverteres til
   // JPEG av nettleseren (iOS Safari dekoder HEIC → canvas → JPEG) — Workers har ingen HEIC-dekoder.
   var MAX_BREDDE = 1920, THUMB_BREDDE = 320, KVALITET = 0.8;
-  var LUMINANS_MIN = 55, MIN_BREDDE = 400;
+  var LUMINANS_MIN = 55, MIN_BREDDE = 400, GLARE_HIGH = 240, GLARE_ANDEL = 0.25;
 
   function komprimerBilde(fil) {
     return new Promise(function (resolve, reject) {
@@ -165,10 +165,15 @@
           var advarsler = [];
           try {
             var imgd = cctx.getImageData(0, 0, fw, fh).data;
-            var sum = 0;
-            for (var i = 0; i < imgd.length; i += 4) sum += 0.2126 * imgd[i] + 0.7152 * imgd[i + 1] + 0.0722 * imgd[i + 2];
-            if (sum / (imgd.length / 4) < LUMINANS_MIN) advarsler.push('bildet er mørkt');
-          } catch (e) { /* piksel-lesing utilgjengelig — hopp over luminans-sjekk */ }
+            var sum = 0, lyse = 0, n = imgd.length / 4;
+            for (var i = 0; i < imgd.length; i += 4) {
+              var l = 0.2126 * imgd[i] + 0.7152 * imgd[i + 1] + 0.0722 * imgd[i + 2];
+              sum += l;
+              if (l > GLARE_HIGH) lyse++;
+            }
+            if (sum / n < LUMINANS_MIN) advarsler.push('bildet er mørkt');
+            if (lyse / n > GLARE_ANDEL) advarsler.push('mye gjenskinn eller reflekser');
+          } catch (e) { /* piksel-lesing utilgjengelig — hopp over lys-/gjenskinn-sjekk */ }
           if (w < MIN_BREDDE) advarsler.push('lav oppløsning');
           resolve({ dataUrl: dataUrl, thumbDataUrl: thumbDataUrl, advarsler: advarsler });
         } catch (e) { reject(e); }
