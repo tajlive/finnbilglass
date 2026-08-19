@@ -15,12 +15,21 @@ import { createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrati
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
+import { skuDecisionUi } from './sku-decision-ui';
+import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
+import type { GlassAttributes } from './fitment-v1/glass-sku';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
+
+/** Frosset kundereise-snapshot (G9: vehicle_json i beta_inquiries). */
+interface SnapshotVehicle {
+  bil?: { merke?: string; modell?: string; vin?: string | null };
+  resolver?: { kandidater?: Record<string, unknown>[] };
+}
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -515,7 +524,7 @@ export default {
       if (!registration.trim()) return json({ ok: false, error: 'Kjennemerke påkrevd' }, 400);
       if (!images.length || images.length > 4) return json({ ok: false, error: 'Legg ved minst ett og maksimalt fire bilder' }, 400);
       if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
-      const decoded: { type: 'plate' | 'windshield' | 'mirror_sensor' | 'interior_optional'; bytes: Uint8Array; mime: string; ext: string }[] = [];
+      const decoded: { type: import('./evidence-capture-v01').EvidenceImageType; bytes: Uint8Array; mime: string; ext: string }[] = [];
       for (const image of images) {
         if (!isRecord(image) || !isEvidenceImageType(image.type) || typeof image.data !== 'string') return json({ ok: false, error: 'Ugyldig bildedata' }, 400);
         if (image.data.length > 7_000_000) return json({ ok: false, error: 'Et bilde er for stort (maks 5 MB)' }, 413);
@@ -659,6 +668,111 @@ export default {
       const now = Date.now();
       await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
       return json({ ok: true });
+    }
+    if (method === 'GET' && path === '/ops/sku') {
+      // Operatørflate for SKU-godkjenning (Oppgave 3) — staging+prod, token-gate i UI-et.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      return skuDecisionUi();
+    }
+    if (method === 'GET' && path === '/api/ops/sku-cases') {
+      // SKU-beslutningsflate (Oppgave 3): henvendelser med kundereise-snapshot
+      // (resolver-kandidater) + siste beslutning. Token-beskyttet, lesing.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const rows = await env.FINNBILGLASS_DB.prepare(
+        `SELECT id, regnr, status, vehicle_json, created_at FROM beta_inquiries
+         WHERE vehicle_json IS NOT NULL AND vehicle_json != ''
+         ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT 100`,
+      ).all<{ id: number; regnr: string | null; status: string; vehicle_json: string; created_at: string }>();
+      const result = [];
+      for (const r of rows.results ?? []) {
+        let vehicle = null;
+        try { vehicle = JSON.parse(r.vehicle_json); } catch { continue; }
+        const kandidater = Array.isArray(vehicle?.resolver?.kandidater) ? vehicle.resolver.kandidater : [];
+        const beslutning = await env.FINNBILGLASS_DB.prepare(
+          'SELECT decision_type, sku, eurocode, reason, created_by, created_at FROM case_sku_decisions WHERE case_id = ? ORDER BY created_at DESC LIMIT 1',
+        ).bind(String(r.id)).first<{ decision_type: string; sku: string | null; eurocode: string | null; reason: string | null; created_by: string; created_at: string }>();
+        result.push({ id: r.id, regnr: r.regnr, status: r.status, createdAt: r.created_at, kandidater, sisteBeslutning: beslutning ?? null });
+      }
+      return json({ ok: true, cases: result });
+    }
+    if (method === 'POST' && path === '/api/ops/decision') {
+      // Operatør-beslutning (Oppgave 3): godkjenn SKU / be om bedre bilde /
+      // velg alternativ SKU / avslå. Append-only; overrides logges i
+      // evidence_events. «godkjenn SKU» passerer godkjenningsGate (hard regel 1).
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const idRaw = body.inquiry_id;
+      const decision = String(body.decision ?? '');
+      const actor = typeof body.actor === 'string' ? body.actor.trim() : '';
+      const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
+      const sku = typeof body.sku === 'string' && body.sku ? body.sku.trim() : null;
+      const eurocode = typeof body.eurocode === 'string' && body.eurocode ? body.eurocode.trim() : null;
+      const attrs = (typeof body.attributes === 'object' && body.attributes !== null) ? (body.attributes as Record<string, unknown>) : null;
+      if (!/^\d+$/.test(String(idRaw ?? '')) || !['approve_sku', 'request_better_image', 'choose_alternative_sku', 'reject'].includes(decision)) {
+        return json({ ok: false, error: 'Ugyldig henvendelse-id eller beslutningstype.' }, 400);
+      }
+      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(reason)) {
+        return json({ ok: false, error: 'Ansvarlig og kort begrunnelse er påkrevd.' }, 400);
+      }
+      const id = Number(idRaw);
+      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, status, vehicle_json FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; status: string; vehicle_json: string | null }>();
+      if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+
+      // Kundereise-snapshot → kandidater for policy-sjekk.
+      let vehicle: SnapshotVehicle | null = null;
+      try { if (row.vehicle_json) vehicle = JSON.parse(row.vehicle_json) as SnapshotVehicle; } catch { /* ugyldig snapshot */ }
+      const snapshotKandidater = (Array.isArray(vehicle?.resolver?.kandidater) ? vehicle.resolver.kandidater : []) as Record<string, unknown>[];
+      const kandidater = snapshotKandidater.map((k) => snapshotKandidatTilSku(k));
+      const make = String(vehicle?.bil?.merke ?? '').toUpperCase() || 'UKJENT';
+      const modelSeries = String(vehicle?.bil?.modell ?? '') || null;
+      const vin = (vehicle?.bil?.vin as string | null) ?? null;
+      const bevis = attrs ? (attrs as Partial<GlassAttributes>) : {};
+
+      const now = Date.now();
+      if (decision === 'request_better_image') {
+        await env.FINNBILGLASS_DB.batch([
+          env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'NEEDS_INFO', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
+          env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('NEEDS_INFO', now, actor, id),
+        ]);
+        await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, reason, actor });
+        return json({ ok: true, status: 'NEEDS_INFO' });
+      }
+      if (decision === 'reject') {
+        await env.FINNBILGLASS_DB.batch([
+          env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'REJECTED', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
+          env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('REJECTED', now, actor, id),
+        ]);
+        await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, reason, actor });
+        return json({ ok: true, status: 'REJECTED' });
+      }
+      // approve_sku / choose_alternative_sku: krever sku-valg som finnes i kandidatene.
+      if (!sku) return json({ ok: false, error: 'SKU er påkrevd for godkjenning.' }, 400);
+      const valgt = snapshotKandidater.find((k) =>
+        String(k.varenr ?? '') === sku || String(k.eurokode ?? '') === (eurocode ?? '') ||
+        (eurocode && String(k.eurokode ?? '') === eurocode),
+      );
+      if (!valgt && !kandidater.length) return json({ ok: false, error: 'Saken har ingen kandidater å godkjenne.' }, 409);
+      const valgtEuro = String(valgt?.eurocode ?? eurocode ?? '') || null;
+
+      if (decision === 'approve_sku') {
+        const vurdering = godkjenningsGate(kandidater, bevis);
+        if (vurdering.status !== 'approved') {
+          return json({ ok: false, status: 'needs_verification', error: `Kan ikke godkjenne automatisk: ${vurdering.grunn.join('; ')}. Bruk «velg alternativ SKU» for eksplisitt operatørvalg.` }, 422);
+        }
+      }
+      // Felles for approve_sku (etter gate) og choose_alternative_sku (operatørvalg):
+      const { overrideId } = await skrivOverride(env, {
+        vin, make, modelSeries, attrs: bevis, sku, eurocode: valgtEuro, actor,
+        notes: `${decision}${valgt ? ` — kandidat fra sak ${row.regnr ?? ''}` : ''}${reason ? ` — ${reason}` : ''}`,
+      });
+      await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, sku, eurocode: valgtEuro, reason, actor });
+      await env.FINNBILGLASS_DB.batch([
+        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, 'CONFIRMED', ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, `${decision}: ${sku}${valgtEuro ? ` (${valgtEuro})` : ''}${reason ? ` — ${reason}` : ''}`, now, actor, JSON.stringify({ overrideId })),
+        env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('CONFIRMED', now, actor, id),
+      ]);
+      return json({ ok: true, status: 'CONFIRMED', overrideId });
     }
     if (method === 'GET' && path === '/support/evidence') {
       // Behandlingsflaten (statusendring/sjekkliste) er staging-only i denne fasen.
