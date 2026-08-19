@@ -5,6 +5,9 @@
  */
 import { dekodeEurokode, katalogKode } from './eurokode-dekoder';
 import { parseAar, matcherAar, type AarIntervall } from './aar-parser';
+import type { GlassAttributes, GlassSku } from './fitment-v1/glass-sku';
+import { approvalPolicy, attributkonflikter, skillendeAttributter, type ApprovalVurdering } from './approval/policy';
+import { lesOverrider, overrideAttributter } from './approval/overrides';
 
 export interface BilProfil {
   coated?: boolean;
@@ -93,6 +96,47 @@ function scoreKandidat(vare: Kandidat, profil: BilProfil, bilAar: number | null 
   }
 
   return { vare, score, feil, dek, aar };
+}
+
+// ── GlassSku-mapping (Oppgave 2): hver vurdert kandidat → enhetlig GlassSku ──
+// Attributter uten kilde forblir null (UKJENT) — aldri fabrikkert.
+function tilGlassSku(v: Vurdert, merke: string, verified: boolean): GlassSku {
+  const egenskaper = new Set([...v.dek.egenskaper, ...navnAttributter(v.vare.varenavn, v.vare.kommentar)]);
+  const attributes: GlassAttributes = {
+    windshield: v.dek.posisjon === 'frontrute' || /FRONT/.test(v.vare.varenavn ?? ''),
+    hud: null,
+    cameraBracket: null,
+    rainLightSensor: egenskaper.has('sensor') ? true : null,
+    heating: egenskaper.has('oppvarmet') ? true : null,
+    acoustic: null,
+    antenna: egenskaper.has('antenne') ? true : null,
+    tint: v.dek.fargetone,
+  };
+  return {
+    sku: `AUTOGLASS:${v.vare.varenr}`,
+    varenr: v.vare.varenr,
+    supplier: 'AUTOGLASS',
+    supplierPartNumbers: [v.vare.varenr],
+    oemPartNumbers: [],
+    eurocodes: v.vare.eurokode ? [v.vare.eurokode] : [],
+    vehicleRules: [{
+      make: merke.toUpperCase(),
+      model: v.vare.varenavn,
+      yearFrom: v.aar?.start ?? null,
+      yearTo: v.aar?.slutt ?? null,
+      source: 'glass_prisliste',
+      raw: v.vare.varenavn ?? '',
+      provenance: { source: 'glass_prisliste', sourceClass: 'INTERNAL_CATALOG', sourceRecord: v.vare.eurokode ?? v.vare.varenr },
+    }],
+    attributes,
+    evidence: [{
+      source: 'glass_prisliste',
+      sourceClass: verified ? 'AUTHORITATIVE' : 'INTERNAL_CATALOG',
+      sourceRecord: v.vare.eurokode ?? v.vare.varenr,
+      notes: verified ? 'matchet manuell override (manual_review)' : undefined,
+    }],
+    status: verified ? 'verified' : 'candidate',
+  };
 }
 
 function esc(s: string): string {
@@ -246,6 +290,24 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
   const margin = topp ? (nest ? topp.score - nest.score : 99) : 0;
   const pinpoint = !!topp && topp.feil.length === 0 && margin >= 4;
 
+  // Steg 8 (Oppgave 2): verifiserte regler (manual_review_overrides) → snevrer
+  // kandidatlisten til den godkjente SKU-en og gir hasVerifiedCatalogRule=true.
+  const overrideTreff = await lesOverrider(env, bil);
+  const override = overrideTreff.override;
+  const overrideEuro = override?.eurocode ?? null;
+  let vurdertFinale = vurdert;
+  if (overrideEuro) {
+    const matchet = vurdert.filter((v) => (v.vare.eurokode ?? '').toUpperCase() === overrideEuro.toUpperCase());
+    if (matchet.length === 1) vurdertFinale = matchet;
+  }
+
+  // Steg 9 (Oppgave 2): enhetlig GlassSku-liste + godkjenningsvurdering.
+  const candidateSkus: GlassSku[] = vurdertFinale.map((v) => tilGlassSku(v, bil.merke, overrideTreff.hasVerifiedCatalogRule));
+  const missingAttributes = skillendeAttributter(candidateSkus);
+  const bevisProfil = override ? overrideAttributter(override) : {};
+  const konflikter = candidateSkus.length ? attributkonflikter(candidateSkus, bevisProfil) : [];
+  const approval: ApprovalVurdering = approvalPolicy(candidateSkus, overrideTreff.hasVerifiedCatalogRule, konflikter);
+
   return {
     kandidater: vurdert.map((v) => ({
       varenr: v.vare.varenr,
@@ -274,11 +336,18 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
     } : null,
     pinpoint,
     margin,
+    // Oppgave 2: enhetlig SKU-kandidatliste + godkjenningsgrunnlag.
+    candidateSkus,
+    candidateCount: candidateSkus.length,
+    missingAttributes,
+    hasVerifiedCatalogRule: overrideTreff.hasVerifiedCatalogRule,
+    approval,
     meta: {
       seedAntall: seed.results?.length ?? 0,
       katalogkoder: [...koder],
       kandidaterTotalt: front.length,
       aarEkskludert: front.length - kandidater.length,
+      overrideId: override ? override.id : null,
     },
   };
 }
