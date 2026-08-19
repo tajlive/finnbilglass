@@ -555,11 +555,7 @@
   }
 
   // 3. Glassvalg → videre. VIN-søk og manuell inngang er fjernet (Tom 2026-08-17):
-  //    skiltnummer (SVV) er eneste inngang; «Ikke min bil» → start; «Annet» → kontakt.
-  $('btn-ikke-min-bil').addEventListener('click', function () {
-    loggHendelse('ikke_min_bil', { merke: state.merke, modell: state.modell, regnr: state.regnr });
-    show('start');
-  });
+  //    skiltnummer (SVV) er eneste inngang; «Annet» → kontakt; «Tilbake»/«Nytt søk» → start.
   $('btn-annet').addEventListener('click', function () {
     loggHendelse('annet_glass', { merke: state.merke, modell: state.modell, regnr: state.regnr });
     window.location.href = 'mailto:support@finnbilglass.no?subject=' + encodeURIComponent('Annet glass — trenger hjelp');
@@ -734,16 +730,16 @@
       .filter(function (p) { return p != null; });
     var harResolver = !!(data && data.meta && data.meta.resolver);
     if (data && data.pinpoint && anbefaling && anbefaling.pris != null) {
-      return { label: 'Pris inkl. mva', verdi: formatPris(anbefaling.pris) };
+      return { label: 'Veiledende glasspris inkl. mva', verdi: formatPris(anbefaling.pris) };
     }
     if (harResolver && priser.length > 1) {
       var min = Math.min.apply(Math, priser);
       var max = Math.max.apply(Math, priser);
-      if (min === max) return { label: 'Pris inkl. mva', verdi: formatPris(min) };
-      return { label: 'Pris avhenger av variant', verdi: formatPris(min) + '–' + formatPris(max) };
+      if (min === max) return { label: 'Veiledende glasspris inkl. mva', verdi: formatPris(min) };
+      return { label: 'Veiledende pris avhenger av variant', verdi: formatPris(min) + '–' + formatPris(max) };
     }
     if (anbefaling && anbefaling.pris != null) {
-      return { label: harResolver ? 'Nærmeste pris inkl. mva' : 'Pris inkl. mva', verdi: formatPris(anbefaling.pris) };
+      return { label: 'Veiledende glasspris inkl. mva', verdi: formatPris(anbefaling.pris) };
     }
     return { label: 'Pris', verdi: 'Pris på forespørsel' };
   }
@@ -755,18 +751,18 @@
     $('inquiry-regnr').value = state.regnr || '';
     var a = data && data.anbefaling;
     if (!a) {
-      tomtVis('Fant ingen treff', 'Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss så hjelper vi deg manuelt.');
+      tomtVis('Fant ingen treff', 'Jeg fant ikke et trygt treff i katalogen. Send meg en forespørsel, så undersøker jeg bilen og hjelper deg videre.');
       return;
     }
     var st = $('resultat-status');
     if (data.pinpoint) {
-      st.textContent = 'Dette er vårt beste forslag basert på bilen din. En av våre fagfolk kontrollerer valget manuelt og bekrefter riktig glass og pris før noe bestilles.';
+      st.textContent = 'Dette er mitt beste forslag basert på bilen din. Jeg dobbeltsjekker glasset manuelt og bekrefter riktig glass og pris før noe bestilles.';
       st.className = 'note status pinpoint';
     } else if (data && data.meta && data.meta.resolver) {
-      st.textContent = 'Disse variantene kan passe din bil. Riktig valg avhenger av utstyr og sensorer, og bekreftes alltid manuelt av en fagperson før noe bestilles.';
+      st.textContent = 'Disse variantene kan passe din bil. Riktig valg avhenger av utstyr og sensorer, og jeg bekrefter alltid valget manuelt før noe bestilles.';
       st.className = 'note status verify';
     } else {
-      st.textContent = 'Vi har funnet beste kandidat ut fra bildataene dine. En fagperson kontrollerer valget manuelt før sending.';
+      st.textContent = 'Jeg har funnet en mulig kandidat ut fra bildataene dine. Jeg dobbeltsjekker valget manuelt før jeg sender tilbud.';
       st.className = 'note status';
     }
     st.classList.remove('hidden');
@@ -1004,7 +1000,7 @@
         if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende forespørselen.');
         $('inquiry-form').classList.add('hidden');
         var b = $('inquiry-bekreftet');
-        b.textContent = 'Takk! Vi har mottatt forespørselen og en fagperson kontakter deg for å bekrefte glass og pris.';
+        b.textContent = 'Takk! Jeg har mottatt forespørselen og dobbeltsjekker glasset før jeg sender deg et endelig tilbud.';
         b.className = 'note status pinpoint';
         b.classList.remove('hidden');
       })

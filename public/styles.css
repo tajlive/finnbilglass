@@ -118,15 +118,29 @@ body {
   border-radius: 999px;
 }
 
-/* Diskret beta-merkelapp under header — nøytral, ikke advarsel */
-.beta-merknad {
-  margin: 0 0 4px;
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  color: var(--text-3);
-  text-align: center;
-  padding: 8px 12px;
+/* Personlig beta-invitasjon (P0.3) — kort overskrift + to avsnitt, mobil-først */
+.beta-invitasjon {
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
+.beta-invitasjon-tittel {
+  font-size: var(--fs-body);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.3;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.beta-invitasjon p {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.beta-invitasjon p + p { margin-top: 8px; }
 
 /* ── SKJERM-VEKSLING ───────────────────────────────────────── */
 .hidden { display: none !important; }

@@ -134,14 +134,19 @@
     <span class="beta" aria-label="Åpner etter beta">Åpner etter beta</span>
   </header>
 
-  <!-- Diskret beta-merkelapp (C2) — under header, over hovedinnhold -->
-  <p class="beta-merknad">Beta — vi tester tjenesten. Alle valg og priser bekreftes manuelt.</p>
+  <!-- Personlig beta-invitasjon (P0.3) — under header, over hovedinnhold.
+       Kort overskrift + to avsnitt, mobil-først. Skiltnummerflyten står tydelig nedenfor. -->
+  <div class="beta-invitasjon" aria-label="Personlig invitasjon til beta">
+    <p class="beta-invitasjon-tittel">Kjenner du Tom Arne? Da vil jeg gjerne ha din hjelp.</p>
+    <p>Du er invitert til å teste Finnbilglass før jeg åpner for alle. Skriv inn eller fotografer skiltnummeret, og følg de enkle stegene.</p>
+    <p>Du hjelper meg å gjøre det lettere å finne riktig glass til riktig bil. Som takk får du tilgang til ekstra gode priser på bilglass når jeg åpner. Jeg dobbeltsjekker alltid glassvalg og pris før bestilling.</p>
+  </div>
 
   <!-- Skjerm 1: Start / søk -->
   <section id="screen-start" class="screen" aria-label="Søk etter bilglass">
     <div class="hero-stripe" aria-hidden="true"></div>
     <h1>Bilglass til riktig pris</h1>
-    <p class="sub">Forsikringen bestemmer ikke prisen lenger.</p>
+    <p class="sub">Betaler du selv, skal det være enklere å finne riktig glass og få en god pris.</p>
     <button id="btn-foto-regnr" class="foto-prim" type="button">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-kamera-skilt"/></svg>
       Fotografer skiltnummeret
@@ -187,7 +192,6 @@
       </div>
       <div id="glass-import" class="import-merke hidden" role="alert" aria-live="polite"></div>
       <div id="glass-det" class="detlinjer hidden" aria-label="Detaljer fra Statens vegvesen"></div>
-      <button id="btn-ikke-min-bil" class="link" type="button">Ikke min bil</button>
     </div>
 
     <!-- Evidence Capture: supportdokumentasjon, separat fra beslutningsmotoren.
@@ -294,14 +298,14 @@
   <section id="screen-resultat" class="screen hidden" aria-label="Funnet bilglass" aria-live="polite">
     <div class="resultat-header">
       <span class="sjekk" aria-hidden="true"><svg class="ikon" aria-hidden="true"><use href="#ikon-sjekk"/></svg></span>
-      <h2>Vi fant glasset ditt</h2>
+      <h2>Jeg har funnet et mulig glass til bilen din</h2>
     </div>
     <div id="resultat-status" class="note status hidden" role="status" aria-live="polite"></div>
     <div id="resultat-kort" class="varekort" role="region" aria-label="Glassdetaljer"></div>
     <div id="resultat-regnr" class="note regnr-note hidden" aria-label="Kjennemerke"></div>
     <div id="resultat-alt" class="alternativer" aria-label="Andre mulige varianter"></div>
     <div class="prislinje">
-      <span id="resultat-prislbl" class="prislbl">Pris inkl. mva</span>
+      <span id="resultat-prislbl" class="prislbl">Veiledende glasspris inkl. mva</span>
       <span id="resultat-pris" class="pris" aria-label="Pris" aria-live="polite"></span>
     </div>
     <div id="tilbehor-seksjon" class="tilbehor hidden" aria-label="Tilbehør til monteringen">
@@ -322,7 +326,7 @@
     </button>
     <div id="inquiry-form" class="inquiry hidden" aria-label="Forespørsel om tilbud">
       <h3>Få tilbud og bekreftelse</h3>
-      <p class="note">Vi kontakter deg for å bekrefte riktig glass og gi deg pris.</p>
+      <p class="note">Send meg forespørselen, så dobbeltsjekker jeg glasset, avklarer levering eller montering og sender deg et endelig tilbud før du bestiller.</p>
       <label class="felt">
         <span>Registreringsnummer</span>
         <input id="inquiry-regnr" type="text" readonly aria-readonly="true">
@@ -352,7 +356,7 @@
   <!-- Skjerm 7: Ingen treff / feil -->
   <section id="screen-tomt" class="screen hidden" aria-label="Ingen treff" aria-live="assertive">
     <h2 id="tomt-tittel">Fant ingen treff</h2>
-    <p class="sub" id="tomt-tekst">Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss, så hjelper vi deg manuelt.</p>
+    <p class="sub" id="tomt-tekst">Jeg fant ikke et trygt treff i katalogen. Send meg en forespørsel, så undersøker jeg bilen og hjelper deg videre.</p>
     <button class="link" type="button" data-tilbake="start">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Nytt søk
@@ -371,7 +375,7 @@
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Alle glassvalg bekreftes manuelt av vårt team.</p>
+    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Jeg dobbeltsjekker alle glassvalg og priser før bestilling.</p>
   </footer>
 
 </div><!-- /.wrap -->
