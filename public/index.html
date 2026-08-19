@@ -74,6 +74,9 @@
     <symbol id="ikon-tilbake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m15 18-6-6 6-6"/>
     </symbol>
+    <symbol id="ikon-pil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
+    </symbol>
     <symbol id="ikon-sok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="8"/>
       <path d="m21 21-4.3-4.3"/>
@@ -145,8 +148,29 @@
   <!-- Skjerm 1: Start / søk -->
   <section id="screen-start" class="screen" aria-label="Søk etter bilglass">
     <div class="hero-stripe" aria-hidden="true"></div>
-    <h1>Bilglass til riktig pris</h1>
-    <p class="sub">Betaler du selv, skal det være enklere å finne riktig glass og få en god pris.</p>
+
+    <p class="hero-eyebrow"><span class="live-dot" aria-hidden="true"></span>Skiltfoto-søk</p>
+    <h1>Bilglass til <em>riktig pris</em></h1>
+    <p class="sub">Fotografer skiltnummeret, så finner vi riktig glass til bilen din og gir deg prisen — på sekunder.</p>
+
+    <!-- Moderne «hvordan det virker» — imponerende visuelt førsteinntrykk (Tom 2026-08-19) -->
+    <div class="hero-flyt" aria-label="Slik virker det">
+      <div class="flyt-steg">
+        <span class="flyt-ikon"><svg class="ikon" aria-hidden="true"><use href="#ikon-kamera-skilt"/></svg></span>
+        <span class="flyt-txt">Foto av skilt</span>
+      </div>
+      <span class="flyt-pil" aria-hidden="true"><svg class="ikon" aria-hidden="true"><use href="#ikon-pil"/></svg></span>
+      <div class="flyt-steg">
+        <span class="flyt-ikon"><svg class="ikon" aria-hidden="true"><use href="#ikon-skilt"/></svg></span>
+        <span class="flyt-txt">Bilen gjenkjennes</span>
+      </div>
+      <span class="flyt-pil" aria-hidden="true"><svg class="ikon" aria-hidden="true"><use href="#ikon-pil"/></svg></span>
+      <div class="flyt-steg">
+        <span class="flyt-ikon"><svg class="ikon" aria-hidden="true"><use href="#ikon-frontrute"/></svg></span>
+        <span class="flyt-txt">Glass + pris</span>
+      </div>
+    </div>
+
     <button id="btn-foto-regnr" class="foto-prim" type="button">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-kamera-skilt"/></svg>
       Fotografer skiltnummeret
