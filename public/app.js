@@ -404,52 +404,113 @@
   // Ingen respons herfra brukes i resolveren eller kan sette EXACT.
   // Modernisert (Oppgave 7): klientside komprimering + EXIF-orientering +
   // thumbnail + kvalitetssjekk (lysstyrke/størrelse) FØR opplasting.
+  // ── P0.2: mobil-først fotoopplevelse (kamera primær, bildebibliotek sekundær) ──
+  var evidenceBilder = {}; // key → { dataUrl, thumbDataUrl, advarsler }
+
+  function evidenceNokkel(el) { return el.getAttribute('data-key'); }
+
+  // Primær: kamera (capture=environment på skjult input); sekundær: bibliotek (uten capture).
+  document.querySelectorAll('.evidence-kamera').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = document.getElementById('evidence-' + evidenceNokkel(btn));
+      if (inp) inp.click();
+    });
+  });
+  document.querySelectorAll('.evidence-bibliotek').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = document.getElementById('evidence-' + evidenceNokkel(btn) + '-bib');
+      if (inp) inp.click();
+    });
+  });
+
+  function evidenceFeil(msg) {
+    var r = $('evidence-result');
+    r.textContent = msg;
+    r.classList.remove('hidden', 'ok');
+  }
+
+  function visEvidenceMiniatyr(key, res) {
+    var mini = document.querySelector('.evidence-miniatyr[data-key="' + key + '"]');
+    if (!mini) return;
+    mini.classList.remove('hidden');
+    var img = mini.querySelector('.evidence-thumb');
+    if (img) img.src = res.thumbDataUrl || res.dataUrl;
+  }
+
+  function fjernEvidence(key) {
+    delete evidenceBilder[key];
+    var mini = document.querySelector('.evidence-miniatyr[data-key="' + key + '"]');
+    if (mini) mini.classList.add('hidden');
+    var r = $('evidence-result');
+    if (r && !Object.keys(evidenceBilder).length) r.classList.add('hidden');
+  }
+
+  function handterEvidenceFil(key, input) {
+    var f = input.files && input.files[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { evidenceFeil('Filen må være et bilde.'); return; }
+    if (f.size > 20 * 1024 * 1024) { evidenceFeil('Bildet er over 20 MB.'); return; }
+    komprimerBilde(f).then(function (res) {
+      evidenceBilder[key] = res;
+      visEvidenceMiniatyr(key, res);
+    }).catch(function () {
+      evidenceFeil('Kunne ikke lese bildet. Prøv igjen.');
+    });
+  }
+
+  ['plate', 'windshield', 'mirror_sensor', 'interior_optional'].forEach(function (key) {
+    var kamera = document.getElementById('evidence-' + key);
+    var bib = document.getElementById('evidence-' + key + '-bib');
+    if (kamera) kamera.addEventListener('change', function () { handterEvidenceFil(key, kamera); kamera.value = ''; });
+    if (bib) bib.addEventListener('change', function () { handterEvidenceFil(key, bib); bib.value = ''; });
+  });
+
+  document.querySelectorAll('.evidence-ta-paa-nytt').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = document.getElementById('evidence-' + evidenceNokkel(btn));
+      if (inp) inp.click();
+    });
+  });
+  document.querySelectorAll('.evidence-fjern').forEach(function (btn) {
+    btn.addEventListener('click', function () { fjernEvidence(evidenceNokkel(btn)); });
+  });
+
+  // Send — beholder komprimering/EXIF/kvalitetssjekk/R2 + token-/feature-gates.
   $('btn-evidence-submit').addEventListener('click', function () {
-    var felt = [
-      ['plate', $('evidence-plate')],
-      ['windshield', $('evidence-windshield')],
-      ['mirror_sensor', $('evidence-mirror')],
-      ['interior_optional', $('evidence-interior')]
-    ];
-    var valgt = felt.filter(function (p) { return p[1].files && p[1].files[0]; });
+    var keys = Object.keys(evidenceBilder);
     var resultat = $('evidence-result');
     var settFeil = function (msg) { resultat.textContent = msg; resultat.classList.remove('hidden', 'ok'); };
     var settOk = function (msg) { resultat.textContent = msg; resultat.classList.remove('hidden'); resultat.classList.add('ok'); };
-    if (!valgt.length) { settFeil('Velg minst ett bilde først.'); return; }
-    if (!state.regnr) { settFeil('Søk opp bilen først — vi trenger registreringsskiltet for å knytte bildene til en sak.'); return; }
+    if (!keys.length) { settFeil('Ta minst ett bilde først.'); return; }
+    if (!state.regnr) { settFeil('Søk opp bilen først — vi trenger skiltnummeret for å knytte bildene til en sak.'); return; }
     var knapp = this;
     knapp.disabled = true;
-    knapp.textContent = 'Klargjør bilder…';
-    Promise.all(valgt.map(function (p) {
-      var f = p[1].files[0];
-      if (!f.type.startsWith('image/')) throw new Error('Filen må være et bilde.');
-      if (f.size > 20 * 1024 * 1024) throw new Error('Et bilde er over 20 MB.');
-      return komprimerBilde(f).then(function (res) {
-        return { type: p[0], data: res.dataUrl, thumbnail: res.thumbDataUrl, advarsler: res.advarsler };
-      });
-    }))
-      .then(function (bilder) {
-        var adv = bilder.filter(function (b) { return b.advarsler.length; });
-        if (adv.length) {
-          var fortsett = window.confirm('Bildekvaliteten er dårlig for ' + adv.length + ' bilde(r) (' + adv[0].advarsler.join(', ') + '). Vil du likevel sende?');
-          if (!fortsett) { knapp.disabled = false; knapp.textContent = 'Send bilder til support'; return null; }
-        }
-        knapp.textContent = 'Sender bilder…';
-        return fetch('/api/evidence-capture', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ regnr: state.regnr, sessionId: sessionId, images: bilder.map(function (b) { return { type: b.type, data: b.data, thumbnail: b.thumbnail }; }) })
-        }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); });
-      })
+    knapp.textContent = 'Sender bilder…';
+    var advarsler = keys.filter(function (k) { return evidenceBilder[k].advarsler && evidenceBilder[k].advarsler.length; });
+    if (advarsler.length) {
+      if (!window.confirm('Bildekvaliteten er dårlig for ' + advarsler.length + ' bilde(r) (' + evidenceBilder[advarsler[0]].advarsler.join(', ') + '). Vil du likevel sende?')) {
+        knapp.disabled = false; knapp.textContent = 'Send bilder til Tom Arne'; return;
+      }
+    }
+    var bilder = keys.map(function (key) {
+      return { type: key, data: evidenceBilder[key].dataUrl, thumbnail: evidenceBilder[key].thumbDataUrl };
+    });
+    fetch('/api/evidence-capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regnr: state.regnr, sessionId: sessionId, images: bilder })
+    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
       .then(function (r) {
-        if (r === null) return; // kunde avbrøt kvalitetssjekk
-        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende bildene.');
-        settOk('Takk. Support-sak ' + r.data.caseId + ' er opprettet. Dette påvirker ikke glassvalget.');
-        valgt.forEach(function (p) { p[1].value = ''; });
+        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Bildene ble ikke sendt.');
+        settOk('Takk – jeg har fått bildene og dobbeltsjekker glasset før jeg sender tilbud.');
         loggHendelse('evidence_capture_sent', { caseId: r.data.caseId, imageCount: r.data.imageCount });
+        keys.forEach(fjernEvidence);
       })
-      .catch(function (e) { settFeil(e.message || 'Kunne ikke sende bildene. Prøv igjen.'); })
-      .finally(function () { knapp.disabled = false; knapp.textContent = 'Send bilder til support'; });
+      .catch(function () {
+        // Menneskelig feilmelding; teknisk årsak logges internt, aldri til kunde.
+        settFeil('Bildene ble ikke sendt. Prøv igjen, eller send meg en forespørsel så hjelper jeg deg.');
+      })
+      .finally(function () { knapp.disabled = false; knapp.textContent = 'Send bilder til Tom Arne'; });
   });
 
   // P2 (Beta1-funn): SVVs handelsbetegnelse inkluderer ofte merket («NISSAN

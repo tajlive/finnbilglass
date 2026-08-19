@@ -193,13 +193,61 @@
     <!-- Evidence Capture: supportdokumentasjon, separat fra beslutningsmotoren.
          Ingen respons herfra brukes i resolveren eller kan sette EXACT. -->
     <section class="evidence-capture" aria-labelledby="evidence-title">
-      <h3 id="evidence-title">Hjelp oss å dobbeltsjekke</h3>
-      <p>Valgfritt: ta et bilde eller velg fra bildebiblioteket. Bildene brukes kun som dokumentasjon og bestemmer aldri hvilket glass vi velger.</p>
-      <label><span>Registreringsskilt</span><input id="evidence-plate" type="file" accept="image/*" capture="environment"></label>
-      <label><span>Hele frontruten</span><input id="evidence-windshield" type="file" accept="image/*" capture="environment"></label>
-      <label><span>Nærbilde rundt speil/sensorområde</span><input id="evidence-mirror" type="file" accept="image/*" capture="environment"></label>
-      <label><span>Valgfritt bilde innenfra</span><input id="evidence-interior" type="file" accept="image/*" capture="environment"></label>
-      <button id="btn-evidence-submit" class="sek" type="button">Send bilder til support</button>
+      <h3 id="evidence-title">Vil du at jeg skal dobbeltsjekke?</h3>
+      <p>Ta gjerne bilder av bilen. Det hjelper meg å kontrollere riktig glass før jeg sender tilbud. Bildene endrer aldri glassvalget automatisk.</p>
+      <div class="evidence-gruppe" data-key="plate">
+        <button type="button" class="evidence-kamera" data-key="plate">Ta bilde av skiltnummeret</button>
+        <button type="button" class="evidence-bibliotek" data-key="plate">Velg fra bildebiblioteket</button>
+        <input id="evidence-plate" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="evidence-plate-bib" class="evidence-input" type="file" accept="image/*" hidden>
+        <div class="evidence-miniatyr hidden" data-key="plate">
+          <img class="evidence-thumb" alt="Forhåndsvisning av skiltnummeret">
+          <div class="evidence-actions">
+            <button type="button" class="evidence-ta-paa-nytt" data-key="plate">Ta på nytt</button>
+            <button type="button" class="evidence-fjern" data-key="plate">Fjern</button>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-gruppe" data-key="windshield">
+        <button type="button" class="evidence-kamera" data-key="windshield">Ta bilde av hele frontruten</button>
+        <button type="button" class="evidence-bibliotek" data-key="windshield">Velg fra bildebiblioteket</button>
+        <input id="evidence-windshield" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="evidence-windshield-bib" class="evidence-input" type="file" accept="image/*" hidden>
+        <div class="evidence-miniatyr hidden" data-key="windshield">
+          <img class="evidence-thumb" alt="Forhåndsvisning av frontruten">
+          <div class="evidence-actions">
+            <button type="button" class="evidence-ta-paa-nytt" data-key="windshield">Ta på nytt</button>
+            <button type="button" class="evidence-fjern" data-key="windshield">Fjern</button>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-gruppe" data-key="mirror_sensor">
+        <button type="button" class="evidence-kamera" data-key="mirror_sensor">Ta bilde ved speilet/sensoren</button>
+        <button type="button" class="evidence-bibliotek" data-key="mirror_sensor">Velg fra bildebiblioteket</button>
+        <input id="evidence-mirror_sensor" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="evidence-mirror_sensor-bib" class="evidence-input" type="file" accept="image/*" hidden>
+        <div class="evidence-miniatyr hidden" data-key="mirror_sensor">
+          <img class="evidence-thumb" alt="Forhåndsvisning ved speilet/sensoren">
+          <div class="evidence-actions">
+            <button type="button" class="evidence-ta-paa-nytt" data-key="mirror_sensor">Ta på nytt</button>
+            <button type="button" class="evidence-fjern" data-key="mirror_sensor">Fjern</button>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-gruppe" data-key="interior_optional">
+        <button type="button" class="evidence-kamera" data-key="interior_optional">Legg eventuelt til et bilde innenfra</button>
+        <button type="button" class="evidence-bibliotek" data-key="interior_optional">Velg fra bildebiblioteket</button>
+        <input id="evidence-interior_optional" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="evidence-interior_optional-bib" class="evidence-input" type="file" accept="image/*" hidden>
+        <div class="evidence-miniatyr hidden" data-key="interior_optional">
+          <img class="evidence-thumb" alt="Forhåndsvisning innenfra">
+          <div class="evidence-actions">
+            <button type="button" class="evidence-ta-paa-nytt" data-key="interior_optional">Ta på nytt</button>
+            <button type="button" class="evidence-fjern" data-key="interior_optional">Fjern</button>
+          </div>
+        </div>
+      </div>
+      <button id="btn-evidence-submit" class="sek" type="button">Send bilder til Tom Arne</button>
       <p id="evidence-result" class="note hidden" role="status" aria-live="polite"></p>
     </section>
 
