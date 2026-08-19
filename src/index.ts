@@ -754,7 +754,29 @@ export default {
           review: review ?? null,
         });
       }
-      return json({ ok: true, observasjoner });
+      // Evidenssaker (evidence_cases): supportdokumentasjon med kildebilder +
+      // kandidatdata. Leses i samme AI-støtte-fane, men review går via
+      // evidence_case_review_events (append-only, token-gate).
+      let evidenssaker: unknown[] = [];
+      try {
+        const cases = await env.FINNBILGLASS_DB.prepare('SELECT case_id, created_at, status FROM evidence_cases ORDER BY created_at DESC LIMIT 50').all<{ case_id: string; created_at: number; status: string }>();
+        for (const c of cases.results ?? []) {
+          const images = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type, r2_key, thumb_r2_key FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string; r2_key: string; thumb_r2_key: string | null }>();
+          const snap = await env.FINNBILGLASS_DB.prepare('SELECT candidates_json FROM evidence_case_candidate_snapshots WHERE case_id = ?').bind(c.case_id).first<{ candidates_json: string }>();
+          let kandidater: unknown[] = [];
+          try { kandidater = snap ? JSON.parse(snap.candidates_json) : []; } catch { /* ugyldig */ }
+          const latest = await env.FINNBILGLASS_DB.prepare('SELECT status, created_by, reason FROM evidence_case_review_events WHERE case_id = ? ORDER BY created_at DESC LIMIT 1').bind(c.case_id).first<{ status: string; created_by: string; reason: string }>();
+          evidenssaker.push({
+            caseId: c.case_id,
+            createdAt: c.created_at,
+            status: c.status,
+            kandidater: Array.isArray(kandidater) ? kandidater.slice(0, 6) : [],
+            images: (images.results ?? []).map(i => ({ imageId: i.image_id, imageType: i.image_type, thumbUrl: `/api/ops/thumb?key=${encodeURIComponent(i.thumb_r2_key ?? i.r2_key)}`, fullUrl: `/api/ops/thumb?key=${encodeURIComponent(i.r2_key)}` })),
+            sisteReview: latest ?? null,
+          });
+        }
+      } catch { /* evidenssaker er valgfri — tabellen kan mangle i ny staging-DB */ }
+      return json({ ok: true, observasjoner, evidenssaker });
     }
     if (method === 'POST' && path === '/api/ops/observasjon') {
       // Operatør-gjennomgang av én AI-observasjon (append-only): godkjenn
@@ -768,7 +790,7 @@ export default {
       const decision = String(body.decision ?? '');
       const notat = typeof body.notat === 'string' ? body.notat.trim().slice(0, 600) : '';
       const actor = typeof body.actor === 'string' ? body.actor.trim() : '';
-      if (!Number.isInteger(bildeId) || !['godkjenn', 'avvis'].includes(decision)) return json({ ok: false, error: 'Ugyldig bilde-id eller beslutning.' }, 400);
+      if (!Number.isInteger(bildeId) || !['godkjenn', 'avvis', 'request_image'].includes(decision)) return json({ ok: false, error: 'Ugyldig bilde-id eller beslutning.' }, 400);
       if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor)) return json({ ok: false, error: 'Ansvarlig er påkrevd.' }, 400);
       const bilde = await env.FINNBILGLASS_DB.prepare('SELECT id, type, session_id FROM opplaering_bilde WHERE id = ?').bind(bildeId).first<{ id: number; type: string; session_id: string | null }>();
       if (!bilde) return json({ ok: false, error: 'Bildet finnes ikke.' }, 404);

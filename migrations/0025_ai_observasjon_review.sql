@@ -10,7 +10,7 @@
 CREATE TABLE IF NOT EXISTS ai_observasjon_review (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   bilde_id INTEGER NOT NULL,            -- opplaering_bilde.id
-  decision TEXT NOT NULL CHECK (decision IN ('godkjenn','avvis')),
+  decision TEXT NOT NULL CHECK (decision IN ('godkjenn','avvis','request_image')),
   notat TEXT,
   actor TEXT NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
