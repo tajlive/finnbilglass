@@ -6,7 +6,7 @@
  * (aldri tolkes som false). Bruker CF D1 REST API (wrangler-i-child feiler).
  * Batch à 200 (SQLITE_TOOBIG-guard).
  *
- * Bruk: CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/seed-glass-sku-attributter.mjs [--dry-run]
+ * Bruk: CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/seed-glass-sku-attributter.mjs [--db finnbilglass-db-staging] [--dry-run]
  */
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -14,6 +14,8 @@ import { dirname, join } from 'path';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DRY = process.argv.includes('--dry-run');
+const dbArg = process.argv.indexOf('--db');
+const DB_NAVN = dbArg > -1 ? process.argv[dbArg + 1] : 'finnbilglass-db';
 const token = process.env.CLOUDFLARE_API_TOKEN;
 const acct = process.env.CLOUDFLARE_ACCOUNT_ID;
 if (!token || !acct) { console.error('FEIL: CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID mangler'); process.exit(1); }
@@ -49,11 +51,11 @@ async function query(sql, params = []) {
 let uuidCache = null;
 async function dbUuid() {
   if (uuidCache) return uuidCache;
-  const list = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acct}/d1/database?name=finnbilglass-db`, {
+  const list = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acct}/d1/database?name=${DB_NAVN}`, {
     headers: { Authorization: `Bearer ${token}` },
   }).then((r) => r.json());
   uuidCache = list?.result?.[0]?.uuid;
-  if (!uuidCache) throw new Error('finnbilglass-db ikke funnet');
+  if (!uuidCache) throw new Error(`${DB_NAVN} ikke funnet`);
   return uuidCache;
 }
 
@@ -63,10 +65,10 @@ if (DRY) {
   process.exit(0);
 }
 
-// Batch-upsert à 200
+// Batch-upsert à 40 (D1 SQLITE_MAX_VARIABLE_NUMBER-grense ~100 variabler)
 let innsatt = 0;
-for (let i = 0; i < rader.length; i += 200) {
-  const batch = rader.slice(i, i + 200);
+for (let i = 0; i < rader.length; i += 40) {
+  const batch = rader.slice(i, i + 40);
   const values = batch.map(() => '(?, ?, \'glavista-index\', strftime(\'%Y-%m-%dT%H:%M:%fZ\',\'now\'))').join(',');
   const params = batch.flatMap(([euro, attrs]) => [euro, JSON.stringify(attrs)]);
   await query(`INSERT OR REPLACE INTO glass_sku_attributes (eurocode, attributes_json, source, updated_at) VALUES ${values}`, params);
