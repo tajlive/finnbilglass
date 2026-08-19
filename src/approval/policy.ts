@@ -28,15 +28,21 @@ export const SKILLENDE_ATTRIBUTTER: Array<keyof Omit<GlassAttributes, 'windshiel
 ];
 
 /**
- * Attributter der kandidatene har ULIK verdi (minst én true og én false).
- * Disse forhindrer entydighet og må bekreftes (kunde/foto/OE) for å redusere
- * kandidatlisten til 1. null (UKJENT) teller ikke som verdi.
+ * Attributter der kandidatene har ULIK verdi og minst én KJENT verdi
+ * (true/false). Disse forhindrer entydighet og må bekreftes (kunde/foto/OE)
+ * for å redusere kandidatlisten til 1.
+ *
+ * Presisering (Tom 2026-08-19, oppgave 6a-2): null/ukjent hos én kandidat og
+ * true hos en annen ER en gyldig skillelinje (den kjente skiller fra den
+ * ukjente). Alle-null (mangler begge verdier) skiller IKKE — og tolkes aldri
+ * som «ingen kamera/sensor».
  */
 export function skillendeAttributter(skus: GlassSku[]): string[] {
   const ut: string[] = [];
   for (const key of SKILLENDE_ATTRIBUTTER) {
-    const verdier = skus.map((s) => s.attributes[key]).filter((v): v is boolean => typeof v === 'boolean');
-    if (verdier.some((v) => v) && verdier.some((v) => !v)) ut.push(key);
+    const verdier = new Set(skus.map((s) => s.attributes[key]));
+    const harKjent = [...verdier].some((v) => typeof v === 'boolean');
+    if (verdier.size >= 2 && harKjent) ut.push(key);
   }
   return ut;
 }

@@ -100,7 +100,8 @@ function scoreKandidat(vare: Kandidat, profil: BilProfil, bilAar: number | null 
 
 // ── GlassSku-mapping (Oppgave 2): hver vurdert kandidat → enhetlig GlassSku ──
 // Attributter uten kilde forblir null (UKJENT) — aldri fabrikkert.
-function tilGlassSku(v: Vurdert, merke: string, verified: boolean): GlassSku {
+// ekstra (Oppgave 6a-2): glavista-attributter fyller kun hull (null → verdi).
+function tilGlassSku(v: Vurdert, merke: string, verified: boolean, ekstra?: Partial<GlassAttributes>): GlassSku {
   const egenskaper = new Set([...v.dek.egenskaper, ...navnAttributter(v.vare.varenavn, v.vare.kommentar)]);
   const attributes: GlassAttributes = {
     windshield: v.dek.posisjon === 'frontrute' || /FRONT/.test(v.vare.varenavn ?? ''),
@@ -112,6 +113,13 @@ function tilGlassSku(v: Vurdert, merke: string, verified: boolean): GlassSku {
     antenna: egenskaper.has('antenne') ? true : null,
     tint: v.dek.fargetone,
   };
+  if (ekstra) {
+    for (const [k, verdi] of Object.entries(ekstra)) {
+      if (attributes[k as keyof GlassAttributes] === null && verdi !== null && verdi !== undefined) {
+        (attributes as unknown as Record<string, unknown>)[k] = verdi;
+      }
+    }
+  }
   return {
     sku: `AUTOGLASS:${v.vare.varenr}`,
     varenr: v.vare.varenr,
@@ -137,6 +145,32 @@ function tilGlassSku(v: Vurdert, merke: string, verified: boolean): GlassSku {
     }],
     status: verified ? 'verified' : 'candidate',
   };
+}
+
+// ── Glavista-attributter (Oppgave 6a-2): D1 glass_sku_attributes ──
+async function lesGlavistaAttributter(
+  env: { FINNBILGLASS_DB: D1Database },
+  eurokoder: string[],
+): Promise<Map<string, Partial<GlassAttributes>>> {
+  const ut = new Map<string, Partial<GlassAttributes>>();
+  const unike = [...new Set(eurokoder.filter((k): k is string => !!k))];
+  if (!unike.length) return ut;
+  try {
+    for (let i = 0; i < unike.length; i += 40) {
+      const batch = unike.slice(i, i + 40);
+      const ph = batch.map(() => '?').join(',');
+      const res = await env.FINNBILGLASS_DB
+        .prepare(`SELECT eurocode, attributes_json FROM glass_sku_attributes WHERE eurocode IN (${ph})`)
+        .bind(...batch)
+        .all<{ eurocode: string; attributes_json: string }>();
+      for (const r of res.results ?? []) {
+        try { ut.set(r.eurocode.toUpperCase(), JSON.parse(r.attributes_json) as Partial<GlassAttributes>); } catch { /* ugyldig JSON ignorert */ }
+      }
+    }
+  } catch {
+    // glass_sku_attributes finnes ikke (ennå) — ingen attributter, ingen krasj.
+  }
+  return ut;
 }
 
 function esc(s: string): string {
@@ -301,8 +335,25 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
     if (matchet.length === 1) vurdertFinale = matchet;
   }
 
+  // Steg 8b (Oppgave 6a-2): glavista-attributter (glass_sku_attributes) beriker
+  // kandidatene og skiller mot bilens profil. KUN kjente motsigelser
+  // eliminerer; null/UKJENT hos kandidaten beholdes konservativt — aldri
+  // tolket som «ingen kamera/sensor». Policyens harde regler er urørt.
+  const glavista = await lesGlavistaAttributter(env, vurdertFinale.map((v) => v.vare.eurokode ?? ''));
+  const vurdertEtterAttributter = vurdertFinale.filter((v) => {
+    const ekstra = v.vare.eurokode ? glavista.get(v.vare.eurokode.toUpperCase()) : undefined;
+    if (!ekstra) return true;
+    if (profil.sensor === false && ekstra.rainLightSensor === true) return false;
+    if (profil.sensor === true && ekstra.rainLightSensor === false) return false;
+    if (profil.antenne === false && ekstra.antenna === true) return false;
+    if (profil.antenne === true && ekstra.antenna === false) return false;
+    return true;
+  });
+  vurdertFinale = vurdertEtterAttributter.length ? vurdertEtterAttributter : vurdertFinale; // aldri 0-kandidat ved uventet utslag
+
   // Steg 9 (Oppgave 2): enhetlig GlassSku-liste + godkjenningsvurdering.
-  const candidateSkus: GlassSku[] = vurdertFinale.map((v) => tilGlassSku(v, bil.merke, overrideTreff.hasVerifiedCatalogRule));
+  const candidateSkus: GlassSku[] = vurdertFinale.map((v) => tilGlassSku(v, bil.merke, overrideTreff.hasVerifiedCatalogRule,
+    v.vare.eurokode ? glavista.get(v.vare.eurokode.toUpperCase()) : undefined));
   const missingAttributes = skillendeAttributter(candidateSkus);
   const bevisProfil = override ? overrideAttributter(override) : {};
   const konflikter = candidateSkus.length ? attributkonflikter(candidateSkus, bevisProfil) : [];
