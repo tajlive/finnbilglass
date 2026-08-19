@@ -44,7 +44,9 @@
     "test:evidence-capture": "node --import tsx --test tests/evidence-capture-v01.test.ts",
     "test:glass-sku": "node --import tsx --test tests/glass-sku.test.mjs",
     "test:approval": "node --import tsx --test tests/approval-policy.test.mjs",
-    "test:decisions": "node --import tsx --test tests/approval-decisions.test.mjs"
+    "test:decisions": "node --import tsx --test tests/approval-decisions.test.mjs",
+    "test:dekningsrapport": "node --test tests/dekningsrapport.test.mjs",
+    "rapport:dekning": "node scripts/dekningsrapport.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
