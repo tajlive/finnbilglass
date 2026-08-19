@@ -165,6 +165,7 @@ async function lagreOpplaeringBilde(
     sessionId: string | null;
     type: 'skilt' | 'verify43r';
     imageDataUrl?: string;
+    thumbnailDataUrl?: string | null;
     lesing?: Record<string, unknown>;
     fasit?: Record<string, unknown> | null;
     utfall: 'ok' | 'ikke_funnet' | 'feil';
@@ -173,6 +174,7 @@ async function lagreOpplaeringBilde(
   try {
     if (!env.OPPLAERING_BUCKET) return;
     let r2Key: string | null = null;
+    let thumbR2Key: string | null = null;
     let mime: string | null = null;
     if (opts.imageDataUrl) {
       const parsed = dataUrlTilBytes(opts.imageDataUrl);
@@ -182,15 +184,24 @@ async function lagreOpplaeringBilde(
         r2Key = `${opts.type}/${sid}/${ts}.${parsed.ext}`;
         mime = parsed.mime;
         await env.OPPLAERING_BUCKET.put(r2Key, parsed.bytes, { httpMetadata: { contentType: parsed.mime } });
+        // Thumbnail (Oppgave 7): nedskalert JPEG for raskere lasting i /ops/sku.
+        if (opts.thumbnailDataUrl) {
+          const thumb = dataUrlTilBytes(opts.thumbnailDataUrl);
+          if (thumb) {
+            thumbR2Key = `${opts.type}/${sid}/${ts}.thumb.${thumb.ext}`;
+            await env.OPPLAERING_BUCKET.put(thumbR2Key, thumb.bytes, { httpMetadata: { contentType: thumb.mime } });
+          }
+        }
       }
     }
     await env.FINNBILGLASS_DB.prepare(
-      `INSERT INTO opplaering_bilde (session_id, type, r2_key, mime, lesing, fasit, utfall)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO opplaering_bilde (session_id, type, r2_key, thumb_r2_key, mime, lesing, fasit, utfall)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       opts.sessionId,
       opts.type,
       r2Key,
+      thumbR2Key,
       mime,
       opts.lesing ? JSON.stringify(opts.lesing) : null,
       opts.fasit ? JSON.stringify(opts.fasit) : null,
@@ -474,10 +485,12 @@ export default {
         const lest = await lesSkilt(env.AI, imageRaw);
         // Opplæring: lagre skiltbildet + hva AI-en leste (innlesingsfeil må kunne analyseres).
         const sid = sessionId(body, request);
+        const thumbRaw = (body as Record<string, unknown>)?.thumbnail;
         await lagreOpplaeringBilde(env, {
           sessionId: sid,
           type: 'skilt',
           imageDataUrl: imageRaw,
+          thumbnailDataUrl: typeof thumbRaw === 'string' && thumbRaw.startsWith('data:image/') ? thumbRaw : null,
           lesing: { regnr: lest.regnr, confidence: lest.confidence, raatekst: lest.raatekst.slice(0, 300) },
           fasit: bilKontekst(body),
           utfall: lest.regnr ? 'ok' : 'ikke_funnet',
@@ -674,16 +687,28 @@ export default {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       return skuDecisionUi();
     }
+    if (method === 'GET' && path === '/api/ops/thumb') {
+      // Thumbnail-serving (Oppgave 7): nedskalert skilt-bilde for raskere
+      // lasting i /ops/sku. Token-beskyttet; nøkkelen er kun fra D1 (aldri brukerstyrt).
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
+      const key = new URL(request.url).searchParams.get('key') ?? '';
+      if (!key) return json({ ok: false, error: 'Mangler key' }, 400);
+      const object = await env.OPPLAERING_BUCKET.get(key);
+      if (!object) return json({ ok: false, error: 'Bilde mangler' }, 404);
+      return new Response(object.body, { headers: { 'Content-Type': object.httpMetadata?.contentType ?? 'image/jpeg', 'Cache-Control': 'private, no-store' } });
+    }
     if (method === 'GET' && path === '/api/ops/sku-cases') {
       // SKU-beslutningsflate (Oppgave 3): henvendelser med kundereise-snapshot
       // (resolver-kandidater) + siste beslutning. Token-beskyttet, lesing.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
       const rows = await env.FINNBILGLASS_DB.prepare(
-        `SELECT id, regnr, status, vehicle_json, created_at FROM beta_inquiries
+        `SELECT id, regnr, status, vehicle_json, session_id, created_at FROM beta_inquiries
          WHERE vehicle_json IS NOT NULL AND vehicle_json != ''
          ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT 100`,
-      ).all<{ id: number; regnr: string | null; status: string; vehicle_json: string; created_at: string }>();
+      ).all<{ id: number; regnr: string | null; status: string; vehicle_json: string; session_id: string | null; created_at: string }>();
       const result = [];
       for (const r of rows.results ?? []) {
         let vehicle = null;
@@ -692,7 +717,15 @@ export default {
         const beslutning = await env.FINNBILGLASS_DB.prepare(
           'SELECT decision_type, sku, eurocode, reason, created_by, created_at FROM case_sku_decisions WHERE case_id = ? ORDER BY created_at DESC LIMIT 1',
         ).bind(String(r.id)).first<{ decision_type: string; sku: string | null; eurocode: string | null; reason: string | null; created_by: string; created_at: string }>();
-        result.push({ id: r.id, regnr: r.regnr, status: r.status, createdAt: r.created_at, kandidater, sisteBeslutning: beslutning ?? null });
+        // Thumbnail av skilt-foto (Oppgave 7) — fallback til full-bilde hvis ingen thumb.
+        let thumbUrl: string | null = null;
+        if (r.session_id) {
+          const b = await env.FINNBILGLASS_DB.prepare(
+            "SELECT r2_key, thumb_r2_key FROM opplaering_bilde WHERE session_id = ? AND type = 'skilt' AND r2_key IS NOT NULL ORDER BY created_at DESC LIMIT 1",
+          ).bind(r.session_id).first<{ r2_key: string; thumb_r2_key: string | null }>();
+          if (b) thumbUrl = `/api/ops/thumb?key=${encodeURIComponent(b.thumb_r2_key ?? b.r2_key)}`;
+        }
+        result.push({ id: r.id, regnr: r.regnr, status: r.status, createdAt: r.created_at, kandidater, sisteBeslutning: beslutning ?? null, thumbUrl });
       }
       return json({ ok: true, cases: result });
     }

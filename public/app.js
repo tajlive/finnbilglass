@@ -139,42 +139,103 @@
   });
 
   // 1b. Foto av skiltnummeret → AI leser skiltet → SVV-oppslag (samme flyt som skrevet regnr).
+  // Oppgave 7: klientside bildebehandling — EXIF-orientering, nedskalering, JPEG-komprimering,
+  // thumbnail og kvalitetssjekk (lysstyrke/størrelse) FØR opplasting. HEIC konverteres til
+  // JPEG av nettleseren (iOS Safari dekoder HEIC → canvas → JPEG) — Workers har ingen HEIC-dekoder.
+  var MAX_BREDDE = 1920, THUMB_BREDDE = 320, KVALITET = 0.8;
+  var LUMINANS_MIN = 55, MIN_BREDDE = 400;
+
+  function komprimerBilde(fil) {
+    return new Promise(function (resolve, reject) {
+      function behandle(bmp) {
+        try {
+          var w = bmp.width, h = bmp.height;
+          var skala = w > MAX_BREDDE ? MAX_BREDDE / w : 1; // forstørr aldri
+          var fw = Math.round(w * skala), fh = Math.round(h * skala);
+          var c = document.createElement('canvas');
+          c.width = fw; c.height = fh;
+          var cctx = c.getContext('2d');
+          cctx.drawImage(bmp, 0, 0, fw, fh);
+          var dataUrl = c.toDataURL('image/jpeg', KVALITET);
+          var ts = w > THUMB_BREDDE ? THUMB_BREDDE / w : 1;
+          var tc = document.createElement('canvas');
+          tc.width = Math.round(w * ts); tc.height = Math.round(h * ts);
+          tc.getContext('2d').drawImage(bmp, 0, 0, tc.width, tc.height);
+          var thumbDataUrl = tc.toDataURL('image/jpeg', 0.7);
+          var advarsler = [];
+          try {
+            var imgd = cctx.getImageData(0, 0, fw, fh).data;
+            var sum = 0;
+            for (var i = 0; i < imgd.length; i += 4) sum += 0.2126 * imgd[i] + 0.7152 * imgd[i + 1] + 0.0722 * imgd[i + 2];
+            if (sum / (imgd.length / 4) < LUMINANS_MIN) advarsler.push('bildet er mørkt');
+          } catch (e) { /* piksel-lesing utilgjengelig — hopp over luminans-sjekk */ }
+          if (w < MIN_BREDDE) advarsler.push('lav oppløsning');
+          resolve({ dataUrl: dataUrl, thumbDataUrl: thumbDataUrl, advarsler: advarsler });
+        } catch (e) { reject(e); }
+      }
+      if (typeof createImageBitmap === 'function') {
+        createImageBitmap(fil).then(behandle).catch(function () {
+          // Fallback: <img> + objectURL (eldre nettlesere uten createImageBitmap).
+          var url = URL.createObjectURL(fil);
+          var img = new Image();
+          img.onload = function () { behandle(img); URL.revokeObjectURL(url); };
+          img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('bilde-feil')); };
+          img.src = url;
+        });
+      } else {
+        var url2 = URL.createObjectURL(fil);
+        var img2 = new Image();
+        img2.onload = function () { behandle(img2); URL.revokeObjectURL(url2); };
+        img2.onerror = function () { URL.revokeObjectURL(url2); reject(new Error('bilde-feil')); };
+        img2.src = url2;
+      }
+    });
+  }
+
+  function sendSkiltBilde(dataUrl, thumbDataUrl) {
+    var btn = $('btn-foto-regnr');
+    var org = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Leser skiltnummeret…';
+    fetch('/api/les-skilt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl, thumbnail: thumbDataUrl || null, sessionId: sessionId })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        loggHendelse('foto_skilt', { lest: d.regnr || null, funnet: !!(d && d.funnet) }, d && d.resolver ? d.resolver.utfall : null);
+        if (d && d.ok && d.funnet && d.bil && d.bil.merke) {
+          settBilFraSvv(d.bil, d.resolver || null, d.regnr);
+        } else if (d && d.ok && !d.funnet) {
+          visKontaktHandoff('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen.');
+          $('input-regnr').value = formatRegnr(d.regnr);
+        } else if (d && d.error) {
+          visStartFeil(d.error);
+        } else {
+          visStartFeil('Kunne ikke lese skiltnummeret. Prøv igjen i bedre lys, uten reflekser.');
+        }
+      })
+      .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller skriv skiltnummeret manuelt.'); })
+      .finally(function () { btn.disabled = false; btn.innerHTML = org; });
+  }
+
   $('btn-foto-regnr').addEventListener('click', function () { $('regnr-fil').click(); });
   $('regnr-fil').addEventListener('change', function () {
     var fil = this.files && this.files[0];
     this.value = '';
     if (!fil) return;
     if (!fil.type.startsWith('image/')) { visStartFeil('Filen må være et bilde.'); return; }
-    if (fil.size > 5 * 1024 * 1024) { visStartFeil('Bildet er over 5 MB — ta et nytt bilde med mobilen.'); return; }
-    var leser = new FileReader();
-    leser.onload = function () {
-      var btn = $('btn-foto-regnr');
-      var org = btn.innerHTML;
-      btn.disabled = true;
-      btn.textContent = 'Leser skiltnummeret…';
-      fetch('/api/les-skilt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: String(leser.result), sessionId: sessionId })
+    if (fil.size > 20 * 1024 * 1024) { visStartFeil('Bildet er for stort (maks 20 MB).'); return; }
+    komprimerBilde(fil)
+      .then(function (res) {
+        if (res.advarsler.length) {
+          var fortsett = window.confirm('Bildekvaliteten er dårlig (' + res.advarsler.join(', ') + '). Vil du likevel sende dette bildet?');
+          if (!fortsett) return;
+        }
+        sendSkiltBilde(res.dataUrl, res.thumbDataUrl);
       })
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          loggHendelse('foto_skilt', { lest: d.regnr || null, funnet: !!(d && d.funnet) }, d && d.resolver ? d.resolver.utfall : null);
-          if (d && d.ok && d.funnet && d.bil && d.bil.merke) {
-            settBilFraSvv(d.bil, d.resolver || null, d.regnr);
-          } else if (d && d.ok && !d.funnet) {
-            visKontaktHandoff('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen.');
-            $('input-regnr').value = formatRegnr(d.regnr);
-          } else if (d && d.error) {
-            visStartFeil(d.error);
-          } else {
-            visStartFeil('Kunne ikke lese skiltnummeret. Prøv igjen i bedre lys, uten reflekser.');
-          }
-        })
-        .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller skriv skiltnummeret manuelt.'); })
-        .finally(function () { btn.disabled = false; btn.innerHTML = org; });
-    };
-    leser.readAsDataURL(fil);
+      .catch(function () { visStartFeil('Kunne ikke behandle bildet. Prøv et annet bilde.'); });
   });
 
   function visStartFeil(msg) {
