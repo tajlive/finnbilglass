@@ -724,27 +724,29 @@ export default {
       // bilder (skilt/43R) + siste operatør-review. Token-beskyttet, lesing.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
-      const rows = await env.FINNBILGLASS_DB.prepare(
-        'SELECT id, session_id, type, r2_key, thumb_r2_key, lesing, utfall, created_at FROM opplaering_bilde ORDER BY id DESC LIMIT 200',
-      ).all<{ id: number; session_id: string | null; type: string; r2_key: string; thumb_r2_key: string | null; lesing: string | null; utfall: string; created_at: string }>();
-      const observasjoner = [];
-      for (const r of rows.results ?? []) {
-        let lesing: unknown = null;
-        try { if (r.lesing) lesing = JSON.parse(r.lesing); } catch { /* ugyldig JSON */ }
-        const review = await env.FINNBILGLASS_DB.prepare(
-          'SELECT decision, notat, actor, created_at FROM ai_observasjon_review WHERE bilde_id = ? ORDER BY id DESC LIMIT 1',
-        ).bind(r.id).first<{ decision: string; notat: string | null; actor: string; created_at: string }>();
-        observasjoner.push({
-          id: r.id,
-          type: r.type,
-          thumbUrl: `/api/ops/thumb?key=${encodeURIComponent(r.thumb_r2_key ?? r.r2_key)}`,
-          fullUrl: `/api/ops/thumb?key=${encodeURIComponent(r.r2_key)}`,
-          lesing,
-          utfall: r.utfall,
-          createdAt: r.created_at,
-          review: review ?? null,
-        });
-      }
+      const observasjoner: unknown[] = [];
+      try {
+        const rows = await env.FINNBILGLASS_DB.prepare(
+          'SELECT id, session_id, type, r2_key, thumb_r2_key, lesing, utfall, created_at FROM opplaering_bilde ORDER BY id DESC LIMIT 200',
+        ).all<{ id: number; session_id: string | null; type: string; r2_key: string; thumb_r2_key: string | null; lesing: string | null; utfall: string; created_at: string }>();
+        for (const r of rows.results ?? []) {
+          let lesing: unknown = null;
+          try { if (r.lesing) lesing = JSON.parse(r.lesing); } catch { /* ugyldig JSON */ }
+          const review = await env.FINNBILGLASS_DB.prepare(
+            'SELECT decision, notat, actor, created_at FROM ai_observasjon_review WHERE bilde_id = ? ORDER BY id DESC LIMIT 1',
+          ).bind(r.id).first<{ decision: string; notat: string | null; actor: string; created_at: string }>();
+          observasjoner.push({
+            id: r.id,
+            type: r.type,
+            thumbUrl: `/api/ops/thumb?key=${encodeURIComponent(r.thumb_r2_key ?? r.r2_key)}`,
+            fullUrl: `/api/ops/thumb?key=${encodeURIComponent(r.r2_key)}`,
+            lesing,
+            utfall: r.utfall,
+            createdAt: r.created_at,
+            review: review ?? null,
+          });
+        }
+      } catch { /* opplaering_bilde er valgfri — tabellen kan mangle i ny staging-DB */ }
       // Evidenssaker (evidence_cases): supportdokumentasjon med kildebilder +
       // kandidatdata. Leses i samme AI-støtte-fane, men review går via
       // evidence_case_review_events (append-only, token-gate).
