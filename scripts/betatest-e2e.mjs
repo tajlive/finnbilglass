@@ -8,8 +8,13 @@
 //         FBG_SEND_INQUIRY=1 ...                        (send én test-henvendelse; kun staging)
 // Exit:   0 = alt grønt · 1 = betatest-funn (UI-avvik) · 2 = teknisk krasj
 import { createRequire } from 'module';
-const require = createRequire('/Users/taj/klarpakke/');
-const { chromium } = require('playwright');
+let chromium;
+try {
+  ({ chromium } = await import('playwright'));
+} catch {
+  const require = createRequire('/Users/taj/klarpakke/'); // lokal dev (script ligger i finnbilglass-repoet)
+  ({ chromium } = require('playwright'));
+}
 
 const BASE = process.env.FBG_BASE || 'https://finnbilglass.no';
 const SEND_INQUIRY = process.env.FBG_SEND_INQUIRY === '1';

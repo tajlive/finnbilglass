@@ -1,5 +1,6 @@
-# CI/CD — finnbilglass (generisk mal, tilpass etter stack)
-# Gates: test → deploy → smoke → auto-rollback. Ingen prod-deploy uten grønne gates.
+# CI/CD — finnbilglass (produsert 2026-08-19, erstatter TODO-malen)
+# Gates: test → (deploy ved [deploy]-markør / dispatch) → full betatest mot prod.
+# Ingen prod-deploy uten grønne gates.
 name: deploy
 
 on:
@@ -24,14 +25,59 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # TODO: secret-scan (grep + allowlist) — arv secret-audit.mjs fra Arch
+      - name: Ingen hemmelighetsfiler i git
+        run: |
+          LEAKS=$(git ls-files | grep -E '(^|/)(\.env(\.local)?|\.dev\.vars|wrangler\..*\.jsonc)$' || true)
+          if [ -n "$LEAKS" ]; then
+            echo "::error::Hemmelighetsfil committet:"; echo "$LEAKS"; exit 1
+          fi
+          echo "OK — ingen hemmelighetsfiler i git"
 
   deploy:
     needs: [test-gate, security-check]
+    # Auto-deploy ved [deploy]-markør i commit-melding eller manuell dispatch.
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy]')
     runs-on: ubuntu-latest
-    # TODO: wrangler deploy / platform-deploy. Alert via Linear fingerprint-dedup.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: SVV-nøkkel som Worker-secret
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SVV_API_KEY: ${{ secrets.SVV_API_KEY }}
+        run: printf '%s' "$SVV_API_KEY" | npx wrangler secret put SVV_API_KEY --name finnbilglass-frontrute
+      - name: Deploy Worker + assets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+      - name: Krev ny kode på www (asset-cache-sjekk)
+        run: |
+          for i in 1 2 3 4 5; do
+            if curl -s "https://www.finnbilglass.no/app.js?cb=$RANDOM" | grep -q "gaaTilResultat"; then
+              echo "OK — ny app.js servert på www"; exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::app.js på www er fortsatt gammel etter deploy (asset-cache)"; exit 1
 
-  smoke:
-    needs: [deploy]
+  smoke-betatest:
+    needs: [test-gate, security-check, deploy]
     runs-on: ubuntu-latest
-    # TODO: health + landing + i18n-nøkkel-sjekk. Ved feil → auto-rollback → Linear prio 2/1.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Playwright chromium
+        run: npx playwright install --with-deps chromium
+      - name: Full betatest mot prod
+        run: node scripts/betatest-e2e.mjs
