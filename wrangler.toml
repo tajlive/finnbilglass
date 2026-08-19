@@ -27,6 +27,12 @@ bucket_name = "finnbilglass-opplaering"
 [vars]
 ENVIRONMENT = "production"
 
+# ── Observability (Tom 2026-08-19): Workers Logs-lagring AV (kostnad),
+#    invocation_logs PÅ (wrangler tail / debugging) ──────────────────
+[observability.logs]
+enabled = false
+invocation_logs = true
+
 # ── Statisk frontend (prototype public/) ──────────────────────
 [assets]
 directory = "./public"

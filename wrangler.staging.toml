@@ -24,6 +24,11 @@ bucket_name = "finnbilglass-opplaering-staging"
 [vars]
 ENVIRONMENT = "staging"
 
+# ── Observability: Workers Logs-lagring AV, invocation_logs PÅ (konsistens med prod) ──
+[observability.logs]
+enabled = false
+invocation_logs = true
+
 # ── Statisk frontend (samme public/) ────────────────────────────
 [assets]
 directory = "./public"
