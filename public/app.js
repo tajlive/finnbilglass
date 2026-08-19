@@ -402,6 +402,8 @@
     $('glass-bilnavn').textContent = penSkrivemaate(state.modell) + (state.aar ? ' · ' + state.aar : '');
     renderGlassDet();
     visRegnr();
+    var ev4 = document.querySelector('.evidence-gruppe[data-key="interior_optional"]');
+    if (ev4) ev4.classList.toggle('hidden', !glassKanHaSensorKamera());
     show('glass');
   }
 
@@ -594,6 +596,18 @@
   function settSpm(funksjoner) {
     spm = (funksjoner || []).filter(function (f) { return SPM_DEF[f]; }).map(function (f) {
       return { key: f, tittel: SPM_DEF[f].tittel, hjelp: SPM_DEF[f].hjelp };
+    });
+  }
+
+  // Bilde 4 («under speil innenfra») vises kun når glasset kan ha sensor/kamera-utstyr
+  // (kamera-feste bak speil eller regn-/lyssensor). Ukjent → konservativt vis.
+  function glassKanHaSensorKamera() {
+    var k = state.resolver && state.resolver.kandidater;
+    if (!k || !k.length) return false;
+    return k.some(function (kand) {
+      var a = kand && kand.attributter;
+      if (!a) return true;
+      return a.cameraBracket !== false || a.rainLightSensor !== false;
     });
   }
 

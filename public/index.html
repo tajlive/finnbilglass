@@ -226,6 +226,7 @@
       <div class="evidence-gruppe" data-key="plate">
         <button type="button" class="evidence-kamera" data-key="plate">Ta bilde av skiltnummeret</button>
         <button type="button" class="evidence-bibliotek" data-key="plate">Velg fra bildebiblioteket</button>
+        <p class="evidence-forklaring">Ta skiltet rett forfra og skarpt. Det bekrefter bilen vi har funnet.</p>
         <input id="evidence-plate" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
         <input id="evidence-plate-bib" class="evidence-input" type="file" accept="image/*" hidden>
         <div class="evidence-miniatyr hidden" data-key="plate">
@@ -239,6 +240,7 @@
       <div class="evidence-gruppe" data-key="windshield">
         <button type="button" class="evidence-kamera" data-key="windshield">Ta bilde av hele frontruten</button>
         <button type="button" class="evidence-bibliotek" data-key="windshield">Velg fra bildebiblioteket</button>
+        <p class="evidence-forklaring">Ta bildet utenfra, rett forfra, slik at hele glasset og hjørnene er synlige. Da kan vi kontrollere riktig glass.</p>
         <input id="evidence-windshield" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
         <input id="evidence-windshield-bib" class="evidence-input" type="file" accept="image/*" hidden>
         <div class="evidence-miniatyr hidden" data-key="windshield">
@@ -250,8 +252,9 @@
         </div>
       </div>
       <div class="evidence-gruppe" data-key="mirror_sensor">
-        <button type="button" class="evidence-kamera" data-key="mirror_sensor">Ta bilde ved speilet/sensoren</button>
+        <button type="button" class="evidence-kamera" data-key="mirror_sensor">Ta bilde av feltet ved speilet/sensoren</button>
         <button type="button" class="evidence-bibliotek" data-key="mirror_sensor">Velg fra bildebiblioteket</button>
+        <p class="evidence-forklaring">Et nærbilde av området bak innvendig speil — der kameraet eller sensoren sitter. Det avgjør om glasset skal ha sensoråpning.</p>
         <input id="evidence-mirror_sensor" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
         <input id="evidence-mirror_sensor-bib" class="evidence-input" type="file" accept="image/*" hidden>
         <div class="evidence-miniatyr hidden" data-key="mirror_sensor">
@@ -262,9 +265,10 @@
           </div>
         </div>
       </div>
-      <div class="evidence-gruppe" data-key="interior_optional">
-        <button type="button" class="evidence-kamera" data-key="interior_optional">Legg eventuelt til et bilde innenfra</button>
+      <div class="evidence-gruppe hidden" data-key="interior_optional">
+        <button type="button" class="evidence-kamera" data-key="interior_optional">Legg eventuelt til et bilde under speil innenfra</button>
         <button type="button" class="evidence-bibliotek" data-key="interior_optional">Velg fra bildebiblioteket</button>
+        <p class="evidence-forklaring">Vis området under speilet innenfra. Dette er valgfritt, men hjelper oss å velge helt riktig glass.</p>
         <input id="evidence-interior_optional" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
         <input id="evidence-interior_optional-bib" class="evidence-input" type="file" accept="image/*" hidden>
         <div class="evidence-miniatyr hidden" data-key="interior_optional">
