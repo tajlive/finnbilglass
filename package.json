@@ -49,7 +49,8 @@
     "test:evidence-features": "node --import tsx --test tests/evidence-features.test.mjs",
     "test:glavista": "node --import tsx --test tests/glavista-matcher.test.mjs",
     "test:dekningsrapport": "node --test tests/dekningsrapport.test.mjs",
-    "rapport:dekning": "node scripts/dekningsrapport.mjs"
+    "rapport:dekning": "node scripts/dekningsrapport.mjs",
+    "selftest:50:staging": "node scripts/e2e-self-test-50-cars.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
