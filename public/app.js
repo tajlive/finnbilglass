@@ -387,10 +387,11 @@
     state.import = !!bil.import;
     state.importLand = bil.importLand || null;
     state.resolver = resolver || null;
-    // P1 (Beta1-funn): KUN funksjoner som faktisk skiller kandidatene stilles
-    // (Tom-doktrine, C9/C9.2). Resolveren oppgir sporsmaal; fallback = de tre
-    // matcher-profil-nøklene (sensor/antenne/coated) som /api/frontrute bruker.
-    settSpm(resolver && Array.isArray(resolver.sporsmaal) ? resolver.sporsmaal : ['sensor', 'antenne', 'coated']);
+    // P0 (Tom-doktrine): aldri generiske utstyrsspørsmål. Resolveren oppgir kun
+    // skillende spørsmål (der en egenskap faktisk finnes som kandidatvariant OG
+    // svaret skiller to kandidater). Mangler resolver/sporsmaal → 0 spørsmål
+    // → trygg manuell kontroll («Jeg vil dobbeltsjekke riktig glass …»).
+    settSpm(resolver && Array.isArray(resolver.sporsmaal) ? resolver.sporsmaal : []);
     $('glass-merkelbl').textContent = '';
     visMerkeLogo(state.merke);
     $('glass-bilnavn').textContent = penSkrivemaate(state.modell) + (state.aar ? ' · ' + state.aar : '');
