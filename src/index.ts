@@ -163,6 +163,37 @@ function supportAuthorised(request: Request, env: Env): boolean {
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
 }
 
+/** Send svar til kunde på e-post via SendGrid v3. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
+async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: string | null, message: string): Promise<{ ok: boolean; error?: string }> {
+  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  const body = { navn: navn || '', regnr: regnr || '' };
+  const subject = `Svar fra FinnBilglass — din forespørsel${body.regnr ? ' (' + body.regnr + ')' : ''}`;
+  const html =
+    '<p>Hei' + (body.navn ? ' ' + escHtml(body.navn) : '') + ',</p>' +
+    '<p>' + escHtml(message).replace(/\n/g, '<br>') + '</p>' +
+    '<p>— FinnBilglass</p>' +
+    '<p style="color:#637286;font-size:12px">Svar på e-post til ' + escHtml(from) + '. Vi svarer gjerne på spørsmål om glasset eller leveransen.</p>';
+  try {
+    const r = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + env.SENDGRID_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: to }], subject }],
+        from: { email: from, name: 'FinnBilglass' },
+        content: [{ type: 'text/html', value: html }],
+      }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      return { ok: false, error: `SendGrid ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil ved sending.' };
+  }
+}
+
 function supportEvidenceUiLegacy(): Response {
   // The token is deliberately requested at runtime and is never embedded in an asset.
   return new Response(`<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finnbilglass support – Evidence</title><style>body{font:16px system-ui;margin:2rem;background:#f8fafc;color:#0f172a}main{max-width:900px;margin:auto}button,input{font:inherit;padding:.65rem}button{background:#f59e0b;border:0;border-radius:.4rem;font-weight:700}.case{background:white;border:1px solid #e2e8f0;border-radius:.6rem;padding:1rem;margin:1rem 0}.images{display:flex;gap:.7rem;flex-wrap:wrap}.images img{width:180px;max-height:140px;object-fit:cover;border-radius:.4rem;border:1px solid #e2e8f0}.muted{color:#64748b}</style><main><h1>Evidence Capture</h1><p class="muted">Internt supportverktøy. Bildene er evidens for manuell oppfølging, ikke en fitment-beslutning.</p><p><input id="token" type="password" placeholder="Support-token" autocomplete="current-password"><button id="load">Last saker</button></p><div id="out"></div><script>const out=document.querySelector('#out'),token=document.querySelector('#token');document.querySelector('#load').onclick=async()=>{out.textContent='Laster…';const h={Authorization:'Bearer '+token.value};const r=await fetch('/api/support/evidence',{headers:h});if(!r.ok){out.textContent=r.status===401?'Ingen tilgang.':'Kunne ikke hente saker.';return}const d=await r.json();out.innerHTML='';d.cases.forEach(c=>{const e=document.createElement('article');e.className='case';e.innerHTML='<b>'+c.caseId+'</b> · '+c.status+'<br><span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+' · '+c.imageCount+' bilde(r)</span>';const imgs=document.createElement('div');imgs.className='images';c.images.forEach(i=>{const a=document.createElement('a');a.href='/api/support/evidence/'+encodeURIComponent(c.caseId)+'/'+encodeURIComponent(i.imageId);a.target='_blank';const img=document.createElement('img');img.alt=i.imageType;fetch(a.href,{headers:h}).then(x=>x.blob()).then(b=>img.src=URL.createObjectURL(b));a.append(img);imgs.append(a)});e.append(imgs);out.append(e)});if(!d.cases.length)out.textContent='Ingen innsendte saker ennå.'}</script></main></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
@@ -736,6 +767,27 @@ export default {
       const now = Date.now();
       await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
       return json({ ok: true });
+    }
+    const inquiryReplyMatch = /^\/api\/ops\/inquiries\/(\d+)\/reply$/.exec(path);
+    if (method === 'POST' && inquiryReplyMatch) {
+      // Svar direkte til kunden på e-post (kanal #4). Append-only-logg som notater.
+      // Avhengig av SENDGRID_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!env.SENDGRID_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
+      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
+      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);
+      const id = Number(inquiryReplyMatch[1]);
+      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, navn, kontakt, regnr FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string; regnr: string | null }>();
+      if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+      const epost = (row.kontakt || '').trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(epost)) return json({ ok: false, error: 'Kunden har ikke oppgitt e-post — e-post-svar krever en e-postadresse.' }, 409);
+      const sendt = await sendReplyEmail(env, epost, row.navn, row.regnr, message);
+      if (!sendt.ok) return json({ ok: false, error: sendt.error || 'Kunne ikke sende e-posten.' }, 502);
+      const now = Date.now();
+      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ to: epost, to_user: row.navn || null })).run();
+      return json({ ok: true, to: epost });
     }
     if (method === 'GET' && path === '/api/ops/saker') {
       // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens

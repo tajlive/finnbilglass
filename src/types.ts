@@ -14,4 +14,7 @@ export interface Env {
   EVIDENCE_UPLOAD_ENABLED?: string;
   EVIDENCE_REVIEW_ENABLED?: string;
   EVIDENCE_STATUS_CHANGE_ENABLED?: string;
+  /** Utgående e-post-svar til kunder (SendGrid v3). Uten nøkkel er /reply 503 «ikke konfigurert». */
+  SENDGRID_API_KEY?: string;
+  SUPPORT_FROM_EMAIL?: string;
 }
