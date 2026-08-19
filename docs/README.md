@@ -19,8 +19,10 @@
 
 ## Status
 
-Scaffoldet via Arch Control Plane (Project Factory v2.1, 2026-08-13). Ingen kode/deploy ennå.
+Aktiv styrende plan: [prosjektplan-2026-08-18.md](prosjektplan-2026-08-18.md).
+
+Per 2026-08-18 er bildeopplasting, kunde-chat og speech satt pa vent. Produksjonsklar v1 prioriterer en enkel kundeflyt rundt kjennemerke, SVV-oppslag, resolverstatus og tydelig supportkontakt ved usikkerhet.
 
 ## Teknologistack
 
-<TODO — avklares med Tom. Naturlig kandidat: React/Vite + Cloudflare Worker + D1, samme mønster som Autoglass-ordremottakeren, med glass-katalogen gjenbrukt.>
+Cloudflare Worker + D1 + R2 + statiske assets i `public/`. Produksjonsendringer skal ga gjennom ren commit, test og direkte live-verifisering.

@@ -408,6 +408,7 @@
     return navn + (state.aar ? ' ' + state.aar : '');
   }
 
+
   // Detaljlinjer fra SVV (førstegangsregistrert + VIN + import-merkelapp) på glassvalg-skjermen.
   function renderGlassDet() {
     var det = $('glass-det');

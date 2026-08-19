@@ -11,7 +11,7 @@ import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
-import { createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash } from './evidence-capture-v01';
+import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
@@ -72,6 +72,16 @@ function validateBil(body: unknown): BilInput | string {
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return !!x && typeof x === 'object' && !Array.isArray(x);
+}
+
+function parseJsonArray(value: string | null): unknown[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 /** Session-id fra frontend (localStorage) — kobler hele kundereisen. */
@@ -155,7 +165,7 @@ function supportEvidenceUiLegacy(): Response {
 }
 
 function supportEvidenceUi(): Response {
-  return new Response(`<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finnbilglass support – Evidence</title><style>body{font:16px system-ui;margin:2rem;background:#f8fafc;color:#0f172a}main{max-width:960px;margin:auto}.case{background:#fff;border:1px solid #e2e8f0;border-radius:.6rem;padding:1rem;margin:1rem 0}.images{display:flex;gap:.7rem;flex-wrap:wrap}.images img{width:180px;max-height:140px;object-fit:cover;border-radius:.4rem;border:1px solid #e2e8f0}.muted{color:#64748b}.warn{color:#9a3412;font-weight:600}button,input,select,textarea{font:inherit;padding:.6rem}textarea{width:100%;box-sizing:border-box}button{background:#f59e0b;border:0;border-radius:.4rem;font-weight:700}label{display:block;margin:.5rem 0}.check{display:inline-block;margin-right:1rem}</style><main><h1>Evidence Capture</h1><p class="warn">Intern support. Kandidater er kun støtte og aldri en beslutning om glassvalg.</p><p><input id="token" type="password" placeholder="Support-token" autocomplete="current-password"><button id="load">Last saker</button></p><div id="out"></div><script>const out=document.querySelector('#out'),token=document.querySelector('#token'),statuses=['NEW','UNDER_REVIEW','NEEDS_CUSTOMER_INFO','CONFIRMED','REJECTED'];const h=()=>({Authorization:'Bearer '+token.value,'Content-Type':'application/json'});function esc(s){const e=document.createElement('span');e.textContent=s;return e.innerHTML}async function load(){out.textContent='Laster…';const r=await fetch('/api/support/evidence',{headers:h()});if(!r.ok){out.textContent=r.status===401?'Ingen tilgang.':'Kunne ikke hente saker.';return}const d=await r.json();out.innerHTML='';d.cases.forEach(c=>{const e=document.createElement('article');e.className='case';e.innerHTML='<b>'+esc(c.caseId)+'</b> · '+esc(c.status)+'<br><span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+' · '+c.imageCount+' bilde(r)</span><div class="images"></div><p><b>Sjekkliste</b><br>'+['Kjennemerke synlig','Frontrute synlig og skarp','Speil-/sensorområde synlig','Innvendig bilde vedlagt'].map((x,i)=>'<label class="check"><input type="checkbox" data-check="'+i+'" '+(c.checklist[i]?'checked':'')+'>'+x+'</label>').join('')+'</p><label>Status <select>'+statuses.map(s=>'<option '+(s===c.status?'selected':'')+'>'+s+'</option>').join('')+'</select></label><label>Ansvarlig <input value="support" maxlength="64"></label><label>Begrunnelse (maks 3 setninger)<textarea maxlength="600" placeholder="Kort begrunnelse for statusendringen"></textarea></label><button>Oppdater status</button><p class="muted">Kandidater: '+(c.candidates.length?c.candidates.map(x=>esc(x.varenr)).join(', '):'Ikke knyttet til saken')+' — ikke beslutning.</p><details><summary>Revisjonsspor</summary>'+c.history.map(x=>'<p>'+new Date(x.createdAt).toLocaleString('nb-NO')+' · '+esc(x.createdBy)+' · '+esc(x.previousStatus)+' → '+esc(x.status)+'<br>'+esc(x.reason)+'</p>').join('')+'</details>';const images=e.querySelector('.images');c.images.forEach(i=>{const a=document.createElement('a');a.href='/api/support/evidence/'+encodeURIComponent(c.caseId)+'/'+encodeURIComponent(i.imageId);a.target='_blank';const img=document.createElement('img');img.alt=i.imageType;fetch(a.href,{headers:h()}).then(x=>x.blob()).then(b=>img.src=URL.createObjectURL(b));a.append(img);images.append(a)});e.querySelector('button').onclick=async()=>{const status=e.querySelector('select').value,actor=e.querySelector('input').value,reason=e.querySelector('textarea').value,checklist=[0,1,2,3].map(i=>e.querySelector('[data-check="'+i+'"]').checked);const r=await fetch('/api/support/evidence/'+encodeURIComponent(c.caseId)+'/status',{method:'POST',headers:h(),body:JSON.stringify({status,actor,reason,checklist})});if(!r.ok){alert((await r.json()).error||'Kunne ikke oppdatere');return}load()};out.append(e)});if(!d.cases.length)out.textContent='Ingen innsendte saker ennå.'}document.querySelector('#load').onclick=load;</script></main>`,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
+  return new Response(`<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finnbilglass support – Evidence</title><style>body{font:16px system-ui;margin:2rem;background:#f8fafc;color:#0f172a}main{max-width:960px;margin:auto}.case{background:#fff;border:1px solid #e2e8f0;border-radius:.6rem;padding:1rem;margin:1rem 0}.images{display:flex;gap:.7rem;flex-wrap:wrap}.images img{width:180px;max-height:140px;object-fit:cover;border-radius:.4rem;border:1px solid #e2e8f0}.q{display:block;margin-top:.25rem;color:#64748b;font-size:12px;max-width:180px}.muted{color:#64748b}.warn{color:#9a3412;font-weight:600}button,input,select,textarea{font:inherit;padding:.6rem}textarea{width:100%;box-sizing:border-box}button{background:#f59e0b;border:0;border-radius:.4rem;font-weight:700}label{display:block;margin:.5rem 0}.check{display:inline-block;margin-right:1rem}</style><main><h1>Evidence Capture</h1><p class="warn">Intern support. Kandidater er kun støtte og aldri en beslutning om glassvalg.</p><p><input id="token" type="password" placeholder="Support-token" autocomplete="current-password"><button id="load">Last saker</button></p><div id="out"></div><script>const out=document.querySelector('#out'),token=document.querySelector('#token'),statuses=['NEW','UNDER_REVIEW','NEEDS_CUSTOMER_INFO','CONFIRMED','REJECTED'];const h=()=>({Authorization:'Bearer '+token.value,'Content-Type':'application/json'});function esc(s){const e=document.createElement('span');e.textContent=s;return e.innerHTML}async function load(){out.textContent='Laster…';const r=await fetch('/api/support/evidence',{headers:h()});if(!r.ok){out.textContent=r.status===401?'Ingen tilgang.':'Kunne ikke hente saker.';return}const d=await r.json();out.innerHTML='';d.cases.forEach(c=>{const e=document.createElement('article');e.className='case';e.innerHTML='<b>'+esc(c.caseId)+'</b> · '+esc(c.status)+'<br><span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+' · '+c.imageCount+' bilde(r)</span><div class="images"></div><p><b>Sjekkliste</b><br>'+['Kjennemerke synlig','Frontrute synlig og skarp','Speil-/sensorområde synlig','Innvendig bilde vedlagt'].map((x,i)=>'<label class="check"><input type="checkbox" data-check="'+i+'" '+(c.checklist[i]?'checked':'')+'>'+x+'</label>').join('')+'</p><label>Status <select>'+statuses.map(s=>'<option '+(s===c.status?'selected':'')+'>'+s+'</option>').join('')+'</select></label><label>Ansvarlig <input value="support" maxlength="64"></label><label>Begrunnelse (maks 3 setninger)<textarea maxlength="600" placeholder="Kort begrunnelse for statusendringen"></textarea></label><button>Oppdater status</button><p class="muted">Kandidater: '+(c.candidates.length?c.candidates.map(x=>esc(x.varenr)).join(', '):'Ikke knyttet til saken')+' — ikke beslutning.</p><details><summary>Revisjonsspor</summary>'+c.history.map(x=>'<p>'+new Date(x.createdAt).toLocaleString('nb-NO')+' · '+esc(x.createdBy)+' · '+esc(x.previousStatus)+' → '+esc(x.status)+'<br>'+esc(x.reason)+'</p>').join('')+'</details>';const images=e.querySelector('.images');c.images.forEach(i=>{const wrap=document.createElement('div');const a=document.createElement('a');a.href='/api/support/evidence/'+encodeURIComponent(c.caseId)+'/'+encodeURIComponent(i.imageId);a.target='_blank';const img=document.createElement('img');img.alt=i.imageType;fetch(a.href,{headers:h()}).then(x=>x.blob()).then(b=>img.src=URL.createObjectURL(b));const q=document.createElement('span');q.className='q';const dims=i.quality&&i.quality.width?i.quality.width+'×'+i.quality.height:'ukjent størrelse';q.textContent=i.imageType+' · '+((i.quality&&i.quality.class)||'UNKNOWN')+' · '+dims;a.append(img);wrap.append(a,q);images.append(wrap)});e.querySelector('button').onclick=async()=>{const status=e.querySelector('select').value,actor=e.querySelector('input').value,reason=e.querySelector('textarea').value,checklist=[0,1,2,3].map(i=>e.querySelector('[data-check="'+i+'"]').checked);const r=await fetch('/api/support/evidence/'+encodeURIComponent(c.caseId)+'/status',{method:'POST',headers:h(),body:JSON.stringify({status,actor,reason,checklist})});if(!r.ok){alert((await r.json()).error||'Kunne ikke oppdatere');return}load()};out.append(e)});if(!d.cases.length)out.textContent='Ingen innsendte saker ennå.'}document.querySelector('#load').onclick=load;</script></main>`,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'}});
 }
 
 /** Lagre bilde til R2 + metadata til D1 — aldri blokkerende. */
@@ -537,13 +547,17 @@ export default {
       if (!registration.trim()) return json({ ok: false, error: 'Kjennemerke påkrevd' }, 400);
       if (!images.length || images.length > 4) return json({ ok: false, error: 'Legg ved minst ett og maksimalt fire bilder' }, 400);
       if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
-      const decoded: { type: import('./evidence-capture-v01').EvidenceImageType; bytes: Uint8Array; mime: string; ext: string }[] = [];
+      const decoded: { type: EvidenceImageType; bytes: Uint8Array; mime: string; ext: string; quality: EvidenceImageQuality }[] = [];
       for (const image of images) {
         if (!isRecord(image) || !isEvidenceImageType(image.type) || typeof image.data !== 'string') return json({ ok: false, error: 'Ugyldig bildedata' }, 400);
         if (image.data.length > 7_000_000) return json({ ok: false, error: 'Et bilde er for stort (maks 5 MB)' }, 413);
         const parsed = dataUrlTilBytes(image.data);
         if (!parsed || !parsed.mime.startsWith('image/') || parsed.bytes.byteLength > MAX_EVIDENCE_IMAGE_BYTES) return json({ ok: false, error: 'Ugyldig bilde eller filen er for stor' }, 400);
-        decoded.push({ type: image.type, ...parsed });
+        const quality = analyseEvidenceImage(parsed.bytes, parsed.mime);
+        if (quality.qualityClass === 'REJECT') {
+          return json({ ok: false, error: `Bildet ${image.type} kan ikke brukes: ${quality.reasonCodes.join(', ')}`, imageType: image.type, quality }, 422);
+        }
+        decoded.push({ type: image.type, ...parsed, quality });
       }
       if (new Set(decoded.map((image) => image.type)).size !== decoded.length) return json({ ok: false, error: 'Hver bildetype kan bare sendes én gang' }, 400);
       const createdAt = Date.now();
@@ -571,6 +585,8 @@ export default {
           await env.OPPLAERING_BUCKET.put(record.r2Key, record.image.bytes, { httpMetadata: { contentType: record.image.mime } });
           await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_images (image_id, case_id, image_type, r2_key, mime, created_at) VALUES (?, ?, ?, ?, ?, ?)')
             .bind(record.imageId, caseId, record.image.type, record.r2Key, record.image.mime, createdAt).run();
+          await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_image_quality_events (event_id, image_id, case_id, quality_class, reason_codes_json, width, height, byte_length, mime, analysis_version, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+            .bind(`${record.imageId}-quality-v1`, record.imageId, caseId, record.image.quality.qualityClass, JSON.stringify(record.image.quality.reasonCodes), record.image.quality.width, record.image.quality.height, record.image.quality.byteLength, record.image.quality.mime, record.image.quality.analysisVersion, createdAt, 'system').run();
         }
       } catch (e) {
         console.error('evidence-capture lagring feilet:', e);
@@ -871,13 +887,29 @@ export default {
       const cases = await env.FINNBILGLASS_DB.prepare('SELECT case_id, created_at, status FROM evidence_cases ORDER BY created_at DESC LIMIT 100').all<{ case_id: string; created_at: number; status: string }>();
       const result = [];
       for (const c of cases.results) {
-        const images = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string }>();
+        let images: { results: { image_id: string; image_type: string; quality_class: string | null; reason_codes_json: string | null; width: number | null; height: number | null; byte_length: number | null }[] };
+        try {
+          images = await env.FINNBILGLASS_DB.prepare(`WITH latest_quality AS (
+            SELECT image_id, quality_class, reason_codes_json, width, height, byte_length,
+                   ROW_NUMBER() OVER (PARTITION BY image_id ORDER BY created_at DESC) AS n
+            FROM evidence_case_image_quality_events
+            WHERE case_id = ?
+          )
+          SELECT i.image_id, i.image_type, q.quality_class, q.reason_codes_json, q.width, q.height, q.byte_length
+          FROM evidence_case_images i
+          LEFT JOIN latest_quality q ON q.image_id = i.image_id AND q.n = 1
+          WHERE i.case_id = ?
+          ORDER BY i.created_at`).bind(c.case_id, c.case_id).all<{ image_id: string; image_type: string; quality_class: string | null; reason_codes_json: string | null; width: number | null; height: number | null; byte_length: number | null }>();
+        } catch {
+          const legacyImages = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string }>();
+          images = { results: legacyImages.results.map(i => ({ ...i, quality_class: null, reason_codes_json: null, width: null, height: null, byte_length: null })) };
+        }
         const events = await env.FINNBILGLASS_DB.prepare('SELECT previous_status, status, created_at, created_by, reason, checklist_json FROM evidence_case_review_events WHERE case_id = ? ORDER BY created_at DESC').bind(c.case_id).all<{ previous_status: string; status: string; created_at: number; created_by: string; reason: string; checklist_json: string }>();
         const snapshot = await env.FINNBILGLASS_DB.prepare('SELECT candidates_json FROM evidence_case_candidate_snapshots WHERE case_id = ?').bind(c.case_id).first<{ candidates_json: string }>();
         const current = events.results[0]?.status;
         const checklist = events.results[0] ? (() => { try { const x = JSON.parse(events.results[0].checklist_json); return Array.isArray(x) ? x.map(Boolean).slice(0, 4) : []; } catch { return []; } })() : [];
         const candidates = (() => { try { const x = snapshot ? JSON.parse(snapshot.candidates_json) : []; return Array.isArray(x) ? x : []; } catch { return []; } })();
-        result.push({ caseId: c.case_id, createdAt: c.created_at, status: isSupportCaseStatus(current) ? current : legacyStatus(c.status), imageCount: images.results.length, images: images.results.map(i => ({ imageId: i.image_id, imageType: i.image_type })), checklist, candidates, history: events.results.reverse().map(e => ({ previousStatus: e.previous_status, status: e.status, createdAt: e.created_at, createdBy: e.created_by, reason: e.reason })) });
+        result.push({ caseId: c.case_id, createdAt: c.created_at, status: isSupportCaseStatus(current) ? current : legacyStatus(c.status), imageCount: images.results.length, images: images.results.map(i => ({ imageId: i.image_id, imageType: i.image_type, quality: { class: i.quality_class ?? 'UNKNOWN', reasonCodes: parseJsonArray(i.reason_codes_json), width: i.width, height: i.height, byteLength: i.byte_length } })), checklist, candidates, history: events.results.reverse().map(e => ({ previousStatus: e.previous_status, status: e.status, createdAt: e.created_at, createdBy: e.created_by, reason: e.reason })) });
       }
       return json({ ok: true, cases: result });
     }
