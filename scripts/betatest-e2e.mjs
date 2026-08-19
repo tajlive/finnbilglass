@@ -8,6 +8,7 @@
 //         FBG_SEND_INQUIRY=1 ...                        (send én test-henvendelse; kun staging)
 // Exit:   0 = alt grønt · 1 = betatest-funn (UI-avvik) · 2 = teknisk krasj
 import { createRequire } from 'module';
+import { mkdirSync, writeFileSync } from 'fs';
 let chromium;
 try {
   ({ chromium } = await import('playwright'));
@@ -18,7 +19,7 @@ try {
 
 const BASE = process.env.FBG_BASE || 'https://finnbilglass.no';
 const SEND_INQUIRY = process.env.FBG_SEND_INQUIRY === '1';
-const UT = new URL('../scripts/out/', import.meta.url).pathname;
+const UT = process.env.FBG_OUT || new URL('../scripts/out/', import.meta.url).pathname;
 
 // Regnr hentet fra SVV-korpuset (verifisert 2026-08-15/19).
 const BILER = [
@@ -173,8 +174,8 @@ async function ukjentRegnr(browser) {
   await browser.close();
 
   const rapport = { base: BASE, tid: new Date().toISOString(), funn };
-  require('fs').mkdirSync(UT, { recursive: true });
-  require('fs').writeFileSync(`${UT}betatest.json`, JSON.stringify(rapport, null, 2));
+  mkdirSync(UT, { recursive: true });
+  writeFileSync(`${UT}betatest.json`, JSON.stringify(rapport, null, 2));
 
   console.log(`\n=== SAMMENDRAG ===`);
   if (!funn.length) { console.log('ALT GRØNT — ingen funn'); process.exit(0); }
