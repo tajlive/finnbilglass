@@ -86,7 +86,7 @@ test('7. VERIFY → null avkrysningsbokser (frontend)', () => {
   const app = readFileSync(join(ROOT, 'public', 'app.js'), 'utf8');
   assert.match(app, /VERIFY: aldri kandidatspesifikke valg/);
   const html = readFileSync(join(ROOT, 'public', 'index.html'), 'utf8');
-  assert.match(html, /Jeg avklarer eventuelt nødvendig tilbehør før jeg sender tilbudet/);
+  assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet/);
 });
 
 test('8. selvmontasje + dokumentert Sika → lim-kit kan vises (frontend)', () => {

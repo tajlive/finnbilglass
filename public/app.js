@@ -390,7 +390,7 @@
     // P0 (Tom-doktrine): aldri generiske utstyrsspørsmål. Resolveren oppgir kun
     // skillende spørsmål (der en egenskap faktisk finnes som kandidatvariant OG
     // svaret skiller to kandidater). Mangler resolver/sporsmaal → 0 spørsmål
-    // → trygg manuell kontroll («Jeg vil dobbeltsjekke riktig glass …»).
+    // → trygg manuell kontroll («Vi vil dobbeltsjekke riktig glass …»).
     settSpm(resolver && Array.isArray(resolver.sporsmaal) ? resolver.sporsmaal : []);
     $('glass-merkelbl').textContent = '';
     visMerkeLogo(state.merke);
@@ -502,15 +502,15 @@
     }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
       .then(function (r) {
         if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Bildene ble ikke sendt.');
-        settOk('Takk – jeg har fått bildene og dobbeltsjekker glasset før jeg sender tilbud.');
+        settOk('Takk – vi har fått bildene og dobbeltsjekker glasset før vi sender tilbud.');
         loggHendelse('evidence_capture_sent', { caseId: r.data.caseId, imageCount: r.data.imageCount });
         keys.forEach(fjernEvidence);
       })
       .catch(function () {
         // Menneskelig feilmelding; teknisk årsak logges internt, aldri til kunde.
-        settFeil('Bildene ble ikke sendt. Prøv igjen, eller send meg en forespørsel så hjelper jeg deg.');
+        settFeil('Bildene ble ikke sendt. Prøv igjen, eller send oss en forespørsel så hjelper vi deg.');
       })
-      .finally(function () { knapp.disabled = false; knapp.textContent = 'Send bilder til Tom Arne'; });
+      .finally(function () { knapp.disabled = false; knapp.textContent = 'Send bilder til Finnbilglass'; });
   });
 
   // P2 (Beta1-funn): SVVs handelsbetegnelse inkluderer ofte merket («NISSAN
@@ -751,18 +751,18 @@
     $('inquiry-regnr').value = state.regnr || '';
     var a = data && data.anbefaling;
     if (!a) {
-      tomtVis('Fant ingen treff', 'Jeg fant ikke et trygt treff i katalogen. Send meg en forespørsel, så undersøker jeg bilen og hjelper deg videre.');
+      tomtVis('Fant ingen treff', 'Vi fant ikke et trygt treff i katalogen. Send oss en forespørsel, så undersøker vi bilen og hjelper deg videre.');
       return;
     }
     var st = $('resultat-status');
     if (data.pinpoint) {
-      st.textContent = 'Dette er mitt beste forslag basert på bilen din. Jeg dobbeltsjekker glasset manuelt og bekrefter riktig glass og pris før noe bestilles.';
+      st.textContent = 'Dette er vårt beste forslag basert på bilen din. Vi dobbeltsjekker glasset manuelt og bekrefter riktig glass og pris før noe bestilles.';
       st.className = 'note status pinpoint';
     } else if (data && data.meta && data.meta.resolver) {
-      st.textContent = 'Disse variantene kan passe din bil. Riktig valg avhenger av utstyr og sensorer, og jeg bekrefter alltid valget manuelt før noe bestilles.';
+      st.textContent = 'Disse variantene kan passe din bil. Riktig valg avhenger av utstyr og sensorer, og vi bekrefter alltid valget manuelt før noe bestilles.';
       st.className = 'note status verify';
     } else {
-      st.textContent = 'Jeg har funnet en mulig kandidat ut fra bildataene dine. Jeg dobbeltsjekker valget manuelt før jeg sender tilbud.';
+      st.textContent = 'Vi har funnet en mulig kandidat ut fra bildataene dine. Vi dobbeltsjekker valget manuelt før vi sender tilbud.';
       st.className = 'note status';
     }
     st.classList.remove('hidden');
@@ -1000,7 +1000,7 @@
         if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende forespørselen.');
         $('inquiry-form').classList.add('hidden');
         var b = $('inquiry-bekreftet');
-        b.textContent = 'Takk! Jeg har mottatt forespørselen og dobbeltsjekker glasset før jeg sender deg et endelig tilbud.';
+        b.textContent = 'Takk! Vi har mottatt forespørselen og dobbeltsjekker glasset før vi sender deg et endelig tilbud.';
         b.className = 'note status pinpoint';
         b.classList.remove('hidden');
       })

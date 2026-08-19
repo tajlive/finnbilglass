@@ -63,12 +63,12 @@ test('5. send forklarer hva som mangler uten bilde/regnr', () => {
 
 test('6. evidence API-feil gir forståelig feilmelding', () => {
   // Menneskelig feilmelding uten teknisk årsak til kunde
-  assert.match(js, /Bildene ble ikke sendt\. Prøv igjen, eller send meg en forespørsel så hjelper jeg deg\./);
+  assert.match(js, /Bildene ble ikke sendt\. Prøv igjen, eller send oss en forespørsel så hjelper vi deg\./);
   // Suksess-tekst
-  assert.match(js, /Takk – jeg har fått bildene og dobbeltsjekker glasset før jeg sender tilbud\./);
+  assert.match(js, /Takk – vi har fått bildene og dobbeltsjekker glasset før vi sender tilbud\./);
   // Tittel + forklaring + send-knapp (Tom-tekster)
-  assert.match(html, /Vil du at jeg skal dobbeltsjekke\?/);
-  assert.match(html, /Send bilder til Tom Arne/);
+  assert.match(html, /Vil du at vi skal dobbeltsjekke\?/);
+  assert.match(html, /Send bilder til Finnbilglass/);
 });
 
 test('7. ingen endring i decisionAuthority eller glassresolver', () => {

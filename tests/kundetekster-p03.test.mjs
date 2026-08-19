@@ -1,7 +1,9 @@
-// P0.3-regresjonstester: fjerning av «Ikke min bil» + personlig beta-tekst.
-// Verifiserer: (1) «Ikke min bil»/btn-ikke-min-bil fjernet fra aktiv frontend,
-// (2) P0.2-fotoopplevelsen beholdt, (3) personlig beta-invitasjon på forsiden,
-// (4) ingen endring i API-er, feature-flags, resolver eller evidence decisionAuthority.
+// P0.3+P0.4-regresjonstester: fjerning av «Ikke min bil», personlig beta-invitasjon
+// og språkregelen «vi» er hovedspråket («jeg» kun i beta-invitasjonen, kundens egne
+// valg/spørsmål og Tom Arne-presentasjonen).
+// Verifiserer: (1) «Ikke min bil» fjernet, (2) P0.2-fotoopplevelse beholdt,
+// (3) beta-invitasjon, (4) «vi» i aktiv kundereise, (5) «jeg» kun i godkjente
+// unntak, (6) ingen endring i API-er, feature-flags, resolver eller decisionAuthority.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -12,6 +14,9 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const html = readFileSync(join(ROOT, 'public', 'index.html'), 'utf8');
 const js = readFileSync(join(ROOT, 'public', 'app.js'), 'utf8');
 const css = readFileSync(join(ROOT, 'public', 'styles.css'), 'utf8');
+const omoss = readFileSync(join(ROOT, 'public', 'om-oss.html'), 'utf8');
+const buf = readFileSync(join(ROOT, 'public', 'bilglass-uten-forsikring.html'), 'utf8');
+const personvern = readFileSync(join(ROOT, 'public', 'personvern.html'), 'utf8');
 const src = readFileSync(join(ROOT, 'src', 'index.ts'), 'utf8');
 const resolver = readFileSync(join(ROOT, 'src', 'vin-resolver.ts'), 'utf8');
 const wrangler = readFileSync(join(ROOT, 'wrangler.toml'), 'utf8');
@@ -25,11 +30,11 @@ test('1. «Ikke min bil» og btn-ikke-min-bil er fjernet fra aktiv frontend', ()
 });
 
 test('2. P0.2-fotoopplevelse beholdt (tekster)', () => {
-  assert.match(html, /Vil du at jeg skal dobbeltsjekke\?/);
+  assert.match(html, /Vil du at vi skal dobbeltsjekke\?/);
   assert.match(html, /Bildene endrer aldri glassvalget automatisk\./);
-  assert.match(html, /Send bilder til Tom Arne/);
-  assert.match(js, /Takk – jeg har fått bildene og dobbeltsjekker glasset før jeg sender tilbud\./);
-  assert.match(js, /Bildene ble ikke sendt\. Prøv igjen, eller send meg en forespørsel så hjelper jeg deg\./);
+  assert.match(html, /Send bilder til Finnbilglass/);
+  assert.match(js, /Takk – vi har fått bildene og dobbeltsjekker glasset før vi sender tilbud\./);
+  assert.match(js, /Bildene ble ikke sendt\. Prøv igjen, eller send oss en forespørsel så hjelper vi deg\./);
 });
 
 test('3. P0.2-fotoopplevelse beholdt (kamera + bildebibliotek)', () => {
@@ -44,27 +49,70 @@ test('3. P0.2-fotoopplevelse beholdt (kamera + bildebibliotek)', () => {
   assert.equal(bibMedCapture.length, 0, 'bildebibliotek-input skal ikke ha capture');
 });
 
-test('4. personlig beta-invitasjon finnes på forsiden', () => {
-  assert.match(html, /Kjenner du Tom Arne\?/);
-  assert.match(html, /beta-invitasjon/);
-  assert.match(css, /\.beta-invitasjon\s*\{/);
+test('4. personlig beta-invitasjon finnes på forsiden (førsteperson, ordrett)', () => {
+  assert.match(html, /Kjenner du Tom Arne\? Da vil jeg gjerne ha din hjelp\./);
   assert.match(html, /Du er invitert til å teste Finnbilglass/);
   assert.match(html, /Jeg dobbeltsjekker alltid glassvalg og pris før bestilling\./);
+  assert.match(html, /beta-invitasjon/);
+  assert.match(css, /\.beta-invitasjon\s*\{/);
 });
 
-test('5. ingen endring i API-er og evidence decisionAuthority', () => {
+test('5. språkregel: aktiv kundereise bruker «vi»', () => {
+  assert.match(html, /Vil du at vi skal dobbeltsjekke\?/);
+  assert.match(html, /Det hjelper oss å kontrollere riktig glass før vi sender tilbud\./);
+  assert.match(html, /Vi har funnet et mulig glass til bilen din/);
+  assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet\./);
+  assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi glasset/);
+  assert.match(html, /Vi fant ikke et trygt treff i katalogen\. Send oss en forespørsel/);
+  assert.match(html, /Vi dobbeltsjekker alle glassvalg og priser før bestilling\./);
+  assert.match(js, /Vi har funnet en mulig kandidat ut fra bildataene dine\. Vi dobbeltsjekker valget manuelt før vi sender tilbud\./);
+  assert.match(js, /Takk! Vi har mottatt forespørselen og dobbeltsjekker glasset/);
+  assert.match(personvern, /Her forklarer vi hvilke opplysninger Finnbilglass bruker, hvorfor vi trenger dem/);
+});
+
+test('6. språkregel: «jeg/meg» finnes kun i godkjente unntak', () => {
+  // Godkjente unntak
+  assert.match(html, /Kjenner du Tom Arne\? Da vil jeg gjerne ha din hjelp\./); // beta-invitasjon
+  assert.match(html, /Jeg monterer selv/); // kundens eget valg
+  assert.match(buf, /når jeg betaler selv\?/); // kundens FAQ-spørsmål
+  assert.match(omoss, /Hei, jeg heter Tom Arne og står bak Finnbilglass\./); // Tom-presentasjon
+
+  // Forbudt «jeg/meg»-kommunikasjon fra Finnbilglass i app.js
+  const forbudtJs = [
+    /hjelper meg å kontrollere/, /før jeg sender tilbud/, /send meg en forespørsel/,
+    /undersøker jeg bilen/, /Jeg har funnet et mulig glass/, /Jeg avklarer/,
+    /Jeg dobbeltsjekker glasset manuelt/, /Jeg har funnet en mulig kandidat/,
+    /Jeg har mottatt forespørselen/, /hjelper jeg deg/, /jeg henter bilopplysningene/,
+    /jeg finner et mulig glass/, /jeg dobbeltsjekker glasset og sender/, /Jeg vil dobbeltsjekke/
+  ];
+  for (const re of forbudtJs) {
+    assert.doesNotMatch(js, re, `app.js inneholder forbudt «jeg»: ${re}`);
+  }
+
+  // Forbudt i index.html (utenfor beta-invitasjonen og kundens valg)
+  const forbudtHtml = [
+    /Vil du at jeg skal dobbeltsjekke/, /Det hjelper meg å kontrollere/, /Send bilder til Tom Arne/,
+    /Jeg har funnet et mulig glass/, /Jeg avklarer/, /Send meg forespørselen/,
+    /Jeg fant ikke et trygt treff/, /Jeg dobbeltsjekker alle glassvalg/
+  ];
+  for (const re of forbudtHtml) {
+    assert.doesNotMatch(html, re, `index.html inneholder forbudt «jeg»: ${re}`);
+  }
+});
+
+test('7. ingen endring i API-er og evidence decisionAuthority', () => {
   assert.match(src, /\/api\/evidence-capture/);
   assert.match(src, /\/api\/accessories/);
   assert.match(src, /decisionAuthority:\s*'NONE'/);
 });
 
-test('6. feature-flags uendret (review/status forblir av)', () => {
+test('8. feature-flags uendret (review/status forblir av)', () => {
   for (const f of [wrangler, wranglerStaging]) {
     assert.match(f, /EVIDENCE_REVIEW_ENABLED\s*=\s*"false"/);
     assert.match(f, /EVIDENCE_STATUS_CHANGE_ENABLED\s*=\s*"false"/);
   }
 });
 
-test('7. resolver uendret (skillendeSporsmaal fortsatt intakt)', () => {
+test('9. resolver uendret (skillendeSporsmaal fortsatt intakt)', () => {
   assert.match(resolver, /skillendeSporsmaal/);
 });
