@@ -51,6 +51,9 @@ async function query(sql, params = []) {
 let uuidCache = null;
 async function dbUuid() {
   if (uuidCache) return uuidCache;
+  // Eksakt uuid (36 tegn) brukes direkte — navne-søk har prefiks-match-felle
+  // (?name=finnbilglass-db matcher finnbilglass-db-staging først).
+  if (/^[0-9a-f-]{36}$/i.test(DB_NAVN)) { uuidCache = DB_NAVN; return uuidCache; }
   const list = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acct}/d1/database?name=${DB_NAVN}`, {
     headers: { Authorization: `Bearer ${token}` },
   }).then((r) => r.json());
