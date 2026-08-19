@@ -11,6 +11,7 @@ import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
+import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
 import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
@@ -157,16 +158,6 @@ function dataUrlTilBytes(dataUrl: string): { bytes: Uint8Array; mime: string; ex
 function supportAuthorised(request: Request, env: Env): boolean {
   const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
-}
-
-/** Feature-flag for evidence-flyten — default false (kun eksplisitt 'true' åpner). */
-function featureEnabled(env: Env, navn: 'EVIDENCE_UPLOAD_ENABLED' | 'EVIDENCE_REVIEW_ENABLED' | 'EVIDENCE_STATUS_CHANGE_ENABLED'): boolean {
-  return env[navn] === 'true';
-}
-
-/** Standard 403 når et feature-flag er av — forståelig, ikke 404. */
-function featureDisabled(navn: string): Response {
-  return json({ ok: false, error: 'feature_disabled', feature: navn, melding: 'Denne funksjonen er ikke aktivert ennå.' }, 403);
 }
 
 function supportEvidenceUiLegacy(): Response {
@@ -790,7 +781,7 @@ export default {
       const decision = String(body.decision ?? '');
       const notat = typeof body.notat === 'string' ? body.notat.trim().slice(0, 600) : '';
       const actor = typeof body.actor === 'string' ? body.actor.trim() : '';
-      if (!Number.isInteger(bildeId) || !['godkjenn', 'avvis', 'request_image'].includes(decision)) return json({ ok: false, error: 'Ugyldig bilde-id eller beslutning.' }, 400);
+      if (!Number.isInteger(bildeId) || !erGyldigReviewDecision(decision)) return json({ ok: false, error: 'Ugyldig bilde-id eller beslutning.' }, 400);
       if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor)) return json({ ok: false, error: 'Ansvarlig er påkrevd.' }, 400);
       const bilde = await env.FINNBILGLASS_DB.prepare('SELECT id, type, session_id FROM opplaering_bilde WHERE id = ?').bind(bildeId).first<{ id: number; type: string; session_id: string | null }>();
       if (!bilde) return json({ ok: false, error: 'Bildet finnes ikke.' }, 404);
