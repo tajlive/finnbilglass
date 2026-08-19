@@ -792,7 +792,7 @@ export default {
         const now = Date.now();
         await env.FINNBILGLASS_DB.prepare(
           "INSERT INTO evidence_events (id, vehicle_identity_hash, created_at, source_type, evidence_type, value, confidence, status, created_by, notes) VALUES (?, ?, ?, 'SYSTEM', 'OTHER', ?, 100, 'VERIFIED', ?, ?)",
-        ).bind(`evt-ai-${bildeId}-${now}`, `ai-obs-${bilde.session_id ?? 'anonym'}-${bilde.type}`, now, bilde.type, actor, `godkjent AI-observasjon (type=${bilde.type})${notat ? ' — ' + notat : ''}`).run();
+        ).bind(`evt-ai-${bildeId}-${now}`, `ai-obs-${bilde.session_id ?? 'anonym'}-${bilde.type}`, now, bilde.type, 'system', `godkjent AI-observasjon (type=${bilde.type}) av ${actor}${notat ? ' — ' + notat : ''}`).run();
       }
       return json({ ok: true, decision, bildeId });
     }
