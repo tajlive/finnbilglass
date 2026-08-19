@@ -10,9 +10,7 @@
   var spm = [
     { key: 'sensor',     tittel: 'Har bilen regnsensor?', hjelp: 'Da starter viskerne automatisk når det regner.' },
     { key: 'antenne',    tittel: 'Har bilen radioantenne i frontruten?', hjelp: 'Usikker? Velg «Vet ikke». Vi dobbeltsjekker før sending.' },
-    { key: 'coated',     tittel: 'Har frontruten et sol- eller varmedempende belegg?', hjelp: 'Dette er ofte vanskelig å se. Velg «Vet ikke» hvis du er usikker.' },
-    { key: 'adaskamera', tittel: 'Har bilen kamera bak speilet eller førerassistansesystemer?', hjelp: 'For eksempel filholder, nødbrems eller skiltgjenkjenning.' },
-    { key: 'oppvarmet',  tittel: 'Har frontruten varmetråder i glasset?', hjelp: 'Oppvarmet frontrute har synlige tråder eller varmefelt i glasset.' }
+    { key: 'coated',     tittel: 'Har frontruten et sol- eller varmedempende belegg?', hjelp: 'Dette er ofte vanskelig å se. Velg «Vet ikke» hvis du er usikker.' }
   ];
   var spmIndex = 0;
 
@@ -328,12 +326,25 @@
     state.import = !!bil.import;
     state.importLand = bil.importLand || null;
     state.resolver = resolver || null;
+    // P1 (Beta1-funn): KUN funksjoner som faktisk skiller kandidatene stilles
+    // (Tom-doktrine, C9/C9.2). Resolveren oppgir sporsmaal; fallback = de tre
+    // matcher-profil-nøklene (sensor/antenne/coated) som /api/frontrute bruker.
+    settSpm(resolver && Array.isArray(resolver.sporsmaal) ? resolver.sporsmaal : ['sensor', 'antenne', 'coated']);
     $('glass-merkelbl').textContent = '';
     visMerkeLogo(state.merke);
     $('glass-bilnavn').textContent = penSkrivemaate(state.modell) + (state.aar ? ' · ' + state.aar : '');
     renderGlassDet();
     visRegnr();
     show('glass');
+  }
+
+  // P2 (Beta1-funn): SVVs handelsbetegnelse inkluderer ofte merket («NISSAN
+  // LEAF», «TOYOTA HILUX») — ikke prepender merket da. («NISSAN NISSAN LEAF»)
+  function bilnavn() {
+    var m = (state.merke || '').toUpperCase().trim();
+    var mod = (state.modell || '').trim();
+    var navn = (m && mod.toUpperCase().indexOf(m) !== 0 ? state.merke + ' ' : '') + mod;
+    return navn + (state.aar ? ' ' + state.aar : '');
   }
 
   // Detaljlinjer fra SVV (førstegangsregistrert + VIN + import-merkelapp) på glassvalg-skjermen.
@@ -385,6 +396,7 @@
       if (b.dataset.type !== 'front') return; // kun frontrute er aktiv i beta
       loggHendelse('velg_frontrute', { merke: state.merke, modell: state.modell, regnr: state.regnr });
       spmIndex = 0;
+      if (!spm.length) { gaaTilResultat(); return; } // ingen skillende spørsmål → direkte resultat
       spmRender();
       show('spm');
     });
@@ -441,7 +453,11 @@
     if (key === 'sensor' || key === 'antenne' || key === 'coated') state.profil[key] = val;
     else state.info[key] = val; // hud / kamera / adas / oppvarmet: info i resultatet, ikke matcher-profilen
     if (spmIndex < spm.length - 1) { spmIndex++; spmRender(); return; }
-    // Siste spørsmål besvart — velg direkte blant resolver-kandidatene når de finnes
+    gaaTilResultat();
+  }
+
+  // Velg direkte blant resolver-kandidatene når de finnes; ellers /api/frontrute.
+  function gaaTilResultat() {
     var valgt = filtrerResolverKandidater();
     if (valgt && renderResolverResultat(valgt)) return;
     show('resultat');
@@ -586,7 +602,7 @@
       '<div class="meta"></div>' +
       '<div class="spec"></div>';
     kort.querySelector('.name').textContent =
-      state.merke + ' ' + state.modell + (state.aar ? ' ' + state.aar : '');
+      bilnavn();
     kort.querySelector('.meta').textContent =
       'Varenr. ' + (a.varenr || '') + (a.eurokode ? ' · ' + a.eurokode : '');
 
