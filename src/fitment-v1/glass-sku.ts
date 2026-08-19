@@ -253,6 +253,41 @@ export function gtTilVehicleRule(r: GtRad): VehicleRule | null {
   };
 }
 
+/**
+ * Bygg GlassSku DIREKTE fra GT-rad (Oppgave 6a, commit 1) når ingen
+ * glavista-SKU finnes for eurokoden (veteran-koder som 16C/377C).
+ *
+ * status: 'verified' KUN når GT-raden har en MENNESKELIG verified_by
+ * (≠ 'gt-auto-prisliste' — den er klasse-D sirkulær kilde og beviser ikke).
+ * Alle dagens GT-rader har 'gt-auto-prisliste' → candidate. Fremtidige
+ * menneskelig verifiserte rader blir automatisk verified.
+ */
+export function byggSkuFraGt(regler: VehicleRule[], eurocode: string): GlassSku {
+  const menneskelig = regler.some((r) => r.verifiedBy && r.verifiedBy !== 'gt-auto-prisliste' && r.verifiedBy !== 'gt-generator');
+  return {
+    sku: `GT:${eurocode}`,
+    varenr: null,
+    supplier: 'GROUND_TRUTH',
+    supplierPartNumbers: [],
+    oemPartNumbers: [],
+    eurocodes: [eurocode],
+    vehicleRules: regler,
+    attributes: {
+      windshield: true,
+      hud: null, cameraBracket: null, rainLightSensor: null,
+      heating: null, acoustic: null, antenna: null, tint: null,
+    },
+    evidence: [{
+      source: 'gt-auto-prisliste',
+      sourceClass: menneskelig ? 'AUTHORITATIVE' : 'INTERNAL_CATALOG',
+      sourceRecord: eurocode,
+      datasetVersion: '2026-08',
+      notes: `ground_truth ${regler.length} regler; verified_by=${[...new Set(regler.map((r) => r.verifiedBy ?? 'gt-generator'))].join(',')}`,
+    }],
+    status: menneskelig ? 'verified' : 'candidate',
+  };
+}
+
 /** Fletter GT-regler inn i en eksisterende SKU (matcher på eurokode — ingen data mistes). */
 export function leggTilGtRule(sku: GlassSku, r: VehicleRule): GlassSku {
   const finnes = sku.vehicleRules.some((v) => v.raw === r.raw && v.source === r.source);

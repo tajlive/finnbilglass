@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   parseGlavistaProps, glavistaTint, glavistaTilAttributes,
   byggSkuFraGlavista, gtTilVehicleRule, fasitTilSku,
-  leggTilGtRule, parseAarIntervall, ukjenteAttributter,
+  leggTilGtRule, parseAarIntervall, ukjenteAttributter, byggSkuFraGt,
 } from '../src/fitment-v1/glass-sku.ts';
 
 test('parseGlavistaProps: Mirror boss → cameraBracket', () => {
@@ -104,4 +104,23 @@ test('glavistaTilAttributes: alle nevnte attributter true, resten null', () => {
   assert.equal(a.cameraBracket, null);
   assert.equal(a.heating, null);
   assert.equal(a.tint, 'BL');
+});
+
+// ── Oppgave 6a commit 1: GT-baserte SKU-er ──
+test('byggSkuFraGt: gt-auto-prisliste-regler → candidate (sirkulær kilde beviser ikke)', () => {
+  const regler = [gtTilVehicleRule({ make: 'VW', model: 'TRANSPORTER', year: 1951, frontruteEurocode: '9217C', verifiedBy: 'gt-auto-prisliste' })];
+  const sku = byggSkuFraGt(regler, '9217C');
+  assert.equal(sku.sku, 'GT:9217C');
+  assert.equal(sku.status, 'candidate');
+  assert.equal(sku.eurocodes[0], '9217C');
+  assert.equal(sku.supplier, 'GROUND_TRUTH');
+  assert.equal(sku.vehicleRules.length, 1);
+  assert.equal(sku.attributes.cameraBracket, null); // aldri fabrikkert
+});
+
+test('byggSkuFraGt: menneskelig verified_by → verified (fremtidssikret)', () => {
+  const regler = [gtTilVehicleRule({ make: 'VW', model: 'TRANSPORTER', year: 1951, frontruteEurocode: '9217C', verifiedBy: 'tom-fasit' })];
+  const sku = byggSkuFraGt(regler, '9217C');
+  assert.equal(sku.status, 'verified');
+  assert.equal(sku.evidence[0].sourceClass, 'AUTHORITATIVE');
 });

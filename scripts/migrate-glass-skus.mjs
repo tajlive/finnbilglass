@@ -19,8 +19,22 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = join(ROOT, 'data');
 
 // GlassSku-modellen er TypeScript; scriptet bruker de samme mappere via tsx.
-const { byggSkuFraGlavista, gtTilVehicleRule, fasitTilSku, leggTilGtRule } =
+const { byggSkuFraGlavista, byggSkuFraGt, gtTilVehicleRule, fasitTilSku, leggTilGtRule } =
   await import(join(ROOT, 'src/fitment-v1/glass-sku.ts'));
+
+// Dekning av fasit-live-koder FØR GT-utvidelsen (måles i rapporten).
+const fasitLive = JSON.parse(readFileSync(join(DATA, 'fasit-live.json'), 'utf8'));
+const fasitSaker = fasitLive.fasiter ?? [];
+function dekningAv(alleSkuer) {
+  const koder = new Set();
+  for (const s of alleSkuer) for (const k of s.eurocodes) koder.add(k.toUpperCase());
+  let sakerMedAlleKoder = 0;
+  for (const f of fasitSaker) {
+    const ks = (f.gyldigeKoder ?? []).map((k) => String(k).toUpperCase());
+    if (ks.length && ks.every((k) => koder.has(k))) sakerMedAlleKoder++;
+  }
+  return sakerMedAlleKoder;
+}
 
 // ── 1. Glavista-index ──
 const glavista = JSON.parse(readFileSync(join(DATA, 'glavista-index.json'), 'utf8'));
@@ -71,6 +85,20 @@ for (const sku of skuer.values()) {
   }
 }
 
+// ── 2b. GT-baserte SKU-er (Oppgave 6a commit 1): bygg SKU direkte fra GT-rad
+//        når ingen glavista-SKU finnes for eurokoden (veteran-koder) ──
+const dekkedeKoder = new Set();
+for (const sku of skuer.values()) for (const k of sku.eurocodes) dekkedeKoder.add(k.toUpperCase());
+const dekningFor = dekningAv([...skuer.values()]);
+let gtSkuerBygd = 0;
+for (const [kode, regler] of gtTilKode) {
+  if (dekkedeKoder.has(kode)) continue; // allerede dekket av glavista
+  const ny = byggSkuFraGt(regler, kode);
+  skuer.set(ny.sku, ny);
+  gtSkuerBygd++;
+}
+const dekningEtter = dekningAv([...skuer.values()]);
+
 // ── 3. Tom-fasiter → verified-status + Autoglass-varenr ──
 const fasit = JSON.parse(readFileSync(join(DATA, 'fasit-glass.json'), 'utf8'));
 const fasitRader = (fasit.fasiter ?? []);
@@ -114,12 +142,18 @@ const rapport = {
     fasitRader: fasitRader.length,
   },
   glassSkuTotalt: alle.length,
-  medVehicleRule: alle.length - umappetAttributter.length,
+  gtSkuerBygd: gtSkuerBygd,
+  medVehicleRule: alle.length - umapAttributter(alle).length,
   medGtRegel: medGt.length,
   medOe: medOe.length,
   verified: verified.length,
   fasitMatchet: fasitMatchet,
   fasitUtenGlavistaTreff: fasitRader.length - fasitMatchet,
+  fasitLiveDekning: {
+    forGtUtvidelse: dekningFor,
+    etterGtUtvidelse: dekningEtter,
+    okning: dekningEtter - dekningFor,
+  },
   umappet: {
     utenVehicleRule: umapAttributter(alle).length,
     utenPropsOgRegel: utenProps.length,
