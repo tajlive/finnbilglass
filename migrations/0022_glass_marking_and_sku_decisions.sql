@@ -8,9 +8,13 @@
 -- ============================================================================
 
 -- 1. Rebuild evidence_case_images med utvidet bildetype-sett
---    RENAME-sekvens (ikke DROP): DROP av foreldre-tabellen blokkeres av FK fra
---    evidence_case_image_quality_events (0016) når foreign_keys=ON (D1).
---    SQLite oppdaterer barnets FK-referanse automatisk ved RENAME.
+--    RENAME-sekvens (ikke tabell-sletting): D1 kjører multi-statement i
+--    transaksjon der PRAGMA foreign_keys=OFF er no-op, og sletting av en
+--    tabell som er FK-mål for evidence_case_image_quality_events (0016)
+--    blokkeres (SQLITE_CONSTRAINT_FOREIGNKEY). SQLite oppdaterer barnets
+--    FK-referanse automatisk ved RENAME.
+--    MERK: evidence_case_images_old blir liggende som backup etter rebuild
+--    (fjernes ikke — bevisst, se over; tabellen er tom-innhold-duplikat).
 CREATE TABLE IF NOT EXISTS evidence_case_images_new (
   image_id TEXT PRIMARY KEY,
   case_id TEXT NOT NULL,
@@ -24,7 +28,6 @@ INSERT OR IGNORE INTO evidence_case_images_new (image_id, case_id, image_type, r
   SELECT image_id, case_id, image_type, r2_key, mime, created_at FROM evidence_case_images;
 ALTER TABLE evidence_case_images RENAME TO evidence_case_images_old;
 ALTER TABLE evidence_case_images_new RENAME TO evidence_case_images;
-DROP TABLE IF EXISTS evidence_case_images_old;
 CREATE INDEX IF NOT EXISTS idx_evidence_case_images_case ON evidence_case_images (case_id, created_at);
 
 -- 2. Append-only beslutningslogg for SKU-handlinger
