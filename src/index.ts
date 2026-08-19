@@ -163,7 +163,7 @@ function supportAuthorised(request: Request, env: Env): boolean {
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
 }
 
-/** Send svar til kunde på e-post via SendGrid v3. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
+/** Send svar til kunde på e-post via Brevo (tidl. Sendinblue) v3 SMTP. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
 async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: string | null, message: string): Promise<{ ok: boolean; error?: string }> {
   const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
   const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
@@ -175,18 +175,19 @@ async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: 
     '<p>— FinnBilglass</p>' +
     '<p style="color:#637286;font-size:12px">Svar på e-post til ' + escHtml(from) + '. Vi svarer gjerne på spørsmål om glasset eller leveransen.</p>';
   try {
-    const r = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + env.SENDGRID_API_KEY, 'Content-Type': 'application/json' },
+      headers: { 'api-key': env.BREVO_API_KEY || '', 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        personalizations: [{ to: [{ email: to }], subject }],
-        from: { email: from, name: 'FinnBilglass' },
-        content: [{ type: 'text/html', value: html }],
+        sender: { email: from, name: 'FinnBilglass' },
+        to: [{ email: to, name: body.navn || undefined }],
+        subject,
+        htmlContent: html,
       }),
     });
     if (!r.ok) {
       const txt = await r.text().catch(() => '');
-      return { ok: false, error: `SendGrid ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
+      return { ok: false, error: `Brevo ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
     }
     return { ok: true };
   } catch (e) {
@@ -771,10 +772,10 @@ export default {
     const inquiryReplyMatch = /^\/api\/ops\/inquiries\/(\d+)\/reply$/.exec(path);
     if (method === 'POST' && inquiryReplyMatch) {
       // Svar direkte til kunden på e-post (kanal #4). Append-only-logg som notater.
-      // Avhengig av SENDGRID_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
+      // Avhengig av BREVO_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
-      if (!env.SENDGRID_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
+      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
       if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);
