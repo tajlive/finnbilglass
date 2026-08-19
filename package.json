@@ -41,7 +41,8 @@
     "test:c84": "node --import tsx --test tests/c84.test.mjs",
     "test:c10": "node --import tsx --test tests/c10.test.mjs",
     "test:challenge": "node --import tsx --test tests/fitment-challenge.test.mjs",
-    "test:evidence-capture": "node --import tsx --test tests/evidence-capture-v01.test.ts"
+    "test:evidence-capture": "node --import tsx --test tests/evidence-capture-v01.test.ts",
+    "test:glass-sku": "node --import tsx --test tests/glass-sku.test.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
