@@ -436,6 +436,13 @@
     r.classList.remove('hidden', 'ok');
   }
 
+  // «Send bilder» er kun aktiv når minst ett bilde er valgt — bildene er valgfrie,
+  // og glassvalg er veien videre. Deaktivert uten bilder forhindrer «stuck»-felle på PC/pad/mac.
+  function oppdaterEvidenceKnapp() {
+    var b = document.getElementById('btn-evidence-submit');
+    if (b) b.disabled = !Object.keys(evidenceBilder).length;
+  }
+
   function visEvidenceMiniatyr(key, res) {
     var mini = document.querySelector('.evidence-miniatyr[data-key="' + key + '"]');
     if (!mini) return;
@@ -450,6 +457,7 @@
     if (mini) mini.classList.add('hidden');
     var r = $('evidence-result');
     if (r && !Object.keys(evidenceBilder).length) r.classList.add('hidden');
+    oppdaterEvidenceKnapp();
   }
 
   function handterEvidenceFil(key, input) {
@@ -460,6 +468,7 @@
     komprimerBilde(f).then(function (res) {
       evidenceBilder[key] = res;
       visEvidenceMiniatyr(key, res);
+      oppdaterEvidenceKnapp();
     }).catch(function () {
       evidenceFeil('Kunne ikke lese bildet. Prøv igjen.');
     });
