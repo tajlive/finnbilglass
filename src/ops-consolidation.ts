@@ -46,6 +46,12 @@ export interface KonsolidertSak {
   assignedTo: string | null;
   createdAt: number;
   updatedAt: number | null;
+  /** Resolver-utfall: PINPOINT / VERIFY / FALLBACK / null (ukjent/evidence-only). */
+  resolverUtfall: string | null;
+  /** Antall kandidater fra resolver-snapshot (0 = ingen). */
+  kandidatantall: number;
+  /** Arbeids-prioritet: 0 = mest arbeid (FALLBACK), 3 = minst (PINPOINT/ukjent). */
+  prioritet: number;
 }
 
 /** Normaliser kjennemerke for sammenligning (SVV-format: 2 bokstaver + 5 siffer). */
@@ -58,6 +64,28 @@ function tilEpoch(v: number | string): number {
   if (typeof v === 'number') return v;
   const t = Date.parse(v);
   return Number.isFinite(t) ? t : 0;
+}
+
+/** Resolver-utfall + kandidatantall fra et frosset vehicle_json-snapshot. */
+function utfallFraSnapshot(vehicleJson: string | null): { utfall: string | null; kandidater: number } {
+  if (!vehicleJson) return { utfall: null, kandidater: 0 };
+  try {
+    const v = JSON.parse(vehicleJson) as { resolver?: { utfall?: string; kandidater?: unknown[] } };
+    return {
+      utfall: typeof v.resolver?.utfall === 'string' ? v.resolver.utfall : null,
+      kandidater: Array.isArray(v.resolver?.kandidater) ? v.resolver.kandidater.length : 0,
+    };
+  } catch {
+    return { utfall: null, kandidater: 0 };
+  }
+}
+
+function arbeidsPrioritet(utfall: string | null, kandidater: number, kind: 'inquiry' | 'evidence'): number {
+  if (kind === 'evidence') return 1; // bilder uten henvendelse → trenger manuell vurdering
+  if (utfall === 'FALLBACK') return 0; // mest arbeid
+  if (utfall === 'VERIFY') return 1;
+  if (utfall === 'PINPOINT') return 2; // minst arbeid
+  return kandidater > 1 ? 1 : 3; // ukjent utfall: med kandidater → vurder, uten → sist
 }
 
 /**
@@ -74,6 +102,7 @@ export function konsoliderSaker(
   // 1. Inquiries er primær-enheten.
   for (const i of inquiries) {
     const createdAt = tilEpoch(i.created_at);
+    const snap = utfallFraSnapshot(i.vehicle_json);
     saker.set(`inquiry-${i.id}`, {
       key: `inquiry-${i.id}`,
       kind: 'inquiry',
@@ -88,6 +117,9 @@ export function konsoliderSaker(
       assignedTo: i.assigned_to,
       createdAt,
       updatedAt: i.updated_at ?? null,
+      resolverUtfall: snap.utfall,
+      kandidatantall: snap.kandidater,
+      prioritet: arbeidsPrioritet(snap.utfall, snap.kandidater, 'inquiry'),
     });
   }
 
@@ -123,8 +155,12 @@ export function konsoliderSaker(
       assignedTo: null,
       createdAt: e.created_at,
       updatedAt: null,
+      resolverUtfall: null,
+      kandidatantall: 0,
+      prioritet: 1,
     });
   }
 
-  return [...saker.values()].sort((a, b) => b.createdAt - a.createdAt);
+  // Prioriter: mest arbeid først (FALLBACK→VERIFY→PINPOINT), deretter eldst først.
+  return [...saker.values()].sort((a, b) => a.prioritet - b.prioritet || a.createdAt - b.createdAt);
 }

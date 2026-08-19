@@ -66,13 +66,21 @@ test('konsoliderSaker: evidence med null session_id blir aldri feilaktig matchet
   assert.equal(saker.length, 2, 'null session_id skal ikke matche');
 });
 
-test('konsoliderSaker: sorterer nyest-først', () => {
-  const inquiries = [
-    inquiry({ id: 1, regnr: 'A', session_id: 's1', created_at: 1000 }),
-    inquiry({ id: 2, regnr: 'B', session_id: 's2', created_at: 3000, status: 'CONFIRMED' }),
-  ];
-  const saker = konsoliderSaker(inquiries, []);
-  assert.equal(saker[0].inquiryId, 2, 'nyeste først');
+test('konsoliderSaker: prioriterer mest arbeid først (FALLBACK over PINPOINT), uavhengig av alder', () => {
+  const fallback = inquiry({ id: 1, session_id: 's1', created_at: 3000, vehicle_json: JSON.stringify({ resolver: { utfall: 'FALLBACK', kandidater: [] } }) });
+  const pinpoint = inquiry({ id: 2, session_id: 's2', created_at: 1000, vehicle_json: JSON.stringify({ resolver: { utfall: 'PINPOINT', kandidater: [{}] } }) });
+  const saker = konsoliderSaker([pinpoint, fallback], []);
+  assert.equal(saker[0].inquiryId, 1, 'FALLBACK (mest arbeid) skal komme først');
+  assert.equal(saker[1].inquiryId, 2);
+  assert.equal(saker[0].prioritet, 0);
+  assert.equal(saker[1].prioritet, 2);
+});
+
+test('konsoliderSaker: innen samme prioritet kommer eldst først', () => {
+  const a = inquiry({ id: 1, session_id: 's1', created_at: 3000, vehicle_json: JSON.stringify({ resolver: { utfall: 'VERIFY', kandidater: [{}, {}] } }) });
+  const b = inquiry({ id: 2, session_id: 's2', created_at: 1000, vehicle_json: JSON.stringify({ resolver: { utfall: 'VERIFY', kandidater: [{}, {}] } }) });
+  const saker = konsoliderSaker([a, b], []);
+  assert.equal(saker[0].inquiryId, 2, 'eldst VERIFY-sak først');
   assert.equal(saker[1].inquiryId, 1);
 });
 
