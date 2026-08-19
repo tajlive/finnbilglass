@@ -10,4 +10,8 @@ export interface Env {
   SUPPORT_EVIDENCE_TOKEN?: string;
   /** STAGING: konversasjonell assistent (fitment-v1/conversation-v1). Prod default: AV. */
   ASSISTANT_ENABLED?: string;
+  /** Feature-flags for evidence-flyten (default false i production inntil staging-verifisert). */
+  EVIDENCE_UPLOAD_ENABLED?: string;
+  EVIDENCE_REVIEW_ENABLED?: string;
+  EVIDENCE_STATUS_CHANGE_ENABLED?: string;
 }

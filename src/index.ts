@@ -159,6 +159,16 @@ function supportAuthorised(request: Request, env: Env): boolean {
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
 }
 
+/** Feature-flag for evidence-flyten — default false (kun eksplisitt 'true' åpner). */
+function featureEnabled(env: Env, navn: 'EVIDENCE_UPLOAD_ENABLED' | 'EVIDENCE_REVIEW_ENABLED' | 'EVIDENCE_STATUS_CHANGE_ENABLED'): boolean {
+  return env[navn] === 'true';
+}
+
+/** Standard 403 når et feature-flag er av — forståelig, ikke 404. */
+function featureDisabled(navn: string): Response {
+  return json({ ok: false, error: 'feature_disabled', feature: navn, melding: 'Denne funksjonen er ikke aktivert ennå.' }, 403);
+}
+
 function supportEvidenceUiLegacy(): Response {
   // The token is deliberately requested at runtime and is never embedded in an asset.
   return new Response(`<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finnbilglass support – Evidence</title><style>body{font:16px system-ui;margin:2rem;background:#f8fafc;color:#0f172a}main{max-width:900px;margin:auto}button,input{font:inherit;padding:.65rem}button{background:#f59e0b;border:0;border-radius:.4rem;font-weight:700}.case{background:white;border:1px solid #e2e8f0;border-radius:.6rem;padding:1rem;margin:1rem 0}.images{display:flex;gap:.7rem;flex-wrap:wrap}.images img{width:180px;max-height:140px;object-fit:cover;border-radius:.4rem;border:1px solid #e2e8f0}.muted{color:#64748b}</style><main><h1>Evidence Capture</h1><p class="muted">Internt supportverktøy. Bildene er evidens for manuell oppfølging, ikke en fitment-beslutning.</p><p><input id="token" type="password" placeholder="Support-token" autocomplete="current-password"><button id="load">Last saker</button></p><div id="out"></div><script>const out=document.querySelector('#out'),token=document.querySelector('#token');document.querySelector('#load').onclick=async()=>{out.textContent='Laster…';const h={Authorization:'Bearer '+token.value};const r=await fetch('/api/support/evidence',{headers:h});if(!r.ok){out.textContent=r.status===401?'Ingen tilgang.':'Kunne ikke hente saker.';return}const d=await r.json();out.innerHTML='';d.cases.forEach(c=>{const e=document.createElement('article');e.className='case';e.innerHTML='<b>'+c.caseId+'</b> · '+c.status+'<br><span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+' · '+c.imageCount+' bilde(r)</span>';const imgs=document.createElement('div');imgs.className='images';c.images.forEach(i=>{const a=document.createElement('a');a.href='/api/support/evidence/'+encodeURIComponent(c.caseId)+'/'+encodeURIComponent(i.imageId);a.target='_blank';const img=document.createElement('img');img.alt=i.imageType;fetch(a.href,{headers:h}).then(x=>x.blob()).then(b=>img.src=URL.createObjectURL(b));a.append(img);imgs.append(a)});e.append(imgs);out.append(e)});if(!d.cases.length)out.textContent='Ingen innsendte saker ennå.'}</script></main></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
@@ -536,9 +546,7 @@ export default {
     }
 
     if (method === 'POST' && path === '/api/evidence-capture') {
-      if (env.ENVIRONMENT === 'production') {
-        return json({ ok: false, error: 'Kundebilder til support er ikke aktivert' }, 404);
-      }
+      if (!featureEnabled(env, 'EVIDENCE_UPLOAD_ENABLED')) return featureDisabled('EVIDENCE_UPLOAD_ENABLED');
       let body: unknown;
       try { body = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const b = isRecord(body) ? body : null;
@@ -877,9 +885,8 @@ export default {
       return json({ ok: true, status: 'CONFIRMED', overrideId });
     }
     if (method === 'GET' && path === '/support/evidence') {
-      // Behandlingsflaten (statusendring/sjekkliste) er staging-only i denne fasen.
-      // Prod har lesetilgang via /ops-panelet. B2B/montør kommer som egen fase.
-      if (env.ENVIRONMENT !== 'staging') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      // Behandlingsflaten (statusendring/sjekkliste) styres av feature-flag.
+      if (!featureEnabled(env, 'EVIDENCE_REVIEW_ENABLED')) return featureDisabled('EVIDENCE_REVIEW_ENABLED');
       return supportEvidenceUi();
     }
     if (method === 'GET' && path === '/api/support/evidence') {
@@ -915,8 +922,8 @@ export default {
     }
     const statusMatch = /^\/api\/support\/evidence\/([^/]+)\/status$/.exec(path);
     if (method === 'POST' && statusMatch) {
-      // Statusendring er skriving — staging-only i denne fasen (prod = lesetilgang).
-      if (env.ENVIRONMENT !== 'staging') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      // Statusendring er skriving — styres av feature-flag (append-only, token-gate).
+      if (!featureEnabled(env, 'EVIDENCE_STATUS_CHANGE_ENABLED')) return featureDisabled('EVIDENCE_STATUS_CHANGE_ENABLED');
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;

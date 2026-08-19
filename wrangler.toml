@@ -26,6 +26,10 @@ bucket_name = "finnbilglass-opplaering"
 
 [vars]
 ENVIRONMENT = "production"
+# Evidence-flyt feature-flags — default AV i production inntil staging-verifisert.
+EVIDENCE_UPLOAD_ENABLED = "false"
+EVIDENCE_REVIEW_ENABLED = "false"
+EVIDENCE_STATUS_CHANGE_ENABLED = "false"
 
 # ── Observability (Tom 2026-08-19): Workers Logs-lagring AV (kostnad),
 #    invocation_logs PÅ (wrangler tail / debugging) ──────────────────
