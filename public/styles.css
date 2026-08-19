@@ -372,6 +372,16 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
 .tilbehor-valg span { font-size: 15px; font-weight: 600; }
 .note-tilbehor { opacity: .75; }
 
+/* P0.1: montasjevalg + tilbehørsinfo (kandidat- og glassstyrt) */
+.montasje-valg { margin: 10px 0 12px; font-size: var(--fs-sm); color: var(--text-2); }
+.montasje-valg label {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 8px 14px 0 0; font-weight: 600; cursor: pointer;
+}
+.montasje-valg input { width: 18px; height: 18px; accent-color: var(--brand); }
+.tilbehor-info { margin: 8px 0; font-size: 14px; line-height: 1.45; color: var(--text-2); }
+.tilbehor-info::before { content: '✓ '; color: var(--brand-deep); font-weight: 800; }
+
 /* Henvendelsesskjema (beta) */
 .inquiry {
   margin: 16px 0;

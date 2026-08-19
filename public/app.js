@@ -689,7 +689,7 @@
 
   function renderResultat(data) {
     visRegnr();
-    $('tilbehor-seksjon').classList.remove('hidden');
+    // P0.1: tilbehørsseksjonen vises ikke generisk — kun per kandidat/glass (nedenfor).
     // Forhåndsutfyll henvendelsesskjema med skiltnummeret (låst) — beta-tilbudsflyt.
     $('inquiry-regnr').value = state.regnr || '';
     var a = data && data.anbefaling;
@@ -763,7 +763,115 @@
       avslutning.textContent = 'Vi dobbeltsjekker riktig variant manuelt for bilen din før levering.';
       alt.appendChild(avslutning);
     }
+
+    // P0.1 (Tom-doktrine): tilbehør er kandidat- og glassstyrt via
+    // /api/accessories (AccessoryApplicabilityEngine som fasit).
+    var tilbehorSeksjon = $('tilbehor-seksjon');
+    var verifyTekst = $('tilbehor-verify');
+    var montasjeValg = $('montasje-valg');
+    if (data.pinpoint && a && a.varenr) {
+      // PINPOINT: hent tilbehør for den ene kandidaten (engine som fasit).
+      verifyTekst.classList.add('hidden');
+      hentOgVisTilbehor(a, 'EXACT');
+    } else if (data.kandidater && data.kandidater.length > 1) {
+      // VERIFY: aldri kandidatspesifikke valg — kun trygg tekst.
+      tilbehorData = [];
+      $('tilbehor-liste').innerHTML = '';
+      if (montasjeValg) montasjeValg.style.display = 'none';
+      verifyTekst.classList.remove('hidden');
+      tilbehorSeksjon.classList.remove('hidden');
+    } else {
+      // FALLBACK/tomt: ingen dokumentert tilbehør → ingen seksjon.
+      tilbehorData = [];
+      tilbehorSeksjon.classList.add('hidden');
+      verifyTekst.classList.add('hidden');
+    }
   }
+
+  // ── P0.1: tilbehør (kandidat- og glassstyrt, engine som fasit) ─────────
+  var tilbehorData = null; // siste /api/accessories-svar (re-render ved montasjevalg)
+
+  function tilbehorInfoTekst(state) {
+    if (state === 'REQUIRED_SEPARATE') return 'Dette trenger bilen din for riktig montering.';
+    if (state === 'INCLUDED_WITH_GLASS') return 'Dette følger med glasset.';
+    return null;
+  }
+
+  function renderTilbehor(accessories) {
+    var seksjon = $('tilbehor-seksjon');
+    var liste = $('tilbehor-liste');
+    var verify = $('tilbehor-verify');
+    var montasjeRadio = document.querySelector('input[name="montasje"]:checked');
+    var montasje = montasjeRadio ? montasjeRadio.value : 'verksted';
+    liste.innerHTML = '';
+    verify.classList.add('hidden');
+    if (!accessories || !accessories.length) { seksjon.classList.add('hidden'); return; }
+    var visbare = 0;
+    var harLimKit = false;
+    accessories.forEach(function (a) {
+      var info = tilbehorInfoTekst(a.state);
+      if (info) {
+        // REQUIRED / INCLUDED → informasjon, aldri avkrysningsboks.
+        var rad = document.createElement('p');
+        rad.className = 'tilbehor-info';
+        rad.textContent = a.accessory.name + ' — ' + info;
+        liste.appendChild(rad);
+        visbare++;
+        return;
+      }
+      if (a.state === 'OPTIONAL_COMPATIBLE') {
+        // Lim-kit (INSTALLATION_CONSUMABLE) kun ved eksplisitt selvmontasje.
+        if (a.accessory.kind === 'INSTALLATION_CONSUMABLE') {
+          harLimKit = true;
+          if (montasje !== 'selv') return;
+        }
+        var lbl = document.createElement('label');
+        lbl.className = 'tilbehor-valg';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = a.accessory.productId;
+        cb.addEventListener('change', function () {
+          loggHendelse('tilbehor_valg', { valg: cb.value, avkrysset: cb.checked });
+        });
+        lbl.appendChild(cb);
+        var span = document.createElement('span');
+        span.textContent = a.accessory.name;
+        lbl.appendChild(span);
+        liste.appendChild(lbl);
+        visbare++;
+      }
+      // NOT_APPLICABLE / UNKNOWN / AMBIGUOUS / EXCLUDED → aldri vist.
+    });
+    if (!visbare) { seksjon.classList.add('hidden'); return; }
+    seksjon.classList.remove('hidden');
+    var mv = $('montasje-valg');
+    if (mv) mv.style.display = harLimKit ? '' : 'none';
+  }
+
+  function hentOgVisTilbehor(kandidat, fitmentStatus) {
+    var features = {};
+    if (kandidat && kandidat.attributter) {
+      ['sensor', 'antenne', 'hud', 'kamera', 'adas', 'coated'].forEach(function (f) {
+        if (kandidat.attributter[f] === true || kandidat.attributter[f] === false) features[f] = kandidat.attributter[f];
+      });
+    }
+    fetch('/api/accessories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ varenr: kandidat.varenr || null, eurokode: kandidat.eurokode || null, features: features, fitmentStatus: fitmentStatus })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      tilbehorData = (d && d.ok) ? d.accessories : [];
+      renderTilbehor(tilbehorData);
+    }).catch(function () {
+      tilbehorData = [];
+      renderTilbehor(tilbehorData);
+    });
+  }
+
+  // Montasjevalg (verksted/selv) → re-render: lim-kit vises kun ved selvmontasje.
+  document.querySelectorAll('input[name="montasje"]').forEach(function (r) {
+    r.addEventListener('change', function () { renderTilbehor(tilbehorData || []); });
+  });
 
   function mock() {
     // Demo-fasit (verifisert katalogdata, finnbilglass-db): VW TRANSPORTER T5 2003- →
@@ -788,12 +896,7 @@
     });
   });
 
-  // Tilbehørsvalg (Sika/klips/pyntelist/sensorgel) — fasit for tilbehørs-modellen.
-  document.querySelectorAll('.tilbehor-valg input[type="checkbox"]').forEach(function (cb) {
-    cb.addEventListener('change', function () {
-      loggHendelse('tilbehor_valg', { valg: cb.value, avkrysset: cb.checked });
-    });
-  });
+  // Tilbehørsvalg bindes dynamisk i renderTilbehor (P0.1) — ingen statiske bokser.
 
   // Beta-henvendelse: knapp → skjema → validering → POST → bekreftelse.
   $('btn-inquiry').addEventListener('click', function () {

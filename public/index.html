@@ -258,27 +258,13 @@
     </div>
     <div id="tilbehor-seksjon" class="tilbehor hidden" aria-label="Tilbehør til monteringen">
       <h3>Trenger du tilbehør til monteringen?</h3>
-      <p class="note">Velg det du trenger — prisen legges til i bestillingen.</p>
-      <label class="tilbehor-valg" id="tilbehor-sika">
-        <input type="checkbox" value="sika-pakke">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-lim"/></svg>
-        <span>Sika monteringspakke — rutelim, primer og Q-tips</span>
-      </label>
-      <label class="tilbehor-valg" id="tilbehor-klips">
-        <input type="checkbox" value="klips">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-verktoy"/></svg>
-        <span>Klips / festeklips</span>
-      </label>
-      <label class="tilbehor-valg" id="tilbehor-pyntelist">
-        <input type="checkbox" value="pyntelist">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-frontrute"/></svg>
-        <span>Pynteliste</span>
-      </label>
-      <label class="tilbehor-valg" id="tilbehor-sensorgel">
-        <input type="checkbox" value="sensorgel">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-lim"/></svg>
-        <span>Regnsensorgel / sensorfeste</span>
-      </label>
+      <div class="montasje-valg" id="montasje-valg">
+        <span class="muted">Hvem monterer glasset?</span>
+        <label><input type="radio" name="montasje" value="verksted" checked> Avtaleverksted monterer</label>
+        <label><input type="radio" name="montasje" value="selv"> Jeg monterer selv</label>
+      </div>
+      <div id="tilbehor-liste"></div>
+      <p id="tilbehor-verify" class="note hidden">Jeg avklarer eventuelt nødvendig tilbehør før jeg sender tilbudet.</p>
       <p class="note note-tilbehor">Tilbehørspriser vises når beta åpner.</p>
     </div>
     <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Glasset sendes direkte til deg — eller til et av våre avtaleverksteder for montering. Montering og frakt tilkommer.</p>

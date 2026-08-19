@@ -19,6 +19,8 @@ import { operationsCenterUi } from './ops-center-ui';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
+import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
+import { defaultRelations } from './accessory-v1/catalogue.js';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -389,6 +391,38 @@ export default {
       }
     }
 
+    if (method === 'POST' && path === '/api/accessories') {
+      // P0.1 (Tom-doktrine): tilbehør er kandidat- og glassstyrt via
+      // AccessoryApplicabilityEngine (deterministisk fasit, ikke if/else i UI).
+      // Ingen relasjon dokumentert → ingen tilbehør. UNKNOWN/NOT_APPLICABLE
+      // returneres men markeres — frontend viser dem aldri.
+      const eng = new AccessoryApplicabilityEngine(defaultRelations());
+      let body: unknown;
+      try { body = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const varenr = typeof (body as Record<string, unknown>)?.varenr === 'string' ? (body as Record<string, unknown>).varenr as string : null;
+      const eurokode = typeof (body as Record<string, unknown>)?.eurokode === 'string' ? (body as Record<string, unknown>).eurokode as string : null;
+      const features = (body as Record<string, unknown>)?.features && typeof (body as Record<string, unknown>).features === 'object' ? (body as Record<string, unknown>).features as Record<string, unknown> : {};
+      const fs = (body as Record<string, unknown>)?.fitmentStatus;
+      if (!varenr && !eurokode) return json({ ok: false, error: 'varenr eller eurokode påkrevd' }, 400);
+      const app = eng.evaluate({
+        vehicleIdentity: null,
+        applicationIdentity: null,
+        selectedGlass: { glass: eurokode ?? '', varenr },
+        glassFeatures: features as Record<string, string | boolean | null>,
+        fitmentStatus: fs === 'EXACT' ? 'EXACT' : fs === 'AMBIGUOUS' ? 'AMBIGUOUS' : 'UNKNOWN',
+        verificationMode: null,
+      });
+      return json({
+        ok: true,
+        accessories: app.map((a) => ({
+          accessory: { productId: a.accessory.productId, name: a.accessory.name, category: a.accessory.category, kind: a.accessory.kind },
+          state: a.state,
+          reason: a.reason,
+          requiresInstallerConfirmation: !!a.requiresInstallerConfirmation,
+          duplicateOfGlassComponent: !!a.duplicateOfGlassComponent,
+        })),
+      });
+    }
     if (method === 'POST' && path === '/api/regnr') {
       let body: unknown;
       try {
