@@ -190,6 +190,19 @@
       <button id="btn-ikke-min-bil" class="link" type="button">Ikke min bil</button>
     </div>
 
+    <!-- Evidence Capture: supportdokumentasjon, separat fra beslutningsmotoren.
+         Ingen respons herfra brukes i resolveren eller kan sette EXACT. -->
+    <section class="evidence-capture" aria-labelledby="evidence-title">
+      <h3 id="evidence-title">Hjelp oss å dobbeltsjekke</h3>
+      <p>Valgfritt: ta et bilde eller velg fra bildebiblioteket. Bildene brukes kun som dokumentasjon og bestemmer aldri hvilket glass vi velger.</p>
+      <label><span>Registreringsskilt</span><input id="evidence-plate" type="file" accept="image/*" capture="environment"></label>
+      <label><span>Hele frontruten</span><input id="evidence-windshield" type="file" accept="image/*" capture="environment"></label>
+      <label><span>Nærbilde rundt speil/sensorområde</span><input id="evidence-mirror" type="file" accept="image/*" capture="environment"></label>
+      <label><span>Valgfritt bilde innenfra</span><input id="evidence-interior" type="file" accept="image/*" capture="environment"></label>
+      <button id="btn-evidence-submit" class="sek" type="button">Send bilder til support</button>
+      <p id="evidence-result" class="note hidden" role="status" aria-live="polite"></p>
+    </section>
+
     <!-- Glasstype-bokser -->
     <div class="glassvalg" role="group" aria-label="Glasstype">
       <button class="glassopt" data-type="front" type="button">

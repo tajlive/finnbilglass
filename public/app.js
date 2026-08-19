@@ -399,6 +399,58 @@
     show('glass');
   }
 
+  // Evidence Capture: supportdokumentasjon, separat fra beslutningsmotoren.
+  // Ingen respons herfra brukes i resolveren eller kan sette EXACT.
+  // Modernisert (Oppgave 7): klientside komprimering + EXIF-orientering +
+  // thumbnail + kvalitetssjekk (lysstyrke/størrelse) FØR opplasting.
+  $('btn-evidence-submit').addEventListener('click', function () {
+    var felt = [
+      ['plate', $('evidence-plate')],
+      ['windshield', $('evidence-windshield')],
+      ['mirror_sensor', $('evidence-mirror')],
+      ['interior_optional', $('evidence-interior')]
+    ];
+    var valgt = felt.filter(function (p) { return p[1].files && p[1].files[0]; });
+    var resultat = $('evidence-result');
+    var settFeil = function (msg) { resultat.textContent = msg; resultat.classList.remove('hidden', 'ok'); };
+    var settOk = function (msg) { resultat.textContent = msg; resultat.classList.remove('hidden'); resultat.classList.add('ok'); };
+    if (!valgt.length) { settFeil('Velg minst ett bilde først.'); return; }
+    if (!state.regnr) { settFeil('Søk opp bilen først — vi trenger registreringsskiltet for å knytte bildene til en sak.'); return; }
+    var knapp = this;
+    knapp.disabled = true;
+    knapp.textContent = 'Klargjør bilder…';
+    Promise.all(valgt.map(function (p) {
+      var f = p[1].files[0];
+      if (!f.type.startsWith('image/')) throw new Error('Filen må være et bilde.');
+      if (f.size > 20 * 1024 * 1024) throw new Error('Et bilde er over 20 MB.');
+      return komprimerBilde(f).then(function (res) {
+        return { type: p[0], data: res.dataUrl, thumbnail: res.thumbDataUrl, advarsler: res.advarsler };
+      });
+    }))
+      .then(function (bilder) {
+        var adv = bilder.filter(function (b) { return b.advarsler.length; });
+        if (adv.length) {
+          var fortsett = window.confirm('Bildekvaliteten er dårlig for ' + adv.length + ' bilde(r) (' + adv[0].advarsler.join(', ') + '). Vil du likevel sende?');
+          if (!fortsett) { knapp.disabled = false; knapp.textContent = 'Send bilder til support'; return null; }
+        }
+        knapp.textContent = 'Sender bilder…';
+        return fetch('/api/evidence-capture', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ regnr: state.regnr, sessionId: sessionId, images: bilder.map(function (b) { return { type: b.type, data: b.data, thumbnail: b.thumbnail }; }) })
+        }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); });
+      })
+      .then(function (r) {
+        if (r === null) return; // kunde avbrøt kvalitetssjekk
+        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende bildene.');
+        settOk('Takk. Support-sak ' + r.data.caseId + ' er opprettet. Dette påvirker ikke glassvalget.');
+        valgt.forEach(function (p) { p[1].value = ''; });
+        loggHendelse('evidence_capture_sent', { caseId: r.data.caseId, imageCount: r.data.imageCount });
+      })
+      .catch(function (e) { settFeil(e.message || 'Kunne ikke sende bildene. Prøv igjen.'); })
+      .finally(function () { knapp.disabled = false; knapp.textContent = 'Send bilder til support'; });
+  });
+
   // P2 (Beta1-funn): SVVs handelsbetegnelse inkluderer ofte merket («NISSAN
   // LEAF», «TOYOTA HILUX») — ikke prepender merket da. («NISSAN NISSAN LEAF»)
   function bilnavn() {

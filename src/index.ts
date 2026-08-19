@@ -555,7 +555,7 @@ export default {
       if (!registration.trim()) return json({ ok: false, error: 'Kjennemerke påkrevd' }, 400);
       if (!images.length || images.length > 4) return json({ ok: false, error: 'Legg ved minst ett og maksimalt fire bilder' }, 400);
       if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
-      const decoded: { type: EvidenceImageType; bytes: Uint8Array; mime: string; ext: string; quality: EvidenceImageQuality }[] = [];
+      const decoded: { type: EvidenceImageType; bytes: Uint8Array; mime: string; ext: string; quality: EvidenceImageQuality; thumbnail: string | null }[] = [];
       for (const image of images) {
         if (!isRecord(image) || !isEvidenceImageType(image.type) || typeof image.data !== 'string') return json({ ok: false, error: 'Ugyldig bildedata' }, 400);
         if (image.data.length > 7_000_000) return json({ ok: false, error: 'Et bilde er for stort (maks 5 MB)' }, 413);
@@ -565,7 +565,8 @@ export default {
         if (quality.qualityClass === 'REJECT') {
           return json({ ok: false, error: `Bildet ${image.type} kan ikke brukes: ${quality.reasonCodes.join(', ')}`, imageType: image.type, quality }, 422);
         }
-        decoded.push({ type: image.type, ...parsed, quality });
+        const thumbnail = typeof image.thumbnail === 'string' && image.thumbnail.startsWith('data:image/') ? image.thumbnail : null;
+        decoded.push({ type: image.type, ...parsed, quality, thumbnail });
       }
       if (new Set(decoded.map((image) => image.type)).size !== decoded.length) return json({ ok: false, error: 'Hver bildetype kan bare sendes én gang' }, 400);
       const createdAt = Date.now();
@@ -580,7 +581,7 @@ export default {
           candidateSnapshot = (resolved.kandidater ?? []).slice(0, 12).map(k => ({ varenr: k.varenr, varenavn: k.varenavn, eurokode: k.eurokode, attributter: k.attributter }));
         } catch { /* Candidate support is optional and never blocks image capture. */ }
       }
-      const records = decoded.map((image, index) => ({ image, imageId: `${caseId}-${index + 1}`, r2Key: `evidence-capture/${caseId}/${image.type}.${image.ext}` }));
+      const records = decoded.map((image, index) => ({ image, imageId: `${caseId}-${index + 1}`, r2Key: `evidence-capture/${caseId}/${image.type}.${image.ext}`, thumbR2Key: image.thumbnail ? `evidence-capture/${caseId}/${image.type}.thumb.jpg` : null }));
       try {
         await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_cases (case_id, registration_hash, vehicle_identity_hash, created_at, session_id, status) VALUES (?, ?, ?, ?, ?, ?)')
           .bind(caseId, hash, hash, createdAt, sid, 'NEW').run();
@@ -591,8 +592,12 @@ export default {
         if (candidateSnapshot.length) await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_candidate_snapshots (case_id, created_at, candidates_json) VALUES (?, ?, ?)').bind(caseId, createdAt, JSON.stringify(candidateSnapshot)).run();
         for (const record of records) {
           await env.OPPLAERING_BUCKET.put(record.r2Key, record.image.bytes, { httpMetadata: { contentType: record.image.mime } });
-          await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_images (image_id, case_id, image_type, r2_key, mime, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-            .bind(record.imageId, caseId, record.image.type, record.r2Key, record.image.mime, createdAt).run();
+          if (record.thumbR2Key && record.image.thumbnail) {
+            const thumb = dataUrlTilBytes(record.image.thumbnail);
+            if (thumb) await env.OPPLAERING_BUCKET.put(record.thumbR2Key, thumb.bytes, { httpMetadata: { contentType: thumb.mime } });
+          }
+          await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_images (image_id, case_id, image_type, r2_key, thumb_r2_key, mime, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            .bind(record.imageId, caseId, record.image.type, record.r2Key, record.thumbR2Key, record.image.mime, createdAt).run();
           await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_image_quality_events (event_id, image_id, case_id, quality_class, reason_codes_json, width, height, byte_length, mime, analysis_version, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
             .bind(`${record.imageId}-quality-v1`, record.imageId, caseId, record.image.quality.qualityClass, JSON.stringify(record.image.quality.reasonCodes), record.image.quality.width, record.image.quality.height, record.image.quality.byteLength, record.image.quality.mime, record.image.quality.analysisVersion, createdAt, 'system').run();
         }
