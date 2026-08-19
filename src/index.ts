@@ -21,6 +21,7 @@ import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSk
 import type { GlassAttributes } from './fitment-v1/glass-sku';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
+import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -735,6 +736,80 @@ export default {
       const now = Date.now();
       await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
       return json({ ok: true });
+    }
+    if (method === 'GET' && path === '/api/ops/saker') {
+      // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens
+      // smeltet på session_id). Lesing, token-gate, kun staging+prod.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const inquiries = await env.FINNBILGLASS_DB.prepare(
+        'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
+      ).all<InquiryRow>();
+      const evidenceRows = await env.FINNBILGLASS_DB.prepare(
+        `SELECT c.case_id, c.registration_hash, c.session_id, c.status, c.created_at,
+                (SELECT COUNT(*) FROM evidence_case_images i WHERE i.case_id = c.case_id) AS image_count
+         FROM evidence_cases c ORDER BY c.created_at DESC LIMIT 500`,
+      ).all<EvidenceCaseRow>();
+      const saker = konsoliderSaker(inquiries.results ?? [], evidenceRows.results ?? []);
+      return json({ ok: true, saker, total: saker.length });
+    }
+    const sakDetailMatch = /^\/api\/ops\/saker\/(inquiry|evidence)-(.+)$/.exec(path);
+    if (method === 'GET' && sakDetailMatch) {
+      // Fase A: konsolidert sakdetalj — inquiry + tilknyttede evidenssaker med
+      // bilder + SKU-beslutning + tidslinje. Én visning for hele kundereisen.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const kind = sakDetailMatch[1];
+      const rawId = sakDetailMatch[2];
+
+      type InquiryDetail = { id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null };
+      type EvidenceDetail = { case_id: string; status: string; created_at: number; session_id: string | null };
+
+      let inquiry: InquiryDetail | null = null;
+      let sessionId: string | null = null;
+      let inquiryId: number | null = null;
+
+      if (kind === 'inquiry' && /^\d+$/.test(rawId)) {
+        inquiryId = Number(rawId);
+        inquiry = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(inquiryId).first<InquiryDetail>();
+        if (inquiry) sessionId = inquiry.session_id;
+      }
+
+      const evidenceCases: EvidenceDetail[] = [];
+      if (kind === 'evidence') {
+        const c = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE case_id = ?').bind(rawId).first<EvidenceDetail>();
+        if (c) { evidenceCases.push(c); if (!sessionId && c.session_id) sessionId = c.session_id; }
+      }
+      if (sessionId) {
+        const bySession = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE session_id = ? ORDER BY created_at DESC').bind(sessionId).all<EvidenceDetail>();
+        for (const c of bySession.results ?? []) if (!evidenceCases.some((x) => x.case_id === c.case_id)) evidenceCases.push(c);
+      }
+      if (kind === 'evidence' && !inquiry && sessionId) {
+        inquiry = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE session_id = ? ORDER BY created_at DESC LIMIT 1').bind(sessionId).first<InquiryDetail>();
+        if (inquiry) inquiryId = inquiry.id;
+      }
+
+      const evidenceMedBilder = [];
+      for (const c of evidenceCases) {
+        const images = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type, r2_key, thumb_r2_key FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string; r2_key: string; thumb_r2_key: string | null }>();
+        evidenceMedBilder.push({
+          caseId: c.case_id, status: c.status, createdAt: c.created_at,
+          images: (images.results ?? []).map((i) => ({ imageId: i.image_id, imageType: i.image_type, thumbUrl: `/api/ops/thumb?key=${encodeURIComponent(i.thumb_r2_key ?? i.r2_key)}`, fullUrl: `/api/ops/thumb?key=${encodeURIComponent(i.r2_key)}` })),
+        });
+      }
+
+      let skuDecision: unknown = null;
+      if (inquiryId) {
+        skuDecision = await env.FINNBILGLASS_DB.prepare('SELECT decision_type, sku, eurocode, reason, created_by, created_at FROM case_sku_decisions WHERE case_id = ? ORDER BY created_at DESC LIMIT 1').bind(String(inquiryId)).first<{ decision_type: string; sku: string | null; eurocode: string | null; reason: string | null; created_by: string; created_at: string }>();
+      }
+
+      let timeline: unknown[] = [];
+      if (inquiryId) {
+        const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(inquiryId).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
+        timeline = (events.results ?? []).map((e) => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta */ } return { ...e, meta }; });
+      }
+
+      return json({ ok: true, sak: { kind, inquiry, evidence: evidenceMedBilder, skuDecision, timeline } });
     }
     if (method === 'GET' && path === '/ops/sku') {
       // Operatørflate for SKU-godkjenning (Oppgave 3) — staging+prod, token-gate i UI-et.
