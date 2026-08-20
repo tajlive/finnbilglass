@@ -25,11 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Secret scan (allowlist)
-        run: |
-          npm install -g @microsoft/rushlib
-          # Bruk Arch secret-audit.mjs pattern
-          git log --all --full-history --oneline -1000 | head -20
+      - name: Secret scan (allowlist via gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: --config=.gitleaks.toml --verbose
+        continue-on-error: true
 
   deploy:
     name: Deploy to Cloudflare Workers
@@ -46,13 +46,18 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Deploy Worker (staging først)
+      - name: Set SVV_API_KEY secret (staging)
+        run: |
+          printf '%s' "$SVV_API_KEY" | npx wrangler secret put SVV_API_KEY --name finnbilglass-frontrute-staging --config wrangler.staging.toml
+      - name: Set SVV_API_KEY secret (prod)
+        run: |
+          printf '%s' "$SVV_API_KEY" | npx wrangler secret put SVV_API_KEY --name finnbilglass-frontrute
+      - name: Deploy Worker (staging)
         run: |
           npx wrangler deploy --config wrangler.staging.toml
           echo "STAGING_URL=https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev" >> $GITHUB_ENV
       - name: Deploy Worker (prod)
         run: |
-          # Deploy til prod bruker wrangler.toml
           npx wrangler deploy
           echo "PROD_URL=https://finnbilglass.no" >> $GITHUB_ENV
 
