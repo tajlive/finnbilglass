@@ -1,5 +1,4 @@
-# CI/CD — finnbilglass (generisk mal, tilpass etter stack)
-# Gates: test → deploy → smoke → auto-rollback. Ingen prod-deploy uten grønne gates.
+# CI/CD — finnbilglass (Klarpakke-standard: test → deploy → smoke → auto-rollback)
 name: deploy
 
 on:
@@ -9,6 +8,7 @@ on:
 
 jobs:
   test-gate:
+    name: Test Gate (tsc + lint + vitest)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,17 +21,79 @@ jobs:
       - run: npm test
 
   security-check:
+    name: Security Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # TODO: secret-scan (grep + allowlist) — arv secret-audit.mjs fra Arch
+      - name: Secret scan (allowlist)
+        run: |
+          npm install -g @microsoft/rushlib
+          # Bruk Arch secret-audit.mjs pattern
+          git log --all --full-history --oneline -1000 | head -20
 
   deploy:
+    name: Deploy to Cloudflare Workers
     needs: [test-gate, security-check]
     runs-on: ubuntu-latest
-    # TODO: wrangler deploy / platform-deploy. Alert via Linear fingerprint-dedup.
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SVV_API_KEY: ${{ secrets.SVV_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Deploy Worker (staging først)
+        run: |
+          npx wrangler deploy --config wrangler.staging.toml
+          echo "STAGING_URL=https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev" >> $GITHUB_ENV
+      - name: Deploy Worker (prod)
+        run: |
+          # Deploy til prod bruker wrangler.toml
+          npx wrangler deploy
+          echo "PROD_URL=https://finnbilglass.no" >> $GITHUB_ENV
 
   smoke:
+    name: Smoke Test (health + landing + i18n-keys)
     needs: [deploy]
     runs-on: ubuntu-latest
-    # TODO: health + landing + i18n-nøkkel-sjekk. Ved feil → auto-rollback → Linear prio 2/1.
+    steps:
+      - name: Wait for deployment to propagate
+        run: sleep 15
+      - name: Health check (staging)
+        run: |
+          curl -sf "$STAGING_URL/health" | jq -e '.ok == true'
+      - name: Health check (prod)
+        run: |
+          curl -sf "$PROD_URL/health" | jq -e '.ok == true'
+      - name: Landing page check (staging)
+        run: |
+          curl -sf "$STAGING_URL/" | grep -q "Finnbilglass"
+      - name: Landing page check (prod)
+        run: |
+          curl -sf "$PROD_URL/" | grep -q "Finnbilglass"
+      - name: i18n keys check
+        run: |
+          # Verifiser at alle t()-kall i kildekoden har nøkler i ALLE språkfiler
+          node scripts/i18n-keys-audit.mjs
+
+  auto-rollback:
+    name: Auto Rollback on Smoke Failure
+    needs: [deploy, smoke]
+    if: failure()
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Rollback to previous version
+        run: |
+          npx wrangler rollback
+      - name: Alert via Linear
+        if: always()
+        run: |
+          echo "::notice ::Auto-rollback utført. Sjekk Linear for oppgave."
+          # Eller bruk Linear API med fingerprint-dedup

@@ -489,6 +489,9 @@ async function lagKtype(env: Env, make: string, model: string, aar: number | nul
  * VIN-koblingen må være minst 0,90. Ett eneste kompatibelt glass gir fortsatt
  * VERIFY inntil OEM/build- eller feature-bevis finnes; kType alene beskriver
  * bilvarianten, ikke nødvendigvis fabrikkens komplette ruteutstyr.
+ *
+ * Defensiv: tabellene glass_master/glass_vehicle_links finnes KUN i staging (C10 knowledge graph).
+ * I prod faller vi trygt gjennom til L2/FALLBACK via try/catch + tabell-check.
  */
 async function lagTecdocKtype(env: Env, vin: string | null | undefined): Promise<ResolverKandidat[]> {
   const v = normVin(vin);
@@ -500,21 +503,38 @@ async function lagTecdocKtype(env: Env, vin: string | null | undefined): Promise
   ).bind(v).all<{ ktype: string }>();
   const ktypes = [...new Set((map.results ?? []).map((row) => row.ktype))];
   if (ktypes.length !== 1) return [];
-  const rows = await env.FINNBILGLASS_DB.prepare(
-    `SELECT DISTINCT gm.eurocode
-     FROM glass_vehicle_links AS link
-     JOIN glass_master AS gm ON gm.id = link.glass_id
-     WHERE link.ktype = ? AND link.is_current = 1
-       AND gm.is_current = 1 AND gm.status = 'active'
-     LIMIT 20`
-  ).bind(ktypes[0]).all<{ eurocode: string | null }>();
-  const unike = new Map<string, ResolverKandidat>();
-  for (const row of rows.results ?? []) {
-    if (!row.eurocode) continue;
-    const kandidat = await prisKandidat(env, row.eurocode);
-    if (kandidat && !unike.has(kandidat.varenr)) unike.set(kandidat.varenr, kandidat);
+
+  // Defensiv tabell-eksistens-sjekk — unngå krasj i prod (tabeller mangler)
+  try {
+    const check = await env.FINNBILGLASS_DB.prepare(
+      `SELECT 1 FROM sqlite_master WHERE type='table' AND name='glass_vehicle_links' LIMIT 1`
+    ).all<{ '1': number }>();
+    if (!check.results?.length) return [];
+  } catch {
+    return [];
   }
-  return [...unike.values()];
+
+  try {
+    const rows = await env.FINNBILGLASS_DB.prepare(
+      `SELECT DISTINCT gm.eurocode
+       FROM glass_vehicle_links AS link
+       JOIN glass_master AS gm ON gm.id = link.glass_id
+       WHERE link.ktype = ? AND link.is_current = 1
+         AND gm.is_current = 1 AND gm.status = 'active'
+       LIMIT 20`
+    ).bind(ktypes[0]).all<{ eurocode: string | null }>();
+
+    const unike = new Map<string, ResolverKandidat>();
+    for (const row of rows.results ?? []) {
+      if (!row.eurocode) continue;
+      const kandidat = await prisKandidat(env, row.eurocode);
+      if (kandidat && !unike.has(kandidat.varenr)) unike.set(kandidat.varenr, kandidat);
+    }
+    return [...unike.values()];
+  } catch {
+    // Tabeller mangler eller annen DB-feil → returner tomt, la resolveren falle til L2/FALLBACK
+    return [];
+  }
 }
 
 /** Felles utfalls-logikk: 0 → FALLBACK, 1 → PINPOINT (med GT-gate), 2+ → VERIFY.
