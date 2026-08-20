@@ -799,7 +799,9 @@ export default {
         'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
       ).all<InquiryRow>();
       const evidenceRows = await env.FINNBILGLASS_DB.prepare(
-        `SELECT c.case_id, c.registration_hash, c.session_id, c.status, c.created_at,
+        `SELECT c.case_id, c.registration_hash, c.session_id,
+                COALESCE((SELECT r.status FROM evidence_case_review_events r WHERE r.case_id = c.case_id ORDER BY r.created_at DESC LIMIT 1), c.status) AS status,
+                c.created_at,
                 (SELECT COUNT(*) FROM evidence_case_images i WHERE i.case_id = c.case_id) AS image_count
          FROM evidence_cases c ORDER BY c.created_at DESC LIMIT 500`,
       ).all<EvidenceCaseRow>();
@@ -1117,12 +1119,7 @@ export default {
       if (!canTransition(from, to)) return json({ ok: false, error: `Overgang fra ${from} til ${to} er ikke tillatt.` }, 409);
       const checklist = Array.isArray(body.checklist) ? body.checklist.slice(0, 4).map(Boolean) : [];
       const now = Date.now();
-      await env.FINNBILGLASS_DB.batch([
-        env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_review_events (event_id, case_id, previous_status, status, created_at, created_by, reason, checklist_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(`${statusMatch[1]}-${now}-${crypto.randomUUID()}`, statusMatch[1], from, to, now, actor, reason.trim(), JSON.stringify(checklist)),
-        // Hold denormalisert status i sync — ellers viser /api/ops/saker (som leser
-        // evidence_cases.status) evidenssaker som NEW selv etter REJECTED/CONFIRMED.
-        env.FINNBILGLASS_DB.prepare('UPDATE evidence_cases SET status = ? WHERE case_id = ?').bind(to, statusMatch[1]),
-      ]);
+      await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_review_events (event_id, case_id, previous_status, status, created_at, created_by, reason, checklist_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(`${statusMatch[1]}-${now}-${crypto.randomUUID()}`, statusMatch[1], from, to, now, actor, reason.trim(), JSON.stringify(checklist)).run();
       return json({ ok: true, status: to, decisionAuthority: 'NONE' });
     }
     const imageMatch = /^\/api\/support\/evidence\/([^/]+)\/([^/]+)$/.exec(path);
