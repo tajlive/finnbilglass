@@ -304,26 +304,6 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
 /* «Fotografer kjennemerket» er kun for touch-enheter (mobil/pad). Desktop skriver kjennemerket. */
 @media (hover: hover) and (pointer: fine) {
   .foto-prim { display: none; }
-  .eller { display: none; }
-}
-
-/* «eller skriv kjennemerket»-separator */
-.eller {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 16px 0 12px;
-  color: var(--text-3);
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-.eller::before, .eller::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border-strong);
 }
 
 /* VIN-fallback — vises kun når kjennemerke ikke finnes i SVV */

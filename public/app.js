@@ -368,11 +368,7 @@
   }
 
   // 3. Glassvalg → videre. VIN-søk og manuell inngang er fjernet (Tom 2026-08-17):
-  //    kjennemerke (SVV) er eneste inngang; «Ikke min bil» → start; «Annet» → kontakt.
-  $('btn-ikke-min-bil').addEventListener('click', function () {
-    loggHendelse('ikke_min_bil', { merke: state.merke, modell: state.modell, regnr: state.regnr });
-    show('start');
-  });
+  //    kjennemerke (SVV) er eneste inngang; «Annet» → kontakt.
   $('btn-annet').addEventListener('click', function () {
     loggHendelse('annet_glass', { merke: state.merke, modell: state.modell, regnr: state.regnr });
     window.location.href = 'mailto:support@finnbilglass.no?subject=' + encodeURIComponent('Annet glass — trenger hjelp');
