@@ -1117,7 +1117,12 @@ export default {
       if (!canTransition(from, to)) return json({ ok: false, error: `Overgang fra ${from} til ${to} er ikke tillatt.` }, 409);
       const checklist = Array.isArray(body.checklist) ? body.checklist.slice(0, 4).map(Boolean) : [];
       const now = Date.now();
-      await env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_review_events (event_id, case_id, previous_status, status, created_at, created_by, reason, checklist_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(`${statusMatch[1]}-${now}-${crypto.randomUUID()}`, statusMatch[1], from, to, now, actor, reason.trim(), JSON.stringify(checklist)).run();
+      await env.FINNBILGLASS_DB.batch([
+        env.FINNBILGLASS_DB.prepare('INSERT INTO evidence_case_review_events (event_id, case_id, previous_status, status, created_at, created_by, reason, checklist_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(`${statusMatch[1]}-${now}-${crypto.randomUUID()}`, statusMatch[1], from, to, now, actor, reason.trim(), JSON.stringify(checklist)),
+        // Hold denormalisert status i sync — ellers viser /api/ops/saker (som leser
+        // evidence_cases.status) evidenssaker som NEW selv etter REJECTED/CONFIRMED.
+        env.FINNBILGLASS_DB.prepare('UPDATE evidence_cases SET status = ? WHERE case_id = ?').bind(to, statusMatch[1]),
+      ]);
       return json({ ok: true, status: to, decisionAuthority: 'NONE' });
     }
     const imageMatch = /^\/api\/support\/evidence\/([^/]+)\/([^/]+)$/.exec(path);

@@ -32,7 +32,7 @@ ENVIRONMENT = "production"
 # Evidence-flyt feature-flags — avgrenset release (Tom 2026-08-19): kun opplasting åpen.
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
-EVIDENCE_STATUS_CHANGE_ENABLED = "false"
+EVIDENCE_STATUS_CHANGE_ENABLED = "true"
 
 # ── Observability (Tom 2026-08-19): Workers Logs-lagring AV (kostnad),
 #    invocation_logs PÅ (wrangler tail / debugging) ──────────────────
