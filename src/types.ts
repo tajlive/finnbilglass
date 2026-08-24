@@ -6,7 +6,7 @@ export interface Env {
   ENVIRONMENT: string;
   SVV_API_KEY?: string;
   IMAGE_RESOLVER_SECRET?: string;
-  OPPLAERING_BUCKET?: R2Bucket;
+  OPPLAERING_BUCKET: R2Bucket;
   SUPPORT_EVIDENCE_TOKEN?: string;
   /** STAGING: konversasjonell assistent (fitment-v1/conversation-v1). Prod default: AV. */
   ASSISTANT_ENABLED?: string;
@@ -17,4 +17,6 @@ export interface Env {
   /** Utgående e-post-svar til kunder (Brevo v3 SMTP). Uten nøkkel er /reply 503 «ikke konfigurert». */
   BREVO_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
+  /** Utgående SMS til kunder som bare oppga telefonnummer (Brevo v3 transactionalSMS). Uten nøkkel/credits: /sms-reply 503. */
+  BREVO_SMS_SENDER?: string;
 }

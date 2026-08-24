@@ -22,6 +22,7 @@ import type { GlassAttributes } from './fitment-v1/glass-sku';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
+import { handleInboundEmail } from './email-ingest';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -259,6 +260,13 @@ async function lagreOpplaeringBilde(
 }
 
 export default {
+  async email(message: ForwardableEmailMessage, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(handleInboundEmail(message, env).catch((e) => console.error('email-ingest feilet:', e)));
+    // NB: forward skjer i handleInboundEmail — men raw er single-use og allerede
+    // konsumert der. Derfor forward FØR parsing i handleren er umulig; vi buffer
+    // raw selv. Denne ytre kroppen gjør ingenting utover å unngå drop.
+  },
+
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
@@ -789,6 +797,40 @@ export default {
       const now = Date.now();
       await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ to: epost, to_user: row.navn || null })).run();
       return json({ ok: true, to: epost });
+    }
+    const inquirySmsReplyMatch = /^\/api\/ops\/inquiries\/(\d+)\/sms-reply$/.exec(path);
+    if (method === 'POST' && inquirySmsReplyMatch) {
+      // SMS-svar til kunder som bare oppga telefonnummer (Brevo v3 transactionalSMS).
+      // Samme token-gate + append-only-logg som e-post-replies. Uten credits i
+      // Brevo-kontoen feiler sendingen med 402/400 → 502 videre til /ops.
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!env.BREVO_API_KEY || !env.BREVO_SMS_SENDER) return json({ ok: false, error: 'SMS-sending er ikke konfigurert ennå.' }, 503);
+      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
+      // SMS-grense: 640 tegn (= 4 SMS-segmenter à 160) — hold svaret kort.
+      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 640) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd (max 640 tegn).' }, 400);
+      const id = Number(inquirySmsReplyMatch[1]);
+      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, navn, kontakt FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string | null }>();
+      if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+      // Norsk mobilnummer → E.164 (+47). Aksepterer 8 siffer, evt. +47/0047-prefix og mellomrom.
+      const raa = (row.kontakt || '').replace(/[\s-]/g, '');
+      const m = /^(?:\+47|0047)?(\d{8})$/.exec(raa);
+      if (!m) return json({ ok: false, error: 'Kunden har ikke et gyldig norsk telefonnummer i kontakt-feltet.' }, 409);
+      const til = `+47${m[1]}`;
+      const smsRes = await fetch('https://api.brevo.com/v3/transactionalSMS/send', {
+        method: 'POST',
+        headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ sender: env.BREVO_SMS_SENDER, recipient: til, type: 'transactional', content: message }),
+      });
+      if (!smsRes.ok) {
+        const errTxt = await smsRes.text().catch(() => '');
+        console.error('Brevo SMS feilet:', smsRes.status, errTxt.slice(0, 300));
+        return json({ ok: false, error: `Kunne ikke sende SMS (Brevo ${smsRes.status}). Sjekk SMS-credits og avsender-navn.` }, 502);
+      }
+      const now = Date.now();
+      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`sms-reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ kanal: 'sms', to: til, to_user: row.navn || null })).run();
+      return json({ ok: true, to: til });
     }
     if (method === 'GET' && path === '/api/ops/saker') {
       // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens
