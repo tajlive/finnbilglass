@@ -1,7 +1,7 @@
 /* Finnbilglass.no — frontend-flyt.
-   Flyt: kjennemerke (foto/skriv) → glassvalg (bil-info + glasstype) → utstyrs-spørsmål → resultat (API) → tomt.
+   Flyt: skiltnummer (foto/skriv) → glassvalg (bil-info + glasstype) → utstyrs-spørsmål → resultat (API) → tomt.
    API: POST /api/frontrute { merke, modell, aar, profil:{sensor,antenne} }
-        POST /api/regnr      { regnr }   ← ALLE kjennemerke lagres (læring).
+        POST /api/regnr      { regnr }   ← ALLE skiltnummer lagres (læring).
    Mock-fallback KUN ved file:// (offline demo), tydelig merket som DEMO. */
 (function () {
   'use strict';
@@ -10,9 +10,7 @@
   var spm = [
     { key: 'sensor',     tittel: 'Har bilen regnsensor?', hjelp: 'Da starter viskerne automatisk når det regner.' },
     { key: 'antenne',    tittel: 'Har bilen radioantenne i frontruten?', hjelp: 'Usikker? Velg «Vet ikke». Vi dobbeltsjekker før sending.' },
-    { key: 'coated',     tittel: 'Har frontruten et sol- eller varmedempende belegg?', hjelp: 'Dette er ofte vanskelig å se. Velg «Vet ikke» hvis du er usikker.' },
-    { key: 'adaskamera', tittel: 'Har bilen kamera bak speilet eller førerassistansesystemer?', hjelp: 'For eksempel filholder, nødbrems eller skiltgjenkjenning.' },
-    { key: 'oppvarmet',  tittel: 'Har frontruten varmetråder i glasset?', hjelp: 'Oppvarmet frontrute har synlige tråder eller varmefelt i glasset.' }
+    { key: 'coated',     tittel: 'Har frontruten et sol- eller varmedempende belegg?', hjelp: 'Dette er ofte vanskelig å se. Velg «Vet ikke» hvis du er usikker.' }
   ];
   var spmIndex = 0;
 
@@ -101,7 +99,7 @@
     if (el) { el.textContent = t; el.classList.toggle('hidden', !t); }
   }
 
-  // Live-formatering av kjennemerke: SU18018 → SU 18018 (norsk format: 2 bokstaver + 4–5 siffer).
+  // Live-formatering av skiltnummer: SU18018 → SU 18018 (norsk format: 2 bokstaver + 4–5 siffer).
   // Formateres mens kunden skriver — reduserer tastefeil og ser proft ut.
   $('input-regnr').addEventListener('input', function () {
     var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
@@ -110,7 +108,7 @@
     if (this.value !== f) this.value = f;
   });
 
-  // 1. Start: kjennemerke → SVV-oppslag (kjennemerke → bil). ALLE kjennemerke lagres (læring).
+  // 1. Start: skiltnummer → SVV-oppslag (skiltnummer → bil). ALLE skiltnummer lagres (læring).
   //    Finner vi bilen → rett til bekreft. Finner vi den ikke → feilmelding med foto-forslag.
   $('form-regnr').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -132,51 +130,117 @@
         if (d && d.bil && d.bil.merke) {
           settBilFraSvv(d.bil, d.resolver || null, raw);
         } else {
-          visKontaktHandoff('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at kjennemerket er riktig.');
+          visKontaktHandoff('Vi fant ikke bilen på «' + formatRegnr(raw) + '». Sjekk at skiltnummeret er riktig.');
         }
         visRegnr();
       })
-      .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller ta bilde av kjennemerket.'); })
+      .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller ta bilde av skiltnummeret.'); })
       .finally(function () { btn.disabled = false; btn.textContent = orgTekst; });
   });
 
-  // 1b. Foto av kjennemerket → AI leser skiltet → SVV-oppslag (samme flyt som skrevet regnr).
+  // 1b. Foto av skiltnummeret → AI leser skiltet → SVV-oppslag (samme flyt som skrevet regnr).
+  // Oppgave 7: klientside bildebehandling — EXIF-orientering, nedskalering, JPEG-komprimering,
+  // thumbnail og kvalitetssjekk (lysstyrke/størrelse) FØR opplasting. HEIC konverteres til
+  // JPEG av nettleseren (iOS Safari dekoder HEIC → canvas → JPEG) — Workers har ingen HEIC-dekoder.
+  var MAX_BREDDE = 1920, THUMB_BREDDE = 320, KVALITET = 0.8;
+  var LUMINANS_MIN = 55, MIN_BREDDE = 400, GLARE_HIGH = 240, GLARE_ANDEL = 0.25;
+
+  function komprimerBilde(fil) {
+    return new Promise(function (resolve, reject) {
+      function behandle(bmp) {
+        try {
+          var w = bmp.width, h = bmp.height;
+          var skala = w > MAX_BREDDE ? MAX_BREDDE / w : 1; // forstørr aldri
+          var fw = Math.round(w * skala), fh = Math.round(h * skala);
+          var c = document.createElement('canvas');
+          c.width = fw; c.height = fh;
+          var cctx = c.getContext('2d');
+          cctx.drawImage(bmp, 0, 0, fw, fh);
+          var dataUrl = c.toDataURL('image/jpeg', KVALITET);
+          var ts = w > THUMB_BREDDE ? THUMB_BREDDE / w : 1;
+          var tc = document.createElement('canvas');
+          tc.width = Math.round(w * ts); tc.height = Math.round(h * ts);
+          tc.getContext('2d').drawImage(bmp, 0, 0, tc.width, tc.height);
+          var thumbDataUrl = tc.toDataURL('image/jpeg', 0.7);
+          var advarsler = [];
+          try {
+            var imgd = cctx.getImageData(0, 0, fw, fh).data;
+            var sum = 0, lyse = 0, n = imgd.length / 4;
+            for (var i = 0; i < imgd.length; i += 4) {
+              var l = 0.2126 * imgd[i] + 0.7152 * imgd[i + 1] + 0.0722 * imgd[i + 2];
+              sum += l;
+              if (l > GLARE_HIGH) lyse++;
+            }
+            if (sum / n < LUMINANS_MIN) advarsler.push('bildet er mørkt');
+            if (lyse / n > GLARE_ANDEL) advarsler.push('mye gjenskinn eller reflekser');
+          } catch (e) { /* piksel-lesing utilgjengelig — hopp over lys-/gjenskinn-sjekk */ }
+          if (w < MIN_BREDDE) advarsler.push('lav oppløsning');
+          resolve({ dataUrl: dataUrl, thumbDataUrl: thumbDataUrl, advarsler: advarsler });
+        } catch (e) { reject(e); }
+      }
+      if (typeof createImageBitmap === 'function') {
+        createImageBitmap(fil).then(behandle).catch(function () {
+          // Fallback: <img> + objectURL (eldre nettlesere uten createImageBitmap).
+          var url = URL.createObjectURL(fil);
+          var img = new Image();
+          img.onload = function () { behandle(img); URL.revokeObjectURL(url); };
+          img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('bilde-feil')); };
+          img.src = url;
+        });
+      } else {
+        var url2 = URL.createObjectURL(fil);
+        var img2 = new Image();
+        img2.onload = function () { behandle(img2); URL.revokeObjectURL(url2); };
+        img2.onerror = function () { URL.revokeObjectURL(url2); reject(new Error('bilde-feil')); };
+        img2.src = url2;
+      }
+    });
+  }
+
+  function sendSkiltBilde(dataUrl, thumbDataUrl) {
+    var btn = $('btn-foto-regnr');
+    var org = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Leser skiltnummeret…';
+    fetch('/api/les-skilt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataUrl, thumbnail: thumbDataUrl || null, sessionId: sessionId })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        loggHendelse('foto_skilt', { lest: d.regnr || null, funnet: !!(d && d.funnet) }, d && d.resolver ? d.resolver.utfall : null);
+        if (d && d.ok && d.funnet && d.bil && d.bil.merke) {
+          settBilFraSvv(d.bil, d.resolver || null, d.regnr);
+        } else if (d && d.ok && !d.funnet) {
+          visKontaktHandoff('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen.');
+          $('input-regnr').value = formatRegnr(d.regnr);
+        } else if (d && d.error) {
+          visStartFeil(d.error);
+        } else {
+          visStartFeil('Kunne ikke lese skiltnummeret. Prøv igjen i bedre lys, uten reflekser.');
+        }
+      })
+      .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller skriv skiltnummeret manuelt.'); })
+      .finally(function () { btn.disabled = false; btn.innerHTML = org; });
+  }
+
   $('btn-foto-regnr').addEventListener('click', function () { $('regnr-fil').click(); });
   $('regnr-fil').addEventListener('change', function () {
     var fil = this.files && this.files[0];
     this.value = '';
     if (!fil) return;
     if (!fil.type.startsWith('image/')) { visStartFeil('Filen må være et bilde.'); return; }
-    if (fil.size > 5 * 1024 * 1024) { visStartFeil('Bildet er over 5 MB — ta et nytt bilde med mobilen.'); return; }
-    var leser = new FileReader();
-    leser.onload = function () {
-      var btn = $('btn-foto-regnr');
-      var org = btn.innerHTML;
-      btn.disabled = true;
-      btn.textContent = 'Leser kjennemerket…';
-      fetch('/api/les-skilt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: String(leser.result), sessionId: sessionId })
+    if (fil.size > 20 * 1024 * 1024) { visStartFeil('Bildet er for stort (maks 20 MB).'); return; }
+    komprimerBilde(fil)
+      .then(function (res) {
+        if (res.advarsler.length) {
+          var fortsett = window.confirm('Bildekvaliteten er dårlig (' + res.advarsler.join(', ') + '). Vil du likevel sende dette bildet?');
+          if (!fortsett) return;
+        }
+        sendSkiltBilde(res.dataUrl, res.thumbDataUrl);
       })
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          loggHendelse('foto_skilt', { lest: d.regnr || null, funnet: !!(d && d.funnet) }, d && d.resolver ? d.resolver.utfall : null);
-          if (d && d.ok && d.funnet && d.bil && d.bil.merke) {
-            settBilFraSvv(d.bil, d.resolver || null, d.regnr);
-          } else if (d && d.ok && !d.funnet) {
-            visKontaktHandoff('Vi leste «' + formatRegnr(d.regnr) + '», men fant ikke bilen i Statens vegvesen.');
-            $('input-regnr').value = formatRegnr(d.regnr);
-          } else if (d && d.error) {
-            visStartFeil(d.error);
-          } else {
-            visStartFeil('Kunne ikke lese kjennemerket. Prøv igjen i bedre lys, uten reflekser.');
-          }
-        })
-        .catch(function () { visStartFeil('Noe gikk galt. Prøv igjen, eller skriv kjennemerket manuelt.'); })
-        .finally(function () { btn.disabled = false; btn.innerHTML = org; });
-    };
-    leser.readAsDataURL(fil);
+      .catch(function () { visStartFeil('Kunne ikke behandle bildet. Prøv et annet bilde.'); });
   });
 
   function visStartFeil(msg) {
@@ -328,13 +392,152 @@
     state.import = !!bil.import;
     state.importLand = bil.importLand || null;
     state.resolver = resolver || null;
+    // P0 (Tom-doktrine): aldri generiske utstyrsspørsmål. Resolveren oppgir kun
+    // skillende spørsmål (der en egenskap faktisk finnes som kandidatvariant OG
+    // svaret skiller to kandidater). Mangler resolver/sporsmaal → 0 spørsmål
+    // → trygg manuell kontroll («Vi vil dobbeltsjekke riktig glass …»).
+    settSpm(resolver && Array.isArray(resolver.sporsmaal) ? resolver.sporsmaal : []);
     $('glass-merkelbl').textContent = '';
     visMerkeLogo(state.merke);
     $('glass-bilnavn').textContent = penSkrivemaate(state.modell) + (state.aar ? ' · ' + state.aar : '');
     renderGlassDet();
     visRegnr();
+    var ev4 = document.querySelector('.evidence-gruppe[data-key="interior_optional"]');
+    if (ev4) ev4.classList.toggle('hidden', !glassKanHaSensorKamera());
     show('glass');
   }
+
+  // Evidence Capture: supportdokumentasjon, separat fra beslutningsmotoren.
+  // Ingen respons herfra brukes i resolveren eller kan sette EXACT.
+  // Modernisert (Oppgave 7): klientside komprimering + EXIF-orientering +
+  // thumbnail + kvalitetssjekk (lysstyrke/størrelse) FØR opplasting.
+  // ── P0.2: mobil-først fotoopplevelse (kamera primær, bildebibliotek sekundær) ──
+  var evidenceBilder = {}; // key → { dataUrl, thumbDataUrl, advarsler }
+
+  function evidenceNokkel(el) { return el.getAttribute('data-key'); }
+
+  // Primær: kamera (capture=environment på skjult input); sekundær: bibliotek (uten capture).
+  document.querySelectorAll('.evidence-kamera').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = document.getElementById('evidence-' + evidenceNokkel(btn));
+      if (inp) inp.click();
+    });
+  });
+  document.querySelectorAll('.evidence-bibliotek').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = document.getElementById('evidence-' + evidenceNokkel(btn) + '-bib');
+      if (inp) inp.click();
+    });
+  });
+
+  function evidenceFeil(msg) {
+    var r = $('evidence-result');
+    r.textContent = msg;
+    r.classList.remove('hidden', 'ok');
+  }
+
+  // «Send bilder» er kun aktiv når minst ett bilde er valgt — bildene er valgfrie,
+  // og glassvalg er veien videre. Deaktivert uten bilder forhindrer «stuck»-felle på PC/pad/mac.
+  function oppdaterEvidenceKnapp() {
+    var b = document.getElementById('btn-evidence-submit');
+    if (b) b.disabled = !Object.keys(evidenceBilder).length;
+  }
+
+  function visEvidenceMiniatyr(key, res) {
+    var mini = document.querySelector('.evidence-miniatyr[data-key="' + key + '"]');
+    if (!mini) return;
+    mini.classList.remove('hidden');
+    var img = mini.querySelector('.evidence-thumb');
+    if (img) img.src = res.thumbDataUrl || res.dataUrl;
+  }
+
+  function fjernEvidence(key) {
+    delete evidenceBilder[key];
+    var mini = document.querySelector('.evidence-miniatyr[data-key="' + key + '"]');
+    if (mini) mini.classList.add('hidden');
+    var r = $('evidence-result');
+    if (r && !Object.keys(evidenceBilder).length) r.classList.add('hidden');
+    oppdaterEvidenceKnapp();
+  }
+
+  function handterEvidenceFil(key, input) {
+    var f = input.files && input.files[0];
+    if (!f) return;
+    if (!f.type.startsWith('image/')) { evidenceFeil('Filen må være et bilde.'); return; }
+    if (f.size > 20 * 1024 * 1024) { evidenceFeil('Bildet er over 20 MB.'); return; }
+    komprimerBilde(f).then(function (res) {
+      evidenceBilder[key] = res;
+      visEvidenceMiniatyr(key, res);
+      oppdaterEvidenceKnapp();
+    }).catch(function () {
+      evidenceFeil('Kunne ikke lese bildet. Prøv igjen.');
+    });
+  }
+
+  ['plate', 'windshield', 'mirror_sensor', 'interior_optional'].forEach(function (key) {
+    var kamera = document.getElementById('evidence-' + key);
+    var bib = document.getElementById('evidence-' + key + '-bib');
+    if (kamera) kamera.addEventListener('change', function () { handterEvidenceFil(key, kamera); kamera.value = ''; });
+    if (bib) bib.addEventListener('change', function () { handterEvidenceFil(key, bib); bib.value = ''; });
+  });
+
+  document.querySelectorAll('.evidence-ta-paa-nytt').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inp = document.getElementById('evidence-' + evidenceNokkel(btn));
+      if (inp) inp.click();
+    });
+  });
+  document.querySelectorAll('.evidence-fjern').forEach(function (btn) {
+    btn.addEventListener('click', function () { fjernEvidence(evidenceNokkel(btn)); });
+  });
+
+  // Send — beholder komprimering/EXIF/kvalitetssjekk/R2 + token-/feature-gates.
+  $('btn-evidence-submit').addEventListener('click', function () {
+    var keys = Object.keys(evidenceBilder);
+    var resultat = $('evidence-result');
+    var settFeil = function (msg) { resultat.textContent = msg; resultat.classList.remove('hidden', 'ok'); };
+    var settOk = function (msg) { resultat.textContent = msg; resultat.classList.remove('hidden'); resultat.classList.add('ok'); };
+    if (!keys.length) { settFeil('Ta minst ett bilde først.'); return; }
+    if (!state.regnr) { settFeil('Søk opp bilen først — vi trenger skiltnummeret for å knytte bildene til en sak.'); return; }
+    var knapp = this;
+    knapp.disabled = true;
+    knapp.textContent = 'Sender bilder…';
+    var advarsler = keys.filter(function (k) { return evidenceBilder[k].advarsler && evidenceBilder[k].advarsler.length; });
+    if (advarsler.length) {
+      if (!window.confirm('Bildekvaliteten er dårlig for ' + advarsler.length + ' bilde(r) (' + evidenceBilder[advarsler[0]].advarsler.join(', ') + '). Vil du likevel sende?')) {
+        knapp.disabled = false; knapp.textContent = 'Send bilder til Tom Arne'; return;
+      }
+    }
+    var bilder = keys.map(function (key) {
+      return { type: key, data: evidenceBilder[key].dataUrl, thumbnail: evidenceBilder[key].thumbDataUrl };
+    });
+    fetch('/api/evidence-capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regnr: state.regnr, sessionId: sessionId, images: bilder })
+    }).then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (r) {
+        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Bildene ble ikke sendt.');
+        settOk('Takk – vi har fått bildene og dobbeltsjekker glasset før vi sender tilbud.');
+        loggHendelse('evidence_capture_sent', { caseId: r.data.caseId, imageCount: r.data.imageCount });
+        keys.forEach(fjernEvidence);
+      })
+      .catch(function () {
+        // Menneskelig feilmelding; teknisk årsak logges internt, aldri til kunde.
+        settFeil('Bildene ble ikke sendt. Prøv igjen, eller send oss en forespørsel så hjelper vi deg.');
+      })
+      .finally(function () { knapp.disabled = false; knapp.textContent = 'Send bilder til Finnbilglass'; });
+  });
+
+  // P2 (Beta1-funn): SVVs handelsbetegnelse inkluderer ofte merket («NISSAN
+  // LEAF», «TOYOTA HILUX») — ikke prepender merket da. («NISSAN NISSAN LEAF»)
+  function bilnavn() {
+    var m = (state.merke || '').toUpperCase().trim();
+    var mod = (state.modell || '').trim();
+    var navn = (m && mod.toUpperCase().indexOf(m) !== 0 ? state.merke + ' ' : '') + mod;
+    return navn + (state.aar ? ' ' + state.aar : '');
+  }
+
 
   // Detaljlinjer fra SVV (førstegangsregistrert + VIN + import-merkelapp) på glassvalg-skjermen.
   function renderGlassDet() {
@@ -368,7 +571,7 @@
   }
 
   // 3. Glassvalg → videre. VIN-søk og manuell inngang er fjernet (Tom 2026-08-17):
-  //    kjennemerke (SVV) er eneste inngang; «Annet» → kontakt.
+  //    skiltnummer (SVV) er eneste inngang; «Annet» → kontakt; «Tilbake»/«Nytt søk» → start.
   $('btn-annet').addEventListener('click', function () {
     loggHendelse('annet_glass', { merke: state.merke, modell: state.modell, regnr: state.regnr });
     window.location.href = 'mailto:support@finnbilglass.no?subject=' + encodeURIComponent('Annet glass — trenger hjelp');
@@ -381,6 +584,7 @@
       if (b.dataset.type !== 'front') return; // kun frontrute er aktiv i beta
       loggHendelse('velg_frontrute', { merke: state.merke, modell: state.modell, regnr: state.regnr });
       spmIndex = 0;
+      if (!spm.length) { gaaTilResultat(); return; } // ingen skillende spørsmål → direkte resultat
       spmRender();
       show('spm');
     });
@@ -401,6 +605,18 @@
   function settSpm(funksjoner) {
     spm = (funksjoner || []).filter(function (f) { return SPM_DEF[f]; }).map(function (f) {
       return { key: f, tittel: SPM_DEF[f].tittel, hjelp: SPM_DEF[f].hjelp };
+    });
+  }
+
+  // Bilde 4 («under speil innenfra») vises kun når glasset kan ha sensor/kamera-utstyr
+  // (kamera-feste bak speil eller regn-/lyssensor). Ukjent → konservativt vis.
+  function glassKanHaSensorKamera() {
+    var k = state.resolver && state.resolver.kandidater;
+    if (!k || !k.length) return false;
+    return k.some(function (kand) {
+      var a = kand && kand.attributter;
+      if (!a) return true;
+      return a.cameraBracket !== false || a.rainLightSensor !== false;
     });
   }
 
@@ -437,7 +653,11 @@
     if (key === 'sensor' || key === 'antenne' || key === 'coated') state.profil[key] = val;
     else state.info[key] = val; // hud / kamera / adas / oppvarmet: info i resultatet, ikke matcher-profilen
     if (spmIndex < spm.length - 1) { spmIndex++; spmRender(); return; }
-    // Siste spørsmål besvart — velg direkte blant resolver-kandidatene når de finnes
+    gaaTilResultat();
+  }
+
+  // Velg direkte blant resolver-kandidatene når de finnes; ellers /api/frontrute.
+  function gaaTilResultat() {
     var valgt = filtrerResolverKandidater();
     if (valgt && renderResolverResultat(valgt)) return;
     show('resultat');
@@ -538,37 +758,39 @@
       .filter(function (p) { return p != null; });
     var harResolver = !!(data && data.meta && data.meta.resolver);
     if (data && data.pinpoint && anbefaling && anbefaling.pris != null) {
-      return { label: 'Pris inkl. mva', verdi: formatPris(anbefaling.pris) };
+      return { label: 'Veiledende glasspris inkl. mva', verdi: formatPris(anbefaling.pris) };
     }
     if (harResolver && priser.length > 1) {
       var min = Math.min.apply(Math, priser);
       var max = Math.max.apply(Math, priser);
-      if (min === max) return { label: 'Pris inkl. mva', verdi: formatPris(min) };
-      return { label: 'Pris avhenger av variant', verdi: formatPris(min) + '–' + formatPris(max) };
+      if (min === max) return { label: 'Veiledende glasspris inkl. mva', verdi: formatPris(min) };
+      return { label: 'Veiledende pris avhenger av variant', verdi: formatPris(min) + '–' + formatPris(max) };
     }
     if (anbefaling && anbefaling.pris != null) {
-      return { label: harResolver ? 'Nærmeste pris inkl. mva' : 'Pris inkl. mva', verdi: formatPris(anbefaling.pris) };
+      return { label: 'Veiledende glasspris inkl. mva', verdi: formatPris(anbefaling.pris) };
     }
     return { label: 'Pris', verdi: 'Pris på forespørsel' };
   }
 
   function renderResultat(data) {
     visRegnr();
-    $('tilbehor-seksjon').classList.remove('hidden');
+    // P0.1: tilbehørsseksjonen vises ikke generisk — kun per kandidat/glass (nedenfor).
+    // Forhåndsutfyll henvendelsesskjema med skiltnummeret (låst) — beta-tilbudsflyt.
+    $('inquiry-regnr').value = state.regnr || '';
     var a = data && data.anbefaling;
     if (!a) {
-      tomtVis('Fant ingen treff', 'Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss så hjelper vi deg manuelt.');
+      tomtVis('Fant ingen treff', 'Vi fant ikke et trygt treff i katalogen. Send oss en forespørsel, så undersøker vi bilen og hjelper deg videre.');
       return;
     }
     var st = $('resultat-status');
     if (data.pinpoint) {
-      st.textContent = 'Vi har funnet en eksakt match til bilen din.';
+      st.textContent = 'Dette er vårt beste forslag basert på bilen din. Vi dobbeltsjekker glasset manuelt og bekrefter riktig glass og pris før noe bestilles.';
       st.className = 'note status pinpoint';
     } else if (data && data.meta && data.meta.resolver) {
-      st.textContent = 'Vi har funnet flere mulige varianter. Dette er nærmeste pris og beste kandidat akkurat nå, og vi dobbeltsjekker riktig rute for bilen din før sending.';
+      st.textContent = 'Disse variantene kan passe din bil. Riktig valg avhenger av utstyr og sensorer, og vi bekrefter alltid valget manuelt før noe bestilles.';
       st.className = 'note status verify';
     } else {
-      st.textContent = 'Vi har funnet beste kandidat ut fra bildataene dine. Vi dobbeltsjekker riktig rute før sending.';
+      st.textContent = 'Vi har funnet en mulig kandidat ut fra bildataene dine. Vi dobbeltsjekker valget manuelt før vi sender tilbud.';
       st.className = 'note status';
     }
     st.classList.remove('hidden');
@@ -580,7 +802,7 @@
       '<div class="meta"></div>' +
       '<div class="spec"></div>';
     kort.querySelector('.name').textContent =
-      state.merke + ' ' + state.modell + (state.aar ? ' ' + state.aar : '');
+      bilnavn();
     kort.querySelector('.meta').textContent =
       'Varenr. ' + (a.varenr || '') + (a.eurokode ? ' · ' + a.eurokode : '');
 
@@ -623,10 +845,118 @@
       });
       var avslutning = document.createElement('p');
       avslutning.className = 'varianter-avslutning';
-      avslutning.textContent = 'Vi dobbeltsjekker riktig variant for bilen din før levering.';
+      avslutning.textContent = 'Vi dobbeltsjekker riktig variant manuelt for bilen din før levering.';
       alt.appendChild(avslutning);
     }
+
+    // P0.1 (Tom-doktrine): tilbehør er kandidat- og glassstyrt via
+    // /api/accessories (AccessoryApplicabilityEngine som fasit).
+    var tilbehorSeksjon = $('tilbehor-seksjon');
+    var verifyTekst = $('tilbehor-verify');
+    var montasjeValg = $('montasje-valg');
+    if (data.pinpoint && a && a.varenr) {
+      // PINPOINT: hent tilbehør for den ene kandidaten (engine som fasit).
+      verifyTekst.classList.add('hidden');
+      hentOgVisTilbehor(a, 'EXACT');
+    } else if (data.kandidater && data.kandidater.length > 1) {
+      // VERIFY: aldri kandidatspesifikke valg — kun trygg tekst.
+      tilbehorData = [];
+      $('tilbehor-liste').innerHTML = '';
+      if (montasjeValg) montasjeValg.style.display = 'none';
+      verifyTekst.classList.remove('hidden');
+      tilbehorSeksjon.classList.remove('hidden');
+    } else {
+      // FALLBACK/tomt: ingen dokumentert tilbehør → ingen seksjon.
+      tilbehorData = [];
+      tilbehorSeksjon.classList.add('hidden');
+      verifyTekst.classList.add('hidden');
+    }
   }
+
+  // ── P0.1: tilbehør (kandidat- og glassstyrt, engine som fasit) ─────────
+  var tilbehorData = null; // siste /api/accessories-svar (re-render ved montasjevalg)
+
+  function tilbehorInfoTekst(state) {
+    if (state === 'REQUIRED_SEPARATE') return 'Dette trenger bilen din for riktig montering.';
+    if (state === 'INCLUDED_WITH_GLASS') return 'Dette følger med glasset.';
+    return null;
+  }
+
+  function renderTilbehor(accessories) {
+    var seksjon = $('tilbehor-seksjon');
+    var liste = $('tilbehor-liste');
+    var verify = $('tilbehor-verify');
+    var montasjeRadio = document.querySelector('input[name="montasje"]:checked');
+    var montasje = montasjeRadio ? montasjeRadio.value : 'verksted';
+    liste.innerHTML = '';
+    verify.classList.add('hidden');
+    if (!accessories || !accessories.length) { seksjon.classList.add('hidden'); return; }
+    var visbare = 0;
+    var harLimKit = false;
+    accessories.forEach(function (a) {
+      var info = tilbehorInfoTekst(a.state);
+      if (info) {
+        // REQUIRED / INCLUDED → informasjon, aldri avkrysningsboks.
+        var rad = document.createElement('p');
+        rad.className = 'tilbehor-info';
+        rad.textContent = a.accessory.name + ' — ' + info;
+        liste.appendChild(rad);
+        visbare++;
+        return;
+      }
+      if (a.state === 'OPTIONAL_COMPATIBLE') {
+        // Lim-kit (INSTALLATION_CONSUMABLE) kun ved eksplisitt selvmontasje.
+        if (a.accessory.kind === 'INSTALLATION_CONSUMABLE') {
+          harLimKit = true;
+          if (montasje !== 'selv') return;
+        }
+        var lbl = document.createElement('label');
+        lbl.className = 'tilbehor-valg';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = a.accessory.productId;
+        cb.addEventListener('change', function () {
+          loggHendelse('tilbehor_valg', { valg: cb.value, avkrysset: cb.checked });
+        });
+        lbl.appendChild(cb);
+        var span = document.createElement('span');
+        span.textContent = a.accessory.name;
+        lbl.appendChild(span);
+        liste.appendChild(lbl);
+        visbare++;
+      }
+      // NOT_APPLICABLE / UNKNOWN / AMBIGUOUS / EXCLUDED → aldri vist.
+    });
+    if (!visbare) { seksjon.classList.add('hidden'); return; }
+    seksjon.classList.remove('hidden');
+    var mv = $('montasje-valg');
+    if (mv) mv.style.display = harLimKit ? '' : 'none';
+  }
+
+  function hentOgVisTilbehor(kandidat, fitmentStatus) {
+    var features = {};
+    if (kandidat && kandidat.attributter) {
+      ['sensor', 'antenne', 'hud', 'kamera', 'adas', 'coated'].forEach(function (f) {
+        if (kandidat.attributter[f] === true || kandidat.attributter[f] === false) features[f] = kandidat.attributter[f];
+      });
+    }
+    fetch('/api/accessories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ varenr: kandidat.varenr || null, eurokode: kandidat.eurokode || null, features: features, fitmentStatus: fitmentStatus })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      tilbehorData = (d && d.ok) ? d.accessories : [];
+      renderTilbehor(tilbehorData);
+    }).catch(function () {
+      tilbehorData = [];
+      renderTilbehor(tilbehorData);
+    });
+  }
+
+  // Montasjevalg (verksted/selv) → re-render: lim-kit vises kun ved selvmontasje.
+  document.querySelectorAll('input[name="montasje"]').forEach(function (r) {
+    r.addEventListener('change', function () { renderTilbehor(tilbehorData || []); });
+  });
 
   function mock() {
     // Demo-fasit (verifisert katalogdata, finnbilglass-db): VW TRANSPORTER T5 2003- →
@@ -651,11 +981,59 @@
     });
   });
 
-  // Tilbehørsvalg (Sika/klips/pyntelist/sensorgel) — fasit for tilbehørs-modellen.
-  document.querySelectorAll('.tilbehor-valg input[type="checkbox"]').forEach(function (cb) {
-    cb.addEventListener('change', function () {
-      loggHendelse('tilbehor_valg', { valg: cb.value, avkrysset: cb.checked });
-    });
+  // Tilbehørsvalg bindes dynamisk i renderTilbehor (P0.1) — ingen statiske bokser.
+
+  // Beta-henvendelse: knapp → skjema → validering → POST → bekreftelse.
+  $('btn-inquiry').addEventListener('click', function () {
+    $('inquiry-form').classList.remove('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    $('inquiry-feil').classList.add('hidden');
+  });
+
+  function inquiryFeil(msg) {
+    var el = $('inquiry-feil');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  // Enkel regex: ser ut som telefon (minst 8 siffer) ELLER e-post (inneholder @ og .).
+  function gyldigKontakt(s) {
+    var v = (s || '').trim();
+    if (!v) return false;
+    var sifre = v.replace(/[^0-9]/g, '');
+    if (sifre.length >= 8) return true;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  }
+
+  $('btn-inquiry-send').addEventListener('click', function () {
+    var regnr = $('inquiry-regnr').value.trim();
+    var navn = $('inquiry-navn').value.trim();
+    var kontakt = $('inquiry-kontakt').value.trim();
+    var melding = $('inquiry-melding').value.trim();
+    if (!navn || navn.length < 2) { inquiryFeil('Skriv inn navnet ditt (minst 2 tegn).'); return; }
+    if (!gyldigKontakt(kontakt)) { inquiryFeil('Skriv inn en gyldig telefon eller e-post.'); return; }
+    if (melding.length > 500) { inquiryFeil('Meldingen er for lang (maks 500 tegn).'); return; }
+    var knapp = this;
+    var org = knapp.textContent;
+    knapp.disabled = true;
+    knapp.textContent = 'Sender…';
+    loggHendelse('tilbud_foresporsel', { regnr: regnr, navnLengde: navn.length, kontaktType: /@/.test(kontakt) ? 'epost' : 'telefon' });
+    fetch('/api/inquiry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+      .then(function (r) {
+        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende forespørselen.');
+        $('inquiry-form').classList.add('hidden');
+        var b = $('inquiry-bekreftet');
+        b.textContent = 'Takk! Vi har mottatt forespørselen og dobbeltsjekker glasset før vi sender deg et endelig tilbud.';
+        b.className = 'note status pinpoint';
+        b.classList.remove('hidden');
+      })
+      .catch(function (e) { inquiryFeil(e.message || 'Kunne ikke sende forespørselen. Prøv igjen.'); })
+      .finally(function () { knapp.disabled = false; knapp.textContent = org; });
   });
 
   // Service worker: cache-first statisk + network-first HTML (80 % mobil = raske gjentatte besøk).

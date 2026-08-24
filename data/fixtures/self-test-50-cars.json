@@ -1,0 +1,408 @@
+{
+  "versjon": 1,
+  "opprettet": "2026-08-19",
+  "kilde": "discovery mot staging 2026-08-19 — 133 regnr fra repoet, 121 med SVV-bil",
+  "krav": "50 biler; >=10 vanlige; >=5 elbil; >=5 varebil/SUV; >=5 eldre <2012; >=5 nyere >=2023; ingen duplikater",
+  "biler": [
+    {
+      "regnr": "AA78283",
+      "merke": "PEUGEOT",
+      "modell": "EXPERT",
+      "aar": 2025,
+      "segment": "varebil-suv",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "AE13412",
+      "merke": "VW",
+      "modell": "GOLF",
+      "aar": 2006,
+      "segment": "eldre",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "AJ95429",
+      "merke": "MERCEDES",
+      "modell": "CLA 200 D 4MATIC",
+      "aar": 2016,
+      "segment": "vanlig",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "BC51543",
+      "merke": "FORD",
+      "modell": "GRANADA 2,3 L",
+      "aar": 1983,
+      "segment": "eldre",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "BR51758",
+      "merke": "VW",
+      "modell": "EOS",
+      "aar": 2007,
+      "segment": "eldre",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "BR58010",
+      "merke": "AUDI",
+      "modell": "A5",
+      "aar": 2007,
+      "segment": "eldre",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "BR67700",
+      "merke": "TOYOTA",
+      "modell": "LAND CRUISER",
+      "aar": 2008,
+      "segment": "varebil-suv",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "BS35162",
+      "merke": "LAND ROVER",
+      "modell": "RANGE ROVER EVOQUE",
+      "aar": 2011,
+      "segment": "eldre",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "BS66728",
+      "merke": "VOLVO",
+      "modell": "V60 PLUG IN HYBRID",
+      "aar": 2013,
+      "segment": "elbil",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "BU23751",
+      "merke": "VW",
+      "modell": "CADDY",
+      "aar": 2021,
+      "segment": "varebil-suv",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "BU28171",
+      "merke": "TOYOTA",
+      "modell": "LAND CRUISER (150 SERIES)",
+      "aar": 2021,
+      "segment": "varebil-suv",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "BU36370",
+      "merke": "TOYOTA",
+      "modell": "COROLLA",
+      "aar": 2023,
+      "segment": "nyere",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "BU37204",
+      "merke": "TOYOTA",
+      "modell": "TOYOTA COROLLA",
+      "aar": 2023,
+      "segment": "nyere",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "BU42163",
+      "merke": "TOYOTA",
+      "modell": "TOYOTA YARIS",
+      "aar": 2024,
+      "segment": "nyere",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "CF91159",
+      "merke": "VOLVO",
+      "modell": "V60 TWIN ENGINE",
+      "aar": 2017,
+      "segment": "vanlig",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "CV52478",
+      "merke": "BMW",
+      "modell": "318D",
+      "aar": 2008,
+      "segment": "eldre",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "CV80776",
+      "merke": "VW",
+      "modell": "TRANSPORTER",
+      "aar": 2016,
+      "segment": "varebil-suv",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "CV89013",
+      "merke": "MAZDA",
+      "modell": "MAZDA CX-3",
+      "aar": 2018,
+      "segment": "vanlig",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "DN65751",
+      "merke": "BMW",
+      "modell": "X5 XDRIVE30D",
+      "aar": 2011,
+      "segment": "varebil-suv",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "DP10946",
+      "merke": "MITSUBISHI",
+      "modell": "MITSUBISHI PAJERO",
+      "aar": 2012,
+      "segment": "vanlig",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "DP72082",
+      "merke": "VOLVO",
+      "modell": "XC60",
+      "aar": 2015,
+      "segment": "vanlig",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "DR56170",
+      "merke": "JAGUAR",
+      "modell": "JAGUAR XF",
+      "aar": 2018,
+      "segment": "vanlig",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "DR94262",
+      "merke": "DANGEL",
+      "modell": "PROACE 4X4",
+      "aar": 2021,
+      "segment": "vanlig",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "DS29473",
+      "merke": "LOTUS",
+      "modell": "ELETRE",
+      "aar": 2026,
+      "segment": "nyere",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "EB11166",
+      "merke": "AUDI",
+      "modell": "AUDI E-TRON",
+      "aar": 2019,
+      "segment": "elbil",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "EB85560",
+      "merke": "VW",
+      "modell": "ID.3 PRO 150 KW",
+      "aar": 2020,
+      "segment": "elbil",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "ED45082",
+      "merke": "NISSAN",
+      "modell": "NISSAN LEAF 40KWH",
+      "aar": 2021,
+      "segment": "elbil",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "ED63427",
+      "merke": "POLESTAR",
+      "modell": "POLESTAR 2",
+      "aar": 2022,
+      "segment": "elbil",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "ED72189",
+      "merke": "PORSCHE",
+      "modell": "TAYCAN 4",
+      "aar": 2021,
+      "segment": "vanlig",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "ED75058",
+      "merke": "KIA",
+      "modell": "NIRO",
+      "aar": 2022,
+      "segment": "elbil",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "ED82258",
+      "merke": "BMW",
+      "modell": "IX XDRIVE50",
+      "aar": 2022,
+      "segment": "vanlig",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "EE12345",
+      "merke": "POLESTAR",
+      "modell": "POLESTAR 2",
+      "aar": 2022,
+      "segment": "elbil",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "EF12345",
+      "merke": "BMW",
+      "modell": "I7 XDRIVE60",
+      "aar": 2022,
+      "segment": "elbil",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "EF93128",
+      "merke": "TESLA",
+      "modell": "MODEL Y",
+      "aar": 2023,
+      "segment": "elbil",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "EF97795",
+      "merke": "CUPRA",
+      "modell": "BORN 150 KW 58/62 KWH",
+      "aar": 2022,
+      "segment": "vanlig",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "EH58246",
+      "merke": "TOYOTA",
+      "modell": "PROACE",
+      "aar": 2025,
+      "segment": "nyere",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "EJ18765",
+      "merke": "HYUNDAI",
+      "modell": "KONA",
+      "aar": 2024,
+      "segment": "elbil",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "EK42721",
+      "merke": "BMW I",
+      "modell": "I3",
+      "aar": 2017,
+      "segment": "vanlig",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "EN30654",
+      "merke": "NISSAN",
+      "modell": "NISSAN ARIYA",
+      "aar": 2025,
+      "segment": "nyere",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "HK19201",
+      "merke": "TOYOTA",
+      "modell": "TOYOTA BZ4X",
+      "aar": 2025,
+      "segment": "nyere",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "JD94062",
+      "merke": "MITSUBISHI",
+      "modell": "MITSUBISHI OUTLANDER",
+      "aar": 2014,
+      "segment": "varebil-suv",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "KJ65178",
+      "merke": "TOYOTA",
+      "modell": "TOYOTA HILUX",
+      "aar": 2025,
+      "segment": "nyere",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "LH90120",
+      "merke": "VW",
+      "modell": "CARAVELLE TDI",
+      "aar": 2000,
+      "segment": "eldre",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "NH12612",
+      "merke": "ISUZU",
+      "modell": "N/A",
+      "aar": 2021,
+      "segment": "vanlig",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "NV63526",
+      "merke": "MITSUBISHI",
+      "modell": "MITSUBISHI ASX",
+      "aar": 2011,
+      "segment": "eldre",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "PR22999",
+      "merke": "MAZDA",
+      "modell": "MAZDA CX-5",
+      "aar": 2014,
+      "segment": "vanlig",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "RH69811",
+      "merke": "MITSUBISHI",
+      "modell": "L200",
+      "aar": 1999,
+      "segment": "eldre",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "RK10863",
+      "merke": "MITSUBISHI",
+      "modell": "OUTLANDER",
+      "aar": 2009,
+      "segment": "varebil-suv",
+      "forventet": "treff"
+    },
+    {
+      "regnr": "RK41592",
+      "merke": "TOYOTA",
+      "modell": "AYGO",
+      "aar": 2010,
+      "segment": "eldre",
+      "forventet": "ingen-kandidat"
+    },
+    {
+      "regnr": "SV45016",
+      "merke": "KIA",
+      "modell": "CEE'D",
+      "aar": 2013,
+      "segment": "vanlig",
+      "forventet": "ingen-kandidat"
+    }
+  ]
+}

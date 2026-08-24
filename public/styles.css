@@ -118,6 +118,30 @@ body {
   border-radius: 999px;
 }
 
+/* Personlig beta-invitasjon (P0.3) — kort overskrift + to avsnitt, mobil-først */
+.beta-invitasjon {
+  margin: 0 0 20px;
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.beta-invitasjon-tittel {
+  font-size: var(--fs-body);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1.3;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.beta-invitasjon p {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.beta-invitasjon p + p { margin-top: 8px; }
+
 /* ── SKJERM-VEKSLING ───────────────────────────────────────── */
 .hidden { display: none !important; }
 .screen { animation: fadeUp var(--dur) var(--ease) both; }
@@ -149,6 +173,92 @@ h2 {
   line-height: 1.55;
   margin-bottom: 24px;
 }
+
+/* ── MODERNE HERO (startskjerm) ───────────────────────────── */
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  color: var(--brand-text);
+  background: var(--brand-subtle);
+  border: 1px solid rgba(245,158,11,.25);
+  border-radius: 999px;
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+  animation: livePulse 2s infinite;
+}
+@keyframes livePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(245,158,11,.45); }
+  70%  { box-shadow: 0 0 0 7px rgba(245,158,11,0); }
+  100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+}
+h1 em {
+  font-style: normal;
+  color: var(--brand-deep);
+  white-space: nowrap;
+  position: relative;
+}
+h1 em::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 3px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--brand-subtle);
+  z-index: -1;
+}
+.hero-flyt {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin: 22px 0 26px;
+  padding: 16px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(15,23,42,.05);
+}
+.flyt-steg {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.flyt-ikon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--brand-subtle);
+  color: var(--brand-deep);
+}
+.flyt-ikon .ikon { width: 24px; height: 24px; }
+.flyt-txt {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  line-height: 1.25;
+}
+.flyt-pil {
+  display: grid;
+  place-items: center;
+  color: var(--text-3);
+  padding-top: 12px;
+}
+.flyt-pil .ikon { width: 16px; height: 16px; }
 .hjelp {
   color: var(--text-2);
   font-size: var(--fs-sm);
@@ -278,7 +388,7 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
   gap: 7px;
 }
 
-/* Foto av kjennemerket — HOVEDhandling på startskjermen (stor primær-knapp) */
+/* Foto av skiltnummeret — HOVEDhandling på startskjermen (stor primær-knapp) */
 .foto-prim {
   display: flex;
   align-items: center;
@@ -301,12 +411,32 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
 .foto-prim:active { transform: scale(.98); }
 .foto-prim .ikon { width: 24px; height: 24px; }
 
-/* «Fotografer kjennemerket» er kun for touch-enheter (mobil/pad). Desktop skriver kjennemerket. */
+/* «Fotografer skiltnummeret» er kun for touch-enheter (mobil/pad). Desktop skriver skiltnummeret. */
 @media (hover: hover) and (pointer: fine) {
   .foto-prim { display: none; }
+  .eller { display: none; }
 }
 
-/* VIN-fallback — vises kun når kjennemerke ikke finnes i SVV */
+/* «eller skriv skiltnummeret»-separator */
+.eller {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.eller::before, .eller::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+/* VIN-fallback — vises kun når skiltnummer ikke finnes i SVV */
 .vin-fallback {
   margin-top: 10px;
   font-size: 15px;
@@ -341,6 +471,41 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
 .tilbehor-valg .ikon { width: 20px; height: 20px; color: var(--brand-deep); flex: 0 0 auto; }
 .tilbehor-valg span { font-size: 15px; font-weight: 600; }
 .note-tilbehor { opacity: .75; }
+
+/* P0.1: montasjevalg + tilbehørsinfo (kandidat- og glassstyrt) */
+.montasje-valg { margin: 10px 0 12px; font-size: var(--fs-sm); color: var(--text-2); }
+.montasje-valg label {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 8px 14px 0 0; font-weight: 600; cursor: pointer;
+}
+.montasje-valg input { width: 18px; height: 18px; accent-color: var(--brand); }
+.tilbehor-info { margin: 8px 0; font-size: 14px; line-height: 1.45; color: var(--text-2); }
+.tilbehor-info::before { content: '✓ '; color: var(--brand-deep); font-weight: 800; }
+
+/* Henvendelsesskjema (beta) */
+.inquiry {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card, #fff);
+}
+.inquiry h3 { font-size: 17px; font-weight: 800; margin: 0 0 4px; }
+.inquiry .felt { display: block; margin: 12px 0; }
+.inquiry .felt span { display: block; font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); margin-bottom: 4px; }
+.inquiry .felt input, .inquiry .felt textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--ink);
+}
+.inquiry .felt input[readonly] { background: var(--brand-subtle); color: var(--text-2); cursor: not-allowed; }
+.inquiry .felt textarea { resize: vertical; }
 .ikon-inline { width: 15px; height: 15px; vertical-align: -2px; margin-right: 2px; }
 
 /* Ikoner (SVG-sprite, lucide-stil) */
@@ -519,6 +684,45 @@ button { font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: tra
 }
 .bil-seksjon .bilkort { margin-bottom: 8px; }
 .bil-seksjon .link { font-size: var(--fs-xs); }
+
+/* Evidence Capture — kun supportdokumentasjon, aldri fitment-autoritativ. */
+.evidence-capture {
+  margin: 0 0 20px;
+  padding: 18px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.evidence-capture h3 { font-size: 18px; margin: 0 0 5px; }
+.evidence-capture p { color: var(--text-2); font-size: var(--fs-sm); margin: 0 0 14px; line-height: 1.45; }
+.evidence-capture .sek { width: 100%; margin-top: 8px; }
+.evidence-capture .note.ok { color: #166534; }
+
+/* P0.2: mobil-først fotoopplevelse (kamera primær, bibliotek sekundær) */
+.evidence-gruppe { margin: 14px 0; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.evidence-gruppe:last-of-type { border-bottom: none; padding-bottom: 0; }
+.evidence-forklaring { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-2); }
+.evidence-valgfri { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--text-3); }
+.evidence-kamera {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; min-height: 52px; padding: 12px 16px;
+  background: var(--ink); color: #fff; border: 0; border-radius: var(--radius-md);
+  font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+}
+.evidence-kamera:active { transform: scale(.99); }
+.evidence-bibliotek {
+  display: block; width: 100%; margin-top: 6px; padding: 6px 0;
+  background: transparent; border: 0; color: var(--accent);
+  font: inherit; font-size: var(--fs-sm); font-weight: 600;
+  text-decoration: underline; cursor: pointer;
+}
+.evidence-input { display: none; } /* skjulte file-inputs — aldri synlig i UI */
+.evidence-miniatyr { margin-top: 10px; }
+.evidence-thumb { max-width: 180px; max-height: 130px; border-radius: 8px; border: 1px solid var(--border); object-fit: cover; }
+.evidence-actions { display: flex; gap: 10px; margin-top: 8px; }
+.evidence-actions button { font: inherit; font-size: var(--fs-sm); font-weight: 600; padding: 7px 14px; border-radius: var(--radius-md); cursor: pointer; }
+.evidence-ta-paa-nytt { background: #e8eef5; color: var(--ink); border: 1px solid var(--line); }
+.evidence-fjern { background: transparent; color: #b91c1c; border: 1px solid rgba(185,28,28,.35); }
 
 /* ── RESULTAT ──────────────────────────────────────────────── */
 .resultat-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }

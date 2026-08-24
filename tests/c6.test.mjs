@@ -4,13 +4,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
-const OUT = new URL('../scripts/out/c6-vehicle-intelligence.json', import.meta.url);
+const BASELINE_OUT = new URL('../scripts/out/c6-vehicle-intelligence.json', import.meta.url);
+const OUT = join(mkdtempSync(join(tmpdir(), 'finnbilglass-c6-')), 'report.json');
 
 test('C6-1: personvern — regnr/VIN er KUN sha256-hash i rapporten, aldri rå verdier', () => {
-  if (!existsSync(OUT)) return; // kjør c6-scriptet først; regresjonstest når rapport finnes
-  const raw = readFileSync(OUT, 'utf8');
+  if (!existsSync(BASELINE_OUT)) return; // kjør c6-scriptet først; regresjonstest når rapport finnes
+  const raw = readFileSync(BASELINE_OUT, 'utf8');
   // ingen rå norske kjennemerker (2 bokstaver + 5 siffer som ord)
   assert.equal(/[A-ZÆØÅ]{2}\s?\d{5}/.test(raw), false, 'rapporten inneholder rå kjennemerke!');
   assert.equal(/WBY31AW07PFN70638|VR7BCZKXCNE026453/.test(raw), false, 'rapporten inneholder rå VIN!');
@@ -18,7 +21,7 @@ test('C6-1: personvern — regnr/VIN er KUN sha256-hash i rapporten, aldri rå v
 });
 
 test('C6-2: kjøring produserer gyldig statistikk (kjøretøy > 0, dekning 0–100 %)', () => {
-  execFileSync('node', ['scripts/c6-vehicle-intelligence.mjs'], { cwd: new URL('..', import.meta.url).pathname });
+  execFileSync('node', ['scripts/c6-vehicle-intelligence.mjs'], { cwd: new URL('..', import.meta.url).pathname, env: { ...process.env, C6_OUTPUT_FILE: OUT } });
   const rep = JSON.parse(readFileSync(OUT, 'utf8'));
   assert.ok(rep.totals.vehicles > 0, 'korpus tomt');
   assert.ok(rep.coverage.vinCoverage >= 0 && rep.coverage.vinCoverage <= 100);

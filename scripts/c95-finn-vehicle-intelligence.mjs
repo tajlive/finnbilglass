@@ -10,9 +10,10 @@ import { resolve, dirname } from 'node:path';
 import { buildClassDCandidates, matchClassDCandidates } from '../src/fitment-v1/catalogue-candidates.js';
 import { rankQuestions } from '../src/fitment-v1/question-optimizer.js';
 
-const OUT = resolve('scripts/out/c95-finn-vehicle-intelligence.json');
-const FINN = '/Users/taj/bilglass/data/finn-no-regnr/broad-scrape-2026-06-07.ndjson';
-const SVV = '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson';
+const OUT = resolve(process.env.ANALYTICS_OUTPUT_FILE ?? 'scripts/out/c95-finn-vehicle-intelligence.json');
+const FIXTURE_DIR = process.env.ANALYTICS_FIXTURE_DIR ? resolve(process.env.ANALYTICS_FIXTURE_DIR) : null;
+const FINN = FIXTURE_DIR ? resolve(FIXTURE_DIR, 'c95-finn.ndjson') : '/Users/taj/bilglass/data/finn-no-regnr/broad-scrape-2026-06-07.ndjson';
+const SVV = FIXTURE_DIR ? resolve(FIXTURE_DIR, 'c95-svv.ndjson') : '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson';
 
 // ── topp 3-familie-regler: SVV-modell-token + Glavista-modellnavn-token ──
 const FAMILIER = {
@@ -37,12 +38,13 @@ if (existsSync(SVV)) {
 }
 
 // ── gt + Glavista-kandidatindekser ──
-const gt = JSON.parse(readFileSync('data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
+const gt = JSON.parse(readFileSync(FIXTURE_DIR ? resolve(FIXTURE_DIR, 'catalogue.json') : 'data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
 const classD = buildClassDCandidates(gt[0].results);
 const glavistaRows = [];
-for (const f of readdirSyncSafe('data/scrape/glavista')) {
+const glavistaDir = FIXTURE_DIR ? resolve(FIXTURE_DIR, 'glavista') : 'data/scrape/glavista';
+for (const f of readdirSyncSafe(glavistaDir)) {
   try {
-    const j = JSON.parse(readFileSync('data/scrape/glavista/' + f, 'utf8'));
+    const j = JSON.parse(readFileSync(resolve(glavistaDir, f), 'utf8'));
     if (String(j.produktgruppe ?? '').toLowerCase() !== 'windscreen') continue;
     glavistaRows.push({ modell: String(j.modell ?? ''), merke: String(j.merke ?? ''), oe: Array.isArray(j.oeNummer) ? j.oeNummer : [], eurokode: j.eurokode, aarFra: aarFraFraNavn(j.modell) });
   } catch { /* hopp over korrupte filer */ }
@@ -74,11 +76,12 @@ for (const a of annonser) {
   const union = [...gtCands, ...glaCands.map((g) => ({ eurokode: g.eurokode, varenr: g.eurokode, varenavn: g.modell, features: [], source: 'GLAVISTA', klassifisering: 'CLASS_D_CATALOGUE_CANDIDATE', matchReason: `${mk} ${fam} Glavista` }))];
   const skillende = union.length > 1 ? rankQuestions(union.map((c) => ({ features: c.features, glavista: null, variant: null }))).map((r) => r.feature) : [];
 
+  const weight = FIXTURE_DIR ? Number(a.testWeight ?? 1) : 1;
   const r = perFamilie.get(fam) ?? { familie: fam, annonser: 0, medKandidater: 0, kandidater: 0, glavistaKilder: 0, skillende: new Set(), aar: [] };
-  r.annonser++;
-  if (union.length > 0) r.medKandidater++;
-  r.kandidater += union.length;
-  if (glaCands.length > 0) r.glavistaKilder++;
+  r.annonser += weight;
+  if (union.length > 0) r.medKandidater += weight;
+  r.kandidater += union.length * weight;
+  if (glaCands.length > 0) r.glavistaKilder += weight;
   for (const f of skillende) r.skillende.add(f);
   if (svv.year) r.aar.push(svv.year);
   perFamilie.set(fam, r);

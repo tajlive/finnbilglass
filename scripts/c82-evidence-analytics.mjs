@@ -14,8 +14,12 @@ import { rankQuestions } from '../src/fitment-v1/question-optimizer.js';
 import { EvidenceKernel } from '../src/fitment-v1/policy/kernel.js';
 import { learningOpportunities } from '../src/learning-v1/analytics.js';
 
-const OUT = resolve('scripts/out/c82-evidence-analytics.json');
-const CORPUS = ['data/finn-modeller/svv-verifisert.ndjson', 'data/test-500-gt-detaljer.jsonl', '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson'];
+const OUT = resolve(process.env.ANALYTICS_OUTPUT_FILE ?? 'scripts/out/c82-evidence-analytics.json');
+const FIXTURE_DIR = process.env.ANALYTICS_FIXTURE_DIR ? resolve(process.env.ANALYTICS_FIXTURE_DIR) : null;
+const CORPUS = FIXTURE_DIR
+  ? [resolve(FIXTURE_DIR, 'c82-corpus.ndjson')]
+  : ['data/finn-modeller/svv-verifisert.ndjson', 'data/test-500-gt-detaljer.jsonl', '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson'];
+const FIXTURE_REPEAT = FIXTURE_DIR ? 60 : 1;
 
 // ── korpus (SVV truth) ──
 const biler = [];
@@ -23,11 +27,12 @@ for (const f of CORPUS) {
   if (!existsSync(f)) continue;
   for (const line of readFileSync(f, 'utf8').split('\n').filter(Boolean)) {
     let r; try { r = JSON.parse(line); } catch { continue; }
-    biler.push({
+    const vehicle = {
       make: String(r.merke ?? r.make ?? r.brand ?? '').toUpperCase().replace('MERCEDES-BENZ', 'MERCEDES').replace('VOLKSWAGEN', 'VW'),
       model: String(r.modell ?? r.model ?? '').toUpperCase(),
       year: r.aar != null ? Number(r.aar) : r.year != null ? Number(r.year) : null,
-    });
+    };
+    for (let i = 0; i < FIXTURE_REPEAT; i++) biler.push(vehicle);
   }
 }
 
@@ -50,14 +55,15 @@ try {
 } catch { /* markedsdata valgfri */ }
 
 const resolver = new ApplicationResolver({ families: buildDefaultGenerationRegistry() });
-const gtRaw = JSON.parse(readFileSync('data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
+const gtRaw = JSON.parse(readFileSync(FIXTURE_DIR ? resolve(FIXTURE_DIR, 'catalogue.json') : 'data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
 const classD = buildClassDCandidates(gtRaw[0].results);
 const kernel = new EvidenceKernel();
 // C9.5: Glavista-kandidatindeks (frontruter) — dekker moderne BMW 3 (F30) som gt mangler
 const glavistaRows = [];
-for (const f of (() => { try { return readdirSync('data/scrape/glavista'); } catch { return []; } })()) {
+const glavistaDir = FIXTURE_DIR ? resolve(FIXTURE_DIR, 'glavista') : 'data/scrape/glavista';
+for (const f of (() => { try { return readdirSync(glavistaDir); } catch { return []; } })()) {
   try {
-    const j = JSON.parse(readFileSync('data/scrape/glavista/' + f, 'utf8'));
+    const j = JSON.parse(readFileSync(resolve(glavistaDir, f), 'utf8'));
     if (String(j.produktgruppe ?? '').toLowerCase() !== 'windscreen') continue;
     glavistaRows.push({ modell: String(j.modell ?? ''), merke: String(j.merke ?? ''), eurokode: j.eurokode });
   } catch { /* hopp over korrupte filer */ }
