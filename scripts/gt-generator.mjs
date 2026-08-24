@@ -198,21 +198,31 @@ function lastDumps(merker) {
   return rader;
 }
 
-/** Katalog-index (catalog-prod): varenr → rader med strukturert brand/model/år/pris.
+/** Katalog-index (catalog-prod): varenr → rader med strukturert brand/model/år/pris/kategori.
  *  GT-generatoren krever år i varenavnet, men Autoglass' navn har ofte IKKE år
  *  («MERCEDES SPRINTER (LAV TYPE)») — da mister vi hele varianten (UR67407:
  *  kun «95-06 LAV MOD»-raden 1979PY hadde år → feilpris 625 kr i GT).
- *  Berik fra den strukturerte katalogen (samme kilde som auto-glass.no). */
+ *  Berik fra den strukturerte katalogen (samme kilde som auto-glass.no).
+ *  KATEGORI-GUARD: kategori ≠ frontrute = ALDRI GT-rad (26229GN sideglass,
+ *  26231GN bakrute, 8410GZPR5SR bakrute — 3 861 rader i prod var feil). */
+const KATEGORI_FRONTRUTE = new Set(['frontrute', 'front', 'windshield', 'windscreen', 'WS']);
+const KATEGORI_HOVED = new Set(['frontrute', 'bakrute', 'sideglass', 'dørglass', 'annet']);
+const KATEGORI_DESCRIPTOR = new Set(['frontrute', 'bakrute', 'sideglass', 'dørglass', 'annet']);
 let KATALOG_INDEX = null;
+let KATALOG_TYPES = null;
 function katalogIndex() {
   if (KATALOG_INDEX) return KATALOG_INDEX;
   KATALOG_INDEX = new Map();
+  KATALOG_TYPES = new Map();
   const fil = '/Users/taj/bilglass/data/catalog-prod.min.json.gz';
   if (!existsSync(fil)) return KATALOG_INDEX;
   const d = JSON.parse(gunzipSync(readFileSync(fil)).toString('utf8'));
   for (const r of d.records ?? []) {
     const vnr = String(r.article_number ?? '').toUpperCase();
     if (!vnr) continue;
+    // KATEGORI-GUARD: katalogens kategori er autoritativ (scrapen, ikke tekst-gjetting).
+    const kat = String(r.category ?? '').toLowerCase();
+    if (kat) KATALOG_TYPES.set(vnr, kat);
     if (!KATALOG_INDEX.has(vnr)) KATALOG_INDEX.set(vnr, []);
     KATALOG_INDEX.get(vnr).push({
       brand: String(r.brand ?? '').toUpperCase(),
@@ -223,6 +233,16 @@ function katalogIndex() {
     });
   }
   return KATALOG_INDEX;
+}
+
+/** KATEGORI-GUARD: er varenr en ekte frontrute per katalogen?
+ *  Returner true = katalog sier frontrute (eller ukjent — vi endrer aldri sannhet
+ *  konstruktivt, kun destruktivt: kjent side-/bak-/dørglass ELIMINERES). */
+export function katalogErFrontrute(varenr) {
+  katalogIndex();
+  const kat = KATALOG_TYPES.get(String(varenr ?? '').toUpperCase());
+  if (!kat) return true; // ukjent → ikke blokkere (konservativ)
+  return KATEGORI_FRONTRUTE.has(kat);
 }
 
 /** Finn årvindu for (varenr, merke) fra katalogen — brand-prefiks-match
@@ -260,6 +280,12 @@ async function main() {
     if (merke === 'MERC') merke = 'MERCEDES';
     if (!merkeSett.has(merke)) continue;
     if (!erFrontrute(r.varenavn, r.varenr, r.eurokode)) { ekskludert++; continue; }
+    // KATEGORI-GUARD (2026-08-24): katalogen (auto-glass.no-scrape) sier eksplisitt
+    // at varenr er sideglass/bakrute/dørglass → aldri GT-rad. 26229GN (BMW E46
+    // siderute), 26231GN (bakrute), 8410GZPR5SR (bakrute) var feil i prod =
+    // 3 861 rader med feil glass i ground_truth. Ukjent kategori = tillatt
+    // (konservativt — vi eliminerer kun, aldri konstruerer sannhet).
+    if (!katalogErFrontrute(r.varenr)) { ekskludert++; continue; }
     frontruteRader++;
     let p = parseVarenavn(r.varenavn, merke);
     // Berikelse (UR67407): Autoglass-navn uten år («MERCEDES SPRINTER (LAV TYPE)»)

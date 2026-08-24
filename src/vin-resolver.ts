@@ -82,6 +82,10 @@ const MODEL_TOKEN_ALIAS: Record<string, string[]> = {
   CARAVELLE: ['CARAV'],
   TRANSPORTER: ['TRANSP'],
   MULTIVAN: ['MULTI'],
+  // SVV gir «RAV4», katalogen skriver «RAV 4» — normaliser begge veier
+  // (RAV4-familien: verifisert mot glass_catalog-modeller 2026-08-24).
+  RAV4: ['RAV'],
+  RAV: ['RAV4'],
 };
 
 export function normBrand(merke: string): string {
