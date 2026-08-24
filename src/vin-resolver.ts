@@ -210,6 +210,23 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
       attributter.kamera = f.camera == null ? null : f.camera === 1;
       attributter.adas   = f.adas   == null ? null : f.adas   === 1;
     }
+    // glass_reference (ihrautoglas) fyller hull: kamera/regnsensor/HUD/Beheizt
+    // fra kuratert utstyrstekst — brukes KUN der verdien fortsatt er null
+    // (eurokode-dekoder + glass_catalog er fortsatt autoritative først).
+    const ref = await env.FINNBILGLASS_DB.prepare(
+      `SELECT features_json FROM glass_reference WHERE eurocode = ? LIMIT 1`
+    ).bind(r.eurokode).first<{ features_json: string }>();
+    if (ref) {
+      let feats: string[] = [];
+      try { feats = JSON.parse(ref.features_json); } catch { /* ignorer */ }
+      const has = (s: string) => feats.some(f => f.toLowerCase().includes(s));
+      if (attributter.kamera === null && has('kamera')) attributter.kamera = true;
+      if (attributter.sensor === null && has('regensensor')) attributter.sensor = true;
+      // NB: 'Beheizt' i ihrautoglas-tekst = varmetråder (dekoder 'oppvarmet'), ikke HUD.
+      // HUD er en projeksjon fra dashbordet — aldri synlig/lesbar på glasset, og kan
+      // derfor ALDRI utledes av glassreferanser. Vi setter aldri false fra referansebanken —
+      // fravær av tekst er ikke bevis.
+    }
   }
 
   return {
