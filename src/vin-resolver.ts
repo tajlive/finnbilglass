@@ -457,13 +457,19 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
   const unike = new Map<string, ResolverKandidat>();
   for (const r of rows.results ?? []) {
     if (!ordTreff(r.model ?? '', tokens)) continue; // ordbasert — aldri substring
-    // Årvindu: kolonne-verdier, ellers år-hint i modellstrengen
+    // Årvindu: kolonne-verdier (autoritative), ellers år-hint i modellstrengen
     if (aar != null) {
-      const intervall = r.year_from != null
-        ? { start: r.year_from, slutt: r.year_to ?? Infinity }
+      const fraKolonne = r.year_from != null;
+      const intervall: { start: number; slutt: number } | null = fraKolonne
+        ? { start: r.year_from as number, slutt: r.year_to ?? Infinity }
         : modellAarIntervall(r.model);
       if (!intervall) continue; // ukjent generasjon → ekskluder (false positive verre enn fallback)
-      if (!matcherAar({ start: intervall.start - 1, slutt: intervall.slutt === Infinity ? Infinity : intervall.slutt + 1 }, aar)) continue;
+      // År-slack (±1) KUN for kolonne-data (Pilkington EOL-felt kan være avrundet).
+      // År-hint parsret fra modellstreng («95-97-») er strenge: generasjonsskifte
+      // 95-97 → neste gen fra 97/98 må ALDRI fange året rett etter (inquiry-16:
+      // Porsche 996 1998 feilmatchet til 993-rute «95-97-» pga +1-slacken).
+      const slakk = fraKolonne ? 1 : 0;
+      if (!matcherAar({ start: intervall.start - slakk, slutt: intervall.slutt === Infinity ? Infinity : intervall.slutt + slakk }, aar)) continue;
     }
     const k = await prisKandidat(env, r.eurocode);
     if (!k) continue;
