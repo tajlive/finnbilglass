@@ -1,13 +1,13 @@
 -- 0019_oem_probe_queue.sql
 -- OEM VIN→OE akseptansetest kø (Tom-korrigert 2026-08-25)
--- Vin_hash = SHA256(VIN + salt) for ekstern logging, men rå VIN lagres i tabellen
--- (VIN er offentlig informasjon, ikke personopplysning)
+-- VIN er personopplysning (SVV-kjørertøydata-API) — lagres IKKE i tabellen.
+-- Kun vin_hash = SHA256(VIN || pepper) lagres for ekstern referanse.
+-- Rå VIN håndteres kun i minnet under manuell test, aldri i DB/Git.
 
 CREATE TABLE IF NOT EXISTS oem_probe_queue (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   probe_id TEXT NOT NULL UNIQUE,               -- f.eks. 'tesla-20250825-001'
-  vin TEXT NOT NULL,                           -- rå VIN (offentlig)
-  vin_hash TEXT NOT NULL,                      -- SHA256(VIN || salt) for ekstern referanse
+  vin_hash TEXT NOT NULL,                      -- SHA256(VIN || pepper) — kun identifikator
   make TEXT NOT NULL,
   model TEXT NOT NULL,
   year INTEGER,
