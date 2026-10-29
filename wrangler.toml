@@ -28,11 +28,13 @@ bucket_name = "finnbilglass-opplaering"
 #    wrangler secret put CRON_SECRET
 
 [vars]
+MULTI_GLASS_ENABLED = "false"
 ENVIRONMENT = "production"
 # Evidence-flyt feature-flags — avgrenset release (Tom 2026-08-19): kun opplasting åpen.
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
 EVIDENCE_STATUS_CHANGE_ENABLED = "true"
+VOICE_LAB_ENABLED = "false"
 
 # ── Observability (Tom 2026-08-19): Workers Logs-lagring AV (kostnad),
 #    invocation_logs PÅ (wrangler tail / debugging) ──────────────────
@@ -44,7 +46,7 @@ invocation_logs = true
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/", "/support/evidence", "/ops"]
+run_worker_first = ["/", "/support/evidence", "/ops", "/ops/*", "/api/ops/voice/*"]
 
 # ── Custom domains (opprettes av wrangler ved deploy) ──────────
 # apex + www serverer landingsside inntil Pages-frontenden tar over; api = matcher

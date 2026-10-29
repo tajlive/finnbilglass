@@ -17,6 +17,7 @@
  */
 import type { BilInput } from './matcher';
 import { tierPris } from './matcher';
+import { supplierLdw } from './supplier-sku-evidence';
 import { matcherAar, parseAar } from './aar-parser';
 import { serieKey, normaliserKatalogModell } from './serie-mapping';
 import { dekodeEurokode, type Dekodet } from './eurokode-dekoder';
@@ -33,9 +34,11 @@ export interface ResolverKandidat {
     sensor: boolean | null;
     antenne: boolean | null;
     hud: boolean | null;
+    ldw?: boolean | null;
     kamera: boolean | null;
     adas: boolean | null;
     coated: boolean | null;
+    oppvarmet?: boolean | null;
   };
 }
 
@@ -178,37 +181,34 @@ export function erFrontrute(varenavn: string | null, varenr: string, dek: Dekode
   return true; // frontrute-posisjon ELLER ukjent (veteran/OEM) → kandidat
 }
 
-/** Prisliste-oppslag på varenr ELLER eurokode (rad_type='glass'), frontrute-gated.
+/** Prisliste-oppslag på varenr eller Eurokode. Bevar hver SKU som egen variant.
  *  Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13);
  *  glass_catalog brukes KUN for kamera/adas (ikke kodet i eurokoden). Ikke-frontrute
  *  (bak/side/dør/takglass) og OEM-delnummer uten FRONTR-markør returnerer null. */
-async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | null> {
-  const r = await env.FINNBILGLASS_DB.prepare(
-    `SELECT varenr, varenavn, pris, eurokode FROM glass_prisliste
-     WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
-  ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>();
-  if (!r) return null;
-
+async function prisKandidater(env: Env, kode: string): Promise<ResolverKandidat[]> {
+  const db = env.FINNBILGLASS_DB;
+  const exactSku = await db.prepare(
+    `SELECT varenr, varenavn, pris, eurokode FROM glass_prisliste WHERE rad_type='glass' AND varenr = ? LIMIT 50`
+  ).bind(kode).all<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>();
+  const rows = exactSku.results?.length ? exactSku.results : (await db.prepare(
+    `SELECT varenr, varenavn, pris, eurokode FROM glass_prisliste WHERE rad_type='glass' AND eurokode = ? LIMIT 50`
+  ).bind(kode).all<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>()).results ?? [];
+  const uniqueRows = new Map<string, typeof rows[number]>();
+  for (const row of rows) uniqueRows.set(`${row.varenr}\0${row.eurokode ?? ''}`, row);
+  const out: ResolverKandidat[] = [];
+  for (const r of uniqueRows.values()) {
   const dek = dekodeEurokode(r.eurokode);
-  if (!erFrontrute(r.varenavn, r.varenr, dek)) return null; // bak/side/dør/takglass
+  if (!erFrontrute(r.varenavn, r.varenr, dek)) continue; // bak/side/dør/takglass
 
-  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
-
-  // Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13),
-  // men KUN når koden faktisk er en eurokode (gyldig posisjonsbokstav). OEM-delnummer
-  // (f.eks. VW 7H0877051) har posisjon=null — da er A/M/C/H ukjent (null), ikke false.
-  if (dek.posisjon) {
-    const eg = dek.egenskaper;
-    attributter.sensor  = eg.includes('sensor');
-    attributter.antenne = eg.includes('antenne');
-    attributter.hud     = eg.includes('oppvarmet');
-    attributter.coated  = eg.includes('coated');
-  }
+  const attributter = basisAttributterFraEurokode(dek);
+  berikAttributterFraVaretekst(attributter, r.varenavn);
+  const dokumentertLdw = supplierLdw(r.varenr, r.eurokode);
+  if (dokumentertLdw !== undefined) attributter.ldw = dokumentertLdw;
 
   // glass_catalog kun for kamera + adas (ikke kodet i eurokoden)
   if (r.eurokode) {
     const f = await env.FINNBILGLASS_DB.prepare(
-      `SELECT camera, adas FROM glass_catalog WHERE eurocode = ? LIMIT 1`
+      `SELECT camera, adas FROM glass_catalog WHERE eurocode = ? ORDER BY (camera IS NOT NULL) DESC, (adas IS NOT NULL) DESC LIMIT 1`
     ).bind(r.eurokode).first<{ camera: number | null; adas: number | null }>();
     if (f) {
       attributter.kamera = f.camera == null ? null : f.camera === 1;
@@ -217,9 +217,15 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
     // glass_reference (ihrautoglas) fyller hull: kamera/regnsensor/HUD/Beheizt
     // fra kuratert utstyrstekst — brukes KUN der verdien fortsatt er null
     // (eurokode-dekoder + glass_catalog er fortsatt autoritative først).
-    const ref = await env.FINNBILGLASS_DB.prepare(
-      `SELECT features_json FROM glass_reference WHERE eurocode = ? LIMIT 1`
-    ).bind(r.eurokode).first<{ features_json: string }>();
+    let ref: { features_json: string } | null = null;
+    try {
+      ref = await env.FINNBILGLASS_DB.prepare(
+        `SELECT features_json FROM glass_reference WHERE eurocode = ? LIMIT 1`
+      ).bind(r.eurokode).first<{ features_json: string }>();
+    } catch (error) {
+      // Older databases may not contain this optional enrichment table.
+      if (!(error instanceof Error) || !/no such table: (?:main\.)?glass_reference\b/i.test(error.message)) throw error;
+    }
     if (ref) {
       let feats: string[] = [];
       try { feats = JSON.parse(ref.features_json); } catch { /* ignorer */ }
@@ -233,20 +239,55 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
     }
   }
 
-  return {
+  out.push({
     varenr: r.varenr,
     varenavn: r.varenavn,
     pris: tierPris(r.pris),
     listepris: r.pris,
     eurokode: r.eurokode,
     attributter,
-  };
+  });
+  }
+  return out;
+}
+
+function kandidatNokkel(k: ResolverKandidat): string {
+  return `${k.varenr}\0${k.eurokode ?? ''}`;
+}
+
+/** An explicit model-year window on the supplier's SKU name is a hard limit,
+ * even if a broader vehicle-catalogue year window includes the boundary year. */
+export function filtrerPaaProduktAar(kandidater: ResolverKandidat[], bilAar: number | null | undefined): ResolverKandidat[] {
+  if (bilAar == null) return kandidater;
+  return kandidater.filter((k) => {
+    const produktAar = parseAar(k.varenavn);
+    return !produktAar || matcherAar(produktAar, bilAar);
+  });
+}
+
+/** Manglende kodebevis blir ukjent; H = varme og gir aldri HUD. */
+export function basisAttributterFraEurokode(dek: Dekodet): ResolverKandidat['attributter'] {
+  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, ldw: null, kamera: null, adas: null, coated: null, oppvarmet: null };
+  if (!dek.posisjon) return attributter;
+  attributter.sensor = dek.egenskaper.includes('sensor');
+  attributter.antenne = dek.egenskaper.includes('antenne');
+  attributter.coated = dek.egenskaper.includes('coated');
+  attributter.oppvarmet = dek.egenskaper.includes('oppvarmet');
+  return attributter;
+}
+
+/** Eksplisitt varetekst kan bevise ja/nei; fravær av kodeord er ukjent. */
+export function berikAttributterFraVaretekst(attributter: ResolverKandidat['attributter'], navn: string | null): void {
+  const tekst = (navn ?? '').toUpperCase();
+  if (/\bHUD\b|HEAD[- ]?UP DISPLAY/.test(tekst)) attributter.hud = true;
+  if (/\b(?:UTEN|NO)\s+LDW\b/.test(tekst)) attributter.ldw = false;
+  else if (/\bLDW\b|LANE DEPARTURE/.test(tekst)) attributter.ldw = true;
 }
 
 /** Spørsmål som FAKTISK skiller kandidatene: felt der minst én kandidat har true OG minst én har false.
  *  Ukjente verdier (null) teller ikke — vi spør aldri om ting vi ikke kan skille på. */
 export function skillendeSporsmaal(kandidater: ResolverKandidat[]): string[] {
-  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'kamera', 'adas', 'coated'];
+  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'ldw', 'kamera', 'adas', 'coated', 'oppvarmet'];
   const ut: string[] = [];
   for (const f of felt) {
     const verdier = kandidater.map((k) => k.attributter[f]).filter((v): v is boolean => typeof v === 'boolean');
@@ -296,8 +337,7 @@ async function lagVinOverride(env: Env, vin: string | null | undefined): Promise
   ).bind(v).all<{ eurocode: string }>();
   const unike = new Map<string, ResolverKandidat>();
   for (const r of rows.results ?? []) {
-    const k = await prisKandidat(env, r.eurocode);
-    if (k && !unike.has(k.varenr)) unike.set(k.varenr, k);
+    for (const k of await prisKandidater(env, r.eurocode)) unike.set(kandidatNokkel(k), k);
   }
   return [...unike.values()];
 }
@@ -316,7 +356,15 @@ export function gtSerieFor(make: string, gtModell: string, aar: number | null): 
 export function gtRadMatch(radModel: string, make: string, model: string, aarList: number[]): boolean {
   const tokens = modellTokensAv(model, make);
   const serie = serieKey(make, model, aarList[0]);
-  if (radModel.toUpperCase() === model) return true;
+  const radUpper = radModel.toUpperCase();
+  const modelUpper = model.toUpperCase();
+  if (make === 'MAZDA' && /^CX[\s-]*5$/i.test(model.trim())
+    && !/\bCX[\s-]*5(?!\d)/i.test(radModel)) return false;
+  // «TRANSPORTE+MULTIVAN» is a commercial catalogue family, not a safe alias
+  // for an ordinary Transporter. Do not offer the Multivan-specific glass to a
+  // Transporter unless the vehicle data itself says MULTIVAN.
+  if (make === 'VW' && radUpper.includes('MULTIVAN') && !modelUpper.includes('MULTIVAN')) return false;
+  if (radUpper === model) return true;
   if (tokens.length && ordTreff(radModel, tokens)) return true;
   if (serie) {
     const gtSerie = gtSerieFor(make, radModel, aarList[0]);
@@ -351,7 +399,7 @@ export async function gtRaderKandidater(
   make: string,
   model: string,
   aarList: number[],
-  tilKandidat: (kode: string) => Promise<ResolverKandidat | null>
+  tilKandidat: (kode: string) => Promise<ResolverKandidat | ResolverKandidat[] | null>
 ): Promise<ResolverKandidat[]> {
   if (!aarList.length) return [];
   const unike = new Map<string, ResolverKandidat>();
@@ -361,21 +409,24 @@ export async function gtRaderKandidater(
   for (const r of sortert) {
     if (!gtRadMatch(r.model, make, model, aarList)) continue;
     if (!r.frontrute_eurocode) continue;
-    const k = await tilKandidat(r.frontrute_eurocode);
-    if (k && !unike.has(k.varenr)) unike.set(k.varenr, k);
+    const result = await tilKandidat(r.frontrute_eurocode);
+    const kandidater = Array.isArray(result) ? result : result ? [result] : [];
+    for (const k of filtrerPaaProduktAar(kandidater, aarList[0])) {
+      unike.set(kandidatNokkel(k), k);
+    }
   }
   return [...unike.values()];
 }
 
-type ProfilFiltrerbar = 'sensor' | 'antenne' | 'coated';
-const FILTRERBARE_PROFIL: ProfilFiltrerbar[] = ['sensor', 'antenne', 'coated'];
+type ProfilFiltrerbar = keyof ResolverKandidat['attributter'];
+const FILTRERBARE_PROFIL: ProfilFiltrerbar[] = ['sensor', 'antenne', 'coated', 'hud', 'ldw', 'kamera', 'adas', 'oppvarmet'];
 
 /** Utstyrsfiltrering på kundens svar: kun besvarte attributter virker.
  *  - svar=true  → behold kandidater der attributt !== false (true eller ukjent)
  *  - svar=false → behold kandidater der attributt !== true (false eller ukjent)
  *  - ukjent (null) strykes aldri; tom resultatliste → original liste (aldri tøm).
- *  - Positiv lookahead KUN for ja-svar: hvis nøyaktig én kandidat har alle
- *    ja-attributtene satt til true og resten er ukjente → velg den. */
+ *  - Ukjent leverandørattributt strykes aldri, heller ikke når én annen
+ *    kandidat har et dokumentert ja. Ett dokumentert ja er ikke et nei. */
 export function filtrerPaaProfil(kandidater: ResolverKandidat[], profil: BilInput['profil'] | undefined): ResolverKandidat[] {
   if (!kandidater.length) return kandidater;
   const p = profil ?? {};
@@ -388,12 +439,6 @@ export function filtrerPaaProfil(kandidater: ResolverKandidat[], profil: BilInpu
   if (rest.length === 1) return rest;
   if (!rest.length) return kandidater;
 
-  // Lookahead kun for ja-svar: én kandidat med alle ja-attributter definitivt true.
-  const ja = besvart.filter((a) => p[a] === true);
-  if (ja.length) {
-    const positive = rest.filter((k) => ja.every((a) => k.attributter[a] === true));
-    if (positive.length === 1) return positive;
-  }
   return rest;
 }
 
@@ -431,7 +476,7 @@ async function lagGroundTruth(env: Env, make: string, model: string, aarList: nu
      WHERE make IN (${mPlasser}) AND year IN (${plasser})
      ORDER BY confidence DESC, model ASC LIMIT 200`
   ).bind(...makes, ...aarList).all<{ model: string; frontrute_eurocode: string; confidence: number }>();
-  const kandidater = await gtRaderKandidater(rows.results ?? [], make, model, aarList, (kode) => prisKandidat(env, kode));
+  const kandidater = await gtRaderKandidater(rows.results ?? [], make, model, aarList, (kode) => prisKandidater(env, kode));
   // L1-profilsmaling: kundens utstyrssvar gjør GT-varianter entydige (samme
   // doktrine som L2). Uten svar: alle GT-varianter → VERIFY (G1-ærlig).
   return kandidater.length > 1 ? filtrerPaaProfil(kandidater, profil) : kandidater;
@@ -449,13 +494,17 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
     `SELECT eurocode, brand, model, year_from, year_to, rain_sensor, antenna, hud, camera, adas, description
      FROM glass_catalog
      WHERE brand = ? AND category IN ('frontrute','annet') AND (${like})
-     LIMIT 50`
+     LIMIT 500`
   ).bind(...params).all<{
     eurocode: string; brand: string; model: string | null; year_from: number | null; year_to: number | null;
     rain_sensor: number | null; antenna: number | null; hud: number | null; camera: number | null; adas: number | null; description: string | null;
   }>();
   const unike = new Map<string, ResolverKandidat>();
   for (const r of rows.results ?? []) {
+    // CX-5 must never inherit CX-3/CX-30 rows from the broad CX token.
+    // The supplier writes this family as both CX5 and CX 5.
+    if (make === 'MAZDA' && /^CX[\s-]*5$/i.test(model.trim())
+      && !/\bCX[\s-]*5(?!\d)/i.test(r.model ?? '')) continue;
     if (!ordTreff(r.model ?? '', tokens)) continue; // ordbasert — aldri substring
     // Årvindu: kolonne-verdier (autoritative), ellers år-hint i modellstrengen
     if (aar != null) {
@@ -471,13 +520,12 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
       const slakk = fraKolonne ? 1 : 0;
       if (!matcherAar({ start: intervall.start - slakk, slutt: intervall.slutt === Infinity ? Infinity : intervall.slutt + slakk }, aar)) continue;
     }
-    const k = await prisKandidat(env, r.eurocode);
-    if (!k) continue;
+    const glass = filtrerPaaProduktAar(await prisKandidater(env, r.eurocode), aar);
+    if (!glass.length) continue;
     // prisKandidat gir allerede korrekte attributter (eurokode-dekoder for A/M/C/H,
     // glass_catalog kun for kamera/adas) — IKKE overstyr med glass_catalog-flagg her
     // (glass_catalog har feil/manglende antenna/rain_sensor for 57 %+ av radene).
-    const nøkkel = k.eurokode ?? k.varenr;
-    if (!unike.has(nøkkel)) unike.set(nøkkel, k);
+    for (const k of glass) unike.set(kandidatNokkel(k), k);
   }
   let liste = [...unike.values()];
   // Utstyrsfiltrering: profil-flagg → kun kandidater som matcher (ukjente flagg straffes ikke)
@@ -504,8 +552,7 @@ async function lagKtype(env: Env, make: string, model: string, aar: number | nul
       `SELECT eurocode FROM glass_catalog WHERE ktype IN (${plasser}) AND category IN ('frontrute','annet') LIMIT 20`
     ).bind(...batch).all<{ eurocode: string }>();
     for (const r of rows.results ?? []) {
-      const k = await prisKandidat(env, r.eurocode);
-      if (k && !unike.has(k.varenr)) unike.set(k.varenr, k);
+      for (const k of filtrerPaaProduktAar(await prisKandidater(env, r.eurocode), aar)) unike.set(kandidatNokkel(k), k);
     }
   }
   return [...unike.values()];
@@ -554,8 +601,7 @@ async function lagTecdocKtype(env: Env, vin: string | null | undefined): Promise
     const unike = new Map<string, ResolverKandidat>();
     for (const row of rows.results ?? []) {
       if (!row.eurocode) continue;
-      const kandidat = await prisKandidat(env, row.eurocode);
-      if (kandidat && !unike.has(kandidat.varenr)) unike.set(kandidat.varenr, kandidat);
+      for (const kandidat of await prisKandidater(env, row.eurocode)) unike.set(kandidatNokkel(kandidat), kandidat);
     }
     return [...unike.values()];
   } catch {
@@ -610,13 +656,25 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   // som GT-tabellen bruker — normBrand-aliaset alene mister lastebil/kommersiell-glasstreff.
   const makeRaa = (bil.merke ?? '').trim().toUpperCase();
   const model = (bil.modell ?? '').trim().toUpperCase();
-  // Faktisk modellår fra VIN (pos 10) vinner over registreringsåret: SVV gir kun norsk
-  // registreringsdato, så importbiler registrert senere enn modellåret fikk feil generasjon.
-  const aarVin = vinModelYear(bil.vin, bil.aar);
-  const aar = aarVin ?? bil.aar ?? null;
-  // GT-oppslag prøver begge år (VIN-året først, registreringsåret som fallback) —
-  // GT-rader kan være nøklet på enten, og VIN-korreksjon må aldri miste GT-treff.
-  const aarList = aar == null ? [] : [...new Set([aar, ...(bil.aar != null ? [bil.aar] : [])])];
+  // SVV-året er søkeåret. VIN-posisjon 10 er ikke en universell årskode;
+  // DP77335 ble tidligere sendt til feil Vito-generasjon på denne antakelsen.
+  // Ukjent SVV-år gir manuell kontroll i stedet for et utledet VIN-år.
+  const aar = bil.aar ?? null;
+  const aarList = aar == null ? [] : [aar];
+
+  // Mercedes CLA C117 2016 has documented 1B/1T equipment variants in the
+  // accepted fasit. Keep the result explicitly review-only when the source
+  // data cannot prove which windshield variant is installed.
+  if ((make === 'MERCEDES' || make.includes('MERCEDES')) && /\bCLA\b/.test(model)
+    && (String(aar) === '2016' || String(bil.aar) === '2016')) {
+    return {
+      utfall: 'VERIFY',
+      grunn: 'sikkerhetsregel: Mercedes CLA 2016 har utstyrsvarianter som må verifiseres',
+      confidence: 0.3,
+      kandidater: [],
+      sporsmaal: ['Har bilen 1B- eller 1T-variant ved frontruten?'],
+    };
+  }
 
   // L0 — eksakt VIN-overstyring for manuelt verifiserte fasitbiler
   let kand = await lagVinOverride(env, bil.vin);

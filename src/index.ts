@@ -1,3 +1,4 @@
+import { commercialRoute } from './inquiry-commercial';
 /** Finnbilglass Worker — frontrute-matcher API + statisk frontend.
  *  POST /api/frontrute  {merke, modell, aar, profil} → glass
  *  GET  /health
@@ -23,6 +24,13 @@ import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
 import { handleInboundEmail } from './email-ingest';
+import { closeVoiceSession, createVoiceSession, voiceSummary, voiceTool } from './voice-lab';
+import { voiceLabUi } from './voice-lab-ui';
+import { publicFrontruteDto, publicVehicleLookupDto } from './customer-price-gate';
+import { parseGlassRequest, type GlassRequest } from './glass-selection';
+import { isValidClientRequestId, persistInquiry } from './inquiry-glass-request';
+import { glassRequestFingerprint } from './glass-search';
+import { searchGlass } from './glass-search';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -41,6 +49,51 @@ function json(data: unknown, status = 200): Response {
     status,
     headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
   });
+}
+
+/** Reject broad catalogue hits that name a different model family. A single
+ * row is not enough evidence when the catalogue matched only on make/year. */
+function resolverMatchesVehicleModel(make: string | null | undefined, model: string | null | undefined, candidates: Array<{ varenavn?: string | null; varenr?: string | null }> | undefined): boolean {
+  if (!model || !candidates?.length) return true;
+  const brand = String(make ?? '').toUpperCase().replace(/[^A-Z0-9]+/g, '');
+  const normalizedModel = model.toUpperCase().replace(/[^A-Z0-9]+/g, '');
+  const modelKey = brand && normalizedModel.startsWith(brand) ? normalizedModel.slice(brand.length) : normalizedModel;
+  if (modelKey.length < 3 || /^\d{4}$/.test(modelKey)) return true;
+  return candidates.every((candidate) => {
+    const name = String(candidate.varenavn ?? '').toUpperCase().replace(/[^A-Z0-9]+/g, '');
+    return name.includes(modelKey) || (modelKey.length >= 5 && name.includes(modelKey.slice(0, 5)));
+  });
+}
+
+/** Known generation boundary: old Vito 2036/2568 families are W638/W639,
+ * never W447 vehicles from 2014 onward. If the catalogue lacks W447 proof,
+ * force manual review instead of surfacing an old-family glass. */
+function resolverMatchesVehicleGeneration(make: string | null | undefined, model: string | null | undefined, year: number | null | undefined, candidates: Array<{ varenr?: string | null }> | undefined): boolean {
+  const m = String(make ?? '').toUpperCase();
+  const v = String(model ?? '').toUpperCase();
+  if (!m.includes('MERCEDES') || !/\bVITO\b/.test(v) || year == null || year < 2014 || !candidates?.length) return true;
+  return candidates.every((candidate) => !/^(2036|2568)/.test(String(candidate.varenr ?? '').toUpperCase()));
+}
+
+function manualFitmentResponse(message = 'Vi fant ikke en sikker variant ut fra bildataene. Send oss en forespørsel, så kontrollerer vi frontruten manuelt.') {
+  return { ok: true, pinpoint: false, anbefaling: null, kandidater: [], meta: { resolver: true }, message };
+}
+
+async function inquiryHasGlassRequestColumn(db: D1Database): Promise<boolean> {
+  try {
+    await db.prepare('SELECT glass_request_json FROM beta_inquiries LIMIT 0').all();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function medResolverModus(env: Env, resolver: Awaited<ReturnType<typeof resolveFrontrute>> | null) {
+  if (!resolver) return null;
+  const modus = await resolverModus(env, resolver.utfall);
+  return modus === resolver.utfall
+    ? resolver
+    : { ...resolver, utfall: modus, grunn: `kill switch: ${resolver.utfall}→${modus} (${resolver.grunn})` };
 }
 
 /** IP + geolokalisering gratis fra Cloudflare (request.cf) — ingen ekstern API. */
@@ -196,6 +249,40 @@ async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: 
   }
 }
 
+/** Varsler support når en ny kundeforespørsel er lagret. */
+async function sendSupportInquiryEmail(env: Env, inquiry: { id: number; navn: string; kontakt: string; regnr: string; melding: string; vehicleJson: string | null }): Promise<{ ok: boolean; error?: string }> {
+  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
+  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  const to = 'support@finnbilglass.no';
+  const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  let vehicle = '';
+  try {
+    const parsed = inquiry.vehicleJson ? JSON.parse(inquiry.vehicleJson) as Record<string, unknown> : null;
+    const bil = parsed?.bil as Record<string, unknown> | undefined;
+    if (bil) vehicle = [bil.merke, bil.modell, bil.aar].filter(Boolean).join(' ');
+  } catch { /* ikke blokker varsling */ }
+  const subject = `Ny forespørsel om bilglass${inquiry.regnr ? ` — ${inquiry.regnr}` : ''}`;
+  const text = [`Ny forespørsel #${inquiry.id}`, `Registreringsnummer: ${inquiry.regnr || 'ikke oppgitt'}`, `Bil: ${vehicle || 'ikke bekreftet'}`, `Navn: ${inquiry.navn}`, `Kontakt: ${inquiry.kontakt}`, `Melding: ${inquiry.melding || '—'}`].join('\n');
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { email: from, name: 'FinnBilglass' },
+        to: [{ email: to, name: 'FinnBilglass support' }],
+        replyTo: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inquiry.kontakt) ? { email: inquiry.kontakt } : undefined,
+        subject,
+        textContent: text,
+        htmlContent: '<h2>Ny forespørsel #' + inquiry.id + '</h2><p><b>Registreringsnummer:</b> ' + escHtml(inquiry.regnr || 'ikke oppgitt') + '<br><b>Bil:</b> ' + escHtml(vehicle || 'ikke bekreftet') + '<br><b>Navn:</b> ' + escHtml(inquiry.navn) + '<br><b>Kontakt:</b> ' + escHtml(inquiry.kontakt) + '</p><p><b>Melding:</b><br>' + escHtml(inquiry.melding || '—').replace(/\n/g, '<br>') + '</p>',
+      }),
+    });
+    if (!r.ok) return { ok: false, error: `Brevo ${r.status}` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil ved support-varsling.' };
+  }
+}
+
 function supportEvidenceUiLegacy(): Response {
   // The token is deliberately requested at runtime and is never embedded in an asset.
   return new Response(`<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Finnbilglass support – Evidence</title><style>body{font:16px system-ui;margin:2rem;background:#f8fafc;color:#0f172a}main{max-width:900px;margin:auto}button,input{font:inherit;padding:.65rem}button{background:#f59e0b;border:0;border-radius:.4rem;font-weight:700}.case{background:white;border:1px solid #e2e8f0;border-radius:.6rem;padding:1rem;margin:1rem 0}.images{display:flex;gap:.7rem;flex-wrap:wrap}.images img{width:180px;max-height:140px;object-fit:cover;border-radius:.4rem;border:1px solid #e2e8f0}.muted{color:#64748b}</style><main><h1>Evidence Capture</h1><p class="muted">Internt supportverktøy. Bildene er evidens for manuell oppfølging, ikke en fitment-beslutning.</p><p><input id="token" type="password" placeholder="Support-token" autocomplete="current-password"><button id="load">Last saker</button></p><div id="out"></div><script>const out=document.querySelector('#out'),token=document.querySelector('#token');document.querySelector('#load').onclick=async()=>{out.textContent='Laster…';const h={Authorization:'Bearer '+token.value};const r=await fetch('/api/support/evidence',{headers:h});if(!r.ok){out.textContent=r.status===401?'Ingen tilgang.':'Kunne ikke hente saker.';return}const d=await r.json();out.innerHTML='';d.cases.forEach(c=>{const e=document.createElement('article');e.className='case';e.innerHTML='<b>'+c.caseId+'</b> · '+c.status+'<br><span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+' · '+c.imageCount+' bilde(r)</span>';const imgs=document.createElement('div');imgs.className='images';c.images.forEach(i=>{const a=document.createElement('a');a.href='/api/support/evidence/'+encodeURIComponent(c.caseId)+'/'+encodeURIComponent(i.imageId);a.target='_blank';const img=document.createElement('img');img.alt=i.imageType;fetch(a.href,{headers:h}).then(x=>x.blob()).then(b=>img.src=URL.createObjectURL(b));a.append(img);imgs.append(a)});e.append(imgs);out.append(e)});if(!d.cases.length)out.textContent='Ingen innsendte saker ennå.'}</script></main></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
@@ -275,8 +362,9 @@ export default {
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
 
     if (method === 'GET' && path === '/health') {
-      const count = await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM glass_prisliste').first<{ n: number }>();
-      return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: count?.n ?? 0 });
+      // Liveness checks must not scan the complete catalogue. Health probes can
+      // run frequently and D1 charges each scanned row against the daily cap.
+      return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: null });
     }
 
     if (method === 'POST' && path === '/api/frontrute') {
@@ -292,34 +380,126 @@ export default {
         // Resolver først (PINPOINT/VERIFY). FALLBACK → eksisterende tekstmatcher (uendret).
         // Kill switch (G6): resolver_all → tvungen FALLBACK; resolver_pinpoint → degrader til VERIFY.
         let resolver = await resolveFrontrute(env, bil);
-        const modus = await resolverModus(env, resolver.utfall);
-        if (modus !== resolver.utfall) {
-          resolver = { ...resolver, utfall: modus, grunn: `kill switch: ${resolver.utfall}→${modus} (${resolver.grunn})` };
+        resolver = (await medResolverModus(env, resolver))!;
+        if (resolver.utfall === 'FALLBACK' || !resolverMatchesVehicleModel(bil.merke, bil.modell, resolver.kandidater)
+          || !resolverMatchesVehicleGeneration(bil.merke, bil.modell, bil.aar, resolver.kandidater)) {
+          return json(manualFitmentResponse());
         }
-        if (resolver.utfall !== 'FALLBACK') {
-          const topp = resolver.kandidater?.[0] ?? null;
-          return json({
-            ok: true,
-            ...resolver,
-            pinpoint: resolver.utfall === 'PINPOINT',
-            anbefaling: resolver.utfall === 'PINPOINT'
-              ? { varenr: resolver.varenr, varenavn: resolver.varenavn, pris: resolver.pris, listepris: resolver.listepris, eurokode: resolver.eurokode }
-              : (topp ? {
-                  varenr: topp.varenr,
-                  varenavn: topp.varenavn,
-                  pris: topp.pris,
-                  listepris: topp.listepris,
-                  eurokode: topp.eurokode,
-                } : null),
-            meta: { resolver: true, grunn: resolver.grunn },
-          });
-        }
-        const resultat = await matchFrontrute(env, bil);
-        return json({ ok: true, ...resultat, meta: { ...resultat.meta, resolver: false } });
+        const topp = resolver.kandidater?.[0] ?? null;
+        return json(publicFrontruteDto({
+          ok: true,
+          ...resolver,
+          pinpoint: false,
+          anbefaling: resolver.varenr
+            ? { varenr: resolver.varenr, varenavn: resolver.varenavn, pris: resolver.pris, listepris: resolver.listepris, eurokode: resolver.eurokode }
+            : (topp ? { varenr: topp.varenr, varenavn: topp.varenavn, pris: topp.pris, listepris: topp.listepris, eurokode: topp.eurokode } : null),
+          meta: { resolver: true, grunn: resolver.grunn },
+        }));
       } catch (e) {
         console.error('matchFrontrute feilet:', e);
         return json({ ok: false, error: 'Intern feil' }, 500);
       }
+    }
+
+    if (method === 'POST' && path === '/api/glass') {
+      let body: unknown;
+      try {
+        const raw = await request.text();
+        if (new TextEncoder().encode(raw).byteLength > 8192) return json({ ok: false, error: 'Forespørselen er for stor' }, 413);
+        body = JSON.parse(raw);
+      } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      if (!isRecord(body) || Object.keys(body).some(key => !['regnr', 'glassRequest'].includes(key))) return json({ ok: false, error: 'Ugyldig forespørsel' }, 400);
+      if (typeof body.regnr !== 'string') return json({ ok: false, error: 'regnr påkrevd' }, 400);
+      const regnr = body.regnr.trim().toUpperCase().replace(/[\s\-–—.]+/g, '');
+      if (!/^[A-Z]{2}[0-9]{4,5}$/.test(regnr)) return json({ ok: false, error: 'Ugyldig norsk registreringsnummer' }, 400);
+      const glassRequest = parseGlassRequest(body.glassRequest);
+      if (!glassRequest || glassRequest.searchId) return json({ ok: false, error: 'Ugyldig glassvalg eller søkereferanse' }, 400);
+      if (glassRequest && glassRequest.selection.kind !== 'windshield' && env.MULTI_GLASS_ENABLED !== 'true') {
+        return json({ ok: false, code: 'GLASS_TYPE_UNAVAILABLE', error: 'Vi tilbyr foreløpig bare søk og forespørsler om frontrute.' }, 409);
+      }
+
+      const ip = geoAv(request).ip;
+      if (ip) {
+        try {
+          const now = Date.now();
+          const rate = await env.FINNBILGLASS_DB.prepare(`INSERT INTO api_rate_limits (bucket_key,window_start,count) VALUES (?, ?, 1)
+            ON CONFLICT(bucket_key) DO UPDATE SET
+              window_start=CASE WHEN api_rate_limits.window_start <= ? THEN excluded.window_start ELSE api_rate_limits.window_start END,
+              count=CASE WHEN api_rate_limits.window_start <= ? THEN 1 ELSE api_rate_limits.count + 1 END
+            RETURNING count`).bind(`glass:${ip}`, now, now - 60_000, now - 60_000).first<{ count: number }>();
+          if (!rate) return json({ ok: false, error: 'Søk er midlertidig utilgjengelig' }, 503);
+          if (rate.count > 30) return json({ ok: false, error: 'For mange søk. Vent litt og prøv igjen.' }, 429);
+        } catch {
+          return json({ ok: false, error: 'Søk er midlertidig utilgjengelig' }, 503);
+        }
+      }
+
+      let vehicle: Awaited<ReturnType<typeof svvLookup>> = null;
+      try { vehicle = await svvLookup(regnr, env.SVV_API_KEY); }
+      catch { /* handled as manual review; do not disclose provider internals */ }
+      if (!vehicle) return json({
+        ok: true, status: 'MANUAL_REVIEW', selection: glassRequest.selection, candidates: [], questions: [], truncated: false,
+        canRequestQuote: true, message: 'Vi fikk ikke bekreftet bilen i oppslaget. Du kan sende en manuell forespørsel.',
+      });
+
+      let result;
+      let candidateIds: string[] = [];
+      let catalogVersion = 'no-verified-catalogue';
+      try {
+        if (glassRequest.selection.kind === 'windshield') {
+          let resolver = await resolveFrontrute(env, { merke: vehicle.merke, modell: vehicle.modell, aar: vehicle.aar ?? undefined, vin: vehicle.vin ?? undefined });
+          resolver = (await medResolverModus(env, resolver))!;
+          if (resolver.utfall === 'FALLBACK' || !resolverMatchesVehicleModel(vehicle.merke, vehicle.modell, resolver.kandidater)
+            || !resolverMatchesVehicleGeneration(vehicle.merke, vehicle.modell, vehicle.aar, resolver.kandidater)) {
+            return json({ ok: true, status: 'MANUAL_REVIEW', selection: glassRequest.selection, candidates: [], questions: [], truncated: false,
+              canRequestQuote: true, message: 'Vi fant ikke en sikker variant ut fra bildataene. Vi kontrollerer frontruten manuelt.' });
+          }
+          const publicMatch = publicFrontruteDto({
+            ok: true, ...resolver,
+            pinpoint: resolver.utfall === 'PINPOINT',
+            anbefaling: resolver.utfall === 'PINPOINT'
+              ? { varenr: resolver.varenr, varenavn: resolver.varenavn, eurokode: resolver.eurokode }
+              : resolver.kandidater?.[0] ? { varenr: resolver.kandidater[0].varenr, varenavn: resolver.kandidater[0].varenavn, eurokode: resolver.kandidater[0].eurokode } : null,
+            meta: { resolver: true },
+          });
+          const candidates = Array.isArray(publicMatch.kandidater) ? publicMatch.kandidater as Record<string, unknown>[] : [];
+          candidateIds = candidates.map(c => typeof c.candidateId === 'string' ? c.candidateId : '').filter(Boolean);
+          result = {
+            status: publicMatch.anbefaling ? 'CANDIDATES' as const : 'MANUAL_REVIEW' as const,
+            selection: glassRequest.selection, candidates: candidates.map(c => ({ candidateId: c.candidateId, partNumber: c.candidateId, manufacturer: null, kind: 'windshield' })),
+            questions: resolver.sporsmaal ?? [], truncated: false,
+            message: publicMatch.anbefaling ? 'Mulige frontrutevarianter. Vi bekrefter glasset før tilbud.' : 'Vi kontrollerer frontruten manuelt.',
+          };
+        } else {
+          result = await searchGlass(env.FINNBILGLASS_DB, vehicle, glassRequest);
+          candidateIds = result.candidates.map(c => c.candidateId);
+          catalogVersion = result.catalogVersion;
+        }
+      } catch {
+        console.error('glass search failed');
+        return json({ ok: false, error: 'Søket kan ikke fullføres akkurat nå. Du kan sende en manuell forespørsel.' }, 503);
+      }
+
+      // The active windshield flow predates multi-glass D1 snapshots. Keep the
+      // front-only release on the legacy schema until paused categories return.
+      if (glassRequest.selection.kind === 'windshield' && env.MULTI_GLASS_ENABLED !== 'true') {
+        return json({ ok: true, ...result, canRequestQuote: true });
+      }
+
+      const searchId = crypto.randomUUID().replace(/-/g, '');
+      const now = Date.now();
+      const vehicleJson = JSON.stringify({ merke: vehicle.merke, modell: vehicle.modell, aar: vehicle.aar, vin: vehicle.vin });
+      const fingerprint = await glassRequestFingerprint(regnr, glassRequest);
+      try {
+        await env.FINNBILGLASS_DB.prepare(`INSERT INTO glass_search_snapshots
+          (search_id,regnr_norm,request_fingerprint,glass_request_json,vehicle_json,candidate_ids_json,catalog_version,created_at,expires_at)
+          VALUES (?,?,?,?,?,?,?,?,?)`).bind(searchId, regnr, fingerprint, JSON.stringify(glassRequest), vehicleJson,
+          JSON.stringify(candidateIds), catalogVersion, now, now + 30 * 60_000).run();
+      } catch {
+        console.error('glass search snapshot persist failed');
+        return json({ ok: false, error: 'Søket kan ikke lagres akkurat nå. Du kan sende en manuell forespørsel.' }, 503);
+      }
+      return json({ ok: true, searchId, ...result, canRequestQuote: true });
     }
 
     if (method === 'POST' && path === '/api/opplaering') {
@@ -340,22 +520,45 @@ export default {
       // Ingen prisberegning, ingen ordrebekreftelse, ingen automatisk beslutning.
       let body: unknown;
       try {
-        body = await request.json();
+        const raw = await request.text();
+        if (new TextEncoder().encode(raw).byteLength > 16_384) return json({ ok: false, error: 'Forespørselen er for stor' }, 413);
+        body = JSON.parse(raw);
       } catch {
         return json({ ok: false, error: 'Ugyldig JSON' }, 400);
       }
-      const b = body as Record<string, unknown>;
+      if (!isRecord(body)) return json({ ok: false, error: 'Ugyldig forespørsel' }, 400);
+      const b = body;
+      const hasGlassRequest = Object.prototype.hasOwnProperty.call(b, 'glassRequest');
+      const glassRequest = hasGlassRequest ? parseGlassRequest(b.glassRequest) : null;
+      if (hasGlassRequest && !glassRequest) return json({ ok: false, error: 'Ugyldig glassvalg' }, 400);
+      if (glassRequest && glassRequest.selection.kind !== 'windshield' && env.MULTI_GLASS_ENABLED !== 'true') {
+        return json({ ok: false, code: 'GLASS_TYPE_UNAVAILABLE', error: 'Vi tilbyr foreløpig bare søk og forespørsler om frontrute.' }, 409);
+      }
+      if (b.clientRequestId !== undefined && !isValidClientRequestId(b.clientRequestId)) return json({ ok: false, error: 'Ugyldig forespørsels-ID' }, 400);
       const regnr = typeof b.regnr === 'string' ? b.regnr.trim().slice(0, 10) : '';
       const navn = typeof b.navn === 'string' ? b.navn.trim() : '';
       const kontakt = typeof b.kontakt === 'string' ? b.kontakt.trim() : '';
+      const contactPreference = b.contactPreference === 'telefon' || b.contactPreference === 'epost' || b.contactPreference === 'begge' ? b.contactPreference : null;
+      const contactPhone = typeof b.contactPhone === 'string' ? b.contactPhone.trim() : '';
       const melding = typeof b.melding === 'string' ? b.melding.trim().slice(0, 500) : '';
-      if (!navn || navn.length < 2) return json({ ok: false, error: 'Navn påkrevd (minst 2 tegn)' }, 400);
-      if (!kontakt) return json({ ok: false, error: 'Telefon eller e-post påkrevd' }, 400);
+      const rawPreference = isRecord(b.preferredCandidate) ? b.preferredCandidate : null;
+      const preferredCandidate = rawPreference && typeof rawPreference.partNumber === 'string'
+        ? {
+            partNumber: rawPreference.partNumber.trim().slice(0, 80),
+            eurocode: typeof rawPreference.eurocode === 'string' ? rawPreference.eurocode.trim().slice(0, 100) : '',
+            description: typeof rawPreference.description === 'string' ? rawPreference.description.trim().slice(0, 240) : '',
+          }
+        : null;
+      if (!navn || navn.length < 2 || navn.length > 80) return json({ ok: false, error: 'Navn må være 2–80 tegn' }, 400);
+      if (!kontakt || kontakt.length > 120) return json({ ok: false, error: 'Telefon eller e-post må være 1–120 tegn' }, 400);
       // Enkel validering: minst 8 siffer ELLER e-postformat.
       const sifre = kontakt.replace(/[^0-9]/g, '');
       const erTelefon = sifre.length >= 8;
       const erEpost = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt);
       if (!erTelefon && !erEpost) return json({ ok: false, error: 'Ugyldig telefon eller e-post' }, 400);
+      if (contactPreference === 'telefon' && !/^(?:\+47|0047)?\d{8}$/.test(kontakt.replace(/[\s-]/g, ''))) return json({ ok: false, error: 'Ugyldig telefonnummer' }, 400);
+      if ((contactPreference === 'epost' || contactPreference === 'begge') && !erEpost) return json({ ok: false, error: 'Ugyldig e-postadresse' }, 400);
+      if (contactPreference === 'begge' && !/^(?:\+47|0047)?\d{8}$/.test(contactPhone.replace(/[\s-]/g, ''))) return json({ ok: false, error: 'Ugyldig telefonnummer for kontaktvalg' }, 400);
       // G12: abuse-beskyttelse — maks 5 henvendelser per IP per 10 min. Aldri blokkerende.
       try {
         const ip = geoAv(request).ip ?? 'ukjent';
@@ -380,52 +583,91 @@ export default {
       } catch (e) {
         console.error('rate-limit feilet (non-blokkerende):', e);
       }
-      // G9: frosset kundereise-snapshot — best-effort, aldri blokkerende.
-      // Kunden så en bil + resolver-utfall + pris; fryses ved innsending slik at
-      // saksbehandling i /ops har kontekst selv om session_id forsvinner.
+      // Freeze vehicle context. Non-windshield requests must never invoke the windshield resolver.
       let vehicleJson: string | null = null;
+      const searchId = glassRequest?.searchId;
+      if (searchId && !glassRequest) return json({ ok: false, error: 'Søket mangler glassvalg' }, 400);
+      if (searchId && glassRequest) {
+        try {
+          const snapshot = await env.FINNBILGLASS_DB.prepare(
+            'SELECT regnr_norm, request_fingerprint, vehicle_json, candidate_ids_json, catalog_version, expires_at FROM glass_search_snapshots WHERE search_id = ?'
+          ).bind(searchId).first<{ regnr_norm: string; request_fingerprint: string; vehicle_json: string; candidate_ids_json: string; catalog_version: string; expires_at: number }>();
+          const normRegnr = regnr.toUpperCase().replace(/[\s\-–—.]+/g, '');
+          if (!snapshot || snapshot.expires_at <= Date.now()) return json({ ok: false, error: 'Søket er utløpt. Søk på nytt eller send en manuell forespørsel uten søkereferanse.' }, 409);
+          if (snapshot.regnr_norm !== normRegnr || snapshot.request_fingerprint !== await glassRequestFingerprint(normRegnr, glassRequest)) {
+            return json({ ok: false, error: 'Søket stemmer ikke med bil eller rutevalg. Søk på nytt eller send en manuell forespørsel uten søkereferanse.' }, 409);
+          }
+          vehicleJson = JSON.stringify({
+            bil: JSON.parse(snapshot.vehicle_json),
+            glassSearch: { searchId, candidateIds: JSON.parse(snapshot.candidate_ids_json), catalogVersion: snapshot.catalog_version, capturedAt: Date.now() },
+          });
+        } catch (e) {
+          console.error('glass snapshot validation failed');
+          return json({ ok: false, error: 'Søket kan ikke bekreftes akkurat nå. Du kan sende en manuell forespørsel uten søkereferanse.' }, 503);
+        }
+      }
+      if (glassRequest && !searchId && glassRequest.selection.kind !== 'windshield') {
+        // An explicit manual fallback after an expired search keeps its chosen
+        // glass type and does not invoke either the windshield resolver or a new search.
+        vehicleJson = JSON.stringify({ glassSearch: { manual: true, reason: 'customer_requested_without_search' } });
+      }
       if (regnr) {
         try {
+          if (!searchId && (!glassRequest || glassRequest.selection.kind === 'windshield')) {
           const normRegnr = regnr.toUpperCase().replace(/[\s\-–—.]+/g, '');
           const bilSnap = await svvLookup(normRegnr, env.SVV_API_KEY);
           if (bilSnap) {
             let resolverSnap: unknown = null;
-            try {
-              resolverSnap = await resolveFrontrute(env, {
-                merke: bilSnap.merke,
-                modell: bilSnap.modell ?? undefined,
-                aar: bilSnap.aar ?? undefined,
-                vin: bilSnap.vin ?? undefined,
-              });
-            } catch {
-              /* resolver-snapshot er ikke kritisk */
+            if (!glassRequest || glassRequest.selection.kind === 'windshield') {
+              try {
+                resolverSnap = await medResolverModus(env, await resolveFrontrute(env, {
+                  merke: bilSnap.merke, modell: bilSnap.modell ?? undefined,
+                  aar: bilSnap.aar ?? undefined, vin: bilSnap.vin ?? undefined,
+                }));
+              } catch { /* resolver-snapshot is best effort for legacy/front requests */ }
             }
             vehicleJson = JSON.stringify({
               bil: { merke: bilSnap.merke, modell: bilSnap.modell ?? null, aar: bilSnap.aar ?? null, vin: bilSnap.vin ?? null },
-              resolver: resolverSnap,
+              ...(resolverSnap ? { resolver: resolverSnap } : {}),
               tattVedInnsending: Date.now(),
             });
+          }
           }
         } catch {
           /* kundereise-snapshot er best-effort */
         }
       }
       try {
-        const inserted = await env.FINNBILGLASS_DB.prepare(
-          'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
-        ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson).run();
-        // Append-only 'created'-hendelse — starten på tidslinjen (G5).
-        const id = inserted.meta?.last_row_id;
-        if (id) {
+        const legacyWindshield = glassRequest?.selection.kind === 'windshield'
+          && !glassRequest.searchId
+          && env.MULTI_GLASS_ENABLED !== 'true';
+        if (contactPreference) {
+          const context = vehicleJson ? JSON.parse(vehicleJson) as Record<string, unknown> : {};
+          context.customerContact = { preference: contactPreference, ...(contactPreference === 'begge' ? { phone: contactPhone } : {}) };
+          vehicleJson = JSON.stringify(context);
+        }
+        if (preferredCandidate) {
           try {
-            await env.FINNBILGLASS_DB.prepare(
-              "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'created', NULL, 'NEW', ?, ?, 'kunde')"
-            ).bind(`created-${id}-${crypto.randomUUID()}`, id, melding || null, Date.now()).run();
-          } catch (e) {
-            console.error('inquiry-created-event feilet:', e);
+            const context = vehicleJson ? JSON.parse(vehicleJson) as Record<string, unknown> : {};
+            context.customerPreference = { ...preferredCandidate, source: 'customer', verified: false };
+            vehicleJson = JSON.stringify(context);
+          } catch {
+            vehicleJson = JSON.stringify({ customerPreference: { ...preferredCandidate, source: 'customer', verified: false } });
           }
         }
-        return json({ ok: true, inquiryId: id ?? null }, 201);
+        const stored = await persistInquiry(env.FINNBILGLASS_DB, {
+          regnr, name: navn, contact: kontakt, message: melding, sessionId: sessionId(body, request),
+          glassRequest: legacyWindshield ? null : glassRequest,
+          clientRequestId: legacyWindshield ? null : (isValidClientRequestId(b.clientRequestId) ? b.clientRequestId : null),
+          vehicleJson,
+        });
+        if (stored.conflict) return json({ ok: false, error: 'Forespørsels-ID-en er allerede brukt med andre opplysninger.' }, 409);
+        let supportEmail: { ok: boolean; error?: string } | null = null;
+        if (stored.created) {
+          supportEmail = await sendSupportInquiryEmail(env, { id: Number(stored.id), navn, kontakt, regnr, melding, vehicleJson });
+          if (!supportEmail.ok) console.error('support-varsling feilet:', supportEmail.error || 'ukjent feil');
+        }
+        return json({ ok: true, inquiryId: stored.id, duplicate: !stored.created, supportEmailSent: supportEmail?.ok ?? false }, stored.created ? 201 : 200);
       } catch (e) {
         console.error('inquiry-lagring feilet:', e);
         return json({ ok: false, error: 'Kunne ikke lagre forespørselen. Prøv igjen.' }, 500);
@@ -467,14 +709,20 @@ export default {
     if (method === 'POST' && path === '/api/regnr') {
       let body: unknown;
       try {
-        body = await request.json();
+        const raw = await request.text();
+        if (new TextEncoder().encode(raw).byteLength > 4096) return json({ ok: false, error: 'Forespørselen er for stor' }, 413);
+        body = JSON.parse(raw);
       } catch {
         return json({ ok: false, error: 'Ugyldig JSON' }, 400);
       }
-      const regnr = (body as Record<string, unknown>)?.regnr;
+      if (!isRecord(body)) return json({ ok: false, error: 'Ugyldig forespørsel' }, 400);
+      if (body.lookupOnly !== undefined && typeof body.lookupOnly !== 'boolean') return json({ ok: false, error: 'lookupOnly må være true eller false' }, 400);
+      const lookupOnly = body.lookupOnly === true;
+      const regnr = body.regnr;
       if (typeof regnr !== 'string' || !regnr.trim()) return json({ ok: false, error: 'regnr påkrevd' }, 400);
       const ren = regnr.trim();
       const norm = ren.toUpperCase().replace(/[\s\-–—.]+/g, '');
+      if (!/^[A-Z]{2}[0-9]{4,5}$/.test(norm)) return json({ ok: false, error: 'Ugyldig norsk registreringsnummer' }, 400);
       let lagret = false;
       try {
         await env.FINNBILGLASS_DB.prepare(
@@ -502,7 +750,7 @@ export default {
         console.error('SVV-oppslag feilet:', e);
       }
       // OE/VIN-pinpoint: SVV-bil → resolver (PINPOINT/VERIFY/FALLBACK) — aldri blokkerende.
-      if (bil) {
+      if (bil && !lookupOnly) {
         try {
           resolver = await resolveFrontrute(env, {
             merke: bil.merke,
@@ -513,8 +761,11 @@ export default {
         } catch (e) {
           console.error('Resolver feilet:', e);
         }
+        resolver = await medResolverModus(env, resolver);
+        if (resolver && (!resolverMatchesVehicleModel(bil?.merke, bil?.modell, resolver.kandidater)
+          || !resolverMatchesVehicleGeneration(bil?.merke, bil?.modell, bil?.aar, resolver.kandidater))) resolver = null;
       }
-      return json({ ok: true, lagret, bil, resolver });
+      return json(publicVehicleLookupDto({ ok: true, lagret, bil, resolver }));
     }
 
     if (method === 'POST' && path === '/api/vin') {
@@ -547,8 +798,11 @@ export default {
         } catch (e) {
           console.error('Resolver feilet (VIN):', e);
         }
+        resolver = await medResolverModus(env, resolver);
+        if (resolver && (!resolverMatchesVehicleModel(bil?.merke, bil?.modell, resolver.kandidater)
+          || !resolverMatchesVehicleGeneration(bil?.merke, bil?.modell, bil?.aar, resolver.kandidater))) resolver = null;
       }
-      return json({ ok: true, bil, resolver });
+      return json(publicVehicleLookupDto({ ok: true, bil, resolver }));
     }
 
     if (method === 'POST' && path === '/api/les-skilt') {
@@ -603,8 +857,11 @@ export default {
           } catch (e) {
             console.error('Resolver feilet:', e);
           }
+          resolver = await medResolverModus(env, resolver);
+          if (resolver && (!resolverMatchesVehicleModel(bil?.merke, bil?.modell, resolver.kandidater)
+            || !resolverMatchesVehicleGeneration(bil?.merke, bil?.modell, bil?.aar, resolver.kandidater))) resolver = null;
         }
-        return json({ ok: true, regnr: lest.regnr, lest: { confidence: lest.confidence, raatekst: lest.raatekst.slice(0, 120) }, funnet: !!bil, bil, resolver });
+        return json(publicVehicleLookupDto({ ok: true, regnr: lest.regnr, lest: { confidence: lest.confidence, raatekst: lest.raatekst.slice(0, 120) }, funnet: !!bil, bil, resolver }));
       } catch (e) {
         console.error('les-skilt feilet:', e);
         return json({ ok: false, error: 'Intern feil' }, 500);
@@ -678,6 +935,28 @@ export default {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       return operationsCenterUi();
     }
+    if (method === 'GET' && path === '/ops/stemmelab') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      return voiceLabUi();
+    }
+    if (method === 'POST' && path === '/api/ops/voice/session') {
+      return createVoiceSession(request, env);
+    }
+    if (method === 'POST' && path === '/api/ops/voice/tool') {
+      return voiceTool(request, env);
+    }
+    if (method === 'POST' && path === '/api/ops/voice/close') {
+      return closeVoiceSession(request, env);
+    }
+    if (method === 'GET' && path === '/api/ops/voice/summary') {
+      return voiceSummary(env);
+    }
+    const commercialMatch = /^\/api\/ops\/inquiries\/(\d+)\/commercial$/.exec(path);
+    if (path === '/api/ops/commercial' || commercialMatch) {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok:false, error:'Ikke tilgjengelig i dette miljøet.' },404);
+      if (!supportAuthorised(request, env)) return json({ ok:false, error:'Unauthorised' },401);
+      return commercialRoute(request, env.FINNBILGLASS_DB, commercialMatch ? Number(commercialMatch[1]) : null);
+    }
     if (method === 'GET' && path === '/api/ops/summary') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
@@ -712,6 +991,8 @@ export default {
       // Beta-henvendelser med statusfilter + paginering (G8). Lesing er åpent i staging+prod (som summary).
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const glassRequestProjection = await inquiryHasGlassRequestColumn(env.FINNBILGLASS_DB)
+        ? 'glass_request_json' : 'NULL AS glass_request_json';
       const url = new URL(request.url);
       const statusFilter = url.searchParams.get('status') ?? '';
       const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? '50') || 50, 1), 200);
@@ -724,7 +1005,7 @@ export default {
         bind.push(statusFilter);
       }
       bind.push(limit, offset);
-      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; created_at: string; updated_at: number | null }>();
+      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, ${glassRequestProjection}, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; glass_request_json: string | null; created_at: string; updated_at: number | null }>();
       return json({ ok: true, inquiries: rows.results.map(r => ({ ...r, status: isInquiryStatus(r.status) ? r.status : 'NEW' })) });
     }
     if (method === 'GET' && path.startsWith('/api/ops/inquiries/')) {
@@ -733,12 +1014,16 @@ export default {
       const idRaw = path.slice('/api/ops/inquiries/'.length).split('/')[0];
       if (!/^\d+$/.test(idRaw)) return json({ ok: false, error: 'Ugyldig id' }, 400);
       const id = Number(idRaw);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null }>();
+      const glassRequestProjection = await inquiryHasGlassRequestColumn(env.FINNBILGLASS_DB)
+        ? 'glass_request_json' : 'NULL AS glass_request_json';
+      const row = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, ${glassRequestProjection}, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?`).bind(id).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; glass_request_json: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
       const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
       let vehicle = null;
       try { if (row.vehicle_json) vehicle = JSON.parse(row.vehicle_json); } catch { /* ugyldig snapshot = ignorert */ }
-      return json({ ok: true, inquiry: { ...row, status: isInquiryStatus(row.status) ? row.status : 'NEW', vehicle, history: events.results.map(e => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta = ignorert */ } return { ...e, meta }; }) } });
+      let glassRequest = null;
+      try { if (row.glass_request_json) glassRequest = JSON.parse(row.glass_request_json); } catch { /* ugyldig glass-request-snapshot = ignorert */ }
+      return json({ ok: true, inquiry: { ...row, status: isInquiryStatus(row.status) ? row.status : 'NEW', vehicle, glassRequest, history: events.results.map(e => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta = ignorert */ } return { ...e, meta }; }) } });
     }
     const inquiryStatusMatch = /^\/api\/ops\/inquiries\/(\d+)\/status$/.exec(path);
     if (method === 'POST' && inquiryStatusMatch) {
@@ -754,10 +1039,25 @@ export default {
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
       const from: InquiryStatus = isInquiryStatus(row.status) ? row.status : 'NEW';
       if (!canTransitionInquiry(from, to)) return json({ ok: false, error: `Overgang fra ${from} til ${to} er ikke tillatt.` }, 409);
-      const meta = typeof body.meta === 'object' && body.meta !== null ? JSON.stringify(body.meta) : '{}';
+      let meta: Record<string, unknown> = {};
+      if (to === 'OFFERED') {
+        const proposed = typeof body.meta === 'object' && body.meta !== null
+          ? (body.meta as Record<string, unknown>).prisTilbudt : null;
+        if (!Number.isInteger(proposed) || (proposed as number) <= 0) {
+          return json({ ok: false, error: 'Godkjent tilbud krever en positiv tilbudspris i hele kroner.' }, 400);
+        }
+        meta = {
+          prisTilbudt: proposed,
+          currency: 'NOK',
+          priceSource: 'PRODUCT_CATALOG',
+          stockAssumption: 'PRICE_PRESENT',
+          approvedBy: actor,
+          approvedAt: Date.now(),
+        };
+      }
       const now = Date.now();
       await env.FINNBILGLASS_DB.batch([
-        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, meta),
+        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, JSON.stringify(meta)),
         env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind(to, now, actor, id),
       ]);
       return json({ ok: true, status: to });
@@ -811,10 +1111,15 @@ export default {
       // SMS-grense: 640 tegn (= 4 SMS-segmenter à 160) — hold svaret kort.
       if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 640) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd (max 640 tegn).' }, 400);
       const id = Number(inquirySmsReplyMatch[1]);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, navn, kontakt FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string | null }>();
+      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, navn, kontakt, vehicle_json FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string | null; vehicle_json: string | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+      let secondaryPhone = '';
+      try {
+        const details = row.vehicle_json ? JSON.parse(row.vehicle_json) as { customerContact?: { preference?: string; phone?: string } } : null;
+        if (details?.customerContact?.preference === 'begge' && typeof details.customerContact.phone === 'string') secondaryPhone = details.customerContact.phone;
+      } catch { /* eldre eller ugyldig kjøretøy-snapshot */ }
       // Norsk mobilnummer → E.164 (+47). Aksepterer 8 siffer, evt. +47/0047-prefix og mellomrom.
-      const raa = (row.kontakt || '').replace(/[\s-]/g, '');
+      const raa = (secondaryPhone || row.kontakt || '').replace(/[\s-]/g, '');
       const m = /^(?:\+47|0047)?(\d{8})$/.exec(raa);
       if (!m) return json({ ok: false, error: 'Kunden har ikke et gyldig norsk telefonnummer i kontakt-feltet.' }, 409);
       const til = `+47${m[1]}`;
@@ -837,8 +1142,10 @@ export default {
       // smeltet på session_id). Lesing, token-gate, kun staging+prod.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const glassRequestProjection = await inquiryHasGlassRequestColumn(env.FINNBILGLASS_DB)
+        ? 'glass_request_json' : 'NULL AS glass_request_json';
       const inquiries = await env.FINNBILGLASS_DB.prepare(
-        'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
+        `SELECT id, regnr, navn, kontakt, melding, status, assigned_to, ${glassRequestProjection}, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500`,
       ).all<InquiryRow>();
       const evidenceRows = await env.FINNBILGLASS_DB.prepare(
         `SELECT c.case_id, c.registration_hash, c.session_id,
@@ -859,16 +1166,18 @@ export default {
       const kind = sakDetailMatch[1];
       const rawId = sakDetailMatch[2];
 
-      type InquiryDetail = { id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null };
+      type InquiryDetail = { id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; glass_request_json: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null };
       type EvidenceDetail = { case_id: string; status: string; created_at: number; session_id: string | null };
 
       let inquiry: InquiryDetail | null = null;
       let sessionId: string | null = null;
       let inquiryId: number | null = null;
+      const glassRequestProjection = await inquiryHasGlassRequestColumn(env.FINNBILGLASS_DB)
+        ? 'glass_request_json' : 'NULL AS glass_request_json';
 
       if (kind === 'inquiry' && /^\d+$/.test(rawId)) {
         inquiryId = Number(rawId);
-        inquiry = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(inquiryId).first<InquiryDetail>();
+        inquiry = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, ${glassRequestProjection}, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?`).bind(inquiryId).first<InquiryDetail>();
         if (inquiry) sessionId = inquiry.session_id;
       }
 
@@ -882,7 +1191,7 @@ export default {
         for (const c of bySession.results ?? []) if (!evidenceCases.some((x) => x.case_id === c.case_id)) evidenceCases.push(c);
       }
       if (kind === 'evidence' && !inquiry && sessionId) {
-        inquiry = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE session_id = ? ORDER BY created_at DESC LIMIT 1').bind(sessionId).first<InquiryDetail>();
+        inquiry = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, ${glassRequestProjection}, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE session_id = ? ORDER BY created_at DESC LIMIT 1`).bind(sessionId).first<InquiryDetail>();
         if (inquiry) inquiryId = inquiry.id;
       }
 
@@ -906,7 +1215,15 @@ export default {
         timeline = (events.results ?? []).map((e) => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta */ } return { ...e, meta }; });
       }
 
-      return json({ ok: true, sak: { kind, inquiry, evidence: evidenceMedBilder, skuDecision, timeline } });
+      let glassRequest = null;
+      try { if (inquiry?.glass_request_json) glassRequest = JSON.parse(inquiry.glass_request_json); } catch { /* ugyldig snapshot = ignorert */ }
+      // Legacy-compatible windshield inquiries do not have a glass_request_json
+      // column. With multi-glass disabled, the only accepted inquiry kind is
+      // windshield, so restore that context for operators without changing D1.
+      if (!glassRequest && inquiry && env.MULTI_GLASS_ENABLED !== 'true') {
+        glassRequest = { schemaVersion: 1, selection: { kind: 'windshield' }, answers: {} };
+      }
+      return json({ ok: true, sak: { kind, inquiry, glassRequest, evidence: evidenceMedBilder, skuDecision, timeline } });
     }
     if (method === 'GET' && path === '/ops/sku') {
       // Operatørflate for SKU-godkjenning (Oppgave 3) — staging+prod, token-gate i UI-et.
@@ -1053,8 +1370,16 @@ export default {
         return json({ ok: false, error: 'Ansvarlig og kort begrunnelse er påkrevd.' }, 400);
       }
       const id = Number(idRaw);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, status, vehicle_json FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; status: string; vehicle_json: string | null }>();
+      const glassRequestProjection = await inquiryHasGlassRequestColumn(env.FINNBILGLASS_DB)
+        ? 'glass_request_json' : 'NULL AS glass_request_json';
+      const row = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, status, ${glassRequestProjection}, vehicle_json FROM beta_inquiries WHERE id = ?`).bind(id).first<{ id: number; regnr: string | null; status: string; glass_request_json: string | null; vehicle_json: string | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+      let submittedGlass: { kind?: string } | null = null;
+      let invalidGlassSnapshot = false;
+      try { if (row.glass_request_json) submittedGlass = JSON.parse(row.glass_request_json); } catch { invalidGlassSnapshot = true; }
+      if (['approve_sku', 'choose_alternative_sku'].includes(decision) && (invalidGlassSnapshot || (row.glass_request_json !== null && submittedGlass?.kind !== 'windshield'))) {
+        return json({ ok: false, error: 'Denne godkjenningsflyten gjelder bare frontruter. Kontroller denne glasstypen manuelt før tilbud.' }, 409);
+      }
 
       // Kundereise-snapshot → kandidater for policy-sjekk.
       let vehicle: SnapshotVehicle | null = null;

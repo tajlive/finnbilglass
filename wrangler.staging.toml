@@ -20,11 +20,13 @@ binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db-staging"
 database_id = "6c8c3eeb-e4bb-41c7-831f-25e5a735717c"
 
+# Egen R2-bøtte for stagingbilder. Ingen deling med produksjonsbilder.
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
 bucket_name = "finnbilglass-opplaering-staging"
 
 [vars]
+MULTI_GLASS_ENABLED = "false"
 ENVIRONMENT = "staging"
 # Evidence-flyt feature-flags — staging verifiserer opplasting FØR prod.
 EVIDENCE_UPLOAD_ENABLED = "true"

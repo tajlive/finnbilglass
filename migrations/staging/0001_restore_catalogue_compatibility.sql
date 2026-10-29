@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS glass_prisliste (
   UNIQUE(varenr, varenavn)
 );
 
+CREATE INDEX IF NOT EXISTS idx_glass_prisliste_type_varenr
+  ON glass_prisliste (rad_type, varenr);
+CREATE INDEX IF NOT EXISTS idx_glass_prisliste_type_eurokode
+  ON glass_prisliste (rad_type, eurokode);
+
 INSERT OR IGNORE INTO glass_prisliste
   (varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type, created_at)
 SELECT

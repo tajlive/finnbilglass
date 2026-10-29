@@ -17,6 +17,11 @@ export interface BilProfil {
   innkapslet?: boolean;
   solar?: boolean;
   fargetone?: string;
+  hud?: boolean;
+  ldw?: boolean;
+  kamera?: boolean;
+  adas?: boolean;
+  oppvarmet?: boolean;
 }
 
 export interface BilInput {
@@ -216,16 +221,11 @@ export function modelTokensAv(modell: string, merke: string): string[] {
   return tokens;
 }
 
-/** Prisregel (Tom 2026-08-13, intern): listepris × 0,60 → rund NED til nærmeste tier.
- *  5 prisgrupper: 3 990 / 5 490 / 6 990 / 8 490 kr + «spesial» (pris på forespørsel)
- *  når rabattert pris er OVER 8 490 (eller under laveste tier). */
-const TIERS = [3990, 5490, 6990, 8490];
+/** Legacy price field is an ex-VAT list price; 75% discount then 25% VAT.
+ * Public display is allowed only while this source basis remains verified. */
 export function tierPris(listepris: number | null): number | null {
   if (listepris == null || listepris <= 0) return null;
-  const rabattert = listepris * 0.6;
-  if (rabattert > TIERS[TIERS.length - 1]) return null; // over høyeste tier → «Spesial» (null)
-  const tier = TIERS.filter((t) => t <= rabattert).pop();
-  return tier ?? null; // under laveste tier → «Spesial» (null)
+  return Math.round(listepris * 0.25 * 1.25);
 }
 
 /** Hovedmatcher: bil → sortert kandidatliste + anbefaling. */

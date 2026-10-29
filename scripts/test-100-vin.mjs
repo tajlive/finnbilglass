@@ -17,7 +17,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const BASE = process.env.BASE_URL ?? 'https://finnbilglass-frontrute-staging.klarpakke.workers.dev';
+const BASE = process.env.BASE_URL ?? 'https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev';
 const LINJER = readFileSync(join(ROOT, 'data/finn-100.jsonl'), 'utf8').split('\n').filter(Boolean);
 
 function makePrefix(merke) {
@@ -100,3 +100,4 @@ if (pin.length) {
   console.log('\nEksempler correct_pinpoint:');
   for (const d of pin.slice(0, 8)) console.log(`  ${d.regnr} ${d.bil} → ${d.treff} (${d.grunn})`);
 }
+if (feil > 0 || fordeling.wrong_pinpoint > 0) process.exitCode = 1;

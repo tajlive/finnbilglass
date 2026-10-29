@@ -119,14 +119,12 @@ async function svvOppslag(
     // noensinne (uansett land) — for bruktimport er det f.eks. 2014-04-14 (Nederland)
     // selv om den ble registrert i Norge først i 2025. nasjonaltGodkjenningsAr er
     // typegodkjenningsåret og kan ligge 1–2 år FØR bilen (Caddy 2017: nasjAr 2016),
-    // så den brukes kun som siste fallback. Registreringsåret i Norge er IKKE
+    // så den brukes ikke som fallback for katalogsøk. Registreringsåret i Norge er IKKE
     // årsmodellen for bruktimport — en 2014-bil importert i 2025 er fra 2014.
     const forsteReg = fg?.forstegangRegistrertDato;
-    const nasjAr = k.godkjenning?.tekniskGodkjenning?.kjoretoyklassifisering?.nasjonalGodkjenning?.nasjonaltGodkjenningsAr;
     const aarKandidat = forsteReg
       ? parseInt(forsteReg.slice(0, 4), 10)
-      : nasjAr ?? (regDato ? parseInt(regDato.slice(0, 4), 10) : null);
-    const aar = aarKandidat && aarKandidat > 1900 && aarKandidat < 2100 ? aarKandidat : null;
+      : (regDato ? parseInt(regDato.slice(0, 4), 10) : null);
     // Bruktimport-deteksjon — krever POSITIVT bevis. Fortollingsreferanse alene
     // betyr IKKE importbil: alle biler i Norge fortolles ved innførsel (MVA/
     // engangsavgift), også helt vanlige nybiler levert via norsk importør.
@@ -144,6 +142,10 @@ async function svvOppslag(
     const importLandKode = fortoll?.beskrivelse ? /^([A-Z]{2})\b/.exec(fortoll.beskrivelse.trim())?.[1] : undefined;
     const gapMnd = cocDato && regDato ? (Date.parse(regDato) - Date.parse(cocDato)) / (1000 * 60 * 60 * 24 * 30.44) : 0;
     const importBrukt = !!bruktimport || gapMnd > 24;
+    // Ved bruktimport uten dato for første registrering i utlandet ville norsk
+    // registreringsår gi feil katalogperiode. La søkeåret være ukjent.
+    const aar = importBrukt && !forsteReg ? null
+      : aarKandidat && aarKandidat > 1900 && aarKandidat < 2100 ? aarKandidat : null;
     // Importland: kun relevant når import er bevist. SVVs landNavn (autoritativt)
     // vinner; ellers landkode-konvertering som siste fallback for COC-gap-import.
     const importLand = !importBrukt

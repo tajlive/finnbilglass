@@ -4,6 +4,8 @@ export interface Env {
   ASSETS: Fetcher;
   AI: Ai;
   ENVIRONMENT: string;
+  /** Paused categories; disabled unless explicitly enabled for development. */
+  MULTI_GLASS_ENABLED?: string;
   SVV_API_KEY?: string;
   IMAGE_RESOLVER_SECRET?: string;
   OPPLAERING_BUCKET: R2Bucket;
@@ -19,4 +21,8 @@ export interface Env {
   SUPPORT_FROM_EMAIL?: string;
   /** Utgående SMS til kunder som bare oppga telefonnummer (Brevo v3 transactionalSMS). Uten nøkkel/credits: /sms-reply 503. */
   BREVO_SMS_SENDER?: string;
+  /** OpenAI Realtime brukes bare av den token-beskyttede stemmelaben. */
+  OPENAI_API_KEY?: string;
+  OPENAI_REALTIME_MODEL?: string;
+  VOICE_LAB_ENABLED?: string;
 }

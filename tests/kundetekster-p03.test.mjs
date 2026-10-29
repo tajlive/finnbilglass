@@ -49,10 +49,10 @@ test('3. P0.2-fotoopplevelse beholdt (kamera + bildebibliotek)', () => {
   assert.equal(bibMedCapture.length, 0, 'bildebibliotek-input skal ikke ha capture');
 });
 
-test('4. personlig beta-invitasjon finnes på forsiden (førsteperson, ordrett)', () => {
-  assert.match(html, /Kjenner du Tom Arne\? Da vil jeg gjerne ha din hjelp\./);
+test('4. beta-invitasjon beskriver avgrenset testing og manuell kontroll', () => {
+  assert.match(html, /Beta for inviterte testere/);
   assert.match(html, /Du er invitert til å teste Finnbilglass/);
-  assert.match(html, /Jeg dobbeltsjekker alltid glassvalg og pris før bestilling\./);
+  assert.match(html, /Vi dobbeltsjekker glassvalg og pris før et eventuelt tilbud sendes\./);
   assert.match(html, /beta-invitasjon/);
   assert.match(css, /\.beta-invitasjon\s*\{/);
 });
@@ -62,18 +62,19 @@ test('5. språkregel: aktiv kundereise bruker «vi»', () => {
   assert.match(html, /Det hjelper oss å kontrollere riktig glass før vi sender tilbud\./);
   assert.match(html, /Vi har funnet et mulig glass til bilen din/);
   assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet\./);
-  assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi glasset/);
+  assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør/);
   assert.match(html, /Vi fant ikke et trygt treff i katalogen\. Send oss en forespørsel/);
   assert.match(html, /Vi dobbeltsjekker alle glassvalg og priser før bestilling\./);
   assert.match(js, /Vi har funnet en mulig kandidat ut fra bildataene dine\. Vi dobbeltsjekker valget manuelt før vi sender tilbud\./);
-  assert.match(js, /Takk! Vi har mottatt forespørselen og dobbeltsjekker glasset/);
-  assert.match(personvern, /Her forklarer vi hvilke opplysninger Finnbilglass bruker, hvorfor vi trenger dem/);
+  assert.match(js, /Takk! Vi har mottatt forespørselen.*dobbeltsjekker glasset/);
+  assert.match(personvern, /Hvilke opplysninger behandler vi\?/);
+  assert.match(personvern, /foreløpig ikke satt opp en automatisk slettedato/);
 });
 
 test('6. språkregel: «jeg/meg» finnes kun i godkjente unntak', () => {
   // Godkjente unntak
-  assert.match(html, /Kjenner du Tom Arne\? Da vil jeg gjerne ha din hjelp\./); // beta-invitasjon
-  assert.match(html, /Jeg monterer selv/); // kundens eget valg
+  assert.match(html, /Vi dobbeltsjekker glassvalg og pris før et eventuelt tilbud sendes\./);
+  assert.match(html, /Til meg/); // kundens leveringsvalg
   assert.match(buf, /når jeg betaler selv\?/); // kundens FAQ-spørsmål
   assert.match(omoss, /Hei, jeg heter Tom Arne og står bak Finnbilglass\./); // Tom-presentasjon
 

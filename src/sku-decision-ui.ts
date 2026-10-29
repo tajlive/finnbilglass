@@ -17,10 +17,10 @@ async function load(){const r=await fetch('/api/ops/sku-cases',{headers:H()});if
 const d=await r.json();q('#out').innerHTML=d.cases.length?d.cases.map(c=>'<div class="card" data-id="'+c.id+'"><div class="row"><b>Sak #'+c.id+'</b> '+(c.regnr?'· '+esc(c.regnr):'')+' '+pill(c.status)+' <span class="muted">'+new Date(c.createdAt).toLocaleString('nb-NO')+'</span></div>'+(c.sisteBeslutning?'<p class="muted">Siste: '+esc(c.sisteBeslutning.decision_type)+' — '+esc(c.sisteBeslutning.sku||'')+' ('+esc(c.sisteBeslutning.created_by)+', '+new Date(c.sisteBeslutning.created_at).toLocaleString('nb-NO')+')</p>':'')+
 '<table><tr><th>Varenr</th><th>Eurokode</th><th>Pris</th><th>Attributter</th></tr>'+c.kandidater.map(k=>'<tr><td>'+esc(k.varenr)+'</td><td>'+esc(k.eurokode||'')+'</td><td>'+(k.pris??'—')+'</td><td class="muted">'+esc(attrsTxt(k))+'</td></tr>').join('')+'</table>'+
 '<div class="row" style="margin-top:10px"><select class="sku-valg" style="max-width:260px"><option value="">Velg SKU…</option>'+c.kandidater.map(k=>'<option value="'+esc(k.varenr)+'" data-euro="'+esc(k.eurokode||'')+'">'+esc(k.varenr)+(k.eurokode?' ('+esc(k.eurokode)+')':'')+'</option>').join('')+'</select>'+
-'<button class="sec" onclick="beslut('+c.id+',\'approve_sku\')">Godkjenn SKU</button>'+
-'<button class="sec" onclick="beslut('+c.id+',\'choose_alternative_sku\')">Velg alternativ SKU</button>'+
-'<button class="sec" onclick="beslut('+c.id+',\'request_better_image\')">Be om bedre bilde</button>'+
-'<button class="sec" onclick="beslut('+c.id+',\'reject\')">Avslå</button></div>'+
+(c.kandidater.length===1?'<button class="sec" data-decision="approve_sku">Godkjenn SKU</button>':'')+
+'<button class="sec" data-decision="choose_alternative_sku">Velg alternativ SKU</button>'+
+'<button class="sec" data-decision="request_better_image">Be om bedre bilde</button>'+
+'<button class="sec" data-decision="reject">Avslå</button></div>'+
 '<input class="aktor" placeholder="Ansvarlig (f.eks. Tom)" value="Tom" style="max-width:220px"><input class="grunn" placeholder="Kort begrunnelse" style="max-width:340px"><div class="resultat"></div></div>').join(''):'<p class="muted">Ingen saker med kundereise-snapshot.</p>';}
 const pill=s=>'<span class="pill'+(s==='NEW'?' new':(s==='CONFIRMED'?' ok':''))+'">'+esc(s)+'</span>';
 async function beslut(id,type){const card=q('[data-id="'+id+'"]'),sel=card.querySelector('.sku-valg'),sku=sel.value,opt=sel.selectedOptions[0],euro=opt?opt.dataset.euro:null,actor=card.querySelector('.aktor').value.trim(),reason=card.querySelector('.grunn').value.trim(),out=card.querySelector('.resultat');
@@ -28,5 +28,6 @@ if(!actor||!reason){out.innerHTML='<p class="err">Ansvarlig og begrunnelse er p�
 if((type==='approve_sku'||type==='choose_alternative_sku')&&!sku){out.innerHTML='<p class="err">Velg en SKU fra listen.</p>';return}
 const body={inquiry_id:id,decision:type,sku:sku||null,eurocode:euro||null,actor,reason};const r=await fetch('/api/ops/decision',{method:'POST',headers:H(),body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));
 if(r.ok){out.innerHTML='<p class="okmsg">✅ '+esc(d.status||'ok')+(d.overrideId?' — override #'+d.overrideId:'')+'</p>';load()}else{out.innerHTML='<p class="err">'+esc(d.error||'Feil')+(d.status==='needs_verification'?' <b>(needs_verification)</b>':'')+'</p>'}}
+q('#out').addEventListener('click',function(e){const button=e.target.closest('[data-decision]');if(!button)return;const card=button.closest('[data-id]');if(card)beslut(Number(card.dataset.id),button.dataset.decision)});
 q('#load').onclick=load;</script></main>`, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }

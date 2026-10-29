@@ -8,7 +8,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:ops-consolidation && npm run test:glavista && npm run test:dekningsrapport",
+    "test": "npm run typecheck && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:ops-consolidation && npm run test:glavista && npm run test:dekningsrapport && npm run test:commercial && npm run test:customer-price-gate && npm run test:glass-selection && npm run test:glass-search && npm run test:multi-glass-customer && npm run test:multi-glass-routes && node --import tsx --test tests/optional-glass-reference.test.mjs",
     "test:vin-aar": "node --import tsx --test tests/vin-modellaar.test.mjs",
     "test:svv": "node --import tsx --test tests/svv.test.mjs",
     "test:matcher": "node --import tsx --test tests/matcher.test.mjs",
@@ -51,16 +51,29 @@
     "test:accessory-applicability": "node --import tsx --test tests/accessory-applicability.test.mjs",
     "test:evidence-capture-p02": "node --import tsx --test tests/evidence-capture-p02.test.mjs",
     "test:kundetekster-p03": "node --import tsx --test tests/kundetekster-p03.test.mjs",
-    "test:ops-consolidation": "node --import tsx --test tests/ops-consolidation.test.mjs",
+    "test:ops-consolidation": "node --import tsx --test tests/ops-consolidation.test.mjs tests/ops-ui-syntax.test.mjs",
     "test:glavista": "node --import tsx --test tests/glavista-matcher.test.mjs",
     "test:dekningsrapport": "node --test tests/dekningsrapport.test.mjs",
     "rapport:dekning": "node scripts/dekningsrapport.mjs",
-    "selftest:50:staging": "node scripts/e2e-self-test-50-cars.mjs"
+    "selftest:50:staging": "node scripts/e2e-self-test-50-cars.mjs",
+    "test:commercial": "node --import tsx --test tests/inquiry-commercial.test.mjs",
+    "test:customer-price-gate": "node --import tsx --test tests/customer-price-gate.test.ts",
+    "test:glass-selection": "node --import tsx --test tests/glass-selection.test.mjs",
+    "test:glass-search": "node --import tsx --test tests/glass-search.test.mjs",
+    "test:multi-glass-customer": "node --import tsx --test tests/multi-glass-customer.test.mjs && node --import tsx --test tests/inquiry-glass-request.test.mjs && node --import tsx --test tests/multi-glass-health.test.mjs",
+    "test:inquiry-glass-request": "node --import tsx --test tests/inquiry-glass-request.test.mjs",
+    "test:multi-glass-health": "node --import tsx --test tests/multi-glass-health.test.mjs",
+    "test:multi-glass-routes": "node --import tsx --test tests/multi-glass-routes.test.mjs",
+    "test:multi-glass:browser": "node tests/multi-glass-customer-flow.browser.mjs",
+    "test:commercial:browser": "node --import tsx tests/inquiry-commercial.browser.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
     "tsx": "^4.23.12",
     "typescript": "^5.8.0",
     "wrangler": "^4.122.0"
+  },
+  "dependencies": {
+    "postal-mime": "4.0.8"
   }
 }
