@@ -4,7 +4,19 @@ name: deploy
 on:
   push:
     branches: [main]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deployment target"
+        type: choice
+        required: true
+        default: staging
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
 
 jobs:
   test-gate:
@@ -39,7 +51,7 @@ jobs:
   staging-deploy:
     name: Deploy staging
     needs: [test-gate, security-check]
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy]')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && (inputs.target == 'staging' || inputs.target == 'production')))
     runs-on: ubuntu-latest
     outputs:
       url: ${{ steps.deploy.outputs.url }}
@@ -84,8 +96,9 @@ jobs:
   production-deploy:
     name: Deploy production
     needs: [test-gate, security-check, staging-smoke]
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy]')
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.target == 'production' && vars.FBG_PRODUCTION_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
+    environment: production
     outputs:
       url: ${{ steps.deploy.outputs.url }}
       previous_version: ${{ steps.previous.outputs.version }}

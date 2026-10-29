@@ -1,0 +1,81 @@
+name: PR Verification
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: test / node22
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  secrets:
+    name: security / gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Scan secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+  schema:
+    name: database / schema-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate migration contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if grep -Fq "'reply'" src/index.ts &&
+             grep -Fq 'beta_inquiry_events' src/index.ts; then
+            if [[ ! -f migrations/0033_inquiry_reply_history.sql ]]; then
+              echo "::error::Migration 0033 is missing."
+              exit 1
+            fi
+            grep -Fq "'reply'" migrations/0033_inquiry_reply_history.sql || {
+              echo "::error::Migration 0033 must permit reply."
+              exit 1
+            }
+          fi
+
+          if grep -REn 'PRAGMA[[:space:]]+foreign_keys[[:space:]]*=[[:space:]]*OFF' migrations/staging --include='*.sql'; then
+            echo "::error::Unsafe D1 foreign key pragma."
+            exit 1
+          fi
+
+          if [[ -f migrations/staging/0003_catalogue_variant_identity.sql ]] &&
+             grep -Fqi 'INSERT OR IGNORE' migrations/staging/0003_catalogue_variant_identity.sql; then
+            echo "::error::Catalogue migration may silently discard rows."
+            exit 1
+          fi
