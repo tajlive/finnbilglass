@@ -13,7 +13,10 @@ dist/
 data/finn-modeller/
 
 # Genererte dumper/rapporter (tracked inngangsdata beholdes: *.sql, *.md, fasit-glass.json)
-data/fixtures/
+data/fixtures/*
+!data/fixtures/self-test-50-cars.json
+!data/fixtures/self-test-50-bilde-full.jpg
+!data/fixtures/self-test-50-bilde-thumb.jpg
 data/gt-ekspansjon/*.json
 data/hull-kart-*
 data/test-100-bom-analyse.json
@@ -28,3 +31,6 @@ docs/demo-*
 
 # Scrapet eurocode-katalog (regenererbar)
 data/scrape/
+
+# Egentest-artefakter (50-bilers self-test) — genereres per kjøring
+output/

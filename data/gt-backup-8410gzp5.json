@@ -1,0 +1,86 @@
+[
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2013,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2014,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2015,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2016,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2017,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2018,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2019,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2020,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2021,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2022,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2023,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ },
+ {
+  "make": "TOYOTA",
+  "model": "RAV4",
+  "year": 2024,
+  "verified_by": "gt-auto-prisliste",
+  "confidence": 0.8
+ }
+]

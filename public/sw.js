@@ -4,10 +4,13 @@
    - Statisk (styles.css, app.js, ikon.svg): stale-while-revalidate → instant visning
      fra cache, oppdateres i bakgrunnen (selvhelende, aldri vedvarende gammel).
    - API (/api/*): aldri cachet. POST røres aldri. */
-const VERSION = 'v1';
+// Bump with the HTML asset query version so an activation cannot mix old JS with new HTML.
+const VERSION = '20261027-resolver-v6';
 const STATIC_CACHE = 'finnbilglass-static-' + VERSION;
 const HTML_CACHE = 'finnbilglass-html-' + VERSION;
-const PRECACHE = ['/', '/styles.css', '/app.js', '/ikon.svg'];
+const ASSET_VERSION = '?v=' + VERSION;
+const PRECACHE = ['/', '/styles.css' + ASSET_VERSION, '/app.js' + ASSET_VERSION, '/ikon.svg'];
+const STATIC_PATHS = new Set(['/styles.css', '/app.js', '/ikon.svg']);
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -39,14 +42,19 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
       fetch(req)
         .then((res) => {
-          const clone = res.clone();
-          caches.open(HTML_CACHE).then((c) => c.put(req, clone));
+          if (res.ok && res.headers.get('content-type') && res.headers.get('content-type').includes('text/html')) {
+            const clone = res.clone();
+            caches.open(HTML_CACHE).then((c) => c.put(req, clone));
+          }
           return res;
         })
         .catch(() => caches.match(req).then((r) => r || caches.match('/')))
     );
     return;
   }
+
+  // Cache only the public, versioned shell assets. Never cache arbitrary same-origin pages.
+  if (!STATIC_PATHS.has(url.pathname) || url.searchParams.get('v') !== VERSION) return;
 
   // Statisk: stale-while-revalidate.
   e.respondWith(

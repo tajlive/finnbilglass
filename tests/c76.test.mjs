@@ -4,12 +4,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, mkdtempSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
-const OUT = new URL('../scripts/out/c76-market-intelligence.json', import.meta.url);
+const ROOT = new URL('..', import.meta.url).pathname;
+const OUT = join(mkdtempSync(join(tmpdir(), 'finnbilglass-c76-')), 'market-intelligence.json');
+const FIXTURE_DIR = new URL('./fixtures/c76', import.meta.url).pathname;
+const SCRIPT_ENV = { ...process.env, C76_FIXTURE_DIR: FIXTURE_DIR, C76_OUTPUT_FILE: OUT };
 
 test('C7.6-1: kjøring produserer ROI-prioritet (sortert synkende, positive verdier)', () => {
-  execFileSync('node', ['--import', 'tsx', 'scripts/c76-market-intelligence.mjs'], { cwd: new URL('..', import.meta.url).pathname });
+  execFileSync('node', ['--import', 'tsx', 'scripts/c76-market-intelligence.mjs'], { cwd: ROOT, env: SCRIPT_ENV });
   const rep = JSON.parse(readFileSync(OUT, 'utf8'));
   assert.ok(rep.roiPriority.length >= 10, 'for få familier i ROI-listen');
   const rois = rep.roiPriority.map((r) => r.roiScore);

@@ -85,7 +85,7 @@ test('svvLookup: import-deteksjon med bruktimport-objekt + land', async () => {
   const bil = await svvLookup('XX12345', 'hemmelig');
   assert.equal(bil.import, true);
   assert.equal(bil.importLand, 'TYSKLAND'); // SVVs landNavn vinner over fortollings-beskrivelse
-  assert.equal(bil.aar, 2019);
+  assert.equal(bil.aar, null); // bruktimport uten første registreringsdato i utlandet
 });
 
 test('svvLookup: fortollingsbeskrivelse med landkode alene er IKKE import (Tesla EF 93128-saken)', async () => {
@@ -170,7 +170,7 @@ test('svvLookup: ukjent importland-kode beholdes rå', async () => {
   assert.equal(bil.importLand, 'ZZ'); // ikke i LAND_NAVN → rå kode
 });
 
-test('svvLookup: bruktimport-objekt fra SVV → import + riktig årsmodell (JD94062-saken)', async () => {
+test('svvLookup: bruktimport uten første utenlandske registreringsdato → ukjent søkeår (JD94062-saken)', async () => {
   mockFetch(200, {
     kjoretoydataListe: [
       {
@@ -195,13 +195,13 @@ test('svvLookup: bruktimport-objekt fra SVV → import + riktig årsmodell (JD94
     ],
   });
   const bil = await svvLookup('JD94062', 'hemmelig');
-  assert.equal(bil.aar, 2014); // årsmodell fra nasjonaltGodkjenningsAr, IKKE registreringsår 2025
+  assert.equal(bil.aar, null); // typegodkjenning 2014 og norsk registrering 2025 beviser ikke søkeåret
   assert.equal(bil.import, true); // SVVs bruktimport-objekt = autoritativt bevis
   assert.equal(bil.importLand, 'NEDERLAND'); // SVVs eget landNavn vinner over kode-mapping
   assert.equal(bil.forstegangsregistrert, '2025-06-03'); // norsk førstegangsregistrering uendret
 });
 
-test('svvLookup: nasjonaltGodkjenningsAr uten bruktimport → år oppdatert, import fortsatt false', async () => {
+test('svvLookup: norsk førstegangsregistrering styrer søkeår, ikke typegodkjenning', async () => {
   mockFetch(200, {
     kjoretoydataListe: [
       {
@@ -218,7 +218,7 @@ test('svvLookup: nasjonaltGodkjenningsAr uten bruktimport → år oppdatert, imp
     ],
   });
   const bil = await svvLookup('XX12345', 'hemmelig');
-  assert.equal(bil.aar, 2024); // nasjonaltGodkjenningsAr vinner
+  assert.equal(bil.aar, 2025); // førstegangsregistrering, ikke typegodkjenningsåret 2024
   assert.equal(bil.import, false); // liten COC-gap + ingen landkode + ingen bruktimport
 });
 

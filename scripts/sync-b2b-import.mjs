@@ -82,7 +82,9 @@ async function main() {
     glass, ['eurocode']);
   const p = await importer(dbUuid, 'glass_prisliste',
     ['varenr', 'varenavn', 'pris', 'eurokode', 'rad_type'],
-    prisliste, ['varenr', 'varenavn']);
+    // Eurocode is part of the supplier identity. A shared product number and
+    // display name can legitimately represent multiple glass variants.
+    prisliste, ['varenr', 'varenavn', 'eurokode', 'rad_type']);
   const k = await importer(dbUuid, 'ktype_matches',
     ['ktype', 'eurocode', 'count'],
     ktype, ['ktype', 'eurocode']);

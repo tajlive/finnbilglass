@@ -3,6 +3,9 @@ main = "src/index.ts"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
+# Tvinger prod-konto (80d5b1d5) — hindrer at wrangler velger feil konto når
+# OAuth-login (som ser flere kontoer) er aktivt uten CLOUDFLARE_ACCOUNT_ID.
+account_id = "80d5b1d56a3e907150ba7348b6182894"
 
 # ── Workers AI (bilde-avlesning: 43R/eurocode/OEM/features) ──
 [ai]
@@ -25,13 +28,25 @@ bucket_name = "finnbilglass-opplaering"
 #    wrangler secret put CRON_SECRET
 
 [vars]
+MULTI_GLASS_ENABLED = "false"
 ENVIRONMENT = "production"
+# Evidence-flyt feature-flags — avgrenset release (Tom 2026-08-19): kun opplasting åpen.
+EVIDENCE_UPLOAD_ENABLED = "true"
+EVIDENCE_REVIEW_ENABLED = "false"
+EVIDENCE_STATUS_CHANGE_ENABLED = "true"
+VOICE_LAB_ENABLED = "false"
+
+# ── Observability (Tom 2026-08-19): Workers Logs-lagring AV (kostnad),
+#    invocation_logs PÅ (wrangler tail / debugging) ──────────────────
+[observability.logs]
+enabled = false
+invocation_logs = true
 
 # ── Statisk frontend (prototype public/) ──────────────────────
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/support/evidence", "/ops"]
+run_worker_first = ["/", "/support/evidence", "/ops", "/ops/*", "/api/ops/voice/*"]
 
 # ── Custom domains (opprettes av wrangler ved deploy) ──────────
 # apex + www serverer landingsside inntil Pages-frontenden tar over; api = matcher

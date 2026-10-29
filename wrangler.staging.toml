@@ -6,6 +6,9 @@ main = "src/index.ts"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
+# Tvinger prod-konto (80d5b1d5) — staging kjører på samme konto som prod
+# (separat worker/bucket/D1). Hindrer at wrangler velger feil konto.
+account_id = "80d5b1d56a3e907150ba7348b6182894"
 
 # ── Workers AI (bilde-avlesning: 43R/eurocode/OEM/features) ──
 [ai]
@@ -17,12 +20,23 @@ binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db-staging"
 database_id = "6c8c3eeb-e4bb-41c7-831f-25e5a735717c"
 
+# Egen R2-bøtte for stagingbilder. Ingen deling med produksjonsbilder.
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
 bucket_name = "finnbilglass-opplaering-staging"
 
 [vars]
+MULTI_GLASS_ENABLED = "false"
 ENVIRONMENT = "staging"
+# Evidence-flyt feature-flags — staging verifiserer opplasting FØR prod.
+EVIDENCE_UPLOAD_ENABLED = "true"
+EVIDENCE_REVIEW_ENABLED = "false"
+EVIDENCE_STATUS_CHANGE_ENABLED = "false"
+
+# ── Observability: Workers Logs-lagring AV, invocation_logs PÅ (konsistens med prod) ──
+[observability.logs]
+enabled = false
+invocation_logs = true
 
 # ── Statisk frontend (samme public/) ────────────────────────────
 [assets]

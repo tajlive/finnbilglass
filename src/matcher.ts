@@ -5,6 +5,9 @@
  */
 import { dekodeEurokode, katalogKode } from './eurokode-dekoder';
 import { parseAar, matcherAar, type AarIntervall } from './aar-parser';
+import type { GlassAttributes, GlassSku } from './fitment-v1/glass-sku';
+import { approvalPolicy, attributkonflikter, skillendeAttributter, type ApprovalVurdering } from './approval/policy';
+import { lesOverrider, overrideAttributter } from './approval/overrides';
 
 export interface BilProfil {
   coated?: boolean;
@@ -14,6 +17,11 @@ export interface BilProfil {
   innkapslet?: boolean;
   solar?: boolean;
   fargetone?: string;
+  hud?: boolean;
+  ldw?: boolean;
+  kamera?: boolean;
+  adas?: boolean;
+  oppvarmet?: boolean;
 }
 
 export interface BilInput {
@@ -95,6 +103,81 @@ function scoreKandidat(vare: Kandidat, profil: BilProfil, bilAar: number | null 
   return { vare, score, feil, dek, aar };
 }
 
+// ── GlassSku-mapping (Oppgave 2): hver vurdert kandidat → enhetlig GlassSku ──
+// Attributter uten kilde forblir null (UKJENT) — aldri fabrikkert.
+// ekstra (Oppgave 6a-2): glavista-attributter fyller kun hull (null → verdi).
+function tilGlassSku(v: Vurdert, merke: string, verified: boolean, ekstra?: Partial<GlassAttributes>): GlassSku {
+  const egenskaper = new Set([...v.dek.egenskaper, ...navnAttributter(v.vare.varenavn, v.vare.kommentar)]);
+  const attributes: GlassAttributes = {
+    windshield: v.dek.posisjon === 'frontrute' || /FRONT/.test(v.vare.varenavn ?? ''),
+    hud: null,
+    cameraBracket: null,
+    rainLightSensor: egenskaper.has('sensor') ? true : null,
+    heating: egenskaper.has('oppvarmet') ? true : null,
+    acoustic: null,
+    antenna: egenskaper.has('antenne') ? true : null,
+    tint: v.dek.fargetone,
+  };
+  if (ekstra) {
+    for (const [k, verdi] of Object.entries(ekstra)) {
+      if (attributes[k as keyof GlassAttributes] === null && verdi !== null && verdi !== undefined) {
+        (attributes as unknown as Record<string, unknown>)[k] = verdi;
+      }
+    }
+  }
+  return {
+    sku: `AUTOGLASS:${v.vare.varenr}`,
+    varenr: v.vare.varenr,
+    supplier: 'AUTOGLASS',
+    supplierPartNumbers: [v.vare.varenr],
+    oemPartNumbers: [],
+    eurocodes: v.vare.eurokode ? [v.vare.eurokode] : [],
+    vehicleRules: [{
+      make: merke.toUpperCase(),
+      model: v.vare.varenavn,
+      yearFrom: v.aar?.start ?? null,
+      yearTo: v.aar?.slutt ?? null,
+      source: 'glass_prisliste',
+      raw: v.vare.varenavn ?? '',
+      provenance: { source: 'glass_prisliste', sourceClass: 'INTERNAL_CATALOG', sourceRecord: v.vare.eurokode ?? v.vare.varenr },
+    }],
+    attributes,
+    evidence: [{
+      source: 'glass_prisliste',
+      sourceClass: verified ? 'AUTHORITATIVE' : 'INTERNAL_CATALOG',
+      sourceRecord: v.vare.eurokode ?? v.vare.varenr,
+      notes: verified ? 'matchet manuell override (manual_review)' : undefined,
+    }],
+    status: verified ? 'verified' : 'candidate',
+  };
+}
+
+// ── Glavista-attributter (Oppgave 6a-2): D1 glass_sku_attributes ──
+async function lesGlavistaAttributter(
+  env: { FINNBILGLASS_DB: D1Database },
+  eurokoder: string[],
+): Promise<Map<string, Partial<GlassAttributes>>> {
+  const ut = new Map<string, Partial<GlassAttributes>>();
+  const unike = [...new Set(eurokoder.filter((k): k is string => !!k))];
+  if (!unike.length) return ut;
+  try {
+    for (let i = 0; i < unike.length; i += 40) {
+      const batch = unike.slice(i, i + 40);
+      const ph = batch.map(() => '?').join(',');
+      const res = await env.FINNBILGLASS_DB
+        .prepare(`SELECT eurocode, attributes_json FROM glass_sku_attributes WHERE eurocode IN (${ph})`)
+        .bind(...batch)
+        .all<{ eurocode: string; attributes_json: string }>();
+      for (const r of res.results ?? []) {
+        try { ut.set(r.eurocode.toUpperCase(), JSON.parse(r.attributes_json) as Partial<GlassAttributes>); } catch { /* ugyldig JSON ignorert */ }
+      }
+    }
+  } catch {
+    // glass_sku_attributes finnes ikke (ennå) — ingen attributter, ingen krasj.
+  }
+  return ut;
+}
+
 function esc(s: string): string {
   return s.replace(/'/g, "''");
 }
@@ -138,16 +221,11 @@ export function modelTokensAv(modell: string, merke: string): string[] {
   return tokens;
 }
 
-/** Prisregel (Tom 2026-08-13, intern): listepris × 0,60 → rund NED til nærmeste tier.
- *  5 prisgrupper: 3 990 / 5 490 / 6 990 / 8 490 kr + «spesial» (pris på forespørsel)
- *  når rabattert pris er OVER 8 490 (eller under laveste tier). */
-const TIERS = [3990, 5490, 6990, 8490];
+/** Legacy price field is an ex-VAT list price; 75% discount then 25% VAT.
+ * Public display is allowed only while this source basis remains verified. */
 export function tierPris(listepris: number | null): number | null {
   if (listepris == null || listepris <= 0) return null;
-  const rabattert = listepris * 0.6;
-  if (rabattert > TIERS[TIERS.length - 1]) return null; // over høyeste tier → «Spesial» (null)
-  const tier = TIERS.filter((t) => t <= rabattert).pop();
-  return tier ?? null; // under laveste tier → «Spesial» (null)
+  return Math.round(listepris * 0.25 * 1.25);
 }
 
 /** Hovedmatcher: bil → sortert kandidatliste + anbefaling. */
@@ -246,6 +324,41 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
   const margin = topp ? (nest ? topp.score - nest.score : 99) : 0;
   const pinpoint = !!topp && topp.feil.length === 0 && margin >= 4;
 
+  // Steg 8 (Oppgave 2): verifiserte regler (manual_review_overrides) → snevrer
+  // kandidatlisten til den godkjente SKU-en og gir hasVerifiedCatalogRule=true.
+  const overrideTreff = await lesOverrider(env, bil);
+  const override = overrideTreff.override;
+  const overrideEuro = override?.eurocode ?? null;
+  let vurdertFinale = vurdert;
+  if (overrideEuro) {
+    const matchet = vurdert.filter((v) => (v.vare.eurokode ?? '').toUpperCase() === overrideEuro.toUpperCase());
+    if (matchet.length === 1) vurdertFinale = matchet;
+  }
+
+  // Steg 8b (Oppgave 6a-2): glavista-attributter (glass_sku_attributes) beriker
+  // kandidatene og skiller mot bilens profil. KUN kjente motsigelser
+  // eliminerer; null/UKJENT hos kandidaten beholdes konservativt — aldri
+  // tolket som «ingen kamera/sensor». Policyens harde regler er urørt.
+  const glavista = await lesGlavistaAttributter(env, vurdertFinale.map((v) => v.vare.eurokode ?? ''));
+  const vurdertEtterAttributter = vurdertFinale.filter((v) => {
+    const ekstra = v.vare.eurokode ? glavista.get(v.vare.eurokode.toUpperCase()) : undefined;
+    if (!ekstra) return true;
+    if (profil.sensor === false && ekstra.rainLightSensor === true) return false;
+    if (profil.sensor === true && ekstra.rainLightSensor === false) return false;
+    if (profil.antenne === false && ekstra.antenna === true) return false;
+    if (profil.antenne === true && ekstra.antenna === false) return false;
+    return true;
+  });
+  vurdertFinale = vurdertEtterAttributter.length ? vurdertEtterAttributter : vurdertFinale; // aldri 0-kandidat ved uventet utslag
+
+  // Steg 9 (Oppgave 2): enhetlig GlassSku-liste + godkjenningsvurdering.
+  const candidateSkus: GlassSku[] = vurdertFinale.map((v) => tilGlassSku(v, bil.merke, overrideTreff.hasVerifiedCatalogRule,
+    v.vare.eurokode ? glavista.get(v.vare.eurokode.toUpperCase()) : undefined));
+  const missingAttributes = skillendeAttributter(candidateSkus);
+  const bevisProfil = override ? overrideAttributter(override) : {};
+  const konflikter = candidateSkus.length ? attributkonflikter(candidateSkus, bevisProfil) : [];
+  const approval: ApprovalVurdering = approvalPolicy(candidateSkus, overrideTreff.hasVerifiedCatalogRule, konflikter);
+
   return {
     kandidater: vurdert.map((v) => ({
       varenr: v.vare.varenr,
@@ -274,11 +387,18 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
     } : null,
     pinpoint,
     margin,
+    // Oppgave 2: enhetlig SKU-kandidatliste + godkjenningsgrunnlag.
+    candidateSkus,
+    candidateCount: candidateSkus.length,
+    missingAttributes,
+    hasVerifiedCatalogRule: overrideTreff.hasVerifiedCatalogRule,
+    approval,
     meta: {
       seedAntall: seed.results?.length ?? 0,
       katalogkoder: [...koder],
       kandidaterTotalt: front.length,
       aarEkskludert: front.length - kandidater.length,
+      overrideId: override ? override.id : null,
     },
   };
 }

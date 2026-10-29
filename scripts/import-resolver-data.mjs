@@ -8,7 +8,7 @@
  *   - api/cf-worker/scripts/ground_truth_rows.json → ktype_registry (make/model/år → ktype)
  *
  * B2B-LIVE-modus (krever B2B_CLOUDFLARE_API_TOKEN + B2B_CLOUDFLARE_ACCOUNT_ID):
- *   eksporterer vin_ktype_map / ground_truth / glass_catalog / oe_eurocode_mapping
+ *   eksporterer vin_ktype_map / ground_truth / glass_catalog
  *   direkte fra glass-catalog-db (konto 2266e975) og importerer enriched data.
  *
  * Repeterbar: sletter resolver-tabeller, importerer, skriver metadata i
@@ -34,6 +34,7 @@ const DB = process.argv.includes('--db')
 const REQUIRE_LIVE = process.argv.includes('--require-live');
 
 loadDotEnvLocal();
+if (DB !== 'finnbilglass-db-staging') throw new Error('Only the staging database is permitted');
 
 const LIVE = !!(process.env.B2B_CLOUDFLARE_API_TOKEN && process.env.B2B_CLOUDFLARE_ACCOUNT_ID);
 if (REQUIRE_LIVE && !LIVE) {
@@ -48,7 +49,26 @@ if (REQUIRE_LIVE && !LIVE) {
   process.exit(2);
 }
 
+if (LIVE) {
+  run(['wrangler', 'd1', 'execute', 'glass-catalog-db', '--remote', '--json', '--command', 'SELECT COUNT(*) AS n FROM vin_ktype_map; SELECT * FROM ground_truth LIMIT 0; SELECT * FROM glass_catalog LIMIT 0;'], {
+    CLOUDFLARE_API_TOKEN: process.env.B2B_CLOUDFLARE_API_TOKEN,
+    CLOUDFLARE_ACCOUNT_ID: process.env.B2B_CLOUDFLARE_ACCOUNT_ID,
+  });
+}
 mkdirSync(OUT, { recursive: true });
+const liveSnapshot = {};
+if (LIVE) {
+  for (const table of ['vin_ktype_map', 'ground_truth', 'glass_catalog']) {
+    liveSnapshot[table] = await exportReadOnlyTable(table, join(OUT, `b2b_${table}.sql`));
+    if (!liveSnapshot[table].length) throw new Error(`Refusing empty live source: ${table}`);
+  }
+  for (const row of liveSnapshot.glass_catalog) {
+    const numbers = JSON.parse(row.oem_numbers || '[]');
+    if (!Array.isArray(numbers) || numbers.some(n => typeof n !== 'string')) {
+      throw new Error(`Invalid OEM list for ${row.eurocode}`);
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // SQL-tuple-parser (tolerant: strings, NULL, tall, JSON i quotes, escaped '')
@@ -97,6 +117,30 @@ function vn(raw) {
   return Number.isFinite(n) ? n : null;
 }
 
+async function exportReadOnlyTable(table, output) {
+  const endpoint = `https://api.cloudflare.com/client/v4/accounts/${process.env.B2B_CLOUDFLARE_ACCOUNT_ID}/d1/database/f79095b3-da80-43fe-8064-ff480e8a1b4b/query`;
+  const rows = [];
+  for (let offset = 0; ; offset += 500) {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.B2B_CLOUDFLARE_API_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sql: `SELECT * FROM "${table}" ORDER BY rowid LIMIT 500 OFFSET ${offset}` }),
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload.success) throw new Error(`Read-only export failed for ${table}: HTTP ${response.status}`);
+    const page = payload.result?.[0]?.results;
+    if (!Array.isArray(page)) throw new Error(`Missing rows for ${table}`);
+    rows.push(...page);
+    if (page.length < 500) break;
+  }
+  const columns = Object.keys(rows[0] ?? {});
+  const literal = (value) => value == null ? 'NULL' : typeof value === 'number' ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
+  const sql = rows.length ? `INSERT INTO "${table}" (${columns.map(c => `"${c}"`).join(',')}) VALUES\n${rows.map(row => `(${columns.map(c => literal(row[c])).join(',')})`).join(',\n')};\n` : '';
+  writeFileSync(output, sql);
+  console.log(`  read-only export ${table}: ${rows.length} rows`);
+  return rows;
+}
+
 // ---------------------------------------------------------------------------
 // Hjelpere
 // ---------------------------------------------------------------------------
@@ -116,9 +160,28 @@ function loadDotEnvLocal() {
   }
 }
 
+function loadWranglerOAuthToken() {
+  const configPath = '/Users/taj/.wrangler/config/default.toml';
+  if (!existsSync(configPath)) return null;
+  return readFileSync(configPath, 'utf8').match(/^oauth_token\s*=\s*"([^"]+)"/m)?.[1] ?? null;
+}
+
 function run(args, env = {}) {
   try {
-    execFileSync('npx', args, { stdio: 'pipe', env: { ...process.env, ...env } });
+    const credentials = { ...process.env, ...env };
+    if (!env.CLOUDFLARE_ACCOUNT_ID) {
+      // Source credentials are read-only; staging uses the existing Wrangler login.
+      const oauthToken = loadWranglerOAuthToken();
+      if (oauthToken) credentials.CLOUDFLARE_API_TOKEN = oauthToken;
+      else delete credentials.CLOUDFLARE_API_TOKEN;
+      delete credentials.CLOUDFLARE_API_KEY;
+      delete credentials.CLOUDFLARE_EMAIL;
+    }
+    execFileSync(process.execPath, [join(ROOT, 'node_modules/wrangler/bin/wrangler.js'), ...args.slice(1)], {
+      stdio: 'pipe',
+      cwd: env.CLOUDFLARE_ACCOUNT_ID ? join(B2B, 'api/cf-worker') : ROOT,
+      env: credentials,
+    });
   } catch (e) {
     const msg = (e.stderr?.toString() || e.message || '').replace(/\u001b\[[0-9;]*m/g, '').split('\n').filter(Boolean).slice(-6).join(' | ');
     console.error(`  FEIL i: npx ${args.join(' ')}\n  → ${msg}`);
@@ -256,22 +319,38 @@ if (LIVE) {
   console.log('  B2B-live-modus: eksporterer fra glass-catalog-db …');
   const b2bEnv = { CLOUDFLARE_API_TOKEN: process.env.B2B_CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID: process.env.B2B_CLOUDFLARE_ACCOUNT_ID };
   run(['wrangler', 'd1', 'execute', 'glass-catalog-db', '--remote', '--json', '--command', 'SELECT COUNT(*) AS n FROM vin_ktype_map LIMIT 1'], b2bEnv);
-  for (const [table, outFile] of [['vin_ktype_map', 'b2b_vin_ktype_map.sql'], ['ground_truth', 'b2b_ground_truth.sql'], ['glass_catalog', 'b2b_glass_catalog.sql'], ['oe_eurocode_mapping', 'b2b_oe.sql']]) {
-    try {
-      run(['wrangler', 'd1', 'export', 'glass-catalog-db', '--remote', '--no-schema', '--table', table, '--output', join(OUT, outFile)], b2bEnv);
-      console.log(`  eksportert ${table}`);
-    } catch (e) {
-      console.error(`  EKSPORT FIKLET for ${table}:`, e.stderr?.toString().slice(0, 300) ?? e.message);
+  const liveRows = liveSnapshot;
+  // Merge source data without promoting pending vehicle lookups to verified fitment.
+  const literal = (value) => value == null ? 'NULL' : typeof value === 'number' ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
+  const merge = (table, columns, rows) => {
+    if (!rows.length) return;
+    const tuples = rows.map(row => `(${columns.map(c => literal(row[c])).join(',')})`);
+    const file = join(OUT, `live-${table}.sql`);
+    writeFileSync(file, batch(tuples, table, `(${columns.join(',')})`).replaceAll('INSERT INTO ', 'INSERT OR REPLACE INTO '));
+    d1(file);
+    console.log(`  merged ${table}: ${rows.length} source rows`);
+  };
+  const catalogColumns = ['eurocode','article_number','category','supplier','brand','model','year_from','year_to','adas','rain_sensor','heated','acoustic','antenna','hud','shade','camera','lane_assist','price','stock_status','oem_numbers','dimensions','description','prefix4','ktype','source','brand_original'];
+  const catalog = liveRows.glass_catalog.filter(r => r.eurocode && r.brand && r.model && r.source);
+  merge('glass_catalog', catalogColumns, catalog);
+  const verified = liveRows.ground_truth.filter(r => r.make && r.model && r.year && r.frontrute_eurocode && Number(r.confidence) >= 0.85 && !/pending/i.test(r.verified_by ?? '')).map(r => ({ ...r, make: r.make.toUpperCase(), model: r.model.toUpperCase(), source: r.source_url || 'b2b-live' }));
+  merge('ground_truth', ['make','model','year','frontrute_eurocode','verified_by','confidence','source'], verified);
+  const oe = [];
+  for (const row of catalog) {
+    let numbers;
+    try { numbers = JSON.parse(row.oem_numbers || '[]'); } catch { throw new Error(`Invalid OEM JSON for ${row.eurocode}`); }
+    if (!Array.isArray(numbers)) throw new Error(`OEM numbers must be an array for ${row.eurocode}`);
+    for (const number of numbers) {
+      if (typeof number === 'string' && number.trim()) oe.push({oe_number:number.trim(),eurocode:row.eurocode,brand:row.brand,model:row.model,category:row.category,source:row.source});
     }
   }
+  merge('oe_eurocode_mapping', ['oe_number','eurocode','brand','model','category','source'], oe);
   // vin_ktype_map — mapping etter kolonnenavn
-  const vkFile = join(OUT, 'b2b_vin_ktype_map.sql');
-  if (existsSync(vkFile)) {
-    const vk = parseInsertLines(readFileSync(vkFile, 'utf8'));
+  if (liveRows.vin_ktype_map.length) {
     const vkOut = [];
     const seen = new Set();
-    for (const r of vk.rows) {
-      const get = (name) => v(r[vk.cols.indexOf(name)]);
+    for (const r of liveRows.vin_ktype_map) {
+      const get = (name) => r[name] ?? null;
       const vin = get('vin')?.toUpperCase(), ktype = get('k_type') ?? get('ktype');
       if (!vin || !ktype || seen.has(vin)) continue;
       seen.add(vin);

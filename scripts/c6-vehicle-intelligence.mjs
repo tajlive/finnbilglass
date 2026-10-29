@@ -14,7 +14,7 @@ const CORPUS_FILES = [
   'data/finn-100.jsonl',
   '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson',
 ];
-const OUT = resolve('scripts/out/c6-vehicle-intelligence.json');
+const OUT = resolve(process.env.C6_OUTPUT_FILE ?? 'scripts/out/c6-vehicle-intelligence.json');
 
 const hash = (id) => createHash('sha256').update(`${id}::${SALT}`).digest('hex').slice(0, 16);
 

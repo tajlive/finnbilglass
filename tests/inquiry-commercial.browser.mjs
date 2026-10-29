@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import worker from '../src/index';
+import { commercialDb } from './commercial-db.mjs';
+const {chromium}=await import(process.env.PLAYWRIGHT_MODULE||'playwright');
+const {db,sqlite}=commercialDb();
+const browser=await chromium.launch({channel:'chrome',headless:true});
+const page=await browser.newPage({viewport:{width:1440,height:1000}});
+page.setDefaultTimeout(10000);
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const env={ENVIRONMENT:'staging',FINNBILGLASS_DB:db,SUPPORT_EVIDENCE_TOKEN:'test-only-token'};
+await page.route('https://finnbilglass.test/**',async route=>{
+ const r=route.request();const request=new Request(r.url(),{method:r.method(),headers:r.headers(),...(r.postData()?{body:r.postData()}:{})});
+ const result=await worker.fetch(request,env);
+ await route.fulfill({status:result.status,headers:Object.fromEntries(result.headers),body:await result.text()});
+});
+try{
+ await page.goto('https://finnbilglass.test/ops');
+ await page.locator('#token').fill('test-only-token');
+ await page.evaluate(()=>window.openCommercial(1));
+ await page.locator('#commercial-form').waitFor();
+ const form=page.locator('#commercial-form');
+ await form.locator('[name=stage]').selectOption('PAID');
+ await form.locator('[name=delivery]').selectOption('PARTNER_INSTALL');
+ await form.locator('[name=revenue]').fill('5000');await form.locator('[name=cost]').fill('2000');
+ await form.locator('[name=paidOn]').fill('2026-09-01');await form.locator('[name=actor]').fill('Tester');
+ await form.locator('[name=incremental]').check();await form.locator('[name=attribution]').fill('Test: henvendelsen ville ellers gått tapt.');
+ await form.locator('[name=note]').fill('Testbetaling kontrollert.');
+ await form.getByRole('button',{name:'Lagre salgsutfall',exact:true}).click();
+ await page.getByText('Lagret med ansvarlig og tidspunkt.',{exact:true}).waitFor();
+ await page.locator('[data-commercial="1"]').click();
+ await page.locator('#commercial-form').waitFor();
+ assert.equal(await page.locator('#commercial-form [name=delivery]').inputValue(),'PARTNER_INSTALL');
+ assert.match((await page.locator('#commercial-metrics').innerText()).replace(/\s/g,''),/3000,00/);
+ assert.ok(await page.locator('#commercial-form [name=source]').isDisabled());
+ assert.equal(sqlite.prepare('SELECT status FROM beta_inquiries WHERE id=1').get().status,'CONFIRMED');
+ if(process.env.SCREENSHOT_DIR)await page.screenshot({path:process.env.SCREENSHOT_DIR+'/finnbilglass-commercial-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile must not overflow');
+ if(process.env.SCREENSHOT_DIR)await page.screenshot({path:process.env.SCREENSHOT_DIR+'/finnbilglass-commercial-mobile.png',fullPage:true});
+ assert.deepEqual(errors,[]);console.log('PASS Finnbilglass: native ops UI, save/reopen, paid metrics, source lock, mobile, fitment unchanged');
+}finally{await browser.close();sqlite.close();}

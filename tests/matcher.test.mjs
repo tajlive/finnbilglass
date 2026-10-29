@@ -57,30 +57,24 @@ test('modelTokensAv: matcher.ts beholder effekt-tokens (vin-resolveren filtrerer
   assert.ok(t.includes('PRO'));
 });
 
-// ── tierPris (Tom 2026-08-13: listepris × 0,60 → rund NED til tier) ─────────
-test('tierPris: ×0,60 rundet ned til nærmeste tier', () => {
-  // 9980 × 0,60 = 5988 → tier 5490
-  assert.equal(tierPris(9980), 5490);
-  // 6650 × 0,60 = 3990 → tier 3990
-  assert.equal(tierPris(6650), 3990);
-  // 9150 × 0,60 = 5490 → tier 5490
-  assert.equal(tierPris(9150), 5490);
-  // 11650 × 0,60 = 6990 → tier 6990
-  assert.equal(tierPris(11650), 6990);
-  // 14150 × 0,60 = 8490 → tier 8490
-  assert.equal(tierPris(14150), 8490);
+// ── Kundepris: 75 % rabatt + 25 % mva. ─────────
+test('tierPris: 75 % rabatt, deretter 25 % mva. når listepris er eks. mva.', () => {
+  assert.equal(tierPris(10000), 3125);
+  assert.equal(tierPris(9980), 3119);
+  assert.equal(tierPris(6650), 2078);
+  assert.equal(tierPris(9150), 2859);
+  assert.equal(tierPris(11650), 3641);
+  assert.equal(tierPris(14150), 4422);
 });
 
-test('tierPris: over høyeste tier → null (spesial/pris på forespørsel)', () => {
-  // 15000 × 0,60 = 9000 > 8490 → spesial (Tom: 5. prisgruppe «pris på forespørsel»)
-  assert.equal(tierPris(15000), null);
-  assert.equal(tierPris(20000), null); // 12000 → spesial
-  // Grensetilfelle: 14152 × 0,60 = 8491,2 > 8490 → spesial; 14150 × 0,60 = 8490 → tier 8490
-  assert.equal(tierPris(14152), null);
+test('tierPris: ingen øvre prisgrense når veiledende pris finnes', () => {
+  assert.equal(tierPris(15000), 4688);
+  assert.equal(tierPris(20000), 6250);
+  assert.equal(tierPris(14152), 4423);
 });
 
-test('tierPris: under laveste tier eller ugyldig → null', () => {
-  assert.equal(tierPris(6000), null); // 3600 < 3990
+test('tierPris: ugyldig veiledende pris → null', () => {
+  assert.equal(tierPris(6000), 1875);
   assert.equal(tierPris(0), null);
   assert.equal(tierPris(null), null);
   assert.equal(tierPris(-5), null);

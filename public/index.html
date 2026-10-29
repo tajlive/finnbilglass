@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Finnbilglass — bilglass til riktig pris</title>
-<meta name="description" content="Finn riktig bilglass til din bil — uten forsikring. Riktige priser, direkte fra lager. Levert over hele Norge.">
-<meta name="theme-color" content="#F59E0B">
+<title>Billigst på bilglass i Norge – uten forsikring | Finnbilglass</title>
+<meta name="description" content="Finn billig frontrute og bilglass uten forsikring. Vi kontrollerer glass, pris og levering før du bestemmer deg.">
+<meta name="theme-color" content="#edf8fc">
+<link rel="canonical" href="https://finnbilglass.no/">
 
 <!-- Open Graph / sosiale medier -->
-<meta property="og:title" content="Finnbilglass — bilglass til riktig pris">
-<meta property="og:description" content="Finn riktig bilglass til din bil — uten forsikring. Direkte fra lager.">
+<meta property="og:title" content="Finnbilglass — finn frontrute til bilen din">
+<meta property="og:description" content="Finn frontrute til bilen din. Glassvalg, pris og levering kontrolleres før tilbud.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://finnbilglass.no/">
 <meta property="og:locale" content="nb_NO">
@@ -23,14 +24,13 @@
       "@type": "WebSite",
       "name": "Finnbilglass",
       "url": "https://finnbilglass.no/",
-      "description": "Finn riktig bilglass til din bil — uten forsikring. Ekte priser, levert over hele Norge."
+      "description": "Finn riktig frontrute med kjøretøydata, glasskandidater og kontroll før tilbud."
     },
     {
       "@type": "OnlineStore",
       "name": "Finnbilglass",
       "url": "https://finnbilglass.no/",
       "areaServed": "NO",
-      "priceRange": "3 990–8 490 kr",
       "telephone": "+4740408241",
       "email": "support@finnbilglass.no"
     }
@@ -38,15 +38,10 @@
 }
 </script>
 
-<!-- Font: Inter Tight — selvhostet via Google Fonts (byttes til lokal ved GDPR-revisjon) -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&display=swap">
-
-<link rel="stylesheet" href="styles.css">
-<link rel="icon" type="image/svg+xml" href="ikon.svg">
+<link rel="stylesheet" href="styles.css?v=20261029-customer-design-v1">
+<link rel="icon" type="image/svg+xml" href="ikon.svg?v=20261029-customer-design-v1">
 </head>
-<body>
+<body class="customer-site">
 <div class="wrap">
 
   <!-- SVG-ikonbibliotek (lucide-stil: stroke 2, runde ender) -->
@@ -56,7 +51,7 @@
       <circle cx="12" cy="13" r="3"/>
     </symbol>
     <symbol id="ikon-kamera-skilt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Kamera med norsk kjennemerke i søkeren (bilglass-spesifikt, ikke generisk) -->
+      <!-- Kamera med norsk skiltnummer i søkeren (bilglass-spesifikt, ikke generisk) -->
       <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
       <rect x="6.5" y="10" width="11" height="7" rx="1.2"/>
       <rect x="6.5" y="10" width="2.4" height="7" rx="0.6" fill="currentColor" stroke="none"/>
@@ -73,6 +68,9 @@
     </symbol>
     <symbol id="ikon-tilbake" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="m15 18-6-6 6-6"/>
+    </symbol>
+    <symbol id="ikon-pil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14M12 5l7 7-7 7"/>
     </symbol>
     <symbol id="ikon-sok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="8"/>
@@ -126,56 +124,107 @@
   <!-- HEADER -->
   <header class="top" role="banner">
     <div class="logo" role="img" aria-label="Finnbilglass">
-      <svg class="logo-ikon" viewBox="0 0 28 28" width="26" height="26" aria-hidden="true" focusable="false">
-        <path d="M7 6.2 C7 4.4 8.4 3.2 10.2 3.2 H17.8 C19.6 3.2 21 4.4 21 6.2 L19.4 19.4 C19.2 21.1 17.9 22.4 16.2 22.7 L11.8 22.7 C10.1 22.4 8.8 21.1 8.6 19.4 Z" fill="none" stroke-width="2.4" stroke-linejoin="round"/>
-      </svg>
+      <img class="logo-ikon logo-ikon-bilde" src="/assets/finnbilglass-logo-mark-2026.png" alt="" width="54" height="32">
       <span class="logo-tekst">finn<span>bilglass</span></span>
     </div>
-    <span class="beta" aria-label="Åpner etter beta">Åpner etter beta</span>
+    <span class="beta" aria-label="Betaversjon">Beta</span>
   </header>
 
   <!-- Skjerm 1: Start / søk -->
-  <section id="screen-start" class="screen" aria-label="Søk etter bilglass">
-    <div class="hero-stripe" aria-hidden="true"></div>
-    <h1>Bilglass til riktig pris</h1>
-    <p class="sub">Forsikringen bestemmer ikke prisen lenger.</p>
-    <button id="btn-foto-regnr" class="foto-prim" type="button">
-      <svg class="ikon" aria-hidden="true"><use href="#ikon-kamera-skilt"/></svg>
-      Fotografer kjennemerket
-    </button>
-    <form id="form-regnr" class="search" novalidate aria-label="Kjennemerke-søk">
-      <input
-        id="input-regnr"
-        type="text"
-        inputmode="text"
-        placeholder="F.eks. SU 18018"
-        autocomplete="off"
-        autocapitalize="characters"
-        spellcheck="false"
-        autocorrect="off"
-        enterkeyhint="go"
-        maxlength="10"
-        aria-label="Kjennemerke"
-        required
-      >
-      <button type="submit" aria-label="Finn glass">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-sok"/></svg>
-        Finn glass
-      </button>
-    </form>
-    <input id="regnr-fil" type="file" accept="image/*" class="hidden" aria-hidden="true" tabindex="-1">
-    <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
-    <p class="svv-badge" aria-label="Vi henter bilopplysningene fra Statens vegvesen">
-      <svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-skjold"/></svg>
-      Vi henter bilopplysningene fra Statens vegvesen
-    </p>
+  <section id="screen-start" class="screen" aria-label="Søk etter frontrute">
+    <div class="start-layout">
+      <div class="start-intro">
+        <p class="start-kicker">Bilglass uten forsikring</p>
+        <h1>Riktig bilglass.<br><span>En pris du forstår.</span></h1>
+        <p class="sub">Uten glassforsikring, eller med høy egenandel? Finn glass til bilen din. Glassteamet kontrollerer riktig variant, pris og levering før du bestemmer deg.</p>
+      </div>
+
+      <div class="start-search">
+        <form id="form-regnr" class="search" novalidate aria-label="Skiltnummer-søk">
+          <label class="search-label" for="input-regnr">Skriv inn registreringsnummer</label>
+          <div class="plate-field">
+            <span class="plate-country" aria-hidden="true"><span class="plate-flag"></span>N</span>
+            <input id="input-regnr" type="text" inputmode="text" placeholder="F.eks. SU 18018"
+              autocomplete="off" autocapitalize="characters" spellcheck="false" autocorrect="off"
+              enterkeyhint="go" maxlength="10" aria-label="Skiltnummer" required>
+          </div>
+          <button type="submit" aria-label="Finn glass til bilen">Finn glass til bilen<svg class="ikon" aria-hidden="true"><use href="#ikon-pil"/></svg></button>
+        </form>
+          <button type="button" id="btn-uten-skilt" class="no-plate-toggle" aria-controls="form-vin" aria-expanded="false">Bilen har ikke skilt</button>
+          <form id="form-vin" class="search hidden" novalidate aria-label="Søk med understellsnummer">
+            <label class="search-label" for="input-vin">Understellsnummer (VIN)</label>
+            <div class="plate-field">
+              <input id="input-vin" type="text" inputmode="text" placeholder="11–17 tegn fra vognkort eller bilen"
+                autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="20" required>
+            </div>
+            <button type="submit">Finn bilen med VIN</button>
+            <p class="no-plate-help">VIN identifiserer bilen, ikke nødvendigvis riktig glass. Vi kontrollerer glasset før tilbud.</p>
+            <p class="no-plate-help">Mangler du også VIN? Oppgi bilmerke, modell og anslått årsmodell når du kontakter oss. Vi legger til et eget skjema for dette.</p>
+
+            <button type="button" id="btn-manual" class="no-plate-toggle"
+              aria-controls="form-manual" aria-expanded="false">Har du heller ikke VIN? Send forespørsel</button>
+</form>
+          <form id="form-manual" class="search no-plate-manual hidden" novalidate
+            aria-label="Manuell forespørsel uten skilt og VIN">
+            <p class="no-plate-help">Oppgi det du vet om bilen. Vi kontrollerer glassvariant, pris og levering før bestilling.</p>
+            <label class="search-label" for="manual-make">Bilmerke</label>
+            <input id="manual-make" type="text" maxlength="50" autocomplete="off" placeholder="F.eks. Volvo" required>
+            <label class="search-label" for="manual-model">Modell</label>
+            <input id="manual-model" type="text" maxlength="80" autocomplete="off" placeholder="F.eks. V70" required>
+            <label class="search-label" for="manual-year">Anslått årsmodell</label>
+            <input id="manual-year" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4"
+              placeholder="F.eks. 2008" required>
+            <label class="search-label" for="manual-name">Navn</label>
+            <input id="manual-name" type="text" autocomplete="name" maxlength="80" required>
+            <label class="search-label" for="manual-contact">Telefon eller e-post</label>
+            <input id="manual-contact" type="text" autocomplete="email" maxlength="120" required>
+            <label class="search-label" for="manual-notes">Andre opplysninger (valgfritt)</label>
+            <textarea id="manual-notes" maxlength="250" rows="2"
+              placeholder="F.eks. kamera ved speilet, regnsensor eller hvilken rute som er skadet"></textarea>
+            <button type="submit">Send forespørsel til glassteamet</button>
+            <p class="no-plate-help">Dette er en uforpliktende forespørsel, ikke en bestilling.</p>
+            <p id="manual-result" class="note hidden" role="status" aria-live="polite"></p>
+          </form>
+
+        <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
+        <p class="search-reassurance">Vi kontrollerer glass, pris og levering før tilbud.</p>
+        <p class="svv-badge"><svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>Bildata fra Statens vegvesen</p>
+      </div>
+    </div>
+
+    <section class="supplier-highlights" aria-label="Derfor velger kunder Finnbilglass">
+      <article><span class="highlight-icon">▱</span><div><h2>Egenandelen kan bli høy</h2><p>I verste fall kan egenandelen være opptil 10 000 kroner.</p></div></article>
+      <article><span class="highlight-icon">⌁</span><div><h2>Vi leverer – verkstedet monterer</h2><p>Finnbilglass utfører ikke glasskift. Du finner selv verksted og avtaler montering direkte. Partnerverksteder kommer senere.</p></div></article>
+    </section>
+
+    <section class="offer-steps" aria-labelledby="offer-steps-title">
+      <h2 id="offer-steps-title">Bilglass til lav pris – enkelt og oversiktlig</h2>
+      <ol>
+        <li><span class="step-number" aria-hidden="true">01</span><div><h3>Finn riktig glass</h3><p>Søk med registreringsnummer.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">02</span><div><h3>Se pris og levering</h3><p>Vi kontrollerer variant, pris og tilgjengelighet.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">03</span><div><h3>Bestill glasset</h3><p>Glasset leveres til deg. Montering avtaler du selv.</p></div></li>
+      </ol>
+      <p class="installation-note">Tilbudet gjelder glass og levering. Vi utfører ikke montering. Du avtaler og betaler eventuell montering direkte med verkstedet du velger. Partnerverksteder kommer senere.</p>
+    </section>
+
+    <details class="beta-invitasjon">
+      <summary>Beta for inviterte testere</summary>
+      <div>
+        <p>Du er invitert til å teste Finnbilglass før vi åpner for alle. Start med registreringsnummeret og gi oss gjerne tilbakemelding.</p>
+        <p>Vi dobbeltsjekker glassvalg og pris før et eventuelt tilbud sendes.</p>
+      </div>
+    </details>
+
+    <!-- Retain the photo bindings while the unverified upload flow is paused. -->
+    <button id="btn-foto-regnr" class="foto-prim" type="button" hidden>Bruk skiltfoto</button>
+    <input id="regnr-fil" type="file" accept="image/*" capture="environment" class="hidden" aria-hidden="true" tabindex="-1">
   </section>
 
   <!-- Skjerm 3: Velg glass (bil-info øverst, glasstype-bokser under — Tom 2026-08-17) -->
-  <section id="screen-glass" class="screen hidden" aria-label="Velg hvilken type glass du vil ha">
-    <h2>Velg hvilken type glass du vil ha</h2>
+  <section id="screen-glass" class="screen hidden" aria-label="Velg frontrute">
+    <h2>Velg frontrute</h2>
 
-    <!-- Bil identifisert (fra SVV via kjennemerke) -->
+    <!-- Bil identifisert (fra SVV via skiltnummer) -->
     <div id="glass-bil-seksjon" class="bil-seksjon">
       <div id="glass-bil" class="bilkort" role="region" aria-label="Bilinformasjon">
         <span class="bilkort-merke" id="glass-merkelbl" aria-hidden="true"></span>
@@ -185,27 +234,87 @@
       <div id="glass-det" class="detlinjer hidden" aria-label="Detaljer fra Statens vegvesen"></div>
     </div>
 
+    <!-- Evidence Capture: supportdokumentasjon, separat fra beslutningsmotoren.
+         Ingen respons herfra brukes i resolveren eller kan sette EXACT. -->
+    <section class="evidence-capture hidden" aria-labelledby="evidence-title">
+      <h3 id="evidence-title">Vil du at vi skal dobbeltsjekke? Send ett eller to bilder</h3>
+      <p id="evidence-intro">Ett bilde er nok for å sende forespørselen. To bilder gir best grunnlag: ett av hele frontruten og ett av området ved speilet/sensoren. Det hjelper oss å kontrollere riktig glass før vi sender tilbud. Bildene endrer aldri glassvalget automatisk.</p>
+      <div class="evidence-gruppe" data-key="plate">
+        <button type="button" class="evidence-kamera" data-key="plate">Ta bilde av skiltnummeret</button>
+        <button type="button" class="evidence-bibliotek" data-key="plate">Velg fra bildebiblioteket</button>
+        <p class="evidence-forklaring">Ta skiltet rett forfra og skarpt. Det bekrefter bilen vi har funnet.</p>
+        <input id="evidence-plate" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="evidence-plate-bib" class="evidence-input" type="file" accept="image/*" hidden>
+        <div class="evidence-miniatyr hidden" data-key="plate">
+          <img class="evidence-thumb" alt="Forhåndsvisning av skiltnummeret">
+          <div class="evidence-actions">
+            <button type="button" class="evidence-ta-paa-nytt" data-key="plate">Ta på nytt</button>
+            <button type="button" class="evidence-fjern" data-key="plate">Fjern</button>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-gruppe" data-key="windshield">
+        <button type="button" class="evidence-kamera" data-key="windshield">Ta bilde av hele frontruten</button>
+        <button type="button" class="evidence-bibliotek" data-key="windshield">Velg fra bildebiblioteket</button>
+        <p class="evidence-forklaring">Ta bildet utenfra, rett forfra, slik at hele glasset og hjørnene er synlige. Da kan vi kontrollere riktig glass.</p>
+        <input id="evidence-windshield" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="evidence-windshield-bib" class="evidence-input" type="file" accept="image/*" hidden>
+        <div class="evidence-miniatyr hidden" data-key="windshield">
+          <img class="evidence-thumb" alt="Forhåndsvisning av frontruten">
+          <div class="evidence-actions">
+            <button type="button" class="evidence-ta-paa-nytt" data-key="windshield">Ta på nytt</button>
+            <button type="button" class="evidence-fjern" data-key="windshield">Fjern</button>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-gruppe" data-key="mirror_sensor">
+        <button type="button" class="evidence-kamera" data-key="mirror_sensor">Ta bilde av feltet ved speilet/sensoren</button>
+        <button type="button" class="evidence-bibliotek" data-key="mirror_sensor">Velg fra bildebiblioteket</button>
+        <p class="evidence-forklaring">Et nærbilde av området bak innvendig speil — der kameraet eller sensoren sitter. Det avgjør om glasset skal ha sensoråpning.</p>
+        <input id="evidence-mirror_sensor" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="evidence-mirror_sensor-bib" class="evidence-input" type="file" accept="image/*" hidden>
+        <div class="evidence-miniatyr hidden" data-key="mirror_sensor">
+          <img class="evidence-thumb" alt="Forhåndsvisning ved speilet/sensoren">
+          <div class="evidence-actions">
+            <button type="button" class="evidence-ta-paa-nytt" data-key="mirror_sensor">Ta på nytt</button>
+            <button type="button" class="evidence-fjern" data-key="mirror_sensor">Fjern</button>
+          </div>
+        </div>
+      </div>
+      <div class="evidence-gruppe hidden" data-key="interior_optional">
+        <button type="button" class="evidence-kamera" data-key="interior_optional">Legg eventuelt til et bilde under speil innenfra</button>
+        <button type="button" class="evidence-bibliotek" data-key="interior_optional">Velg fra bildebiblioteket</button>
+        <p class="evidence-forklaring">Vis området under speilet innenfra. Dette er valgfritt, men hjelper oss å velge helt riktig glass.</p>
+        <input id="evidence-interior_optional" class="evidence-input" type="file" accept="image/*" capture="environment" hidden>
+        <input id="evidence-interior_optional-bib" class="evidence-input" type="file" accept="image/*" hidden>
+        <div class="evidence-miniatyr hidden" data-key="interior_optional">
+          <img class="evidence-thumb" alt="Forhåndsvisning innenfra">
+          <div class="evidence-actions">
+            <button type="button" class="evidence-ta-paa-nytt" data-key="interior_optional">Ta på nytt</button>
+            <button type="button" class="evidence-fjern" data-key="interior_optional">Fjern</button>
+          </div>
+        </div>
+      </div>
+      <button id="btn-evidence-submit" class="sek" type="button" disabled>Send bilder til Finnbilglass</button>
+      <p class="evidence-valgfri">Du kan sende bare ett bilde, to bilder eller be om tilbud uten bilder.</p>
+      <p id="evidence-result" class="note hidden" role="status" aria-live="polite"></p>
+    </section>
+
     <!-- Glasstype-bokser -->
     <div class="glassvalg" role="group" aria-label="Glasstype">
       <button class="glassopt" data-type="front" type="button">
         <svg class="ikon" aria-hidden="true"><use href="#ikon-frontrute"/></svg>
         Frontrute
       </button>
-      <button class="glassopt" data-type="side" type="button" disabled title="Kommer snart" aria-disabled="true">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-siderute"/></svg>
-        Siderute
-        <span class="kommer-snart">Kommer snart</span>
-      </button>
-      <button class="glassopt" data-type="bak" type="button" disabled title="Kommer snart" aria-disabled="true">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-bakrute"/></svg>
-        Bakrute
-        <span class="kommer-snart">Kommer snart</span>
-      </button>
-      <button id="btn-annet" class="glassopt" type="button">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-sporsmaal"/></svg>
-        Annet
-      </button>
     </div>
+    <section id="glass-placement" class="glass-placement hidden" aria-labelledby="glass-placement-title">
+      <h3 id="glass-placement-title" tabindex="-1">Hvor sitter ruten?</h3>
+      <p id="glass-placement-help" class="note">Velg det du vet. «Vet ikke» sender opplysningen til manuell kontroll.</p>
+      <div id="glass-placement-fields"></div>
+      <p id="glass-placement-error" class="note feil hidden" role="alert" aria-live="polite"></p>
+      <button id="btn-glass-search" class="prim" type="button">Fortsett</button>
+      <button id="btn-glass-cancel" class="link" type="button">Velg en annen glasstype</button>
+    </section>
     <button class="link" type="button" data-tilbake="start">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Tilbake
@@ -225,48 +334,70 @@
   </section>
 
   <!-- Skjerm 6: Resultat -->
-  <section id="screen-resultat" class="screen hidden" aria-label="Funnet bilglass" aria-live="polite">
+  <section id="screen-resultat" class="screen hidden" aria-label="Frontrute til bilen" aria-live="polite">
     <div class="resultat-header">
       <span class="sjekk" aria-hidden="true"><svg class="ikon" aria-hidden="true"><use href="#ikon-sjekk"/></svg></span>
-      <h2>Vi fant glasset ditt</h2>
+      <h2>Vi har funnet et mulig glass til bilen din</h2>
     </div>
     <div id="resultat-status" class="note status hidden" role="status" aria-live="polite"></div>
     <div id="resultat-kort" class="varekort" role="region" aria-label="Glassdetaljer"></div>
     <div id="resultat-regnr" class="note regnr-note hidden" aria-label="Kjennemerke"></div>
     <div id="resultat-alt" class="alternativer" aria-label="Andre mulige varianter"></div>
-    <div class="prislinje">
-      <span id="resultat-prislbl" class="prislbl">Pris inkl. mva</span>
-      <span id="resultat-pris" class="pris" aria-label="Pris" aria-live="polite"></span>
+    <div class="prislinje" role="status" aria-live="polite">
+      <p class="prisforklaring">Vi dobbeltsjekker riktig glass og sender deg et tilbud med pris og levering før du bestemmer deg.</p>
     </div>
-    <div id="tilbehor-seksjon" class="tilbehor hidden" aria-label="Tilbehør til monteringen">
-      <h3>Trenger du tilbehør til monteringen?</h3>
-      <p class="note">Velg det du trenger — prisen legges til i bestillingen.</p>
-      <label class="tilbehor-valg" id="tilbehor-sika">
-        <input type="checkbox" value="sika-pakke">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-lim"/></svg>
-        <span>Sika monteringspakke — rutelim, primer og Q-tips</span>
-      </label>
-      <label class="tilbehor-valg" id="tilbehor-klips">
-        <input type="checkbox" value="klips">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-verktoy"/></svg>
-        <span>Klips / festeklips</span>
-      </label>
-      <label class="tilbehor-valg" id="tilbehor-pyntelist">
-        <input type="checkbox" value="pyntelist">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-frontrute"/></svg>
-        <span>Pynteliste</span>
-      </label>
-      <label class="tilbehor-valg" id="tilbehor-sensorgel">
-        <input type="checkbox" value="sensorgel">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-lim"/></svg>
-        <span>Regnsensorgel / sensorfeste</span>
-      </label>
+    <div id="tilbehor-seksjon" class="tilbehor hidden" aria-label="Relevant tilbehør til glasset">
+      <h3>Trenger du relevant tilbehør?</h3>
+      <div class="montasje-valg" id="montasje-valg">
+        <span class="muted">Hvor skal glasset sendes?</span>
+        <label><input type="radio" name="montasje" value="verksted" checked> Til avtaleverksted</label>
+        <label><input type="radio" name="montasje" value="selv"> Til meg</label>
+      </div>
+      <div id="tilbehor-liste"></div>
+      <p id="tilbehor-verify" class="note hidden">Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet.</p>
       <p class="note note-tilbehor">Tilbehørspriser vises når beta åpner.</p>
     </div>
-    <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Glasset sendes direkte til deg — eller til et av våre avtaleverksteder for montering. Montering og frakt tilkommer.</p>
-    <button id="btn-bestill" class="prim" type="button" disabled title="Åpner etter beta" aria-disabled="true">
-      Bestill glass + tilbehør — åpner etter beta
+    <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Vi leverer glasset, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte. Partnerverksteder kommer senere.</p>
+    <button id="btn-inquiry" class="prim" type="button">
+      <svg class="ikon" aria-hidden="true"><use href="#ikon-epost"/></svg>
+      Be om uforpliktende tilbud
     </button>
+    <div id="inquiry-form" class="inquiry hidden" aria-label="Forespørsel om tilbud">
+      <h3>Be om tilbud</h3>
+      <p class="note">Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør og sender deg pris og levering før du bestiller. Vi leverer glass, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte.</p>
+      <p id="inquiry-glass-summary" class="note hidden" aria-label="Valgt glasstype"></p>
+      <label class="felt">
+        <span>Registreringsnummer</span>
+        <input id="inquiry-regnr" type="text" readonly aria-readonly="true">
+      </label>
+      <label class="felt">
+        <span>Navn</span>
+        <input id="inquiry-navn" type="text" autocomplete="name" maxlength="80" placeholder="Fornavn og etternavn">
+      </label>
+      <label class="felt">
+        <span>Hvordan vil du bli kontaktet?</span>
+        <select id="inquiry-kontaktpreferanse">
+          <option value="telefon">Telefon</option>
+          <option value="epost">E-post</option>
+          <option value="begge">Telefon og e-post</option>
+        </select>
+      </label>
+      <label class="felt">
+        <span id="inquiry-kontakt-label">Telefonnummer</span>
+        <input id="inquiry-kontakt" type="tel" autocomplete="tel" inputmode="tel" maxlength="120" placeholder="F.eks. 40 40 82 41">
+      </label>
+      <label class="felt hidden" id="inquiry-telefon-ekstra-felt">
+        <span>Telefonnummer</span>
+        <input id="inquiry-telefon-ekstra" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="F.eks. 40 40 82 41">
+      </label>
+      <label class="felt">
+        <span>Melding (valgfri)</span>
+        <textarea id="inquiry-melding" rows="3" maxlength="500" placeholder="Eventuelle spørsmål eller kommentarer"></textarea>
+      </label>
+      <p id="inquiry-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
+      <button id="btn-inquiry-send" class="sek" type="button">Send forespørsel</button>
+    </div>
+    <p id="inquiry-bekreftet" class="note status hidden" role="status" aria-live="polite"></p>
     <button class="link" type="button" data-tilbake="spm">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Nytt søk
@@ -276,7 +407,8 @@
   <!-- Skjerm 7: Ingen treff / feil -->
   <section id="screen-tomt" class="screen hidden" aria-label="Ingen treff" aria-live="assertive">
     <h2 id="tomt-tittel">Fant ingen treff</h2>
-    <p class="sub" id="tomt-tekst">Vi fant ikke noe glass for denne bilen i katalogen. Kontakt oss, så hjelper vi deg manuelt.</p>
+    <p class="sub" id="tomt-tekst">Vi fant ikke et trygt treff i katalogen. Send oss en forespørsel, så undersøker vi bilen og hjelper deg videre.</p>
+    <button id="btn-tomt-inquiry" class="prim" type="button">Be om manuell kontroll hos vårt glassteam</button>
     <button class="link" type="button" data-tilbake="start">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Nytt søk
@@ -295,10 +427,10 @@
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass — bilglass til riktig pris. Leveres over hele Norge.</p>
+    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling.html">Betaling kommer senere</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Vi dobbeltsjekker alle glassvalg og priser før bestilling.</p>
   </footer>
 
 </div><!-- /.wrap -->
-<script src="app.js"></script>
+<script src="app.js?v=20261029-customer-design-v1"></script>
 </body>
 </html>
