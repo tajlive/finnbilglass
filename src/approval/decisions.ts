@@ -140,6 +140,19 @@ export async function skrivBeslutning(
     .run();
 }
 
+/** Finn bare en SKU som er eksplisitt i sakens kandidat-snapshot. */
+export function finnValgtSnapshotKandidat(
+  kandidater: Record<string, unknown>[],
+  sku: string,
+  eurocode: string | null,
+): Record<string, unknown> | null {
+  if (!sku || !sku.trim()) return null;
+  return kandidater.find((k) =>
+    String(k.varenr ?? '') === sku &&
+    (!eurocode || String(k.eurokode ?? '') === eurocode)
+  ) ?? null;
+}
+
 /**
  * Policy-gate for «godkjenn SKU»: approved KUN når approvalPolicy gir approved.
  * Returnerer needs_verification med grunn — operatøren må da bruke

@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { godkjenningsGate, skrivOverride, skrivBeslutning, snapshotKandidatTilSku } from '../src/approval/decisions.ts';
+import { godkjenningsGate, skrivOverride, skrivBeslutning, snapshotKandidatTilSku, finnValgtSnapshotKandidat } from '../src/approval/decisions.ts';
 import { matchFrontrute } from '../src/matcher.ts';
 
 /** Bygg D1-lignende env fra en node:sqlite-database. */
@@ -117,18 +117,15 @@ test('b1: uten override → 2 kandidater, needs_verification', async () => {
   assert.equal(res.approval.status, 'needs_verification');
 });
 
-test('b2: MED override → candidateCount=1, hasVerifiedCatalogRule=true, approved', async () => {
+test('b2: familiebred historisk override gir aldri automatisk godkjenning', async () => {
   const db = opprettDb();
   db.prepare(`INSERT INTO manual_review_overrides
     (vin_prefix, make, model_series, attributes_json, approved_sku, eurocode, source, approved_by)
     VALUES (NULL, 'VW', 'TRANSPORTER', '{"rainLightSensor":true}', '2525GYA', '8579AGSGYAVZ1B', 'manual_review', 'Tom')`).run();
-  const env = d1Env(db);
-  const res = await matchFrontrute(env, { merke: 'VW', modell: 'TRANSPORTER', aar: 2005 });
-  assert.equal(res.hasVerifiedCatalogRule, true);
-  assert.equal(res.candidateCount, 1);
-  assert.equal(res.candidateSkus[0].varenr, '2525GYA');
-  assert.equal(res.candidateSkus[0].status, 'verified');
-  assert.equal(res.approval.status, 'approved');
+  const res = await matchFrontrute(d1Env(db), { merke: 'VW', modell: 'TRANSPORTER', aar: 2005 });
+  assert.equal(res.hasVerifiedCatalogRule, false);
+  assert.equal(res.candidateCount, 2);
+  assert.equal(res.approval.status, 'needs_verification');
 });
 
 test('b3: override med feil merke påvirker ikke andre biler', async () => {
@@ -140,4 +137,32 @@ test('b3: override med feil merke påvirker ikke andre biler', async () => {
   const res = await matchFrontrute(env, { merke: 'VW', modell: 'TRANSPORTER', aar: 2005 });
   assert.equal(res.hasVerifiedCatalogRule, false);
   assert.equal(res.candidateCount, 2);
+});
+
+test('b4: to VIN-er med samme prefiks arver ikke manuell godkjenning', async () => {
+  const db = opprettDb();
+  db.prepare(`INSERT INTO manual_review_overrides
+    (vin_prefix, make, model_series, approved_sku, eurocode, source, approved_by)
+    VALUES ('WV1ZZZ', 'VW', 'TRANSPORTER', '2525GYA', '8579AGSGYAVZ1B', 'manual_review', 'Tom')`).run();
+  for (const vin of ['WV1ZZZ7HZ5H000001', 'WV1ZZZ7HZ5H000002']) {
+    const res = await matchFrontrute(d1Env(db), {
+      merke: 'VW', modell: 'TRANSPORTER', aar: 2005, vin,
+    });
+    assert.equal(res.hasVerifiedCatalogRule, false);
+    assert.equal(res.approval.status, 'needs_verification');
+  }
+});
+
+test('P0.1.4: SKU må finnes i sakens kandidater med korrekt Eurocode', () => {
+  const rows = [
+    { varenr: '2525GYA', eurokode: '8579AGSGYAVZ1B' },
+    { varenr: '2525GYM', eurokode: '8579AGSGYAMVZ1B' },
+  ];
+  assert.equal(finnValgtSnapshotKandidat(rows, '2525GYA', null), rows[0]);
+  assert.equal(finnValgtSnapshotKandidat(rows, '2525GYM', '8579AGSGYAMVZ1B'), rows[1]);
+  assert.equal(finnValgtSnapshotKandidat(rows, 'IKKE-I-SAK', null), null);
+  assert.equal(finnValgtSnapshotKandidat(rows, 'IKKE-I-SAK', '8579AGSGYAVZ1B'), null);
+  assert.equal(finnValgtSnapshotKandidat(rows, '2525GYA', '8579AGSGYAMVZ1B'), null);
+  assert.equal(finnValgtSnapshotKandidat(rows, '', null), null);
+  assert.equal(finnValgtSnapshotKandidat([{eurokode: ''}], 'ANNEN', null), null);
 });

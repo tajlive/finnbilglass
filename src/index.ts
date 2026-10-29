@@ -18,7 +18,7 @@ import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, ty
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
 import { skuDecisionUi } from './sku-decision-ui';
-import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
+import { finnValgtSnapshotKandidat, godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
@@ -1410,11 +1410,10 @@ export default {
       }
       // approve_sku / choose_alternative_sku: krever sku-valg som finnes i kandidatene.
       if (!sku) return json({ ok: false, error: 'SKU er påkrevd for godkjenning.' }, 400);
-      const valgt = snapshotKandidater.find((k) =>
-        String(k.varenr ?? '') === sku || String(k.eurokode ?? '') === (eurocode ?? '') ||
-        (eurocode && String(k.eurokode ?? '') === eurocode),
-      );
-      if (!valgt && !kandidater.length) return json({ ok: false, error: 'Saken har ingen kandidater å godkjenne.' }, 409);
+      const valgt = finnValgtSnapshotKandidat(snapshotKandidater, sku, eurocode);
+      if (!valgt) {
+        return json({ ok: false, error: 'Valgt SKU finnes ikke i sakens glasskandidater.' }, 409);
+      }
       const valgtEuro = String(valgt?.eurocode ?? eurocode ?? '') || null;
 
       if (decision === 'approve_sku') {

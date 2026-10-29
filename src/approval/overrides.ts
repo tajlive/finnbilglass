@@ -66,36 +66,14 @@ export function overrideAttributter(o: ManualOverride): Partial<GlassAttributes>
   }
 }
 
-/** Les overrides fra D1. Tabellen kan mangle (ikke deployet ennå) — defensivt. */
+/**
+ * P0.1.4: Tidligere manuelle saksbeslutninger er IKKE gjenbrukbare
+ * kjøretøyregler. Gamle rader ligger urørt i D1 for revisjon.
+ * Ikke snevre kandidatlisten eller gi verified fra VIN-prefiks/familie.
+ */
 export async function lesOverrider(
-  env: { FINNBILGLASS_DB: D1Database },
-  bil: { merke?: string; modell?: string; aar?: number | null; vin?: string | null },
+  _env: { FINNBILGLASS_DB: D1Database },
+  _bil: { merke?: string; modell?: string; aar?: number | null; vin?: string | null },
 ): Promise<OverrideTreff> {
-  try {
-    const res = await env.FINNBILGLASS_DB
-      .prepare('SELECT id, vin_prefix, make, model_series, valid_from, valid_to, attributes_json, approved_sku, eurocode, approved_by, approved_at FROM manual_review_overrides')
-      .all<Record<string, unknown>>();
-    const idag = new Date().toISOString();
-    for (const r of res.results ?? []) {
-      const o: ManualOverride = {
-        id: Number(r.id),
-        vinPrefix: (r.vin_prefix as string | null) ?? null,
-        make: String(r.make),
-        modelSeries: (r.model_series as string | null) ?? null,
-        validFrom: (r.valid_from as string | null) ?? null,
-        validTo: (r.valid_to as string | null) ?? null,
-        attributesJson: (r.attributes_json as string | null) ?? null,
-        approvedSku: String(r.approved_sku),
-        eurocode: (r.eurocode as string | null) ?? null,
-        approvedBy: String(r.approved_by),
-        approvedAt: String(r.approved_at),
-      };
-      if (overrideMatcherBil(o, bil, idag)) {
-        return { hasVerifiedCatalogRule: true, override: o };
-      }
-    }
-  } catch {
-    // manual_review_overrides finnes ikke (ennå) — ingen overrides, ingen krasj.
-  }
   return { hasVerifiedCatalogRule: false, override: null };
 }
