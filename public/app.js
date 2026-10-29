@@ -187,6 +187,83 @@
         .finally(function () { btn.disabled = false; btn.textContent = original; });
     });
 
+  // P1.1B: manuell henvendelse uten skilt og VIN.
+  $('btn-manual').addEventListener('click', function () {
+    var form = $('form-manual');
+    var expanded = form.classList.contains('hidden');
+    form.classList.toggle('hidden', !expanded);
+    this.setAttribute('aria-expanded', String(expanded));
+    if (expanded) $('manual-make').focus();
+  });
+  $('btn-uten-skilt').addEventListener('click', function () {
+    if ($('form-vin').classList.contains('hidden')) {
+      $('form-manual').classList.add('hidden');
+      $('btn-manual').setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  $('form-manual').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = this;
+    if (form.dataset.sent === 'true') return;
+    function value(id) { return $(id).value.trim().replace(/\s+/g, ' '); }
+    var make = value('manual-make');
+    var model = value('manual-model');
+    var year = value('manual-year');
+    var name = value('manual-name');
+    var contact = value('manual-contact');
+    var notes = value('manual-notes');
+    var feedback = $('manual-result');
+    feedback.classList.remove('hidden');
+    function show(message) { feedback.textContent = message; }
+    if (make.length < 2 || make.length > 50 || !model || model.length > 80) {
+      show('Oppgi bilmerke og modell.'); return;
+    }
+    var maxYear = new Date().getFullYear() + 1;
+    if (!/^\d{4}$/.test(year) || Number(year) < 1900 || Number(year) > maxYear) {
+      show('Oppgi en gyldig anslått årsmodell.'); return;
+    }
+    if (name.length < 2 || name.length > 80) {
+      show('Oppgi navn med minst to tegn.'); return;
+    }
+    var digits = contact.replace(/\D/g, '');
+    if (contact.length > 120 ||
+        (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact) && digits.length < 8)) {
+      show('Oppgi et gyldig telefonnummer eller en e-postadresse.'); return;
+    }
+    var message = 'Uten skilt/VIN – frontrute. Bilmerke: ' + make +
+      '; modell: ' + model + '; anslått årsmodell: ' + year +
+      (notes ? '; detaljer: ' + notes : '');
+    if (message.length > 500) {
+      show('Beskrivelsen er for lang. Forkort tilleggsopplysningene.'); return;
+    }
+    var button = form.querySelector('button[type="submit"]');
+    var label = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Sender forespørsel…';
+    show('Sender forespørsel…');
+    fetch('/api/inquiry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        regnr: '', navn: name, kontakt: contact, melding: message, sessionId: sessionId
+      })
+    })
+      .then(function (r) {
+        return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+      })
+      .then(function (r) {
+        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende forespørselen.');
+        show('Takk! Vi har mottatt forespørselen' +
+          (r.data.inquiryId != null ? ' (saksnummer ' + r.data.inquiryId + ')' : '') +
+          '. Vi kontrollerer bil og glass manuelt før tilbud. Ingen bestilling er gjennomført.');
+        form.dataset.sent = 'true';
+        form.querySelectorAll('input, textarea').forEach(function (field) { field.disabled = true; });
+      })
+      .catch(function (e) { show(e.message || 'Kunne ikke sende forespørselen. Prøv igjen.'); })
+      .finally(function () { button.disabled = form.dataset.sent === 'true'; button.textContent = label; });
+  });
+
   // 1b. Foto av skiltnummeret → AI leser skiltet → SVV-oppslag (samme flyt som skrevet regnr).
   // Oppgave 7: klientside bildebehandling — EXIF-orientering, nedskalering, JPEG-komprimering,
   // thumbnail og kvalitetssjekk (lysstyrke/størrelse) FØR opplasting. HEIC konverteres til

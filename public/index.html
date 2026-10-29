@@ -160,7 +160,32 @@
             <button type="submit">Finn bilen med VIN</button>
             <p class="no-plate-help">VIN identifiserer bilen, ikke nødvendigvis riktig glass. Vi kontrollerer glasset før tilbud.</p>
             <p class="no-plate-help">Mangler du også VIN? Oppgi bilmerke, modell og anslått årsmodell når du kontakter oss. Vi legger til et eget skjema for dette.</p>
+
+            <button type="button" id="btn-manual" class="no-plate-toggle"
+              aria-controls="form-manual" aria-expanded="false">Har du heller ikke VIN? Send forespørsel</button>
+</form>
+          <form id="form-manual" class="search no-plate-manual hidden" novalidate
+            aria-label="Manuell forespørsel uten skilt og VIN">
+            <p class="no-plate-help">Oppgi det du vet om bilen. Vi kontrollerer glassvariant, pris og levering før bestilling.</p>
+            <label class="search-label" for="manual-make">Bilmerke</label>
+            <input id="manual-make" type="text" maxlength="50" autocomplete="off" placeholder="F.eks. Volvo" required>
+            <label class="search-label" for="manual-model">Modell</label>
+            <input id="manual-model" type="text" maxlength="80" autocomplete="off" placeholder="F.eks. V70" required>
+            <label class="search-label" for="manual-year">Anslått årsmodell</label>
+            <input id="manual-year" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4"
+              placeholder="F.eks. 2008" required>
+            <label class="search-label" for="manual-name">Navn</label>
+            <input id="manual-name" type="text" autocomplete="name" maxlength="80" required>
+            <label class="search-label" for="manual-contact">Telefon eller e-post</label>
+            <input id="manual-contact" type="text" autocomplete="email" maxlength="120" required>
+            <label class="search-label" for="manual-notes">Andre opplysninger (valgfritt)</label>
+            <textarea id="manual-notes" maxlength="250" rows="2"
+              placeholder="F.eks. kamera ved speilet, regnsensor eller hvilken rute som er skadet"></textarea>
+            <button type="submit">Send forespørsel til glassteamet</button>
+            <p class="no-plate-help">Dette er en uforpliktende forespørsel, ikke en bestilling.</p>
+            <p id="manual-result" class="note hidden" role="status" aria-live="polite"></p>
           </form>
+
         <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
         <p class="search-reassurance">Vi kontrollerer glass, pris og levering før tilbud.</p>
         <p class="svv-badge"><svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>Bildata fra Statens vegvesen</p>

@@ -1456,3 +1456,13 @@ footer {
   background: transparent; color: inherit; font: inherit; cursor: pointer;
 }
 .no-plate-help { font-size: 0.875rem; line-height: 1.5; }
+
+/* P1.1B: Manuell forespørsel uten skilt eller VIN. */
+.no-plate-manual { display: flex; flex-direction: column; gap: 0.55rem; margin-top: 1rem; }
+.no-plate-manual.hidden { display: none; }
+.no-plate-manual input, .no-plate-manual textarea {
+  box-sizing: border-box; width: 100%; min-height: 2.7rem; padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem; border: 1px solid #a3a3a3; background: #fff; color: #111;
+  font: inherit;
+}
+.no-plate-manual textarea { resize: vertical; }
