@@ -174,18 +174,32 @@ export class EvidenceKernel {
     }
 
     const gate = evaluateObservationGate({ narrowedByEvidence, observations, remainingCandidates: remaining });
-    const fitmentStatus = gate.passed ? 'EXACT' : 'AMBIGUOUS';
-    const verificationMode = gate.passed ? 'CUSTOMER_OBSERVATION' : (narrowedByEvidence ? 'CUSTOMER_OBSERVATION' : 'HEURISTIC_ONLY');
+    // An observed OE is a glass identifier, not proof of vehicle compatibility.
+    // Do not auto-confirm when vehicle identity is incomplete or the OE result
+    // does not intersect any candidate derived from this vehicle.
+    const hasVehicleIdentity = Boolean(
+      v.vin && /^[A-HJ-NPR-Z0-9]{17}$/.test(v.vin.toUpperCase()) &&
+      v.make.trim() && v.model.trim() && Number.isInteger(v.modelYear)
+    );
+    const candidateMatchesVehicle = remaining.length === 1 &&
+      base.candidates.some((c) => c.glass === remaining[0].glass);
+    const verifiedObservation = gate.passed && hasVehicleIdentity && candidateMatchesVehicle;
+    const fitmentStatus = verifiedObservation ? 'EXACT' : 'AMBIGUOUS';
+    const verificationMode = verifiedObservation ? 'CUSTOMER_OBSERVATION' : (narrowedByEvidence ? 'CUSTOMER_OBSERVATION' : 'HEURISTIC_ONLY');
 
     return {
       fitmentStatus,
       verificationMode,
-      selectedGlass: gate.passed ? remaining[0] : null,
+      selectedGlass: verifiedObservation ? remaining[0] : null,
       candidates: remaining,
       evidence: [...base.evidence, ...obsEdges],
       conflicts: [],
       questions: gate.passed ? [] : buildQuestions(remaining),
-      reasonCodes: [...base.reasonCodes, ...gate.reasonCodes],
+      reasonCodes: [
+        ...base.reasonCodes, ...gate.reasonCodes,
+        ...(!hasVehicleIdentity ? ['VEHICLE_IDENTITY_NOT_VERIFIED'] : []),
+        ...(gate.passed && !candidateMatchesVehicle ? ['OBSERVED_GLASS_NOT_IN_VEHICLE_CANDIDATES'] : []),
+      ],
       auditId: nextAuditId(),
     };
   }
