@@ -31,6 +31,7 @@ export function evaluateExactGate(input: ExactGateInput): GateResult {
     B_applicationLinkageAuthoritative: input.applicationEdgeAuthoritative,
     C_oeGlassAuthoritativeOrIndependent: input.oeGlassEdgeAuthoritativeOrIndependent,
     D_noUnresolvedMaterialConflict: input.materialConflicts.length === 0,
+    E_singleCandidate: input.candidateCount === 1,
   };
   const passed = Object.values(checks).every(Boolean);
   const reasonCodes: string[] = [];
@@ -38,8 +39,9 @@ export function evaluateExactGate(input: ExactGateInput): GateResult {
   if (!checks.B_applicationLinkageAuthoritative) reasonCodes.push('APPLICATION_LINKAGE_NOT_AUTHORITATIVE');
   if (!checks.C_oeGlassAuthoritativeOrIndependent) reasonCodes.push('OE_GLASS_LINKAGE_NOT_AUTHORITATIVE');
   if (!checks.D_noUnresolvedMaterialConflict) reasonCodes.push('MATERIAL_CONFLICT_UNRESOLVED');
+  if (!checks.E_singleCandidate) reasonCodes.push('CANDIDATE_COUNT_NOT_ONE');
   if (input.candidateCount === 1 && passed) reasonCodes.push('SINGLE_CANDIDATE_IS_NOT_PROOF_BY_ITSELF');
-  return { passed: passed && input.candidateCount >= 1, checks, reasonCodes, authoritativeDataExact: passed };
+  return { passed, checks, reasonCodes, authoritativeDataExact: passed };
 }
 
 export interface ObservationGateInput {
