@@ -776,10 +776,15 @@ export default {
       } catch {
         return json({ ok: false, error: 'Ugyldig JSON' }, 400);
       }
+      const lookupOnlyRaw = (body as Record<string, unknown> | null)?.lookupOnly;
+      if (lookupOnlyRaw !== undefined && typeof lookupOnlyRaw !== 'boolean') {
+        return json({ ok: false, error: 'lookupOnly må være true eller false' }, 400);
+      }
+      const lookupOnly = lookupOnlyRaw === true;
       const vin = (body as Record<string, unknown>)?.vin;
       if (typeof vin !== 'string' || !vin.trim()) return json({ ok: false, error: 'vin påkrevd' }, 400);
       const ren = vin.trim().toUpperCase().replace(/[\s\-–—.]+/g, '');
-      if (ren.length < 11 || ren.length > 17) return json({ ok: false, error: 'Ugyldig chassisnummer' }, 400);
+      if (!/^[A-HJ-NPR-Z0-9]{11,17}$/.test(ren)) return json({ ok: false, error: 'Ugyldig chassisnummer' }, 400);
       let bil = null;
       let resolver = null;
       try {
@@ -787,7 +792,7 @@ export default {
       } catch (e) {
         console.error('SVV VIN-oppslag feilet:', e);
       }
-      if (bil) {
+      if (bil && !lookupOnly) {
         try {
           resolver = await resolveFrontrute(env, {
             merke: bil.merke,

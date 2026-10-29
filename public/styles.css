@@ -1448,3 +1448,11 @@ footer {
   .customer-site .start-search { padding: 18px; }
   .customer-site .supplier-highlights article { padding: 16px; }
 }
+
+/* P1.1A – skiltløs bil: alternativt søk. */
+.no-plate-toggle {
+  display: block; width: 100%; margin: 0.75rem 0; padding: 0.85rem;
+  border: 1px solid currentColor; border-radius: 0.7rem;
+  background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.no-plate-help { font-size: 0.875rem; line-height: 1.5; }

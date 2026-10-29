@@ -149,6 +149,44 @@
       .finally(function () { btn.disabled = false; btn.textContent = orgTekst; });
   });
 
+    // P1.1A – biler uten skilt: identifiser bilen, ikke glassvarianten.
+    $('btn-uten-skilt').addEventListener('click', function () {
+      var form = $('form-vin');
+      var expanded = form.classList.contains('hidden');
+      form.classList.toggle('hidden', !expanded);
+      this.setAttribute('aria-expanded', String(expanded));
+      if (expanded) $('input-vin').focus();
+    });
+
+    $('form-vin').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var vin = $('input-vin').value.trim().toUpperCase().replace(/[\s\-–—.]+/g, '');
+      if (!/^[A-HJ-NPR-Z0-9]{11,17}$/.test(vin)) {
+        visStartFeil('Oppgi gyldig understellsnummer med 11–17 tegn uten I, O eller Q.');
+        return;
+      }
+      var btn = this.querySelector('button[type="submit"]');
+      var original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Søker etter bilen…';
+      fetch('/api/vin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vin: vin, lookupOnly: true })
+      })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (d && d.bil && d.bil.merke) {
+            state.regnr = '';
+            settBilFraSvv(d.bil, null, '');
+          } else {
+            visStartFeil('Vi fant ikke bilen via VIN. Send merke, modell og årsmodell til oss på e-post.');
+          }
+        })
+        .catch(function () { visStartFeil('VIN-oppslag feilet. Prøv igjen eller kontakt oss.'); })
+        .finally(function () { btn.disabled = false; btn.textContent = original; });
+    });
+
   // 1b. Foto av skiltnummeret → AI leser skiltet → SVV-oppslag (samme flyt som skrevet regnr).
   // Oppgave 7: klientside bildebehandling — EXIF-orientering, nedskalering, JPEG-komprimering,
   // thumbnail og kvalitetssjekk (lysstyrke/størrelse) FØR opplasting. HEIC konverteres til

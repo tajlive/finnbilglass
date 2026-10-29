@@ -150,6 +150,17 @@
           </div>
           <button type="submit" aria-label="Finn glass til bilen">Finn glass til bilen<svg class="ikon" aria-hidden="true"><use href="#ikon-pil"/></svg></button>
         </form>
+          <button type="button" id="btn-uten-skilt" class="no-plate-toggle" aria-controls="form-vin" aria-expanded="false">Bilen har ikke skilt</button>
+          <form id="form-vin" class="search hidden" novalidate aria-label="Søk med understellsnummer">
+            <label class="search-label" for="input-vin">Understellsnummer (VIN)</label>
+            <div class="plate-field">
+              <input id="input-vin" type="text" inputmode="text" placeholder="11–17 tegn fra vognkort eller bilen"
+                autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="20" required>
+            </div>
+            <button type="submit">Finn bilen med VIN</button>
+            <p class="no-plate-help">VIN identifiserer bilen, ikke nødvendigvis riktig glass. Vi kontrollerer glasset før tilbud.</p>
+            <p class="no-plate-help">Mangler du også VIN? Oppgi bilmerke, modell og anslått årsmodell når du kontakter oss. Vi legger til et eget skjema for dette.</p>
+          </form>
         <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
         <p class="search-reassurance">Vi kontrollerer glass, pris og levering før tilbud.</p>
         <p class="svv-badge"><svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>Bildata fra Statens vegvesen</p>
