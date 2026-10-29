@@ -113,6 +113,64 @@ test('windshield inquiry remains compatible with the deployed pre-multiglass D1 
   } finally { sqlite.close(); }
 });
 
+test('manual windshield inquiry without plate or VIN stores customer vehicle unverified and unchanged message', async () => {
+  const { sqlite, env } = await fixture({ includeMultiGlass: false });
+  try {
+    const message = '  Uten skilt/VIN – frontrute. Bilmerke: Volvo; modell: V70; anslått årsmodell: 2008; detaljer: kamera  \n';
+    const response = await worker.fetch(post('/api/inquiry', {
+      regnr: '', navn: 'Manuell Kunde', kontakt: 'manual@example.no', melding: message,
+      manualVehicle: { make: 'Volvo', model: 'V70', year: '2008' },
+    }), env);
+    assert.equal(response.status, 201);
+    const { inquiryId } = await response.json();
+    const saved = sqlite.prepare('SELECT regnr, melding, vehicle_json FROM beta_inquiries WHERE id = ?').get(inquiryId);
+    assert.equal(saved.regnr, null);
+    assert.equal(saved.melding, message);
+    assert.deepEqual(JSON.parse(saved.vehicle_json), {
+      customerVehicle: { make: 'Volvo', model: 'V70', year: '2008', source: 'customer', verified: false },
+      requiresManualReview: true,
+    });
+    assert.equal(JSON.stringify(JSON.parse(saved.vehicle_json)).includes('resolver'), false);
+    const unauthorised = await worker.fetch(new Request(`https://test.local/api/ops/inquiries/${inquiryId}`), env);
+    assert.equal(unauthorised.status, 401);
+    const auth = { Authorization: 'Bearer test-token' };
+    const detail = await worker.fetch(new Request(`https://test.local/api/ops/inquiries/${inquiryId}`, { headers: auth }), env);
+    assert.equal(detail.status, 200);
+    assert.deepEqual((await detail.json()).inquiry.vehicle.customerVehicle, JSON.parse(saved.vehicle_json).customerVehicle);
+    const list = await worker.fetch(new Request('https://test.local/api/ops/inquiries', { headers: auth }), env);
+    assert.equal(list.status, 200);
+    assert.equal(JSON.parse((await list.json()).inquiries[0].vehicle_json).requiresManualReview, true);
+  } finally { sqlite.close(); }
+});
+
+test('manual vehicle inquiry rejects malformed fields and retains registration lookup', async () => {
+  const { sqlite, env } = await fixture({ includeMultiGlass: false });
+  try {
+    const base = { regnr: '', navn: 'Manuell Kunde', kontakt: 'manual@example.no', melding: 'Forespørsel', manualVehicle: { make: 'Volvo', model: 'V70', year: '2008' } };
+    for (const manualVehicle of [
+      { make: 'V', model: 'V70', year: '2008' },
+      { make: 'Volvo', model: '', year: '2008' },
+      { make: 'Volvo', model: 'V70', year: '1899' },
+      { make: 'Volvo', model: 'V70', year: String(new Date().getFullYear() + 2) },
+      { make: 'Volvo', model: 'V70', year: '2008', vin: 'WVWZZZ' },
+      { make: 'Volvo\u0000', model: 'V70', year: '2008' },
+    ]) {
+      const response = await worker.fetch(post('/api/inquiry', { ...base, manualVehicle }), env);
+      assert.equal(response.status, 400, JSON.stringify(manualVehicle));
+    }
+    const glassChoice = await worker.fetch(post('/api/inquiry', {
+      ...base,
+      glassRequest: { schemaVersion: 1, selection: { kind: 'windshield' }, answers: {} },
+    }), env);
+    assert.equal(glassChoice.status, 400);
+    assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM beta_inquiries').get().n, 0);
+    const lookup = await worker.fetch(post('/api/regnr', { regnr: 'AB12345', lookupOnly: true }), env);
+    assert.equal(lookup.status, 200);
+    assert.equal((await lookup.json()).ok, true);
+    assert.equal(sqlite.prepare('SELECT regnr_norm FROM regnr_logg').get().regnr_norm, 'AB12345');
+  } finally { sqlite.close(); }
+});
+
 test('front-only search and inquiry payload remain compatible with deployed D1 and operator reads', async () => {
   const { sqlite, env } = await fixture({ includeMultiGlass: false });
   try {

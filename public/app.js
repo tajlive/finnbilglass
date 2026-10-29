@@ -246,7 +246,8 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        regnr: '', navn: name, kontakt: contact, melding: message, sessionId: sessionId
+        regnr: '', navn: name, kontakt: contact, melding: message, sessionId: sessionId,
+        manualVehicle: { make: make, model: model, year: year }
       })
     })
       .then(function (r) {

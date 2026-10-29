@@ -38,6 +38,7 @@ test('P1.1B: sender bare en forespørsel uten registreringsnummer', () => {
   assert.match(section, /fetch\('\/api\/inquiry'/);
   assert.match(section, /regnr:\s*''/);
   assert.match(section, /melding:\s*message/);
+  assert.match(section, /manualVehicle:\s*\{\s*make:\s*make,\s*model:\s*model,\s*year:\s*year\s*\}/);
   assert.match(section, /form\.dataset\.sent === 'true'/);
   assert.doesNotMatch(section, /resolveFrontrute|fitmentStatus:\s*'EXACT'|ORDER_CONFIRMED/);
 });

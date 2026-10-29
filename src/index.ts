@@ -535,12 +535,34 @@ export default {
         return json({ ok: false, code: 'GLASS_TYPE_UNAVAILABLE', error: 'Vi tilbyr foreløpig bare søk og forespørsler om frontrute.' }, 409);
       }
       if (b.clientRequestId !== undefined && !isValidClientRequestId(b.clientRequestId)) return json({ ok: false, error: 'Ugyldig forespørsels-ID' }, 400);
+      let manualVehicle: { make: string; model: string; year: string } | null = null;
+      if (b.manualVehicle !== undefined) {
+        if (!isRecord(b.manualVehicle) || Object.keys(b.manualVehicle).some(key => !['make', 'model', 'year'].includes(key))) {
+          return json({ ok: false, error: 'Ugyldige manuelle bilopplysninger' }, 400);
+        }
+        const { make, model, year } = b.manualVehicle;
+        const cleanMake = typeof make === 'string' ? make.trim() : '';
+        const cleanModel = typeof model === 'string' ? model.trim() : '';
+        const cleanYear = typeof year === 'string' ? year.trim() : '';
+        const maxManualYear = new Date().getFullYear() + 1;
+        if (cleanMake.length < 2 || cleanMake.length > 50 || /[\u0000-\u001f\u007f]/.test(cleanMake)
+          || cleanModel.length < 1 || cleanModel.length > 80 || /[\u0000-\u001f\u007f]/.test(cleanModel)
+          || !/^\d{4}$/.test(cleanYear) || Number(cleanYear) < 1900 || Number(cleanYear) > maxManualYear) {
+          return json({ ok: false, error: 'Ugyldige manuelle bilopplysninger' }, 400);
+        }
+        if (typeof b.regnr === 'string' && b.regnr.trim()) return json({ ok: false, error: 'Manuelle bilopplysninger kan ikke kombineres med registreringsnummer' }, 400);
+        if (glassRequest) return json({ ok: false, error: 'Manuell bilforespørsel skal ikke inneholde et katalogbasert glassvalg' }, 400);
+        manualVehicle = { make: cleanMake, model: cleanModel, year: cleanYear };
+      }
       const regnr = typeof b.regnr === 'string' ? b.regnr.trim().slice(0, 10) : '';
       const navn = typeof b.navn === 'string' ? b.navn.trim() : '';
       const kontakt = typeof b.kontakt === 'string' ? b.kontakt.trim() : '';
       const contactPreference = b.contactPreference === 'telefon' || b.contactPreference === 'epost' || b.contactPreference === 'begge' ? b.contactPreference : null;
       const contactPhone = typeof b.contactPhone === 'string' ? b.contactPhone.trim() : '';
-      const melding = typeof b.melding === 'string' ? b.melding.trim().slice(0, 500) : '';
+      const melding = manualVehicle
+        ? (typeof b.melding === 'string' ? b.melding : '')
+        : (typeof b.melding === 'string' ? b.melding.trim().slice(0, 500) : '');
+      if (manualVehicle && melding.length > 500) return json({ ok: false, error: 'Meldingen kan ikke være over 500 tegn' }, 400);
       const rawPreference = isRecord(b.preferredCandidate) ? b.preferredCandidate : null;
       const preferredCandidate = rawPreference && typeof rawPreference.partNumber === 'string'
         ? {
@@ -585,6 +607,12 @@ export default {
       }
       // Freeze vehicle context. Non-windshield requests must never invoke the windshield resolver.
       let vehicleJson: string | null = null;
+      if (manualVehicle) {
+        vehicleJson = JSON.stringify({
+          customerVehicle: { ...manualVehicle, source: 'customer', verified: false },
+          requiresManualReview: true,
+        });
+      }
       const searchId = glassRequest?.searchId;
       if (searchId && !glassRequest) return json({ ok: false, error: 'Søket mangler glassvalg' }, 400);
       if (searchId && glassRequest) {
@@ -1010,7 +1038,7 @@ export default {
         bind.push(statusFilter);
       }
       bind.push(limit, offset);
-      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, ${glassRequestProjection}, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; glass_request_json: string | null; created_at: string; updated_at: number | null }>();
+      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, ${glassRequestProjection}, vehicle_json, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; glass_request_json: string | null; vehicle_json: string | null; created_at: string; updated_at: number | null }>();
       return json({ ok: true, inquiries: rows.results.map(r => ({ ...r, status: isInquiryStatus(r.status) ? r.status : 'NEW' })) });
     }
     if (method === 'GET' && path.startsWith('/api/ops/inquiries/')) {
