@@ -4,7 +4,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  gtRadMatch, gtRaderSett, gtRaderKandidater, filtrerPaaProfil, normBrand,
+  gtRadMatch, gtRaderSett, gtRaderKandidater, filtrerPaaProfil, filtrerPaaProduktAar, normBrand,
 } from '../src/vin-resolver.ts';
 import { dekodeEurokode, katalogKode } from '../src/eurokode-dekoder.ts';
 
@@ -46,7 +46,6 @@ function kand(varenr, eurokode) {
     att.sensor = dek.egenskaper.includes('sensor');
     att.antenne = dek.egenskaper.includes('antenne');
     att.coated = dek.egenskaper.includes('coated');
-    att.hud = dek.egenskaper.includes('oppvarmet');
   }
   return { varenr, varenavn: varenr, pris: null, listepris: null, eurokode, attributter: att };
 }
@@ -60,14 +59,11 @@ test('filtrerPaaProfil: sensor-svar gjør varianter entydige', () => {
   assert.equal(ut2[0].varenr, 'A');
 });
 
-test('filtrerPaaProfil: ukjent (null) attributt straffes ikke, ja-lookahead velger entydig', () => {
+test('filtrerPaaProfil: ukjent (null) attributt overlever også ja-svar', () => {
   const oem = { ...kand('OEM', '7H0877051') }; // sensor=null (ukjent)
   const moderne = kand('MOD', '1234AMGN');     // sensor=true
   const ut = filtrerPaaProfil([oem, moderne], { sensor: true });
-  // Begge overlever false-strykingen (null ≠ false), men lookahead velger den
-  // ene kandidaten som definitivt har sensor → 1, den moderne.
-  assert.equal(ut.length, 1);
-  assert.equal(ut[0].varenr, 'MOD');
+  assert.deepEqual(ut.map((k) => k.varenr), ['OEM', 'MOD']);
 });
 
 test('filtrerPaaProfil: ACL-kode (klar fargetone) er IKKE coated etter dekoder-fiks', () => {
@@ -83,6 +79,14 @@ test('filtrerPaaProfil: ingen profil → uendret liste', () => {
   const ks = [kand('A', '1234AGN'), kand('B', '1234AMGN')];
   assert.equal(filtrerPaaProfil(ks, undefined).length, 2);
   assert.equal(filtrerPaaProfil(ks, {}).length, 2);
+});
+
+test('filtrerPaaProfil: LDW-svar filtrerer variantene, ukjent beholdes', () => {
+  const ldwJa = { ...kand('LDW', '1234AMGN'), attributter: { ...kand('LDW', '1234AMGN').attributter, ldw: true } };
+  const ldwNei = { ...kand('uten-LDW', '1234AGN'), attributter: { ...kand('uten-LDW', '1234AGN').attributter, ldw: false } };
+  const ukjent = { ...kand('ukjent-LDW', '1234BGN'), attributter: { ...kand('ukjent-LDW', '1234BGN').attributter, ldw: null } };
+  assert.deepEqual(filtrerPaaProfil([ldwJa, ldwNei, ukjent], { ldw: true }).map(k => k.varenr), ['LDW', 'ukjent-LDW']);
+  assert.deepEqual(filtrerPaaProfil([ldwJa, ldwNei, ukjent], { ldw: false }).map(k => k.varenr), ['uten-LDW', 'ukjent-LDW']);
 });
 
 // ── Fixtures: GT-søkbarhet (roundtrip + kjente hull) ────────────────────────
@@ -117,7 +121,6 @@ async function tilKandidat(kode) {
     att.sensor = dek.egenskaper.includes('sensor');
     att.antenne = dek.egenskaper.includes('antenne');
     att.coated = dek.egenskaper.includes('coated');
-    att.hud = dek.egenskaper.includes('oppvarmet');
   }
   return { varenr: r.varenr, varenavn: r.varenavn, pris: null, listepris: r.pris, eurokode: r.eurokode, attributter: att };
 }
@@ -204,6 +207,38 @@ test('L1-kandidater: VOLVO TRUCKS F16 blir salgbar PINPOINT-kandidat (1318GN)', 
   const kand = await gtRaderKandidater(rader, 'VOLVO', 'F16', [1984], tilKandidat);
   assert.equal(kand.length, 1);
   assert.equal(kand[0].varenr, '1318GN');
+});
+
+test('L1-kandidater: flere SKU-er på samme Eurokode bevares som varianter', async () => {
+  const variant = (varenr, ldw) => ({
+    varenr, varenavn: varenr, pris: 2500, listepris: 8000, eurokode: '5179AGACIMW5V',
+    attributter: { sensor: true, antenne: false, hud: null, ldw, kamera: null, adas: null, coated: false },
+  });
+  const candidates = await gtRaderKandidater(
+    [{ model: 'CX5 5D SUV FEBR 13-', frontrute_eurocode: '5179AGACIMW5V' }],
+    'MAZDA', 'CX5', [2017],
+    async () => [variant('3151GNCM', false), variant('3151GNCM2', true)]
+  );
+  assert.deepEqual(candidates.map(c => c.varenr).sort(), ['3151GNCM', '3151GNCM2']);
+  assert.deepEqual(candidates.map(c => c.attributter.ldw).sort(), [false, true]);
+});
+
+test('L1-årsgate: GT-lenke viser ikke leverandørglass fra nyere modellår', async () => {
+  const t6 = {
+    varenr: '3393GNM', varenavn: 'VW TRANSPORTER T6 16-', pris: 3000,
+    listepris: 9600, eurokode: 'EXAMPLE-T6',
+    attributter: { sensor: true, antenne: true, hud: null, kamera: null, adas: null, coated: false },
+  };
+  const rows = [{ model: 'TRANSPORTER', frontrute_eurocode: 'EXAMPLE-T6' }];
+  const lookup = async () => t6;
+  assert.deepEqual(await gtRaderKandidater(rows, 'VW', 'TRANSPORTER', [2015], lookup), []);
+  assert.equal((await gtRaderKandidater(rows, 'VW', 'TRANSPORTER', [2016], lookup))[0].varenr, '3393GNM');
+});
+
+test('produktår er streng grense selv når katalogårsvindu har ett års slingringsmonn', () => {
+  const t6 = { ...kand('3393GNM', '8579AGAMVZ15'), varenavn: 'VW TRANSPORTER T6 16-' };
+  assert.deepEqual(filtrerPaaProduktAar([t6], 2015), []);
+  assert.equal(filtrerPaaProduktAar([t6], 2016).length, 1);
 });
 
 test('katalogKode: crosswalk varenr/eurokode-regel (base-8-koder)', () => {

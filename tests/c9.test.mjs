@@ -4,9 +4,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { rankQuestions, optimalQuestionOrder, rankedEvidenceRequests, FEATURE_COST, FEATURE_ANSWERABILITY } from '../src/fitment-v1/question-optimizer.js';
 import { buildEvidenceRequests } from '../src/fitment-v1/differentiation.js';
+
+const ROOT = new URL('..', import.meta.url).pathname;
+const FIXTURE_DIR = new URL('./fixtures/analytics', import.meta.url).pathname;
+function analyticsEnv(name) {
+  return { ...process.env, ANALYTICS_FIXTURE_DIR: FIXTURE_DIR, ANALYTICS_OUTPUT_FILE: join(mkdtempSync(join(tmpdir(), 'finnbilglass-' + name + '-')), 'report.json') };
+}
 
 // Toms eksempel: Glass A (regnsensor+antenne), Glass B (regnsensor), Glass C (ingen)
 const tomsEksempel = [
@@ -53,8 +61,9 @@ test('C9-3: OE-ID prioriteres øverst når den skiller (minimum pålitelig evide
 });
 
 test('C9-4: 1000-søk-målingen produserer ærlig fordeling (0 EXACT direkte uten evidens)', () => {
-  execFileSync('node', ['--import', 'tsx', 'scripts/c9-accuracy.mjs'], { cwd: new URL('..', import.meta.url).pathname });
-  const rep = JSON.parse(readFileSync(new URL('../scripts/out/c9-accuracy.json', import.meta.url), 'utf8'));
+  const env = analyticsEnv('c9');
+  execFileSync('node', ['--import', 'tsx', 'scripts/c9-accuracy.mjs'], { cwd: ROOT, env });
+  const rep = JSON.parse(readFileSync(env.ANALYTICS_OUTPUT_FILE, 'utf8'));
   assert.equal(rep.fordeling.EXACT_DIREKTE.antall, 0, 'katalog/CLASS_D alene gir aldri EXACT');
   const total = rep.fordeling.EXACT_DIREKTE.antall + rep.fordeling.ETT_SPORSMAL.antall + rep.fordeling.FOTO_OE.antall + rep.fordeling.HANDOFF.antall;
   assert.equal(total, rep.meta.sok);
@@ -98,8 +107,9 @@ test('C9.1-2: svarbarhet-straff — spørsmål kunden sjelden kan svare på nedp
 });
 
 test('C9.1-3: C9.1-benchmark — 5 klasser, FEILBESTILLING = 0, Safety/Covery-KPI', () => {
-  execFileSync('node', ['--import', 'tsx', 'scripts/c91-benchmark.mjs'], { cwd: new URL('..', import.meta.url).pathname });
-  const rep = JSON.parse(readFileSync(new URL('../scripts/out/c91-benchmark.json', import.meta.url), 'utf8'));
+  const env = analyticsEnv('c91');
+  execFileSync('node', ['--import', 'tsx', 'scripts/c91-benchmark.mjs'], { cwd: ROOT, env });
+  const rep = JSON.parse(readFileSync(env.ANALYTICS_OUTPUT_FILE, 'utf8'));
   const f = rep.fordeling;
   const total = f.EXACT_UTEN_SPORSMAL.antall + f.EXACT_ETTER_AI_SPORSMAL.antall + f.EXACT_ETTER_BILDE_OE.antall + f.MANUELL.antall + f.FEILBESTILLING.antall;
   assert.equal(total, rep.meta.sok, '5 klasser må summere til 1000');

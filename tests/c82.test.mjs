@@ -6,9 +6,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { learningOpportunities, confidenceFor } from '../src/learning-v1/analytics.js';
+
+const ROOT = new URL('..', import.meta.url).pathname;
+const FIXTURE_DIR = new URL('./fixtures/analytics', import.meta.url).pathname;
+function runAnalytics() {
+  const output = join(mkdtempSync(join(tmpdir(), 'finnbilglass-c82-')), 'report.json');
+  execFileSync('node', ['--import', 'tsx', 'scripts/c82-evidence-analytics.mjs'], { cwd: ROOT, env: { ...process.env, ANALYTICS_FIXTURE_DIR: FIXTURE_DIR, ANALYTICS_OUTPUT_FILE: output } });
+  return JSON.parse(readFileSync(output, 'utf8'));
+}
 
 function v(over) { return { make: 'VW', model: 'GOLF', year: 2018, familie: 'GOLF', kandidater: 5, skillendeFeatures: ['acoustic', 'camera'], ...over }; }
 
@@ -72,16 +82,14 @@ test('C8.2-6: Learning Opportunity Confidence — aldri overreager på små data
 });
 
 test('C8.2-7: confidenceAarsak er synlig i TOPP-rapporten (rapportering, ikke skjult)', () => {
-  execFileSync('node', ['--import', 'tsx', 'scripts/c82-evidence-analytics.mjs'], { cwd: new URL('..', import.meta.url).pathname });
-  const rep = JSON.parse(readFileSync(fileURLToPath(new URL('../scripts/out/c82-evidence-analytics.json', import.meta.url)), 'utf8'));
+  const rep = runAnalytics();
   for (const r of rep.topp) {
     assert.ok(['HØY', 'MIDDELS', 'LAV'].includes(r.confidence), `${r.familie}: gyldig confidence`);
     assert.ok(r.confidenceAarsak.length > 0, `${r.familie}: årsak finnes`);
   }
 });
 test('C8.2-5: script-integritet — TOPP-listen kommer fra SVV-korpuset, summerer korrekt', () => {
-  execFileSync('node', ['--import', 'tsx', 'scripts/c82-evidence-analytics.mjs'], { cwd: new URL('..', import.meta.url).pathname });
-  const rep = JSON.parse(readFileSync(fileURLToPath(new URL('../scripts/out/c82-evidence-analytics.json', import.meta.url)), 'utf8'));
+  const rep = runAnalytics();
   assert.ok(rep.topp.length >= 10, 'TOPP 10-liste');
   assert.ok(rep.meta.korpus > 500, 'SVV-korpus-volum');
   const totalSok = rep.topp.reduce((s, r) => s + r.sok, 0);

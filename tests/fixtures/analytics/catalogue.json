@@ -1,0 +1,13 @@
+[
+  {
+    "results": [
+      {"varenr":"2525GYA","eurokode":"8579AGSGYAVZ1B","varenavn":"VW TRANSPORTER T5 03- FRONTRUTE","kommentar":"SENSOR ANTENNE"},
+      {"varenr":"LEAF01","eurokode":"3301AG","varenavn":"NISSAN LEAF FRONTRUTE 12-"},
+      {"varenr":"MODELY01","eurokode":"5501AG","varenavn":"TESLA MODEL Y FRONTRUTE 20-"},
+      {"varenr":"RAV401","eurokode":"4401AG","varenavn":"TOYOTA RAV4 FRONTRUTE 13-"},
+      {"varenr":"PASSAT01","eurokode":"6601AG","varenavn":"VW PASSAT B8 FRONTRUTE 14-"},
+      {"varenr":"BMW301","eurokode":"2465AGC","varenavn":"BMW 3-SERIE F30 FRONTRUTE 12-","kommentar":"KAMERA"},
+      {"varenr":"BMW302","eurokode":"2465AGD","varenavn":"BMW 3-SERIE F30 FRONTRUTE 12-","kommentar":""}
+    ]
+  }
+]

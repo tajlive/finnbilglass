@@ -41,6 +41,8 @@ const MERKE_ALIAS: Record<string, string[]> = {
   HONDA: ['HONDA'],
   MAZDA: ['MAZDA'],
   MINI: ['MINI'],
+  MITSUBISHI: ['MITSUBISHI'],
+  FIAT: ['FIAT'],
 };
 
 /** Familie-regler: (merke, regex på modell-token) → familie-nøkkel + generasjons-hint-fra-varenavn */
@@ -49,11 +51,11 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'VW', re: /PASSAT/, familie: 'PASSAT' },
   { merke: 'VW', re: /POLO/, familie: 'POLO' },
   { merke: 'VW', re: /TRANSPORTER|TRANSPORT|MULTIVAN|CARAVELLE|T5|T6/, familie: 'TRANSPORTER' },
-  { merke: 'MERCEDES', re: /CLA/, familie: 'CLA' },
+  { merke: 'MERCEDES', re: /\bCLA(?=\b|\d)/, familie: 'CLA' },
   { merke: 'MERCEDES', re: /SPRINTER/, familie: 'SPRINTER' },
   { merke: 'MERCEDES', re: /VITO|V-CLASS/, familie: 'VITO' },
   { merke: 'MERCEDES', re: /A-CLASS|A KLASSE/, familie: 'A-CLASS' },
-  { merke: 'MERCEDES', re: /GLA/, familie: 'GLA' },
+  { merke: 'MERCEDES', re: /\bGLA(?=\b|\d)/, familie: 'GLA' },
   { merke: 'BMW', re: /1-SERIE|1 SERIE|1ER|116|118|120|125/, familie: '1-SERIE' },
   { merke: 'BMW', re: /3-SERIE|3 SERIE|3ER|316|318|320|325|330/, familie: '3-SERIE' },
   { merke: 'VOLVO', re: /XC60/, familie: 'XC60' },
@@ -69,16 +71,23 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'OPEL', re: /ASTRA/, familie: 'ASTRA' },
   { merke: 'OPEL', re: /VECTRA/, familie: 'VECTRA' },
   { merke: 'MINI', re: /COOPER|MINI/, familie: 'MINI' },
+  { merke: 'MITSUBISHI', re: /\bASX\b/, familie: 'ASX' },
+  { merke: 'FIAT', re: /\b500\b/, familie: '500' },
+  { merke: 'VW', re: /\bUP!?\b/, familie: 'UP' },
+  { merke: 'MAZDA', re: /\bCX[- ]?5\b/, familie: 'CX-5' },
 ];
 
 /** Trekker ut tosifret årsintervall («84-90», «03-08», «12-») fra varenavnet. */
 function aarIntervall(varenavn: string): { fra: number | null; til: number | null } {
+  const long = varenavn.match(/\b(19\d{2}|20\d{2})\s*[-–]\s*(19\d{2}|20\d{2})?(?=\D|$)/);
+  if (long) return { fra: Number(long[1]), til: long[2] ? Number(long[2]) : null };
   const m = varenavn.match(/\b(\d{2})\s*[-–]\s*(\d{2})\b/);
   if (m) {
     const a = (y: string) => (parseInt(y, 10) <= 25 ? 2000 + parseInt(y, 10) : 1900 + parseInt(y, 10));
     return { fra: a(m[1]), til: a(m[2]) };
   }
-  const en = varenavn.match(/\b(\d{2})\s*[-–]\s*$/);
+  // Åpent intervall står ofte foran «FR», utstyr eller farge, ikke sist i varenavnet.
+  const en = varenavn.match(/\b(\d{2})\s*[-–](?!\s*\d)/);
   if (en) return { fra: parseInt(en[1], 10) <= 25 ? 2000 + parseInt(en[1], 10) : 1900 + parseInt(en[1], 10), til: null };
   return { fra: null, til: null };
 }
@@ -104,7 +113,9 @@ function featuresFraKommentar(kommentar?: string | null): string[] {
   if (/EMB=10\d/.test(k)) f.push('encapsulated');
   if (/ANTENNEFESTE|ANTENNE/.test(k)) f.push('antenna');
   if (/REGN|SENSOR|REGNSENSOR/.test(k)) f.push('rainSensor');
-  if (/CAMERA|KAMERA|LDW/.test(k)) f.push('camera');
+  if (/CAMERA|KAMERA/.test(k)) f.push('camera');
+  if (/\bLDW\b|LANE DEPARTURE/.test(k)) f.push('ldw');
+  if (/\bHUD\b|HEAD[- ]?UP DISPLAY/.test(k)) f.push('hud');
   if (/COATED|SOLAR|IR-/.test(k)) f.push('coated');
   if (/HEATED|OPPVARMET/.test(k)) f.push('heated');
   if (/ACOUSTIC|AKUSTISK|NOISE/.test(k)) f.push('acoustic');
@@ -140,7 +151,8 @@ export function matchClassDCandidates(index: CatalogueCandidate[], make: string,
   const erBakSide = (c: CatalogueCandidate) => /BAKRUTE|SIDERUTE|DØRRUTE|DORRUTE|BAKRUT|SIDERUT/.test(c.varenavn);
   const erTilbehor = (c: CatalogueCandidate) => /(PYT|PYB|PYV|PYH|PYS|PYC|PYKIT|PY|GU|GUM)$/.test(c.varenr) || /^\d{3,5}K$/.test(c.varenr) || /PYNTELIST|GUMMILIST|KLIPS|PYNTELISTE/.test(c.varenavn);
   const hits = index.filter((c) => c.matchReason.startsWith(fam.merke + ' ' + fam.familie) && !erBakSide(c) && !erTilbehor(c));
-  if (year == null) return hits.slice(0, 6);
+  // Uten kjent år kan ingen produksjonsperiode avgrenses trygt.
+  if (year == null) return [];
   return hits.filter((c) => {
     const y = year;
     // C9.5-fix: match intervall på HELE matchReason — slice(3) krevde generasjon og ga tom

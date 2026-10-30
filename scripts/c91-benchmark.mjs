@@ -14,10 +14,13 @@ import { buildClassDCandidates, matchClassDCandidates } from '../src/fitment-v1/
 import { rankQuestions } from '../src/fitment-v1/question-optimizer.js';
 import { EvidenceKernel } from '../src/fitment-v1/policy/kernel.js';
 
-const OUT = resolve('scripts/out/c91-benchmark.json');
+const OUT = resolve(process.env.ANALYTICS_OUTPUT_FILE ?? 'scripts/out/c91-benchmark.json');
+const FIXTURE_DIR = process.env.ANALYTICS_FIXTURE_DIR ? resolve(process.env.ANALYTICS_FIXTURE_DIR) : null;
 const MAX_SOK = 1000;
 
-const CORPUS = ['data/finn-modeller/svv-verifisert.ndjson', 'data/test-500-gt-detaljer.jsonl', '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson'];
+const CORPUS = FIXTURE_DIR
+  ? [resolve(FIXTURE_DIR, 'c9-corpus.ndjson')]
+  : ['data/finn-modeller/svv-verifisert.ndjson', 'data/test-500-gt-detaljer.jsonl', '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson'];
 const biler = [];
 for (const f of CORPUS) {
   if (!existsSync(f)) continue;
@@ -42,7 +45,7 @@ const utvalg = [...tier1, ...rest].slice(0, MAX_SOK);
 
 const resolver = new ApplicationResolver({ families: buildDefaultGenerationRegistry() });
 const kernel = new EvidenceKernel();
-const gtRaw = JSON.parse(readFileSync('data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
+const gtRaw = JSON.parse(readFileSync(FIXTURE_DIR ? resolve(FIXTURE_DIR, 'catalogue.json') : 'data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
 const classD = buildClassDCandidates(gtRaw[0].results);
 
 const KLASSER = ['EXACT_UTEN_SPORSMAL', 'EXACT_ETTER_AI_SPORSMAL', 'EXACT_ETTER_BILDE_OE', 'MANUELL', 'FEILBESTILLING'];

@@ -3,7 +3,7 @@
  * customer supplied images are support material only; no caller of this
  * module can produce an EXACT decision from them.
  */
-export const EVIDENCE_IMAGE_TYPES = ['plate', 'windshield', 'mirror_sensor', 'interior_optional'] as const;
+export const EVIDENCE_IMAGE_TYPES = ['plate', 'windshield', 'mirror_sensor', 'glass_marking', 'interior_optional'] as const;
 export type EvidenceImageType = typeof EVIDENCE_IMAGE_TYPES[number];
 
 export const MAX_EVIDENCE_IMAGE_BYTES = 5 * 1024 * 1024;

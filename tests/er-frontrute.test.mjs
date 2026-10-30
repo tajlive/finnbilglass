@@ -153,3 +153,31 @@ test('riktige Sprinter-varianter er fortsatt frontruter (1979C/1971C/1979GY/1971
   assert.equal(erFrontrute('MERCEDES SPRINTER (LAV TYPE)', '1979GY', '5426AGNGY'), true);
   assert.equal(erFrontrute('MERC SPRINTER SKAPVOGN', '1971GG', '5427AGNGN1C'), true);
 });
+
+// KATEGORI-GUARD (2026-08-24): katalogens kategori er autoritativ når den finnes
+// (auto-glass.no-scrape → catalog-prod.min.json.gz). Ukjent = tillatt (konservativ).
+import { katalogErFrontrute } from '../scripts/gt-generator.mjs';
+
+test('katalog-guard: sideglass (BMW E46 26229GN) → ikke frontrute', () => {
+  assert.equal(katalogErFrontrute('26229GN'), false);
+});
+
+test('katalog-guard: bakrute (BMW E46 26231GN) → ikke frontrute', () => {
+  assert.equal(katalogErFrontrute('26231GN'), false);
+});
+
+test('katalog-guard: bakrute (RAV4 8410GZPR5SR) → ikke frontrute', () => {
+  assert.equal(katalogErFrontrute('8410GZPR5SR'), false);
+});
+
+test('katalog-guard: dørglass (VW Touareg 26014GN) → ikke frontrute', () => {
+  assert.equal(katalogErFrontrute('26014GN'), false);
+});
+
+test('katalog-guard: kjent frontrute (3202GNM RAV4 13-) → frontrute', () => {
+  assert.equal(katalogErFrontrute('3202GNM'), true);
+});
+
+test('katalog-guard: ukjent varenr → tillatt (konservativ, aldri blokker)', () => {
+  assert.equal(katalogErFrontrute('9999XX'), true);
+});

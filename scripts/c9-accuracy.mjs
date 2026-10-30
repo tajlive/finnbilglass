@@ -12,12 +12,15 @@ import { buildClassDCandidates, matchClassDCandidates } from '../src/fitment-v1/
 import { rankQuestions } from '../src/fitment-v1/question-optimizer.js';
 import { EvidenceKernel } from '../src/fitment-v1/policy/kernel.js';
 
-const OUT = resolve('scripts/out/c9-accuracy.json');
+const OUT = resolve(process.env.ANALYTICS_OUTPUT_FILE ?? 'scripts/out/c9-accuracy.json');
+const FIXTURE_DIR = process.env.ANALYTICS_FIXTURE_DIR ? resolve(process.env.ANALYTICS_FIXTURE_DIR) : null;
 const TIER1 = ['TRANSPORTER', 'GOLF', 'PASSAT', 'MODEL-3', 'MODEL-Y', 'LEAF', 'RAV4', '3-SERIE', 'XC60', 'SPRINTER', 'VITO'];
 const MAX_SOK = 1000;
 
 // ── korpus (SVV truth) ──
-const CORPUS = ['data/finn-modeller/svv-verifisert.ndjson', 'data/test-500-gt-detaljer.jsonl', '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson'];
+const CORPUS = FIXTURE_DIR
+  ? [resolve(FIXTURE_DIR, 'c9-corpus.ndjson')]
+  : ['data/finn-modeller/svv-verifisert.ndjson', 'data/test-500-gt-detaljer.jsonl', '/Users/taj/bilglass/data/finn-no-regnr/svv-finn-broad-results.ndjson'];
 const biler = [];
 for (const f of CORPUS) {
   if (!existsSync(f)) continue;
@@ -43,7 +46,7 @@ const utvalg = [...tier1, ...rest].slice(0, MAX_SOK);
 
 const resolver = new ApplicationResolver({ families: buildDefaultGenerationRegistry() });
 const kernel = new EvidenceKernel();
-const gtRaw = JSON.parse(readFileSync('data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
+const gtRaw = JSON.parse(readFileSync(FIXTURE_DIR ? resolve(FIXTURE_DIR, 'catalogue.json') : 'data/gt-ekspansjon/prisliste-alle-glass.json', 'utf8'));
 const classD = buildClassDCandidates(gtRaw[0].results);
 
 const utfall = { EXACT_DIREKTE: 0, ETT_SPORSMAL: 0, FOTO_OE: 0, HANDOFF: 0 };

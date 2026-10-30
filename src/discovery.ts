@@ -1,0 +1,120 @@
+/** Discovery: find front-rute candidates with pagination, canonical URL and stable SKU identifiers */
+export interface Kandidat {
+  varenr: string;
+  varenavn: string;
+  eurokode: string;
+  typeCode?: string;
+  side?: 'frontrute' | 'bakrute' | 'dor' | 'side';
+  /** Canonical URL for deduplication */
+  canonicalUrl?: string;
+  /** SKU fingerprint for dedup */
+  skuFingerprint?: string;
+  /** First seen timestamp */
+  firstSeenAt: number;
+  /** Last seen timestamp */
+  lastSeenAt: number;
+}
+
+/**
+ * Discovery result with pagination support.
+ */
+export interface DiscoveryResult {
+  candidates: Kandidat[];
+  /** Total available candidates (may be more than returned) */
+  totalAvailable: number;
+  /** Next page cursor for pagination, or null if no more */
+  nextCursor?: string;
+  /** Whether there are more pages available */
+  hasMore: boolean;
+}
+
+/**
+ * Discover front-rute candidates for a vehicle make.
+ * Includes pagination, canonical URL support and SKU fingerprinting.
+ * Limited to 20 results per page - full catalogue requires Tom approval.
+ */
+export async function discoverFrontRute(
+  env: { FINNBILGLASS_DB: any },
+  merke: string,
+  modell?: string,
+  aar?: number,
+  cursor?: string
+): Promise<DiscoveryResult> {
+  const seedOrd: string[] = [];
+
+  if (modell) {
+    seedOrd.push(modell);
+  }
+  if (aar) {
+    seedOrd.push(String(aar));
+  }
+  // Always include the make as seed
+  seedOrd.unshift(merke);
+
+  const primaer = [merke.toUpperCase()];
+  const frontGlob =
+    '(varenavn LIKE "%FRONTRUTE%" OR varenavn LIKE "%FRONT%")';
+
+  const likePrim = primaer.map(() => 'varenavn LIKE ?').join(' AND ');
+  const likeSek = seedOrd.map(() => 'varenavn LIKE ?').join(' OR ');
+  const primParams = primaer.map((k) => `%${k.toUpperCase()}%`);
+  const sekParams = seedOrd.map((k) => `%${k.toUpperCase()}%`);
+
+  const seedSql = `SELECT varenr, varenavn, kommentar, pris, eurokode, typeCode, side, alias_av, rad_type
+    FROM glass_prisliste
+    WHERE rad_type='glass' AND ${frontGlob} AND ${likePrim} AND (${likeSek})
+    ORDER BY pris`;
+
+  const seed = await env.FINNBILGLASS_DB.prepare(seedSql)
+    .bind(...primParams, ...sekParams)
+    .all();
+
+  // Apply pagination: 20 results per page
+  const PAGE_SIZE = 20;
+  const cursorIndex = cursor ? parseInt(cursor, 10) : 0;
+  const startIdx = cursorIndex;
+  const endIdx = startIdx + PAGE_SIZE;
+
+  const allCandidates: Kandidat[] = [];
+  const seen = new Set<string>();
+
+  for (let i = startIdx; i < Math.min(endIdx, seed.results?.length || 0); i++) {
+    const r = seed.results[i];
+    if (!r) continue;
+    const key = r.varenr;
+    if (!seen.has(key)) {
+      seen.add(key);
+      allCandidates.push({
+        varenr: r.varenr,
+        varenavn: r.varenavn,
+        eurokode: r.eurokode,
+        typeCode: r.typeCode,
+        side: r.side,
+        canonicalUrl: `https://finnbilglass.no/glas/${r.varenr}`,
+        skuFingerprint: `${r.eurokode}-${r.varenr}`,
+        firstSeenAt: Date.now(),
+        lastSeenAt: Date.now(),
+      });
+    }
+  }
+
+  const hasMore = endIdx < (seed.results?.length || 0);
+  const nextCursor = hasMore ? String(endIdx) : undefined;
+
+  return {
+    candidates: allCandidates,
+    totalAvailable: seed.results?.length || 0,
+    nextCursor,
+    hasMore,
+  };
+}
+
+/** Discover first page (cursor omitted or '0') */
+export function discoverFrontRuteFirst(
+  env: { FINNBILGLASS_DB: any },
+  merke: string,
+  modell?: string,
+  aar?: number
+): Promise<DiscoveryResult> {
+  return discoverFrontRute(env, merke, modell, aar, undefined);
+}

@@ -21,6 +21,13 @@ CREATE TABLE IF NOT EXISTS glass_prisliste (
   UNIQUE(varenr, varenavn)
 );
 
+-- Keep VIN resolver lookups indexed in a fresh staging database too. The
+-- production migration 0032 adds the same indexes to existing databases.
+CREATE INDEX IF NOT EXISTS idx_glass_prisliste_type_varenr
+  ON glass_prisliste (rad_type, varenr);
+CREATE INDEX IF NOT EXISTS idx_glass_prisliste_type_eurokode
+  ON glass_prisliste (rad_type, eurokode);
+
 CREATE TABLE IF NOT EXISTS regnr_logg (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   regnr TEXT NOT NULL,

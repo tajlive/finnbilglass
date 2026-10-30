@@ -1,14 +1,26 @@
-# CI/CD — finnbilglass (Klarpakke-standard: test → deploy → smoke → auto-rollback)
+# CI/CD — test + secret scan → staging → staging smoke → production → production smoke
 name: deploy
 
 on:
   push:
     branches: [main]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deployment target"
+        type: choice
+        required: true
+        default: staging
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
 
 jobs:
   test-gate:
-    name: Test Gate (tsc + lint + vitest)
+    name: Test Gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,8 +29,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit
+      - run: npm run typecheck
       - run: npm test
+      - run: npm run test:customer-price-gate
+      - run: node --import tsx --test tests/optional-glass-reference.test.mjs
+      - run: npm run test:glass-selection
+      - run: npm run test:glass-search
+      - run: npm run test:multi-glass-customer
+      - run: npm run test:multi-glass-routes
 
   security-check:
     name: Security Check
@@ -29,16 +47,17 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         with:
           args: --config=.gitleaks.toml --verbose
-        continue-on-error: true
 
-  deploy:
-    name: Deploy to Cloudflare Workers
+  staging-deploy:
+    name: Deploy staging
     needs: [test-gate, security-check]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && (inputs.target == 'staging' || inputs.target == 'production')))
     runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      SVV_API_KEY: ${{ secrets.SVV_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,59 +65,101 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Set SVV_API_KEY secret (staging)
-        run: |
-          printf '%s' "$SVV_API_KEY" | npx wrangler secret put SVV_API_KEY --name finnbilglass-frontrute-staging --config wrangler.staging.toml
-      - name: Set SVV_API_KEY secret (prod)
-        run: |
-          printf '%s' "$SVV_API_KEY" | npx wrangler secret put SVV_API_KEY --name finnbilglass-frontrute
       - name: Deploy Worker (staging)
+        id: deploy
         run: |
           npx wrangler deploy --config wrangler.staging.toml
-          echo "STAGING_URL=https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev" >> $GITHUB_ENV
-      - name: Deploy Worker (prod)
-        run: |
-          npx wrangler deploy
-          echo "PROD_URL=https://finnbilglass.no" >> $GITHUB_ENV
+          echo "url=https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev" >> "$GITHUB_OUTPUT"
 
-  smoke:
-    name: Smoke Test (health + landing + i18n-keys)
-    needs: [deploy]
+  staging-smoke:
+    name: Staging smoke
+    needs: [staging-deploy]
     runs-on: ubuntu-latest
+    env:
+      STAGING_URL: ${{ needs.staging-deploy.outputs.url }}
     steps:
-      - name: Wait for deployment to propagate
-        run: sleep 15
-      - name: Health check (staging)
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Health and landing page
         run: |
           curl -sf "$STAGING_URL/health" | jq -e '.ok == true'
-      - name: Health check (prod)
-        run: |
-          curl -sf "$PROD_URL/health" | jq -e '.ok == true'
-      - name: Landing page check (staging)
-        run: |
           curl -sf "$STAGING_URL/" | grep -q "Finnbilglass"
-      - name: Landing page check (prod)
-        run: |
-          curl -sf "$PROD_URL/" | grep -q "Finnbilglass"
-      - name: i18n keys check
-        run: |
-          # Verifiser at alle t()-kall i kildekoden har nøkler i ALLE språkfiler
-          node scripts/i18n-keys-audit.mjs
+          curl -sf "$STAGING_URL/" | grep -qi '<html'
+      - run: node scripts/i18n-keys-audit.mjs
+      - run: npm run test:multi-glass-customer
+      - run: npm run test:multi-glass-routes
 
-  auto-rollback:
-    name: Auto Rollback on Smoke Failure
-    needs: [deploy, smoke]
-    if: failure()
+  production-deploy:
+    name: Deploy production
+    needs: [test-gate, security-check, staging-smoke]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.target == 'production' && vars.FBG_PRODUCTION_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+      previous_version: ${{ steps.previous.outputs.version }}
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
-      - name: Rollback to previous version
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capture known active production version
+        id: previous
         run: |
-          npx wrangler rollback
-      - name: Alert via Linear
-        if: always()
+          npx wrangler deployments list --name finnbilglass-frontrute --json > /tmp/finnbilglass-deployments.json
+          VERSION="$(node scripts/resolve-rollback-version.mjs /tmp/finnbilglass-deployments.json)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Deploy Worker (production)
+        id: deploy
         run: |
-          echo "::notice ::Auto-rollback utført. Sjekk Linear for oppgave."
-          # Eller bruk Linear API med fingerprint-dedup
+          npx wrangler deploy
+          echo "url=https://finnbilglass.no" >> "$GITHUB_OUTPUT"
+
+  production-smoke:
+    name: Production smoke
+    needs: [production-deploy]
+    runs-on: ubuntu-latest
+    env:
+      PROD_URL: ${{ needs.production-deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Health and landing page
+        run: |
+          curl -sf "$PROD_URL/health" | jq -e '.ok == true'
+          curl -sf "$PROD_URL/" | grep -q "Finnbilglass"
+          curl -sf "$PROD_URL/" | grep -qi '<html'
+      - run: node scripts/i18n-keys-audit.mjs
+      - run: npm run test:multi-glass-customer
+      - run: npm run test:multi-glass-routes
+
+  auto-rollback:
+    name: Roll back failed production release
+    needs: [production-deploy, production-smoke]
+    if: always() && needs.production-deploy.result == 'success' && needs.production-smoke.result == 'failure'
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PREVIOUS_VERSION: ${{ needs.production-deploy.outputs.previous_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx wrangler rollback "$PREVIOUS_VERSION" --name finnbilglass-frontrute --message "Rollback after failed production smoke"

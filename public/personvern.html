@@ -4,39 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Personvern | Finnbilglass</title>
-<meta name="description" content="Slik behandler Finnbilglass personopplysningene dine når du søker etter bilglass.">
-<meta name="theme-color" content="#F59E0B">
+<meta name="description" content="Se hvilke opplysninger Finnbilglass behandler i beta, hvorfor de brukes, hvor de lagres og hvem de deles med.">
+<meta name="theme-color" content="#edf8fc">
 <link rel="canonical" href="https://finnbilglass.no/personvern">
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/styles.css?v=20261029-customer-design-v1">
 <link rel="icon" type="image/svg+xml" href="/ikon.svg">
 </head>
-<body>
-<main class="wrap">
-  <div class="hero-stripe" aria-hidden="true"></div>
+<body class="customer-site">
+<main class="wrap info-page">
+  <a class="info-home" href="/"><img src="/assets/finnbilglass-logo-mark-2026.png" alt="" width="54" height="32"> <span>Finnbilglass</span></a>
 
-  <h1>Personvern</h1>
-  <p class="sub">Slik behandler vi opplysningene dine når du bruker Finnbilglass.</p>
+  <h1>Personvern i beta</h1>
+  <p class="sub">Finnbilglass er under utvikling. Denne siden beskriver opplysningene som dagens søke-, bilde- og tilbudsflyt behandler.</p>
 
   <section class="qa">
     <h2>Hvilke opplysninger behandler vi?</h2>
-    <p>Når du søker etter glass til bilen din, behandler vi:</p>
     <ul>
-      <li>Kjennemerke (registreringsnummer)</li>
-      <li>Chassisnummer (VIN), hvis du søker med det</li>
-      <li>Bilde av kjennemerket, hvis du bruker skiltfoto</li>
+      <li>Skiltnummer og kjøretøyopplysninger fra Statens vegvesen. Opplysninger fra kjøretøyoppslaget, blant annet chassisnummer/VIN dersom det følger med, kan kobles til søket og en tilbudssak.</li>
+      <li>En tilfeldig sesjons-ID som nettleseren lagrer lokalt for å knytte søk og valg i samme kundereise sammen.</li>
+      <li>Navn, telefonnummer eller e-postadresse, skiltnummer og eventuell melding når du sender en tilbudsforespørsel.</li>
+      <li>Valg i søket, teknisk utfall, IP-adresse, nettleserens user-agent og, for søkelogger, land, by og nettverkstilbyder identifisert av Cloudflare.</li>
+      <li>Skiltfoto hvis du bruker bildefunksjonen, og bilder av frontruten eller bilen hvis du sender dem til manuell kontroll.</li>
     </ul>
 
     <h2>Hva bruker vi opplysningene til?</h2>
-    <p>For å finne riktig glass til bilen din. Kjennemerke eller chassisnummer sendes til Statens vegvesen for å hente bilopplysninger (merke, modell og årsmodell).</p>
+    <p>Vi bruker skiltnummer til å hente bilopplysninger fra Statens vegvesen og til å finne mulige glassvarianter. Søkevalg og tekniske hendelser logges for å følge kundereisen, feilsøke og forbedre glassoppslaget. Kontaktopplysninger og meldinger brukes til å behandle og svare på tilbudsforespørsler.</p>
 
-    <h2>Lagring av bilder</h2>
-    <p>Bilder du tar for å lese kjennemerket brukes kun til å finne bilen via Statens vegvesen og til teknisk feilsøking av skiltlesing. Kundebilder til support, chat og tale-AI er ikke en del av den aktive kundereisen.</p>
+    <h2>Bilder og automatisk behandling</h2>
+    <p>Hvis du bruker skiltfoto, sendes bildet til Cloudflare Workers AI for å lese skiltnummeret. Finnbilglass lagrer også originalbildet og en eventuell miniatyr i Cloudflare R2, sammen med avlesningsresultatet i Cloudflare D1, for kvalitetskontroll og videreutvikling av oppslaget. Bilder av ruten eller bilen lagres når du sender dem inn, slik at en person kan kontrollere saken. Bildene godkjenner ikke automatisk et glassvalg.</p>
 
-    <h2>Deling</h2>
-    <p>Vi deler opplysninger med Statens vegvesen for å hente bilopplysninger. Vi selger eller deler ikke opplysningene dine med andre.</p>
+    <h2>Hvor lagres opplysningene, og hvem behandler dem?</h2>
+    <p>Finnbilglass bruker Cloudflare Workers for nettsiden og API-et, Cloudflare D1 for søkelogger, tilbudssaker og saksopplysninger, og Cloudflare R2 for innsendte bilder. Cloudflare Workers AI behandler skiltfotoet når det leses automatisk. Cloudflare behandler dermed opplysninger på våre vegne for å levere og drifte tjenesten.</p>
+    <p>Ved kjøretøyoppslag sender vi skiltnummeret til Statens vegvesen. Når vi svarer på en forespørsel via Finnbilglass, bruker vi Brevo til å sende e-post eller SMS; mottakerens kontaktopplysninger og selve svaret behandles da av Brevo. E-post til support@finnbilglass.no håndteres av Domene.no og videresendes til post@finnbilglass.no. Vi selger ikke personopplysningene dine.</p>
+
+    <h2>Lagringstid</h2>
+    <p>I betaen lagres søkelogger og tilbudssaker i Cloudflare D1, og innsendte bilder i Cloudflare R2. Vi har foreløpig ikke satt opp en automatisk slettedato for disse opplysningene. De kan derfor bli liggende til de gjennomgås og slettes manuelt. Vi fastsetter en dokumentert lagrings- og sletterutine før tjenesten åpnes bredere.</p>
 
     <h2>Dine rettigheter</h2>
-    <p>Du har rett til innsyn, retting og sletting av opplysninger om deg. Ta kontakt så ordner vi det.</p>
+    <p>Du kan kontakte oss for spørsmål eller forespørsler om innsyn, retting eller sletting. I beta håndteres slike forespørsler manuelt. Skriv til <a href="mailto:support@finnbilglass.no">support@finnbilglass.no</a>.</p>
   </section>
 
   <a href="/" class="prim">Tilbake til søk</a>
@@ -53,7 +58,7 @@
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · Finnbilglass — bilglass til ekte pris. Leveres over hele Norge.</p>
+    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/om-oss">Om oss</a> · Finnbilglass — glassvalg og tilbud kontrollert før bestilling.</p>
   </footer>
 </main>
 </body>
