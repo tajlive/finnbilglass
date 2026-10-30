@@ -19,6 +19,7 @@ import { operationsCenterUi } from './ops-center-ui';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
+import { discoverFrontRute } from './discovery';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
@@ -1146,6 +1147,23 @@ export default {
       return customerChatUi();
     }
 
+    // API-route: /api/glass for glass-søk via registreringsnummer
+    if (method === 'POST' && path === '/api/glass') {
+      try {
+        const body = (await request.json()) as { merke: string; modell?: string; aar?: number }
+        const merke: string = body.merke
+        if (!merke) {
+          return json({ error: 'Merke påkrevd' }, 400)
+        }
+        const modell: string = body.modell || ''
+        const aar: number = body.aar || 0
+        const result = await discoverFrontRute(env, merke, modell, aar)
+        return json({ success: true, data: result })
+      } catch (e) {
+        console.error('Glass-søk feil:', e)
+        return json({ error: 'Intern feil' }, 500)
+      }
+    }
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
     const STATISKE_SIDER = ['/bilglass-uten-forsikring', '/personvern', '/om-oss'];
     if (method === 'GET' && STATISKE_SIDER.includes(path)) {
