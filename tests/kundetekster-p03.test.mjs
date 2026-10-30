@@ -60,7 +60,7 @@ test('4. beta-invitasjon beskriver avgrenset testing og manuell kontroll', () =>
 test('5. språkregel: aktiv kundereise bruker «vi»', () => {
   assert.match(html, /Vil du at vi skal dobbeltsjekke\?/);
   assert.match(html, /Det hjelper oss å kontrollere riktig glass før vi sender tilbud\./);
-  assert.match(html, /Vi har funnet et mulig glass til bilen din/);
+  assert.match(html, /Vi hjelper deg med å finne riktig glass/);
   assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet\./);
   assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør/);
   assert.match(html, /Vi fant ikke et trygt treff i katalogen\. Send oss en forespørsel/);

@@ -1,0 +1,202 @@
+name: FinnBilGlass glassfinner automation
+
+on:
+  push:
+    branches:
+      - 'automation/fbg-glassfinner-*'
+
+permissions: {}
+
+jobs:
+  implement:
+    name: Codex - bygg og test
+    if: github.actor == 'tajlive'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Installer avhengigheter
+        run: npm ci
+
+      - name: Implementer glasskandidater og kundepriser
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          permission-profile: ':workspace'
+          prompt: |
+            Arbeid i FinnBilGlass. Bevar eksisterende Release A.
+
+            MÅL:
+            Kunden skal finne faktiske glasskandidater
+            og se FinnBilGlass sine reelle kundepriser.
+
+            KARTLEGG FØRST:
+            Eksisterende resolvere, katalogtabeller,
+            priskilder, prisregler, API-kontrakter,
+            glassvalg, inquiry og fitment/evidence.
+
+            IMPLEMENTER:
+            1. Fjern ubetinget MANUAL_REVIEW fra sokGlass.
+            2. Bruk faktisk serveroppslag for tilgjengelige
+               glassposisjoner og riktige kjøretøy.
+            3. Vis relevante glasskandidater som produktkort.
+            4. Vis kjente, dokumenterte egenskaper og
+               skill mellom verifisert og mulig match.
+            5. Spør kun om utstyr som skiller kandidatene.
+            6. Vis faktisk godkjent salgspris inkl. mva.
+               per kandidat fra verifisert prisgrunnlag.
+            7. Dersom reell pris mangler: vis ingen
+               oppdiktet pris; marker pris som uavklart.
+            8. Bevar glassvalg og kandidat i tilbudsdata.
+            9. Bevar korrekt posisjon, side, panel
+               og idempotent inquiry-lagring.
+            10. Bruk offentlig allowlist, aldri interne
+                kostpriser, leverandørnavn eller kilder.
+            11. Bevar matchingsikkerheten. Én kandidat
+                alene betyr ikke dokumentert eksakt treff.
+            12. Gi trygg fallback ved manglende data,
+                konflikt eller serverfeil.
+            13. Sikre at frontend ikke tilbyr en flyt
+                som produksjonens feature-flagg avviser.
+
+            TEST:
+            Oppdater gamle Release A-tester som
+            forutsetter permanent MANUAL_REVIEW.
+            Opprett:
+            tests/customer-candidates-prices.test.mjs
+
+            Test null, én og flere kandidater,
+            feil plassering, manglende egenskaper,
+            matchstatus, priser, mva., pris uten
+            datagrunnlag, personvern og feilrespons.
+
+            BEGRENSNINGER:
+            Endre bare public/, src/, tests/,
+            package.json og package-lock.json.
+            Ikke endre GitHub Actions eller Wrangler.
+            Ikke kjør deploy, databaseendringer,
+            commit, push eller ekte henvendelser.
+            Ikke fabrikker priser eller katalogtreff.
+
+            Rapporter eventuelle manglende priskilder.
+
+      - name: Kjør automatiske tester
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -euo pipefail
+          npm test
+          test -f tests/customer-candidates-prices.test.mjs
+          node --import tsx --test \
+            tests/customer-journey-v4.test.mjs
+          node --import tsx --test \
+            tests/customer-candidates-prices.test.mjs
+
+      - name: Kontroller og pakk bare kodeendringer
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          find tests -type d -name '__pycache__' \
+            -prune -exec rm -rf {} +
+
+          python3 - <<'PY'
+          import subprocess
+          raw = subprocess.check_output([
+              "git", "-c", "status.renames=false",
+              "status", "--porcelain", "-z",
+              "--untracked-files=all"
+          ])
+          paths = [
+              entry.decode("utf-8")[3:]
+              for entry in raw.split(b"\0") if entry
+          ]
+          allowed = ("public/", "src/", "tests/")
+          files = {"package.json", "package-lock.json"}
+          invalid = [
+              p for p in paths
+              if not p.startswith(allowed) and p not in files
+          ]
+          if invalid:
+              raise SystemExit(
+                  "Beskyttede filer endret: " + ", ".join(invalid)
+              )
+          if not paths:
+              raise SystemExit("Ingen kodeendringer ble produsert.")
+          print("Godkjente endringsbaner:", len(paths))
+          PY
+
+          git add -N -- public src tests \
+            package.json package-lock.json
+          git diff --check
+          git diff --binary -- public src tests \
+            package.json package-lock.json > fbg-proposal.patch
+          test -s fbg-proposal.patch
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fbg-proposal
+          path: fbg-proposal.patch
+          if-no-files-found: error
+
+  propose:
+    name: Opprett utkast-PR
+    needs: implement
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fbg-proposal
+
+      - name: Bruk testet endringsforslag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply --check --binary fbg-proposal.patch
+          git apply --binary fbg-proposal.patch
+          rm fbg-proposal.patch
+          git diff --check
+
+      - name: Opprett PR mot automatiseringsgrenen
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: ${{ github.ref_name }}
+          branch: codex/fbg-glassfinner-${{ github.run_id }}
+          commit-message: 'feat: glass candidates and customer prices'
+          title: 'FinnBilGlass: glasskandidater og kundepriser'
+          draft: always-true
+          add-paths: |
+            public/**
+            src/**
+            tests/**
+            package.json
+            package-lock.json
+          body: |
+            Automatisk implementeringsforslag fra Codex.
+
+            Testpakken bestod i implementeringsjobben.
+            Gjennomgå matching, priser og personvern.
+
+            PR har automatiseringsgrenen som base.
+            Ingen deploy eller databaseendringer er utført.

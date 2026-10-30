@@ -26,7 +26,7 @@ binding = "OPPLAERING_BUCKET"
 bucket_name = "finnbilglass-opplaering-staging"
 
 [vars]
-MULTI_GLASS_ENABLED = "false"
+MULTI_GLASS_ENABLED = "true"
 ENVIRONMENT = "staging"
 # Evidence-flyt feature-flags — staging verifiserer opplasting FØR prod.
 EVIDENCE_UPLOAD_ENABLED = "true"

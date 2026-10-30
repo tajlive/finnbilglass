@@ -38,7 +38,7 @@
 }
 </script>
 
-<link rel="stylesheet" href="styles.css?v=20261029-customer-design-v1">
+<link rel="stylesheet" href="styles.css?v=20261030-customer-flow-v4">
 <link rel="icon" type="image/svg+xml" href="ikon.svg?v=20261029-customer-design-v1">
 </head>
 <body class="customer-site">
@@ -221,8 +221,8 @@
   </section>
 
   <!-- Skjerm 3: Velg glass (bil-info øverst, glasstype-bokser under — Tom 2026-08-17) -->
-  <section id="screen-glass" class="screen hidden" aria-label="Velg frontrute">
-    <h2>Velg frontrute</h2>
+  <section id="screen-glass" class="screen hidden" aria-label="Velg glass">
+    <h2>Hvilken rute gjelder det?</h2>
 
     <!-- Bil identifisert (fra SVV via skiltnummer) -->
     <div id="glass-bil-seksjon" class="bil-seksjon">
@@ -302,9 +302,29 @@
 
     <!-- Glasstype-bokser -->
     <div class="glassvalg" role="group" aria-label="Glasstype">
-      <button class="glassopt" data-type="front" type="button">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-frontrute"/></svg>
-        Frontrute
+      <button class="glassopt" data-type="front" type="button" aria-pressed="false">
+        <span class="glassopt-title">Frontrute</span>
+        <span class="glassopt-help">Vindskjerm foran</span>
+      </button>
+      <button class="glassopt" data-type="door" type="button" aria-pressed="false">
+        <span class="glassopt-title">Dørrute</span>
+        <span class="glassopt-help">Rute i bildøren</span>
+      </button>
+      <button class="glassopt" data-type="side" type="button" aria-pressed="false">
+        <span class="glassopt-title">Siderute</span>
+        <span class="glassopt-help">Sidefelt og småruter</span>
+      </button>
+      <button class="glassopt" data-type="rear" type="button" aria-pressed="false">
+        <span class="glassopt-title">Bakrute</span>
+        <span class="glassopt-help">Glass bak på bilen</span>
+      </button>
+      <button class="glassopt" data-type="roof" type="button" aria-pressed="false">
+        <span class="glassopt-title">Takglass</span>
+        <span class="glassopt-help">Panorama eller takluke</span>
+      </button>
+      <button class="glassopt" data-type="unknown" type="button" aria-pressed="false">
+        <span class="glassopt-title">Vet ikke</span>
+        <span class="glassopt-help">Vi hjelper deg</span>
       </button>
     </div>
     <section id="glass-placement" class="glass-placement hidden" aria-labelledby="glass-placement-title">
@@ -336,8 +356,7 @@
   <!-- Skjerm 6: Resultat -->
   <section id="screen-resultat" class="screen hidden" aria-label="Frontrute til bilen" aria-live="polite">
     <div class="resultat-header">
-      <span class="sjekk" aria-hidden="true"><svg class="ikon" aria-hidden="true"><use href="#ikon-sjekk"/></svg></span>
-      <h2>Vi har funnet et mulig glass til bilen din</h2>
+      <h2>Vi hjelper deg med å finne riktig glass</h2>
     </div>
     <div id="resultat-status" class="note status hidden" role="status" aria-live="polite"></div>
     <div id="resultat-kort" class="varekort" role="region" aria-label="Glassdetaljer"></div>
@@ -431,6 +450,6 @@
   </footer>
 
 </div><!-- /.wrap -->
-<script src="app.js?v=20261029-customer-design-v1"></script>
+<script src="app.js?v=20261030-customer-flow-v4"></script>
 </body>
 </html>

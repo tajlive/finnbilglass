@@ -5,7 +5,7 @@
      fra cache, oppdateres i bakgrunnen (selvhelende, aldri vedvarende gammel).
    - API (/api/*): aldri cachet. POST røres aldri. */
 // Bump with the HTML asset query version so an activation cannot mix old JS with new HTML.
-const VERSION = '20261027-resolver-v6';
+const VERSION = '20261030-customer-flow-v4';
 const STATIC_CACHE = 'finnbilglass-static-' + VERSION;
 const HTML_CACHE = 'finnbilglass-html-' + VERSION;
 const ASSET_VERSION = '?v=' + VERSION;

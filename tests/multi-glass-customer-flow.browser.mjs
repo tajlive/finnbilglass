@@ -36,12 +36,12 @@ try {
     await page.goto(origin);
     await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}' });
     const types = await page.locator('.glassopt[data-type]').evaluateAll(elements => elements.map(el => el.dataset.type));
-    assert.deepEqual(types, ['front']);
+    assert.deepEqual(types, ['front', 'door', 'side', 'rear', 'roof', 'unknown']);
     assert.equal(await page.locator('#btn-annet').count(), 0);
     await page.locator('#input-regnr').fill('AB12345');
     await page.locator('#form-regnr button[type=submit]').click();
     await page.locator('#screen-glass:not(.hidden)').waitFor();
-    await page.getByRole('heading', { name: 'Velg frontrute' }).waitFor();
+    await page.getByRole('heading', { name: 'Hvilken rute gjelder det?' }).waitFor();
     await page.locator('.glassopt[data-type="front"]').click();
     let attempts = 0;
     while (await page.locator('#screen-spm').isVisible() && attempts++ < 20) {

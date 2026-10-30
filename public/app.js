@@ -840,29 +840,21 @@
   }
 
   function sokGlass(selection) {
-    var request = { schemaVersion: 1, selection: selection, answers: {} };
+    var request = {
+      schemaVersion: 1,
+      selection: selection,
+      answers: {}
+    };
+
     var generation = ++searchGeneration;
-    state.glassRequest = request;
-    state.preferredWindshieldCandidate = null;
-    state.clientRequestId = null;
-    $('resultat-kort').textContent = '';
-    $('resultat-alt').textContent = '';
-    $('inquiry-bekreftet').classList.add('hidden');
-    $('inquiry-form').classList.add('hidden');
-    $('inquiry-glass-summary').textContent = glassSelectionLabel(selection);
-    $('inquiry-glass-summary').classList.remove('hidden');
-    $('btn-inquiry').disabled = true;
-    $('resultat-status').textContent = 'Vi undersøker ruten og kataloggrunnlaget…';
-    $('resultat-status').className = 'note status';
-    $('resultat-status').classList.remove('hidden');
-    show('resultat');
-    fetch('/api/glass', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regnr: state.regnr, glassRequest: request }) })
-      .then(function (r) { return r.json().then(function (data) { if (!r.ok) throw new Error(data.error || 'Søket feilet'); return data; }); })
-      .then(function (data) { visGlassResultat(request, data, generation); })
-      .catch(function (error) {
-        if (generation !== searchGeneration) return;
-        visGlassResultat(request, { status: 'MANUAL_REVIEW', candidates: [], message: error.message || 'Søket er midlertidig utilgjengelig. Du kan sende en manuell forespørsel.' }, generation);
-      });
+
+    // Release A gir manuelt kontrollert tilbud.
+    // Ikke blokker kunden på /api/glass eller en ubekreftet SKU.
+    visGlassResultat(request, {
+      status: 'MANUAL_REVIEW',
+      candidates: [],
+      message: 'Vi har registrert hvilken rute du trenger. Vi kontrollerer riktig glass, pris og levering før vi sender tilbud.'
+    }, generation);
   }
 
   // 4. Glasstype. Frontruten beholder den eksisterende, dokumenterte flyten.
@@ -870,7 +862,7 @@
     b.addEventListener('click', function () {
       if (b.disabled) return;
       var kind = b.dataset.type;
-      if (kind !== 'front') return; // Other glass categories are paused.
+      searchGeneration++;
       document.querySelectorAll('.glassopt[data-type]').forEach(function (button) { button.classList.toggle('aktiv', button === b); button.setAttribute('aria-pressed', button === b ? 'true' : 'false'); });
       $('glass-placement-error').classList.add('hidden');
       $('resultat-kort').textContent = '';
@@ -881,31 +873,19 @@
       state.glassRequest = null;
       state.clientRequestId = null;
       if (kind === 'front') {
+        // Release A: Bruk samme sikre forespørselsflyt som øvrige glasstyper.
+        // Ikke vis ubekreftede produktkandidater eller priser.
         state.currentGlassKind = 'windshield';
         $('glass-placement').classList.add('hidden');
-        $('inquiry-glass-summary').classList.add('hidden');
-        loggHendelse('velg_frontrute', { merke: state.merke, modell: state.modell, regnr: state.regnr });
-        spmIndex = 0;
-        if (spm.length) { spmRender(); show('spm'); return; }
-        // The initial vehicle lookup is intentionally cheap and does not run
-        // the resolver. Load candidates only when the customer chooses windscreen.
-        $('resultat-status').textContent = 'Vi undersøker glassvariantene…';
-        $('resultat-status').className = 'note status';
-        $('resultat-status').classList.remove('hidden');
-        show('resultat');
-        fetch('/api/frontrute', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ merke: state.merke, modell: state.modell, aar: state.aar, vin: state.vin, profil: {} }) })
-          .then(function (r) { return r.json(); })
-          .then(function (data) {
-            // A single catalogue candidate is still an unconfirmed fitment.
-            state.resolver = { utfall: 'VERIFY', kandidater: data.kandidater || [], sporsmaal: data.sporsmaal || [] };
-            settSpm(state.resolver.sporsmaal);
-            if (spm.length) { spmIndex = 0; spmRender(); show('spm'); return; }
-            renderResultat(data);
-          })
-          .catch(function () { tomtVis('Vi kontrollerer frontruten manuelt', 'Vi fikk ikke hentet kandidatene akkurat nå. Send en forespørsel, så kontrollerer vi glasset manuelt.'); });
+        loggHendelse('velg_frontrute', {
+          merke: state.merke,
+          modell: state.modell,
+          regnr: state.regnr
+        });
+        sokGlass({ kind: 'windshield' });
         return;
       }
+
       state.currentGlassKind = kind;
       if (kind === 'unknown') { $('glass-placement').classList.add('hidden'); sokGlass({ kind: 'unknown' }); return; }
       $('glass-placement-title').textContent = kind === 'door' ? 'Hvilken dørrute?' : kind === 'side' ? 'Hvilken siderute?' : kind === 'rear' ? 'Hvilken bakrute?' : 'Hvilket takglass?';
@@ -916,6 +896,35 @@
   });
 
 
+
+  // Glassplassering: fullfør valgt rutetype.
+  $('btn-glass-search').addEventListener('click', function () {
+    var kind = state.currentGlassKind;
+
+    if (!['door', 'side', 'rear', 'roof'].includes(kind)) return;
+
+    var selection = selectionFromFields(kind);
+    if (!selection) return;
+
+    sokGlass(selection);
+  });
+
+  $('btn-glass-cancel').addEventListener('click', function () {
+    searchGeneration++;
+    state.currentGlassKind = null;
+    state.glassRequest = null;
+
+    $('glass-placement').classList.add('hidden');
+    $('glass-placement-error').classList.add('hidden');
+
+    document.querySelectorAll('.glassopt[data-type]').forEach(function (b) {
+      b.classList.remove('aktiv');
+      b.setAttribute('aria-pressed', 'false');
+    });
+
+    var heading = $('screen-glass').querySelector('h2');
+    if (heading) heading.focus();
+  });
 
   // 5. Utstyrs-spørsmål — KUN funksjoner som faktisk skiller kandidatene stilles.
   //    Aldri spør om noe som ikke finnes som variant for bilen (Tom-doktrine).
@@ -986,19 +995,7 @@
 
   // Velg direkte blant resolver-kandidatene når de finnes; ellers /api/frontrute.
   function gaaTilResultat() {
-    searchGeneration++;
-    var valgt = filtrerResolverKandidater();
-    if (valgt && renderResolverResultat(valgt)) return;
-    // A new vehicle must never show the previous vehicle's glass while loading.
-    $('resultat-kort').textContent = '';
-    $('resultat-alt').textContent = '';
-    $('tilbehor-seksjon').classList.add('hidden');
-    $('btn-inquiry').disabled = true;
-    var loading = $('resultat-status');
-    loading.textContent = 'Vi undersøker glassvariantene…';
-    loading.className = 'note status';
-    show('resultat');
-    lastResultat();
+    sokGlass({ kind: 'windshield' });
   }
 
   // Filtrer resolver-kandidater på kundens svar (kun besvarte funksjoner;
