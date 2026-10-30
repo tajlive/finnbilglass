@@ -84,7 +84,7 @@ test('6. kun relevant OPTIONAL → bare dette ene valget', () => {
 
 test('7. VERIFY → null avkrysningsbokser (frontend)', () => {
   const app = readFileSync(join(ROOT, 'public', 'app.js'), 'utf8');
-  assert.match(app, /VERIFY: aldri kandidatspesifikke valg/);
+  assert.match(app, /Release A offers an inquiry without a customer-selected product/);
   const html = readFileSync(join(ROOT, 'public', 'index.html'), 'utf8');
   assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet/);
 });

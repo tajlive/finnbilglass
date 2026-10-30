@@ -829,29 +829,7 @@
     info.textContent = data.message || 'Vi kontrollerer ruten og riktig glass før vi sender tilbud.';
     info.className = 'note status ' + (status === 'CANDIDATES' ? 'verify' : '');
     info.classList.remove('hidden');
-    if (candidates.length) {
-      candidates.forEach(function (candidate, index) {
-        var item = document.createElement('label');
-        item.className = 'alt-row variant-choice';
-        var radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = 'preferred-windshield-variant';
-        radio.value = candidate.candidateId || candidate.partNumber || '';
-        radio.setAttribute('aria-label', 'Mulig frontrutevariant ' + (candidate.partNumber || index + 1));
-        radio.addEventListener('change', function () {
-          state.preferredWindshieldCandidate = { partNumber: candidate.partNumber || candidate.candidateId || '', description: candidate.manufacturer || '' };
-          $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection) + ' · valgt variant kontrolleres manuelt';
-        });
-        item.appendChild(radio);
-        var label = document.createElement('span');
-        label.textContent = 'Mulig treff · ' + (candidate.manufacturer ? candidate.manufacturer + ' · ' : '') + candidate.partNumber;
-        item.appendChild(label);
-        $('resultat-alt').appendChild(item);
-      });
-      if (data.truncated) {
-        var more = document.createElement('p'); more.className = 'note'; more.textContent = 'Flere mulige treff finnes. Vi kontrollerer riktig variant.'; $('resultat-alt').appendChild(more);
-      }
-    }
+    // Release A ignores any product candidates in a response.
     $('inquiry-regnr').value = state.regnr || '';
     $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
     $('inquiry-glass-summary').classList.remove('hidden');
@@ -1168,75 +1146,22 @@
     var alt = $('resultat-alt');
     alt.innerHTML = '';
     state.preferredWindshieldCandidate = null;
-    if (data.kandidater && data.kandidater.length > 0 && !data.pinpoint) {
-      var intro = document.createElement('p');
-      intro.className = 'varianter-intro';
-      intro.textContent = data.kandidater.length > 1
-        ? 'Disse frontrutene kan passe bilen. Svarene dine snevrer inn alternativene. Pris vises inkl. mva. når den er dokumentert. Vi kontrollerer valgt glass før tilbud.'
-        : 'Dette er en mulig frontrute. Vi kontrollerer glasset før tilbud.';
-      alt.appendChild(intro);
-      data.kandidater.forEach(function (k, index) {
-        var row = document.createElement('label');
-        row.className = 'alt-row variant-choice';
-        var radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = 'preferred-windshield-variant';
-        radio.value = k.candidateId || '';
-        radio.setAttribute('aria-label', 'Mulig frontrutevariant ' + (index + 1));
-        radio.addEventListener('change', function () {
-          state.preferredWindshieldCandidate = { partNumber: k.candidateId || '', description: beskrivVariant(k) || k.varenavn || '' };
-          $('inquiry-glass-summary').textContent = 'Frontrute · ønsket variant: ' + (state.preferredWindshieldCandidate.description || 'valgt variant') + ' · kontrolleres manuelt';
-        });
-        row.appendChild(radio);
-        var beskrivelse = beskrivVariant(k);
-        var txt = document.createElement('span');
-        txt.className = 'alt-beskrivelse';
-        var prisTekst = typeof k.kundeprisInklMva === 'number' && Number.isFinite(k.kundeprisInklMva) && k.kundeprisInklMva > 0
-          ? ' · Glasspris ' + Number(k.kundeprisInklMva).toLocaleString('nb-NO') + ' kr inkl. mva.'
-          : ' · Pris oppgis i tilbudet';
-        txt.textContent = 'Mulig variant' + (beskrivelse ? ' — ' + beskrivelse : k.varenavn ? ' — ' + k.varenavn : '') + prisTekst;
-        row.appendChild(txt);
-        alt.appendChild(row);
-      });
-      var evidence = document.querySelector('.evidence-capture');
-      if (evidence) {
-        var resultatScreen = document.getElementById('screen-resultat');
-        var resultatAlt = document.getElementById('resultat-alt');
-        if (resultatScreen && resultatAlt && evidence.previousElementSibling !== resultatAlt) {
-          resultatAlt.after(evidence);
-        }
-        evidence.classList.remove('hidden');
-        var evidenceTitle = $('evidence-title');
-        var evidenceIntro = $('evidence-intro');
-        if (evidenceTitle) evidenceTitle.textContent = 'Send ett eller to bilder';
-        if (evidenceIntro) evidenceIntro.textContent = 'Ett bilde er nok for å sende forespørselen. To bilder gir best grunnlag: ett av hele frontruten og ett av området ved speilet/sensoren. Det hjelper oss å kontrollere riktig glass før vi sender tilbud. Bildene endrer aldri glassvalget automatisk.';
-      }
+    // Release A offers an inquiry without a customer-selected product.
+    var intro = document.createElement('p');
+    intro.className = 'varianter-intro';
+    intro.textContent = 'Vi kontrollerer riktig frontrute, pris og levering manuelt før tilbud.';
+    alt.appendChild(intro);
     $('btn-inquiry').textContent = 'Be om uforpliktende tilbud';
     $('btn-inquiry').disabled = false;
-    }
 
     // P0.1 (Tom-doktrine): tilbehør er kandidat- og glassstyrt via
     // /api/accessories (AccessoryApplicabilityEngine som fasit).
     var tilbehorSeksjon = $('tilbehor-seksjon');
     var verifyTekst = $('tilbehor-verify');
     var montasjeValg = $('montasje-valg');
-    if (data.pinpoint && a && a.candidateId) {
-      // PINPOINT: hent tilbehør for den ene kandidaten (engine som fasit).
-      verifyTekst.classList.add('hidden');
-      hentOgVisTilbehor(a, 'EXACT');
-    } else if (data.kandidater && data.kandidater.length > 1) {
-      // VERIFY: aldri kandidatspesifikke valg — kun trygg tekst.
-      tilbehorData = [];
-      $('tilbehor-liste').innerHTML = '';
-      if (montasjeValg) montasjeValg.style.display = 'none';
-      verifyTekst.classList.remove('hidden');
-      tilbehorSeksjon.classList.remove('hidden');
-    } else {
-      // FALLBACK/tomt: ingen dokumentert tilbehør → ingen seksjon.
-      tilbehorData = [];
-      tilbehorSeksjon.classList.add('hidden');
-      verifyTekst.classList.add('hidden');
-    }
+    tilbehorData = [];
+    tilbehorSeksjon.classList.add('hidden');
+    verifyTekst.classList.add('hidden');
   }
 
   // ── P0.1: tilbehør (kandidat- og glassstyrt, engine som fasit) ─────────
@@ -1485,7 +1410,6 @@
         regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId,
         contactPreference: kontaktpreferanse,
         ...(kontaktpreferanse === 'begge' ? { contactPhone: kontaktTelefon } : {}),
-        ...(foretrukket && foretrukket.partNumber ? { preferredCandidate: { partNumber: foretrukket.partNumber, eurocode: foretrukket.eurocode || '', description: foretrukket.description || '' } } : {}),
         ...(state.glassRequest ? { glassRequest: state.glassRequest, clientRequestId: clientRequestId } : {})
       })
     })
