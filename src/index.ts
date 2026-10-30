@@ -1176,6 +1176,22 @@ export default {
       if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
       const key = new URL(request.url).searchParams.get('key') ?? '';
       if (!key) return json({ ok: false, error: 'Mangler key' }, 400);
+
+      // Kun bilder som finnes i D1-registeret kan leses fra R2.
+      // Sjekk både original og miniatyr, for begge bildetyper.
+      const registered = await env.FINNBILGLASS_DB.prepare(`
+        SELECT 1 AS allowed FROM opplaering_bilde
+        WHERE r2_key = ? OR thumb_r2_key = ?
+        UNION ALL
+        SELECT 1 AS allowed FROM evidence_case_images
+        WHERE r2_key = ? OR thumb_r2_key = ?
+        LIMIT 1
+      `).bind(key, key, key, key).first<{ allowed: number }>();
+
+      if (!registered) {
+        return json({ ok: false, error: 'Bilde mangler' }, 404);
+      }
+
       const object = await env.OPPLAERING_BUCKET.get(key);
       if (!object) return json({ ok: false, error: 'Bilde mangler' }, 404);
       return new Response(object.body, { headers: { 'Content-Type': object.httpMetadata?.contentType ?? 'image/jpeg', 'Cache-Control': 'private, no-store' } });
