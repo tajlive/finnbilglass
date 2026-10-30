@@ -442,64 +442,11 @@ export default {
         canRequestQuote: true, message: 'Vi fikk ikke bekreftet bilen i oppslaget. Du kan sende en manuell forespørsel.',
       });
 
-      let result;
-      let candidateIds: string[] = [];
-      let catalogVersion = 'no-verified-catalogue';
-      try {
-        if (glassRequest.selection.kind === 'windshield') {
-          let resolver = await resolveFrontrute(env, { merke: vehicle.merke, modell: vehicle.modell, aar: vehicle.aar ?? undefined, vin: vehicle.vin ?? undefined });
-          resolver = (await medResolverModus(env, resolver))!;
-          if (resolver.utfall === 'FALLBACK' || !resolverMatchesVehicleModel(vehicle.merke, vehicle.modell, resolver.kandidater)
-            || !resolverMatchesVehicleGeneration(vehicle.merke, vehicle.modell, vehicle.aar, resolver.kandidater)) {
-            return json({ ok: true, status: 'MANUAL_REVIEW', selection: glassRequest.selection, candidates: [], questions: [], truncated: false,
-              canRequestQuote: true, message: 'Vi fant ikke en sikker variant ut fra bildataene. Vi kontrollerer frontruten manuelt.' });
-          }
-          const publicMatch = publicFrontruteDto({
-            ok: true, ...resolver,
-            pinpoint: resolver.utfall === 'PINPOINT',
-            anbefaling: resolver.utfall === 'PINPOINT'
-              ? { varenr: resolver.varenr, varenavn: resolver.varenavn, eurokode: resolver.eurokode }
-              : resolver.kandidater?.[0] ? { varenr: resolver.kandidater[0].varenr, varenavn: resolver.kandidater[0].varenavn, eurokode: resolver.kandidater[0].eurokode } : null,
-            meta: { resolver: true },
-          });
-          const candidates = Array.isArray(publicMatch.kandidater) ? publicMatch.kandidater as Record<string, unknown>[] : [];
-          candidateIds = candidates.map(c => typeof c.candidateId === 'string' ? c.candidateId : '').filter(Boolean);
-          result = {
-            status: publicMatch.anbefaling ? 'CANDIDATES' as const : 'MANUAL_REVIEW' as const,
-            selection: glassRequest.selection, candidates: candidates.map(c => ({ candidateId: c.candidateId, partNumber: c.candidateId, manufacturer: null, kind: 'windshield' })),
-            questions: resolver.sporsmaal ?? [], truncated: false,
-            message: publicMatch.anbefaling ? 'Mulige frontrutevarianter. Vi bekrefter glasset før tilbud.' : 'Vi kontrollerer frontruten manuelt.',
-          };
-        } else {
-          result = await searchGlass(env.FINNBILGLASS_DB, vehicle, glassRequest);
-          candidateIds = result.candidates.map(c => c.candidateId);
-          catalogVersion = result.catalogVersion;
-        }
-      } catch {
-        console.error('glass search failed');
-        return json({ ok: false, error: 'Søket kan ikke fullføres akkurat nå. Du kan sende en manuell forespørsel.' }, 503);
-      }
-
-      // The active windshield flow predates multi-glass D1 snapshots. Keep the
-      // front-only release on the legacy schema until paused categories return.
-      if (glassRequest.selection.kind === 'windshield' && env.MULTI_GLASS_ENABLED !== 'true') {
-        return json({ ok: true, ...result, canRequestQuote: true });
-      }
-
-      const searchId = crypto.randomUUID().replace(/-/g, '');
-      const now = Date.now();
-      const vehicleJson = JSON.stringify({ merke: vehicle.merke, modell: vehicle.modell, aar: vehicle.aar, vin: vehicle.vin });
-      const fingerprint = await glassRequestFingerprint(regnr, glassRequest);
-      try {
-        await env.FINNBILGLASS_DB.prepare(`INSERT INTO glass_search_snapshots
-          (search_id,regnr_norm,request_fingerprint,glass_request_json,vehicle_json,candidate_ids_json,catalog_version,created_at,expires_at)
-          VALUES (?,?,?,?,?,?,?,?,?)`).bind(searchId, regnr, fingerprint, JSON.stringify(glassRequest), vehicleJson,
-          JSON.stringify(candidateIds), catalogVersion, now, now + 30 * 60_000).run();
-      } catch {
-        console.error('glass search snapshot persist failed');
-        return json({ ok: false, error: 'Søket kan ikke lagres akkurat nå. Du kan sende en manuell forespørsel.' }, 503);
-      }
-      return json({ ok: true, searchId, ...result, canRequestQuote: true });
+      // Release A: a public search never returns or persists product candidates.
+      // The operator resolves the product from the private inquiry context.
+      return json({ ok: true, status: 'MANUAL_REVIEW', selection: glassRequest.selection,
+        candidates: [], questions: [], truncated: false, canRequestQuote: true,
+        message: 'Vi kontrollerer riktig glass, pris og levering før tilbud.' });
     }
 
     if (method === 'POST' && path === '/api/opplaering') {
@@ -563,14 +510,8 @@ export default {
         ? (typeof b.melding === 'string' ? b.melding : '')
         : (typeof b.melding === 'string' ? b.melding.trim().slice(0, 500) : '');
       if (manualVehicle && melding.length > 500) return json({ ok: false, error: 'Meldingen kan ikke være over 500 tegn' }, 400);
-      const rawPreference = isRecord(b.preferredCandidate) ? b.preferredCandidate : null;
-      const preferredCandidate = rawPreference && typeof rawPreference.partNumber === 'string'
-        ? {
-            partNumber: rawPreference.partNumber.trim().slice(0, 80),
-            eurocode: typeof rawPreference.eurocode === 'string' ? rawPreference.eurocode.trim().slice(0, 100) : '',
-            description: typeof rawPreference.description === 'string' ? rawPreference.description.trim().slice(0, 240) : '',
-          }
-        : null;
+      // Release A accepts no customer product selection. Historical preferences
+      // already stored in older inquiries remain explicitly unverified in /ops.
       if (!navn || navn.length < 2 || navn.length > 80) return json({ ok: false, error: 'Navn må være 2–80 tegn' }, 400);
       if (!kontakt || kontakt.length > 120) return json({ ok: false, error: 'Telefon eller e-post må være 1–120 tegn' }, 400);
       // Enkel validering: minst 8 siffer ELLER e-postformat.
@@ -674,15 +615,6 @@ export default {
           context.customerContact = { preference: contactPreference, ...(contactPreference === 'begge' ? { phone: contactPhone } : {}) };
           vehicleJson = JSON.stringify(context);
         }
-        if (preferredCandidate) {
-          try {
-            const context = vehicleJson ? JSON.parse(vehicleJson) as Record<string, unknown> : {};
-            context.customerPreference = { ...preferredCandidate, source: 'customer', verified: false };
-            vehicleJson = JSON.stringify(context);
-          } catch {
-            vehicleJson = JSON.stringify({ customerPreference: { ...preferredCandidate, source: 'customer', verified: false } });
-          }
-        }
         const stored = await persistInquiry(env.FINNBILGLASS_DB, {
           regnr, name: navn, contact: kontakt, message: melding, sessionId: sessionId(body, request),
           glassRequest: legacyWindshield ? null : glassRequest,
@@ -703,37 +635,10 @@ export default {
     }
 
     if (method === 'POST' && path === '/api/accessories') {
-      // P0.1 (Tom-doktrine): tilbehør er kandidat- og glassstyrt via
-      // AccessoryApplicabilityEngine (deterministisk fasit, ikke if/else i UI).
-      // Ingen relasjon dokumentert → ingen tilbehør. UNKNOWN/NOT_APPLICABLE
-      // returneres men markeres — frontend viser dem aldri.
-      const eng = new AccessoryApplicabilityEngine(defaultRelations());
-      let body: unknown;
-      try { body = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
-      const varenr = typeof (body as Record<string, unknown>)?.varenr === 'string' ? (body as Record<string, unknown>).varenr as string : null;
-      const eurokode = typeof (body as Record<string, unknown>)?.eurokode === 'string' ? (body as Record<string, unknown>).eurokode as string : null;
-      const features = (body as Record<string, unknown>)?.features && typeof (body as Record<string, unknown>).features === 'object' ? (body as Record<string, unknown>).features as Record<string, unknown> : {};
-      const fs = (body as Record<string, unknown>)?.fitmentStatus;
-      if (!varenr && !eurokode) return json({ ok: false, error: 'varenr eller eurokode påkrevd' }, 400);
-      const app = eng.evaluate({
-        vehicleIdentity: null,
-        applicationIdentity: null,
-        selectedGlass: { glass: eurokode ?? '', varenr },
-        glassFeatures: features as Record<string, string | boolean | null>,
-        fitmentStatus: fs === 'EXACT' ? 'EXACT' : fs === 'AMBIGUOUS' ? 'AMBIGUOUS' : 'UNKNOWN',
-        verificationMode: null,
-      });
-      return json({
-        ok: true,
-        accessories: app.map((a) => ({
-          accessory: { productId: a.accessory.productId, name: a.accessory.name, category: a.accessory.category, kind: a.accessory.kind },
-          state: a.state,
-          reason: a.reason,
-          requiresInstallerConfirmation: !!a.requiresInstallerConfirmation,
-          duplicateOfGlassComponent: !!a.duplicateOfGlassComponent,
-        })),
-      });
+      return json({ ok: true, accessories: [], status: 'MANUAL_REVIEW',
+        message: 'Tilbehør kontrolleres manuelt i tilbudet.' });
     }
+
     if (method === 'POST' && path === '/api/regnr') {
       let body: unknown;
       try {

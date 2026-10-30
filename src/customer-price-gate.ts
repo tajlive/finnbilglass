@@ -22,49 +22,24 @@ function pick(source: RecordValue, keys: readonly string[]): RecordValue {
   return out;
 }
 
-const CANDIDATE_FIELDS = [
-  // candidateId is an opaque customer-session reference. The actual supplier
-  // number/eurocode stays server-side and is shown only in operator tooling.
-  'candidateId', 'varenavn', 'attributter', 'egenskaper', 'posisjon',
-  'fargetone', 'aarIntervall', 'score', 'kundeprisInklMva',
-] as const;
-
-function publicCandidate(value: unknown): RecordValue | null {
-  if (!isRecord(value)) return null;
-  const out = pick(value, CANDIDATE_FIELDS);
-  if (typeof value.varenr === 'string' && typeof out.candidateId !== 'string') out.candidateId = value.varenr;
-  if (typeof value.pris === 'number' && Number.isFinite(value.pris) && out.kundeprisInklMva === undefined) {
-    out.kundeprisInklMva = value.pris;
-  }
-  return out;
-}
-
-/** Explicit public shape for the vehicle resolver. Never spread internal resolver state. */
+/** Release A exposes no product candidates or internal catalogue identifiers. */
 export function publicResolverDto(value: unknown): RecordValue | null {
   if (!isRecord(value)) return null;
-  const out = pick(value, ['utfall', 'varenavn', 'pinpoint']);
-  if (typeof value.varenr === 'string') out.candidateId = value.varenr;
-  if (typeof value.pris === 'number' && Number.isFinite(value.pris)) out.kundeprisInklMva = value.pris;
-  if (Array.isArray(value.kandidater)) out.kandidater = value.kandidater.map(publicCandidate).filter(Boolean);
-  if (Array.isArray(value.sporsmaal)) out.sporsmaal = value.sporsmaal.filter((x): x is string => typeof x === 'string');
-  if (isRecord(value.meta)) out.meta = pick(value.meta, ['resolver']);
-  return out;
+  return { utfall: 'MANUAL_REVIEW' };
 }
 
-/** Explicit public shape for the frontrute endpoint; catalog internals stay server-side. */
+/** Product selection is reserved for a later server-bound search contract. */
 export function publicFrontruteDto(value: unknown): RecordValue {
   if (!isRecord(value)) return { ok: false };
-  const out = pick(value, ['ok', 'pinpoint']);
-  const recommendation = publicCandidate(value.anbefaling);
-  out.anbefaling = recommendation;
-  out.kandidater = Array.isArray(value.kandidater)
-    ? value.kandidater.map(publicCandidate).filter(Boolean)
-    : [];
-  if (Array.isArray(value.sporsmaal)) out.sporsmaal = value.sporsmaal.filter((x): x is string => typeof x === 'string');
-  if (typeof value.message === 'string') out.message = value.message;
-  const resolver = isRecord(value.meta) && value.meta.resolver === true;
-  out.meta = { resolver };
-  return out;
+  return {
+    ok: value.ok === true,
+    pinpoint: false,
+    anbefaling: null,
+    kandidater: [],
+    sporsmaal: [],
+    message: 'Vi kontrollerer riktig glass, pris og levering før tilbud.',
+    meta: { resolver: false },
+  };
 }
 
 /** Public vehicle object used by registration, VIN, and plate-image lookup routes. */
