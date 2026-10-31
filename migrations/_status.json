@@ -17,7 +17,8 @@
     "ANVENDT": "Skjemaeffekten finnes i produksjon",
     "DELVIS": "Noe av skjemaeffekten finnes — resten mangler",
     "EFFEKT_OPPNADD_ANNET_NAVN": "Effekten er oppnådd, men under et annet tabellnavn enn migrasjonen lager",
-    "PENDING": "Ikke anvendt i produksjon. Skal IKKE kjøres uten egen godkjenning."
+    "PENDING": "Ikke anvendt i produksjon. Skal IKKE kjøres uten egen godkjenning.",
+    "BLOCKED_DESTRUCTIVE": "Ødeleggende for en eksisterende database (DROP/RENAME/datakorrupsjon). Skal aldri kjøres mot prod."
   },
   "migrasjoner": [
     {
@@ -28,9 +29,10 @@
     },
     {
       "fil": "0020_oem_probe_queue_fix.sql",
+      "mappe": "migrations/pending",
       "sha256": "008ebf78782c9874c60149a838c2d56197fe9df5f111e428c8311e4904ad7c97",
-      "status": "EFFEKT_OPPNADD_ANNET_NAVN",
-      "bevis": "Migrasjonen lager oem_probe_queue_v2, som ikke finnes. Men alle v2-kolonnene (cost_eur, latency_ms, vilkar_lagring_ok, status, queried_at, decision, notes, created_at) finnes på oem_probe_queue. Skal ikke kjøres — ville laget duplikattabell."
+      "status": "BLOCKED_DESTRUCTIVE",
+      "bevis": "Destruktiv, ikke en no-op. Migrasjonen gjør CREATE TABLE oem_probe_queue_v2, kopierer BARE 7 av 20 kolonner, kjører DROP TABLE oem_probe_queue og RENAMER v2 inn i plassen. Målt på isolert prod-kopi 2026-10-31: DROP utført, og created_at overskrevet på 10 av 10 rader (1787623711000 -> kjøretidspunkt). Effekten den skulle oppnå (v2-kolonnene) finnes allerede på oem_probe_queue i prod. Skal aldri kjøres mot en eksisterende database."
     },
     {
       "fil": "0028_inquiry_commercial.sql",
