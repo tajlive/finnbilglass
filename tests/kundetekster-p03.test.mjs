@@ -49,31 +49,35 @@ test('3. P0.2-fotoopplevelse beholdt (kamera + bildebibliotek)', () => {
   assert.equal(bibMedCapture.length, 0, 'bildebibliotek-input skal ikke ha capture');
 });
 
-test('4. personlig beta-invitasjon finnes på forsiden (førsteperson, ordrett)', () => {
-  assert.match(html, /Kjenner du Tom Arne\? Da vil jeg gjerne ha din hjelp\./);
-  assert.match(html, /Du er invitert til å teste Finnbilglass/);
-  assert.match(html, /Jeg dobbeltsjekker alltid glassvalg og pris før bestilling\./);
-  assert.match(html, /beta-invitasjon/);
-  assert.match(css, /\.beta-invitasjon\s*\{/);
+test('4. invitert kundeflyt erstatter beta-invitasjonen (godkjent forside)', () => {
+  // Godkjent kundeforside (288ae3a): hero, regnr-søk, VIN-søk og forespørselsskjema.
+  assert.match(html, /Riktig bilglass\.<br><span>En pris du forstår\.<\/span>/);
+  assert.match(html, /id="form-regnr"/);
+  assert.match(html, /id="form-vin"/);
+  // Den gamle personlige beta-invitasjonen (førsteperson) er fjernet.
+  assert.doesNotMatch(html, /Kjenner du Tom Arne/);
+  assert.doesNotMatch(html, /Da vil jeg gjerne ha din hjelp/);
+  // Skjemaet for tilbud finnes, og header viser beta-merket.
+  assert.match(html, /id="inquiry-form"/);
+  assert.match(html, /class="beta"/);
 });
 
 test('5. språkregel: aktiv kundereise bruker «vi»', () => {
   assert.match(html, /Vil du at vi skal dobbeltsjekke\?/);
   assert.match(html, /Det hjelper oss å kontrollere riktig glass før vi sender tilbud\./);
-  assert.match(html, /Vi har funnet et mulig glass til bilen din/);
+  assert.match(html, /Vi dobbeltsjekker riktig glass og sender deg et tilbud/);
   assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet\./);
-  assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi glasset/);
+  assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør/);
   assert.match(html, /Vi fant ikke et trygt treff i katalogen\. Send oss en forespørsel/);
   assert.match(html, /Vi dobbeltsjekker alle glassvalg og priser før bestilling\./);
   assert.match(js, /Vi har funnet en mulig kandidat ut fra bildataene dine\. Vi dobbeltsjekker valget manuelt før vi sender tilbud\./);
-  assert.match(js, /Takk! Vi har mottatt forespørselen og dobbeltsjekker glasset/);
-  assert.match(personvern, /Her forklarer vi hvilke opplysninger Finnbilglass bruker, hvorfor vi trenger dem/);
+  assert.match(js, /Takk! Vi har mottatt forespørselen/);
+  assert.match(personvern, /Vi bruker skiltnummer til å hente bilopplysninger/);
 });
 
 test('6. språkregel: «jeg/meg» finnes kun i godkjente unntak', () => {
   // Godkjente unntak
-  assert.match(html, /Kjenner du Tom Arne\? Da vil jeg gjerne ha din hjelp\./); // beta-invitasjon
-  assert.match(html, /Jeg monterer selv/); // kundens eget valg
+  assert.match(html, /Til meg<\/label>/); // kundens eget valg (levering til privatadresse)
   assert.match(buf, /når jeg betaler selv\?/); // kundens FAQ-spørsmål
   assert.match(omoss, /Hei, jeg heter Tom Arne og står bak Finnbilglass\./); // Tom-presentasjon
 
