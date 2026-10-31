@@ -68,7 +68,7 @@
   },
   "dependencies": {
     "apify": "^3.7.2",
-    "crawlee": "^3.18.2",
+    "cheerio": "^1.0.0-rc.12",
     "tsx": "^4.23.12"
   }
 }
