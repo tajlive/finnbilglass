@@ -29,7 +29,7 @@ Staging-versjonen er deployet fra en ren checkout av `c0b96b4`, ikke fra en arbe
 | #8 | `5e007a9` | Merget → `e2d1564` | — |
 | #9 | `723c2eb` | Merget → `94b3ca5` | — |
 | #10 | `c98d043` | Merget → `ddd78d1` | — |
-| **#12** | idempotens | Draft, CI grønn | P0 før pilot — se punkt 6 |
+| **#12** | idempotens | Draft, CI grønn | P0 før pilot — **testet mot ekte D1**, se punkt 6 |
 | **#13** | offentlig kontrakt | Draft, CI grønn — stablet på #6 | P0 før pilot — se punkt 6b |
 | #11 | docs | Draft | Dette dokumentet |
 | #2, #3, #4, #5 | — | Åpne | **Erstattet** — se punkt 12 |
@@ -148,7 +148,34 @@ Målt i staging: fire identiske POST til `/api/inquiry` ga fire rader i `beta_in
 
 **Status: implementert i PR #12.** Nøkkelen reserveres med `INSERT … ON CONFLICT DO NOTHING` mot PRIMARY KEY før henvendelsen opprettes, så parallelle kall kolliderer atomisk uten transaksjon. Tabellen lagrer kun nøkkel og sha256 av kanonisk body — ingen navn, telefon eller e-post. Rate limiting er beholdt og gjelder kun nye innsendinger. Mangler migrasjon 0038, degraderer handleren til dagens oppførsel: kunden blokkeres aldri.
 
-**Må aktiveres i staging før pilot:** kjør `migrations/0038_inquiry_idempotency.sql` mot staging og verifiser kontrakten ende-til-ende.
+### Verifisert mot ekte staging-D1 (31.10.2026)
+
+`0038` kjørt mot `finnbilglass-db-staging`, PR #12 deployet (`d1b6c705`), deretter målt:
+
+| Test | HTTP | Database |
+|---|---|---|
+| 1. Ny nøkkel | 201, id 75 | 1 henvendelse, 1 `created`-event |
+| 2. Retry, likt innhold | 201, **id 75**, `idempotent:true` | uendret |
+| 3. Samme nøkkel, endret innhold | **409** | uendret |
+| 4. **20 parallelle**, identisk nøkkel | **1 × 201, 19 × 409** | **én** henvendelse (id 76) |
+| 5. Ny nøkkel | 201, id 77 | ny henvendelse |
+| 6. Uten header | 201, id 78 | ingen idempotens-rad |
+
+**Ingen duplikater under 20 samtidige kall.** Hver henvendelse fikk nøyaktig ett `created`-event — innsetting og hendelse skjer i én `db.batch()` (implisitt transaksjon), så de kan ikke havne i utakt.
+
+**Personvern verifisert:** tabellen har kun kolonnene `idem_key`, `request_hash`, `inquiry_id`, `state`, `created_at`. Ingen navn, telefon eller e-post.
+
+### Krasj mellom reservering og opprettelse
+
+En feil i det vinduet etterlot tidligere en `PENDING`-rad som låste nøkkelen **for alltid**. Rettet: en `PENDING` eldre enn 60 s kan overtas med en betinget `UPDATE` på `created_at`, så to samtidige overtakelser ikke begge lykkes. `ryddStale()` fjerner resten.
+
+### Pilotblokkering (håndhevet, ikke bare dokumentert)
+
+```bash
+npm run pilot:preflight -- --database finnbilglass-db-staging --config wrangler.staging.toml
+```
+
+Sju krav med eksplisitt grunn per feil, `exit 1` ved manglende `0038`. Verifisert mot staging: alle sju grønne.
 
 ---
 
