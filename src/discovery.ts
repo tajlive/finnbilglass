@@ -1,3 +1,12 @@
+import { normBrand } from './vin-resolver';
+
+/** Katalogen bruker kortformen (VW, ikke Volkswagen). Gjenbruker
+ *  merke-aliasene fra resolveren saa /api/glass og kundereisen
+ *  forstaar samme navn. */
+function normaliserMerke(merke: string): string {
+  return normBrand(merke);
+}
+
 /** Discovery: find front-rute candidates with pagination, canonical URL and stable SKU identifiers */
 export interface Kandidat {
   varenr: string;
@@ -9,10 +18,6 @@ export interface Kandidat {
   canonicalUrl?: string;
   /** SKU fingerprint for dedup */
   skuFingerprint?: string;
-  /** First seen timestamp */
-  firstSeenAt: number;
-  /** Last seen timestamp */
-  lastSeenAt: number;
 }
 
 /**
@@ -51,7 +56,7 @@ export async function discoverFrontRute(
   // Always include the make as seed
   seedOrd.unshift(merke);
 
-  const primaer = [merke.toUpperCase()];
+  const primaer = [normaliserMerke(merke)];
   const frontGlob =
     '(varenavn LIKE "%FRONTRUTE%" OR varenavn LIKE "%FRONT%")';
 
@@ -106,8 +111,6 @@ export async function discoverFrontRute(
         side: r.side,
         canonicalUrl: `https://finnbilglass.no/glas/${r.varenr}`,
         skuFingerprint: `${r.eurokode}-${r.varenr}`,
-        firstSeenAt: Date.now(),
-        lastSeenAt: Date.now(),
       });
     }
   }

@@ -2,6 +2,8 @@
 // These tests verify the core P1 requirements from CTO CODE REVIEW
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { discoverFrontRute, discoverFrontRuteFirst, Kandidat, DiscoveryResult } from '../src/discovery.ts';
 import { StopRuleResult, checkStopRules } from '../src/stop-rules.ts';
 
@@ -25,14 +27,18 @@ test('P1: Kandidat interface has all required fields', () => {
     varenr: 'test123',
     varenavn: 'Test Vindusglas',
     eurokode: '7H0845101H',
-    firstSeenAt: Date.now(),
-    lastSeenAt: Date.now(),
   };
   assert.strictEqual(k.varenr, 'test123');
   assert.strictEqual(k.varenavn, 'Test Vindusglas');
   assert.strictEqual(k.eurokode, '7H0845101H');
-  assert.strictEqual(typeof k.firstSeenAt, 'number');
-  assert.strictEqual(typeof k.lastSeenAt, 'number');
+});
+
+// Test 2b: kandidater har ingen syntetiske tidsstempler — svaret skal være
+// deterministisk slik at identiske søk gir identisk JSON (cache/dedupe/hash).
+test('P1: Kandidat har ikke syntetiske tidsstempler', () => {
+  const k: Kandidat = { varenr: 'a', varenavn: 'b', eurokode: 'c' };
+  assert.strictEqual('firstSeenAt' in k, false);
+  assert.strictEqual('lastSeenAt' in k, false);
 });
 
 // Test 3: P1 - Stop rules halt on error threshold
@@ -67,4 +73,12 @@ test('P1: StopRuleResult includes errorTrigger field', () => {
   assert.strictEqual(result.errorTrigger, 27);
   assert.strictEqual(result.consecutive429s, 3);
   assert.strictEqual(result.qualityPassRate, 0.75);
+});
+// Test 2c: /api/glass må forstå samme merkenavn som kundereisen.
+// Katalogen bruker kortform (VW), men kunden skriver «Volkswagen». Uten
+// gjenbruk av resolverens merke-alias gir søket 0 kandidater.
+test('P1: discovery gjenbruker merke-alias fra resolveren', () => {
+  const src = readFileSync(join(import.meta.dirname, '..', 'src', 'discovery.ts'), 'utf8');
+  assert.match(src, /import\s*\{\s*normBrand\s*\}\s*from\s*'\.\/vin-resolver'/, 'må importere normBrand');
+  assert.doesNotMatch(src, /merke\.toUpperCase\(\)/, 'skal ikke normalisere merke direkte');
 });
