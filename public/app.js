@@ -1005,6 +1005,19 @@
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   }
 
+  // Idempotens-nøkkel for kundehenvendelsen. Lever så lenge innholdet er uendret,
+  // slik at retry etter nettverksfeil treffer samme sak i stedet for å lage en ny.
+  var inquiryIdemKey = null;
+  function nyInquiryNokkel() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+    return 'fbg-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12);
+  }
+  // Endrer kunden innholdet, er det en ny sak — da skal nøkkelen fornyes.
+  ['inquiry-regnr', 'inquiry-navn', 'inquiry-kontakt', 'inquiry-melding'].forEach(function (id) {
+    var el = $(id);
+    if (el) el.addEventListener('input', function () { inquiryIdemKey = null; });
+  });
+
   $('btn-inquiry-send').addEventListener('click', function () {
     var regnr = $('inquiry-regnr').value.trim();
     var navn = $('inquiry-navn').value.trim();
@@ -1017,15 +1030,20 @@
     var org = knapp.textContent;
     knapp.disabled = true;
     knapp.textContent = 'Sender…';
+    // P0 idempotens: samme nøkkel for alle retry-forsøk av samme innsending,
+    // slik at en nettverksfeil ikke lager to saker i /ops. Nøkkelen nullstilles
+    // når kunden endrer innholdet eller etter vellykket sending.
+    if (!inquiryIdemKey) inquiryIdemKey = nyInquiryNokkel();
     loggHendelse('tilbud_foresporsel', { regnr: regnr, navnLengde: navn.length, kontaktType: /@/.test(kontakt) ? 'epost' : 'telefon' });
     fetch('/api/inquiry', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Idempotency-Key': inquiryIdemKey },
       body: JSON.stringify({ regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId })
     })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
       .then(function (r) {
         if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende forespørselen.');
+        inquiryIdemKey = null; // fullført — neste innsending er en ny sak
         $('inquiry-form').classList.add('hidden');
         var b = $('inquiry-bekreftet');
         b.textContent = 'Takk! Vi har mottatt forespørselen og dobbeltsjekker glasset før vi sender deg et endelig tilbud.';
