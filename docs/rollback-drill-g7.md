@@ -1,6 +1,19 @@
 # G7 — Rollback-drill (KLA-301)
 
-> Status 2026-08-13: **Prosedyre verifisert; faktisk drill avventer neste deploy** (staging har kun 1 deployment — rollback krever 2+).
+> Status 2026-10-31: **Faktisk drill utført i staging** (se under). Rollback er verifisert ende-til-ende, ikke bare antatt fra deployment-historikken.
+
+## Faktisk drill utført (staging, 2026-10-31)
+
+```
+deploy 791408f        → 1afe22a8  (ny integrasjonskandidat)
+wrangler rollback     → 8528d2bc  (forrige versjon, 100 %)
+  verifisert: /health 200 · /api/regnr → PINPOINT (ruten serverer)
+re-deploy 791408f     → d30b4ffc  (ny kandidat tilbake)
+  verifisert: /health 200 · /api/regnr → PINPOINT
+```
+
+Bevis: rollback er reelt testet — forrige versjon ble aktivert til 100 % og
+verifisert fungerende FØR ny deploy. Deployment-historikk alene er ikke nok.
 
 ## Verifisert i dag
 
