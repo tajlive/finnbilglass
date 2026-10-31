@@ -34,3 +34,8 @@ data/scrape/
 
 # Egentest-artefakter (50-bilers self-test) — genereres per kjøring
 output/
+
+# Added by Apify CLI
+storage
+node_modules
+.venv

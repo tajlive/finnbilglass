@@ -106,11 +106,14 @@ test('7. ingen endring i API-er og evidence decisionAuthority', () => {
   assert.match(src, /decisionAuthority:\s*'NONE'/);
 });
 
-test('8. feature-flags uendret (review/status forblir av)', () => {
-  for (const f of [wrangler, wranglerStaging]) {
-    assert.match(f, /EVIDENCE_REVIEW_ENABLED\s*=\s*"false"/);
-    assert.match(f, /EVIDENCE_STATUS_CHANGE_ENABLED\s*=\s*"false"/);
-  }
+test('8. feature-flags uendret (review av; status-endring aktivert i prod, av i staging)', () => {
+  // Prod: EVIDENCE_STATUS_CHANGE_ENABLED = "true" er Tom-godkjent i 08b75a6
+  // (sakslisten viste evidenssaker som NEW etter REJECTED). Review forblir av.
+  assert.match(wrangler, /EVIDENCE_REVIEW_ENABLED\s*=\s*"false"/);
+  assert.match(wrangler, /EVIDENCE_STATUS_CHANGE_ENABLED\s*=\s*"true"/);
+  // Staging: begge av — status-endring verifiseres før den slås på der.
+  assert.match(wranglerStaging, /EVIDENCE_REVIEW_ENABLED\s*=\s*"false"/);
+  assert.match(wranglerStaging, /EVIDENCE_STATUS_CHANGE_ENABLED\s*=\s*"false"/);
 });
 
 test('9. resolver uendret (skillendeSporsmaal fortsatt intakt)', () => {

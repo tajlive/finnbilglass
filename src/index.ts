@@ -23,6 +23,7 @@ import { discoverFrontRute } from './discovery';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
+import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -270,6 +271,14 @@ export default {
     if (method === 'GET' && path === '/health') {
       const count = await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM glass_prisliste').first<{ n: number }>();
       return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: count?.n ?? 0 });
+    }
+
+    // Apify-katalog-import (admin, Bearer APIFY_SYNC_TOKEN) — skriver kun apify_catalog_products.
+    if (method === 'POST' && path === '/api/admin/apify-catalog/sync') {
+      return handleApifyCatalogSync(request, env);
+    }
+    if (method === 'GET' && path === '/api/admin/apify-catalog/status') {
+      return handleApifyCatalogStatus(request, env);
     }
 
     if (method === 'POST' && path === '/api/frontrute') {
@@ -1159,9 +1168,9 @@ export default {
         const aar: number = body.aar || 0
         const result = await discoverFrontRute(env, merke, modell, aar)
         return json({ success: true, data: result })
-      } catch (e) {
+      } catch (e: any) {
         console.error('Glass-søk feil:', e)
-        return json({ error: 'Intern feil' }, 500)
+        return json({ error: 'Intern feil', detail: e.message || String(e) }, 500)
       }
     }
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
