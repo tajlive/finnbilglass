@@ -8,7 +8,8 @@
  *
  * Bruk: CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... node scripts/seed-glass-sku-attributter.mjs [--db finnbilglass-db-staging] [--dry-run]
  */
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -20,7 +21,14 @@ const token = process.env.CLOUDFLARE_API_TOKEN;
 const acct = process.env.CLOUDFLARE_ACCOUNT_ID;
 if (!token || !acct) { console.error('FEIL: CLOUDFLARE_API_TOKEN/CLOUDFLARE_ACCOUNT_ID mangler'); process.exit(1); }
 
-const skuer = JSON.parse(readFileSync(join(ROOT, 'data', 'glass-skus.json'), 'utf8'));
+// data/glass-skus.json er GENERERT (39 MB) og skal ikke i git. Bygg den på nytt
+// fra kildedataene hvis den mangler — regenerering er byte-identisk.
+const SKU_FIL = join(ROOT, 'data', 'glass-skus.json');
+if (!existsSync(SKU_FIL)) {
+  console.log('data/glass-skus.json mangler — genererer fra kildedata ...');
+  execFileSync(process.execPath, [join(ROOT, 'scripts', 'migrate-glass-skus.mjs')], { stdio: 'inherit' });
+}
+const skuer = JSON.parse(readFileSync(SKU_FIL, 'utf8'));
 
 // Samle eurocode → kjente attributter (flere SKU-er kan dele eurokode; siste kjente vinner ikke — merge konservativt: aldri overskriv kjent med null).
 const map = new Map();
