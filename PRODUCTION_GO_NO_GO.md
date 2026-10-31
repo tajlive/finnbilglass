@@ -2,7 +2,32 @@
 
 **Dato:** 31. oktober 2026
 **Baseline main:** `ddd78d1`
-**Release-kandidat:** `c0b96b4` (PR #6)
+**Endelig release-SHA (kode):** `74fbc34` — integrasjonen ferdigstilt
+**Merge-rekke:** #6 → #12 → #13 → #14 → separat nodstopp (cherry-pick av `791408f`)
+
+---
+
+## 0. Integrasjon fullført (2026-10-31)
+
+Alle godkjente PR-er er merget til `main` i rekkefølge, hver med grønn CI og QA:
+
+| Steg | PR | Head | Merge-commit | QA/CI |
+|---|---|---|---|---|
+| 1 | #6 (P1, glassøk + prising) | `c0b96b4` | `a59678b` | ✅ 361 pass · CI grønn |
+| 2 | #12 (idempotens) | `7ca089e` | `b95bc17` | ✅ 361 pass · CI grønn |
+| 3 | #13 (offentlig kontrakt, retargetet til main) | `06f748e` | `3b933ad` | ✅ 377 pass · CI grønn |
+| 4 | #14 (kill-switch på alle ruter) | `38784a9` | `ff12179` | ✅ 383 pass · CI grønn |
+| 5 | Separat nodstopp (cherry-pick `791408f`, Tom) | — | `74fbc34` | ✅ tsc grønn |
+| 6 | #11 (dette dokumentet) | — | (merge) | — |
+
+**Konfliktløsning:** #12, #13 og #14 berørte alle `src/index.ts`/`package.json` og
+krevde merge av ny `main` inn i branchen + union-resolusjon (qa-kjeden inneholder
+nå alle steg: idempotens, public-contract, apify-adapter, nok-prising, p1-verify).
+`npm run qa` på endelig kode-`main` (`74fbc34`): **385 pass · 0 fail**.
+
+**Separat nodstopp:** P0-kravet «stopp nye pilotforespørsler» lå som egen commit
+(`791408f`) på integrasjonsbranchen, ikke i noen PR. Den er cherry-picket inn på
+`main` som `74fbc34` slik at utrullingen matcher det som ble verifisert i staging.
 
 ---
 
