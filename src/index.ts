@@ -11,6 +11,7 @@ import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
+import { tilOffentligSvar } from './public-contract';
 import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
 import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
 import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
@@ -1203,7 +1204,9 @@ export default {
         const modell: string = body.modell || ''
         const aar: number = body.aar || 0
         const result = await discoverFrontRute(env, merke, modell, aar)
-        return json({ success: true, data: result })
+        // Offentlig kontrakt: kun kundevendte felt. Eurokode, SKU-fingeravtrykk,
+        // typeCode, side og kilde-metadata lekker aldri ut her.
+        return json({ success: true, data: tilOffentligSvar(result) })
       } catch (e: any) {
         console.error('Glass-søk feil:', e)
         return json({ error: 'Intern feil', detail: e.message || String(e) }, 500)

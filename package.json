@@ -58,13 +58,14 @@
     "rapport:dekning": "node scripts/dekningsrapport.mjs",
     "selftest:50:staging": "node scripts/e2e-self-test-50-cars.mjs",
     "test:ledger-backfill": "node --test tests/ledger-backfill.test.mjs",
-    "qa": "npm run typecheck && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:ops-consolidation && npm run test:glavista && npm run test:migration-guard && npm run test:ledger-backfill && npm run test:handling-c && npm run test:apify-adapter && npm run test:nok-prising && npm run test:p1-verify && npm run test:idempotens && npm run test:dekningsrapport",
+    "qa": "npm run typecheck && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:ops-consolidation && npm run test:glavista && npm run test:migration-guard && npm run test:ledger-backfill && npm run test:handling-c && npm run test:apify-adapter && npm run test:nok-prising && npm run test:p1-verify && npm run test:idempotens && npm run test:public-contract && npm run test:dekningsrapport",
     "test:handling-c": "node --test tests/handling-c.test.mjs",
     "qa:d1": "node scripts/maintenance/d1-integritet.mjs",
     "test:apify-adapter": "node --import tsx --test tests/apify-catalog-adapter.test.mjs",
     "test:nok-prising": "node --import tsx --test tests/nok-prising.test.ts",
     "test:p1-verify": "node --import tsx --test tests/p1-verify.test.ts",
     "test:idempotens": "node --import tsx --test tests/inquiry-idempotency.test.mjs",
+    "test:public-contract": "node --import tsx --test tests/public-contract.test.mjs",
     "pilot:preflight": "node scripts/maintenance/pilot-preflight.mjs"
   },
   "devDependencies": {
