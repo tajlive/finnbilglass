@@ -430,20 +430,19 @@ export default {
         }
       }
       try {
-        const inserted = await env.FINNBILGLASS_DB.prepare(
-          'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
-        ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson).run();
-        // Append-only 'created'-hendelse — starten på tidslinjen (G5).
-        const id = inserted.meta?.last_row_id;
-        if (id) {
-          try {
-            await env.FINNBILGLASS_DB.prepare(
-              "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'created', NULL, 'NEW', ?, ?, 'kunde')"
-            ).bind(`created-${id}-${crypto.randomUUID()}`, id, melding || null, Date.now()).run();
-          } catch (e) {
-            console.error('inquiry-created-event feilet:', e);
-          }
-        }
+        // db.batch() kjører i én implisitt transaksjon: henvendelsen og dens
+        // 'created'-hendelse kan aldri havne i utakt. Hendelsen finner raden via
+        // last_insert_rowid() i samme batch, så vi slipper å kjenne id-en på forhånd.
+        const naa = Date.now();
+        const resultater = await env.FINNBILGLASS_DB.batch([
+          env.FINNBILGLASS_DB.prepare(
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson),
+          env.FINNBILGLASS_DB.prepare(
+            "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
+          ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
+        ]);
+        const id = resultater[0]?.meta?.last_row_id;
         if (idemNokkel && idemHash && id) {
           try { await fullfor(env.FINNBILGLASS_DB as never, idemNokkel, id); } catch { /* best-effort */ }
         }

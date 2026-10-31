@@ -23,11 +23,16 @@ export interface IdempotensDb {
   };
 }
 
+/** Hvor lenge en PENDING-reservasjon holder før den kan overtas. En krasj
+ *  mellom reservering og opprettelse skal ikke låse nøkkelen permanent. */
+export const STALE_MS = 60_000;
+
 export type Reservasjon =
   | { status: 'NY' }
   | { status: 'REPLAY'; inquiryId: number }
   | { status: 'KONFLIKT' }
-  | { status: 'PAGAR' };
+  | { status: 'PAGAR' }
+  | { status: 'OVERTATT' };
 
 /** Feltene som inngår i fingeravtrykket. Endres rekkefølgen/innholdet her,
  *  endres kontrakten — derfor eksplisitt liste og ikke hele bodyn. */
@@ -82,7 +87,8 @@ export async function reserver(
   db: IdempotensDb,
   nokkel: string,
   hash: string,
-  naa: number = Date.now()
+  naa: number = Date.now(),
+  staleMs: number = STALE_MS
 ): Promise<Reservasjon> {
   const innsatt = await db
     .prepare(
@@ -94,17 +100,44 @@ export async function reserver(
   if ((innsatt.meta?.changes ?? 0) > 0) return { status: 'NY' };
 
   const rad = await db
-    .prepare('SELECT request_hash, inquiry_id, state FROM inquiry_idempotency WHERE idem_key = ?')
+    .prepare('SELECT request_hash, inquiry_id, state, created_at FROM inquiry_idempotency WHERE idem_key = ?')
     .bind(nokkel)
-    .first<{ request_hash: string; inquiry_id: number | null; state: string }>();
+    .first<{ request_hash: string; inquiry_id: number | null; state: string; created_at: number }>();
 
   // Nøkkelen forsvant mellom INSERT og SELECT (frigjort av en feilende
   // parallell forespørsel). La kalleren prøve på nytt som ny.
   if (!rad) return { status: 'NY' };
 
-  if (rad.request_hash !== hash) return { status: 'KONFLIKT' };
-  if (rad.state === 'DONE' && rad.inquiry_id != null) return { status: 'REPLAY', inquiryId: rad.inquiry_id };
+  if (rad.state === 'DONE' && rad.inquiry_id != null) {
+    return rad.request_hash === hash
+      ? { status: 'REPLAY', inquiryId: rad.inquiry_id }
+      : { status: 'KONFLIKT' };
+  }
+
+  // PENDING: enten pågår den fortsatt, eller så krasjet en tidligere forespørsel
+  // mellom reservering og opprettelse. Er den eldre enn staleMs, tar vi over —
+  // ellers ville nøkkelen vært låst for alltid og kunden aldri kunne sende inn.
+  if (naa - rad.created_at > staleMs) {
+    const overtatt = await db
+      .prepare("UPDATE inquiry_idempotency SET request_hash = ?, created_at = ?, inquiry_id = NULL WHERE idem_key = ? AND state = 'PENDING' AND created_at = ?")
+      .bind(hash, naa, nokkel, rad.created_at)
+      .run();
+    if ((overtatt.meta?.changes ?? 0) > 0) return { status: 'OVERTATT' };
+    return { status: 'PAGAR' }; // en annen vant kappløpet
+  }
+
+  // Fortsatt PENDING: innsendingen pågår. Svar 409 «behandles allerede» uansett
+  // innhold — det er ikke en konflikt med en fullført sak, bare et kappløp.
   return { status: 'PAGAR' };
+}
+
+/** Rydder PENDING-reservasjoner eldre enn staleMs. Kalles fra vedlikehold. */
+export async function ryddStale(db: IdempotensDb, naa: number = Date.now(), staleMs: number = STALE_MS): Promise<number> {
+  const r = await db
+    .prepare("DELETE FROM inquiry_idempotency WHERE state = 'PENDING' AND created_at < ?")
+    .bind(naa - staleMs)
+    .run();
+  return r.meta?.changes ?? 0;
 }
 
 /** Merker nøkkelen som fullført og kobler den til henvendelsen. */

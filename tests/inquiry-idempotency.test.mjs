@@ -20,6 +20,8 @@ import {
   reserver,
   fullfor,
   frigjor,
+  ryddStale,
+  STALE_MS,
 } from '../src/inquiry-idempotency.ts';
 
 /** Minimal D1-attrapp som håndhever PRIMARY KEY på idem_key. */
@@ -38,11 +40,30 @@ function falskDb() {
             rader.set(key, { request_hash: hash, inquiry_id: null, state: 'PENDING', created_at: naa });
             return { meta: { changes: 1 } };
           }
-          if (sql.includes("state = 'DONE'")) {
+          if (sql.includes("SET inquiry_id = ?, state = 'DONE'")) {
             const [inquiryId, key] = args;
             const r = rader.get(key);
             if (r) { r.inquiry_id = inquiryId; r.state = 'DONE'; }
             return { meta: { changes: r ? 1 : 0 } };
+          }
+          if (sql.includes('SET request_hash = ?, created_at = ?')) {
+            // Overtakelse av foreldet PENDING (betinget på uendret created_at).
+            const [hash, naa, key, gammelTid] = args;
+            const r = rader.get(key);
+            if (r && r.state === 'PENDING' && r.created_at === gammelTid) {
+              r.request_hash = hash; r.created_at = naa; r.inquiry_id = null;
+              return { meta: { changes: 1 } };
+            }
+            return { meta: { changes: 0 } };
+          }
+          if (sql.includes("state = 'PENDING' AND created_at <")) {
+            // ryddStale: cutoff, ikke nøkkel.
+            const [cutoff] = args;
+            let n = 0;
+            for (const [k, r] of [...rader]) {
+              if (r.state === 'PENDING' && r.created_at < cutoff) { rader.delete(k); n++; }
+            }
+            return { meta: { changes: n } };
           }
           if (sql.includes('DELETE FROM inquiry_idempotency')) {
             const [key] = args;
@@ -109,12 +130,21 @@ test('samme nøkkel + identisk innhold gir REPLAY med samme inquiryId', async ()
   assert.equal(db.rader.size, 1, 'ingen ny rad');
 });
 
-test('samme nøkkel + endret innhold gir KONFLIKT', async () => {
+test('samme nøkkel + endret innhold gir KONFLIKT etter fullført sak', async () => {
   const db = falskDb();
   const h1 = await requestHash(BODY);
   const h2 = await requestHash({ ...BODY, melding: 'Annen melding' });
   assert.equal((await reserver(db, 'nokkel-12345678', h1)).status, 'NY');
+  await fullfor(db, 'nokkel-12345678', 1);
   assert.equal((await reserver(db, 'nokkel-12345678', h2)).status, 'KONFLIKT');
+});
+
+test('samme nøkkel + endret innhold mens den pågår gir PAGAR (409)', async () => {
+  const db = falskDb();
+  const h1 = await requestHash(BODY);
+  const h2 = await requestHash({ ...BODY, melding: 'Annen melding' });
+  await reserver(db, 'nokkel-12345678', h1);
+  assert.equal((await reserver(db, 'nokkel-12345678', h2)).status, 'PAGAR');
 });
 
 test('parallell forespørsel gir PAGAR — aldri to innsendinger', async () => {
@@ -201,4 +231,71 @@ test('idempotens-logging inneholder ingen personopplysninger', () => {
   for (const linje of logger) {
     assert.doesNotMatch(linje, /body|navn|kontakt|melding/i, `logger PII: ${linje}`);
   }
+});
+
+// ── Krasj og gjenoppretting ────────────────────────────────────────────────
+// En krasj mellom reservering og opprettelse skal ikke låse nøkkelen for alltid.
+
+test('fersk PENDING gir PAGAR (parallell forespørsel pågår)', async () => {
+  const db = falskDb();
+  const h = await requestHash(BODY);
+  const naa = 1_000_000;
+  await reserver(db, 'nokkel-12345678', h, naa);
+  const svar = await reserver(db, 'nokkel-12345678', h, naa + 5_000);
+  assert.equal(svar.status, 'PAGAR');
+});
+
+test('foreldet PENDING kan overtas — nøkkelen låses ikke permanent', async () => {
+  const db = falskDb();
+  const h = await requestHash(BODY);
+  const naa = 1_000_000;
+  await reserver(db, 'nokkel-12345678', h, naa);
+  const svar = await reserver(db, 'nokkel-12345678', h, naa + STALE_MS + 1);
+  assert.equal(svar.status, 'OVERTATT');
+});
+
+test('overtakelse med nytt innhold gir OVERTATT, ikke KONFLIKT', async () => {
+  const db = falskDb();
+  const h1 = await requestHash(BODY);
+  const h2 = await requestHash({ ...BODY, melding: 'Endret' });
+  const naa = 1_000_000;
+  await reserver(db, 'nokkel-12345678', h1, naa);
+  assert.equal((await reserver(db, 'nokkel-12345678', h2, naa + STALE_MS + 1)).status, 'OVERTATT');
+});
+
+test('DONE gir REPLAY/FORTSATT KONFLIKT uansett alder', async () => {
+  const db = falskDb();
+  const h1 = await requestHash(BODY);
+  const h2 = await requestHash({ ...BODY, melding: 'Endret' });
+  await reserver(db, 'nokkel-12345678', h1, 1_000_000);
+  await fullfor(db, 'nokkel-12345678', 9);
+  assert.equal((await reserver(db, 'nokkel-12345678', h1, 9_999_999)).status, 'REPLAY');
+  assert.equal((await reserver(db, 'nokkel-12345678', h2, 9_999_999)).status, 'KONFLIKT');
+});
+
+test('ryddStale fjerner bare foreldede PENDING-rader', async () => {
+  const db = falskDb();
+  const h = await requestHash(BODY);
+  await reserver(db, 'gammel-nokkel-1', h, 1_000);
+  await reserver(db, 'fersk-nokkel-2', h, 1_000_000);
+  await fullfor(db, 'fersk-nokkel-2', 5);
+  const slettet = await ryddStale(db, 1_000_000 + STALE_MS + 1);
+  assert.equal(slettet, 1);
+  assert.equal(db.rader.has('gammel-nokkel-1'), false);
+  assert.equal(db.rader.has('fersk-nokkel-2'), true, 'fullført nøkkel skal bevares');
+});
+
+test('henvendelse og created-hendelse skrives i én batch (atomisk)', () => {
+  const src = readFileSync(join(import.meta.dirname, '..', 'src', 'index.ts'), 'utf8');
+  assert.match(src, /\.batch\(\[/);
+  assert.match(src, /last_insert_rowid\(\)/, 'hendelsen må knyttes til raden i samme batch');
+});
+
+test('pilot-preflight blokkerer naar 0038 mangler', () => {
+  const src = readFileSync(join(import.meta.dirname, '..', 'scripts', 'maintenance', 'pilot-preflight.mjs'), 'utf8');
+  assert.match(src, /inquiry_idempotency/, 'ma sjekke idempotens-tabellen');
+  assert.match(src, /PILOT BLOKKERT/);
+  assert.match(src, /process\.exit\(1\)/);
+  // Hver sjekk skal ha en forklarende grunn, ikke bare et feltnavn.
+  assert.match(src, /grunn/);
 });

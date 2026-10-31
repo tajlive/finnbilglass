@@ -61,7 +61,8 @@
     "qa": "npm run typecheck && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:ops-consolidation && npm run test:glavista && npm run test:migration-guard && npm run test:ledger-backfill && npm run test:handling-c && npm run test:idempotens && npm run test:dekningsrapport",
     "test:handling-c": "node --test tests/handling-c.test.mjs",
     "qa:d1": "node scripts/maintenance/d1-integritet.mjs",
-    "test:idempotens": "node --import tsx --test tests/inquiry-idempotency.test.mjs"
+    "test:idempotens": "node --import tsx --test tests/inquiry-idempotency.test.mjs",
+    "pilot:preflight": "node scripts/maintenance/pilot-preflight.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
