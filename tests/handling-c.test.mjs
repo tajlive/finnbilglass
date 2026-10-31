@@ -76,3 +76,12 @@ test('produksjonsmål avvises uten --confirm og HANDLING_C_APPROVED', () => {
 test('testdatabase tillates uten prod-bekreftelse', () => {
     assert.equal(sjekkDatabase('finnbilglass-handling-c-test', {}).ok, true);
 });
+
+test('d1-integritet avviser produksjon uten --allow-production', async () => {
+    const { sjekkMal } = await import('../scripts/maintenance/d1-integritet.mjs');
+    assert.equal(sjekkMal(PROD_DB, {}).ok, false);
+    assert.equal(sjekkMal(PROD_DB, { allowProduction: false }).ok, false);
+    assert.equal(sjekkMal(PROD_DB, { allowProduction: true }).ok, true);
+    assert.equal(sjekkMal('finnbilglass-handling-c-test', {}).ok, true);
+    assert.equal(sjekkMal('', {}).ok, false);
+});
