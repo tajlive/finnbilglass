@@ -20,6 +20,7 @@ import { tierPris } from './matcher';
 import { matcherAar, parseAar } from './aar-parser';
 import { serieKey, normaliserKatalogModell } from './serie-mapping';
 import { dekodeEurokode, type Dekodet } from './eurokode-dekoder';
+import { karanteneGrunn, prisKaranteneGrunn } from './glass-karantene';
 
 export type ResolverUtfall = 'PINPOINT' | 'VERIFY' | 'FALLBACK';
 
@@ -36,6 +37,8 @@ export interface ResolverKandidat {
     kamera: boolean | null;
     adas: boolean | null;
     coated: boolean | null;
+    /** Varmetråder/varmefilm (eurokode H). ALDRI det samme som HUD. */
+    oppvarmet?: boolean | null;
   };
 }
 
@@ -180,15 +183,23 @@ export function erFrontrute(varenavn: string | null, varenr: string, dek: Dekode
  *  (bak/side/dør/takglass) og OEM-delnummer uten FRONTR-markør returnerer null. */
 async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | null> {
   const r = await env.FINNBILGLASS_DB.prepare(
-    `SELECT varenr, varenavn, pris, eurokode FROM glass_prisliste
+    `SELECT varenr, varenavn, pris, eurokode, kommentar FROM glass_prisliste
      WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
-  ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>();
+  ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null; kommentar: string | null }>();
   if (!r) return null;
+
+  // Produkt-karantene: rader merket som glass som egentlig er panel/list
+  // (f.eks. TORPEDOVEGG). Se src/glass-karantene.ts.
+  if (karanteneGrunn(r.kommentar, r.varenavn)) return null;
+  // Pris-karantene: ekte glass, men listeprisen gjelder et kit/antall.
+  // Produktet beholdes; prisen skjules (listepris = null → ingen kundepris).
+  const prisKarantene = prisKaranteneGrunn(r.kommentar) != null;
+  if (prisKarantene) console.warn(`pris-karantene: ${r.varenr} — ${r.kommentar}`);
 
   const dek = dekodeEurokode(r.eurokode);
   if (!erFrontrute(r.varenavn, r.varenr, dek)) return null; // bak/side/dør/takglass
 
-  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
+  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null, oppvarmet: null };
 
   // Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13),
   // men KUN når koden faktisk er en eurokode (gyldig posisjonsbokstav). OEM-delnummer
@@ -197,8 +208,13 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
     const eg = dek.egenskaper;
     attributter.sensor  = eg.includes('sensor');
     attributter.antenne = eg.includes('antenne');
-    attributter.hud     = eg.includes('oppvarmet');
     attributter.coated  = eg.includes('coated');
+    // H i eurokoden betyr varmetråder/varmefilm — det er OPPVARMET, ikke HUD.
+    // HUD er et projeksjonsbilde fra dashbordet og kan ikke leses av glasset
+    // (Tom, fagregel 17). Tidligere ble hud satt = oppvarmet, som ga kunden
+    // «med head-up-display» på en bil som bare har varmetråder.
+    attributter.oppvarmet = eg.includes('oppvarmet');
+    attributter.hud = null;
   }
 
   // glass_catalog kun for kamera + adas (ikke kodet i eurokoden)
@@ -215,8 +231,8 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
   return {
     varenr: r.varenr,
     varenavn: r.varenavn,
-    pris: tierPris(r.pris),
-    listepris: r.pris,
+    pris: prisKarantene ? null : tierPris(r.pris),
+    listepris: prisKarantene ? null : r.pris,
     eurokode: r.eurokode,
     attributter,
   };
@@ -225,7 +241,7 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
 /** Spørsmål som FAKTISK skiller kandidatene: felt der minst én kandidat har true OG minst én har false.
  *  Ukjente verdier (null) teller ikke — vi spør aldri om ting vi ikke kan skille på. */
 export function skillendeSporsmaal(kandidater: ResolverKandidat[]): string[] {
-  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'kamera', 'adas', 'coated'];
+  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'kamera', 'adas', 'coated', 'oppvarmet'];
   const ut: string[] = [];
   for (const f of felt) {
     const verdier = kandidater.map((k) => k.attributter[f]).filter((v): v is boolean => typeof v === 'boolean');
@@ -569,7 +585,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
   }
   return {
     utfall: 'VERIFY',
-    grunn: `L${lag}: ${kandidater.length} varianter — utstyr må verifiseres`,
+    grunn: `L${lag}: ${kandidater.length} varianter${kandidater.length > 6 ? ' (viser 6)' : ''} — utstyr må verifiseres`,
     confidence: Math.min(confidence, 0.5),
     kandidater: kandidater.slice(0, 6),
     sporsmaal: skillendeSporsmaal(kandidater.slice(0, 6)),

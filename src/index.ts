@@ -27,6 +27,7 @@ import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
 import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
 import { handlePrisEstimat } from './routes/pris-estimat';
+import { skalLoggeSok } from './sok-logg-policy';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -517,23 +518,28 @@ export default {
       if (typeof regnr !== 'string' || !regnr.trim()) return json({ ok: false, error: 'regnr påkrevd' }, 400);
       const ren = regnr.trim();
       const norm = ren.toUpperCase().replace(/[\s\-–—.]+/g, '');
+      // Ren identifikasjon (skilt → bil) skal ikke etterlate loggrader.
+      // Frontend sender lookupOnly:true; se src/sok-logg-policy.ts.
+      const skalLogge = skalLoggeSok(body);
       let lagret = false;
-      try {
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
-        ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
-        lagret = true;
-      } catch (e) {
-        console.error('regnr-lagring feilet:', e);
-      }
-      // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
-      try {
-        const g = geoAv(request);
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
-      } catch (e) {
-        console.error('søkelogg feilet:', e);
+      if (skalLogge) {
+        try {
+          await env.FINNBILGLASS_DB.prepare(
+            'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
+          ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
+          lagret = true;
+        } catch (e) {
+          console.error('regnr-lagring feilet:', e);
+        }
+        // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
+        try {
+          const g = geoAv(request);
+          await env.FINNBILGLASS_DB.prepare(
+            'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
+        } catch (e) {
+          console.error('søkelogg feilet:', e);
+        }
       }
       // SVV-oppslag: kjennemerke → bil. Null ved feil/ukjent — frontend faller til manuell.
       let bil = null;
