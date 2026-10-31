@@ -233,6 +233,31 @@ Kandidatlisten er identisk etter degradering. Matchmotoren er ikke endret — ba
 
 `grunn` fra `/api/regnr`: `kill switch: PINPOINT→FALLBACK (vin_glass_overrides: entydig treff …)`.
 
+### PINPOINT-grenen i `/api/frontrute` — bevist
+
+Fixture som faktisk treffer resolverens PINPOINT-vei: `{"merke":"VW","modell":"TRANSPORTER","aar":2005,"vin":"<test-VIN>"}`.
+
+| Tilstand | `pinpoint` | `utfall` | Kandidater |
+|---|---|---|---|
+| begge = 1 | `true` | **PINPOINT** | 1 |
+| `resolver_pinpoint = 0` | `false` | **VERIFY** | 1 |
+| `resolver_all = 0` | `false` | (tekstmatcher) | 5 |
+| gjenopprettet | `true` | **PINPOINT** | 1 |
+
+Den tidligere testen traff bare tekstmatchergrenen. Det er nå dekket.
+
+### Separat nødstopp for nye henvendelser
+
+Uavhengig av resolver-cachen:
+
+```sql
+UPDATE feature_flags SET enabled = 0 WHERE flag = 'inquiries_enabled';
+```
+
+`/api/inquiry` sjekker flagget **før** rate limit og før nøkkelreservering, og svarer `503`. En stengt pilot bruker dermed ikke opp kvoten og låser ingen idempotens-nøkler.
+
+Verifisert i staging: `503` med stopp aktivt, deretter `429` etter gjenoppretting — som beviser at stopp-sjekken ble passert og at forespørselen nådde rate-limiteren.
+
 ### Cache
 
 TTL **10 s** per Worker-isolat. Worst case fra flagget endres i D1 til alle isolater har sett det er 10 s. Lesefeil caches ikke, så en forbigående D1-feil låses ikke fast.
@@ -253,7 +278,7 @@ Verifiser med `npm run pilot:preflight` og ett `/api/regnr`-kall: `resolver.utfa
 1. **Propagering:** inntil 10 s per isolat. En kunde som treffer et isolat med gammel cache kan i det vinduet få PINPOINT.
 2. **Manuell operasjon:** nødstopp krever D1-skriving. Det finnes ingen egen admin-knapp i `/ops`.
 3. **Ingen overvåking:** ingen alarm hvis flagget står feil.
-4. **`/api/frontrute` viste `pinpoint=false` i alle testede tilstander** for testkjøretøyet fordi det traff tekstmatcheren, ikke resolverens PINPOINT-vei. Degraderingen er derfor bevist på `/api/regnr` og `/api/vin`, som faktisk returnerte PINPOINT.
+4. **Propageringstid målt:** 0–1 s over fire flagg-flipp med 40 pollinger hver. Teoretisk worst case er fortsatt TTL 10 s for en varm isolate som ikke treffes under endringen.
 
 ---
 
