@@ -83,6 +83,18 @@ export async function anvendResolverPolicy<T extends { utfall: ResolverUtfall; g
   };
 }
 
+/**
+ * Separat nødstopp for nye kundehenvendelser.
+ *
+ * Uavhengig av resolver-cachen: dette stopper innsendingen før noe annet skjer,
+ * så en pilot kan stenges umiddelbart uten å vente på at resolver-flagget
+ * propagerer. Manglende flagg = tillatt (fail-open), slik at et miljø uten
+ * flagget ikke mister salg ved en feilkonfigurasjon.
+ */
+export async function henvendelserTillatt(env: Env): Promise<boolean> {
+  return erAktiv(env, 'inquiries_enabled');
+}
+
 /** Brukes av ruter som vil vite om PINPOINT er tillatt før de bygger svaret. */
 export async function pinpointTillatt(env: Env): Promise<boolean> {
   return (await erAktivKonservativ(env, 'resolver_all')) && (await erAktivKonservativ(env, 'resolver_pinpoint'));

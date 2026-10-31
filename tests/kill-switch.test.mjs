@@ -80,7 +80,7 @@ test('Cache: verdien er stabil innen TTL (10s), deretter leses D1 på nytt', asy
 // Bare /api/frontrute brukte policyen. /api/regnr og /api/vin returnerte
 // resolveren rå, så stoppsignalet ikke virket der.
 
-import { anvendResolverPolicy, pinpointTillatt } from '../src/kill-switch.ts';
+import { anvendResolverPolicy, pinpointTillatt, henvendelserTillatt } from '../src/kill-switch.ts';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -137,4 +137,26 @@ test('alle resolver-ruter bruker den felles policyen', () => {
   assert.ok(treff.length >= 3, `forventet minst 3 ruter (frontrute, regnr, vin), fant ${treff.length}`);
   assert.doesNotMatch(src, /json\(\{ ok: true, lagret, bil, resolver \}\)/, 'regnr returnerte rå resolver');
   assert.doesNotMatch(src, /json\(\{ ok: true, bil, resolver \}\)/, 'vin returnerte rå resolver');
+});
+
+test('henvendelserTillatt: separat stopp, fail-open uten flagg', async () => {
+  _resetCache();
+  assert.equal(await henvendelserTillatt(mockEnv2({})), true, 'manglende flagg = tillatt');
+  _resetCache();
+  assert.equal(await henvendelserTillatt(mockEnv2({ inquiries_enabled: 1 })), true);
+  _resetCache();
+  assert.equal(await henvendelserTillatt(mockEnv2({ inquiries_enabled: 0 })), false);
+});
+
+test('/api/inquiry sjekker pilotstoppet foran alt annet', () => {
+  const src = readFileSync(join(import.meta.dirname, '..', 'src', 'index.ts'), 'utf8');
+  assert.match(src, /henvendelserTillatt\(env\)/, 'må sjekke stoppet i inquiry-ruten');
+  assert.match(src, /'Vi tar ikke imot nye forespørsler/, 'skal svare med tydelig melding');
+  assert.match(src, /\}, 503\)/, 'skal svare 503 når stoppet er aktivt');
+  // Invarianten: stoppet sjekkes før rate limit og før nøkkelreservering, slik
+  // at en stengt pilot ikke bruker opp kvoten eller låser idempotens-nøkler.
+  const stopp = src.indexOf('await henvendelserTillatt(env)');
+  assert.ok(stopp > 0, 'fant ikke kallet');
+  assert.ok(stopp < src.indexOf('inquiry_rate_limits'), 'stoppet må sjekkes før rate limit');
+  assert.ok(stopp < src.indexOf('reserver(env.FINNBILGLASS_DB'), 'stoppet må sjekkes før nøkkelreservering');
 });
