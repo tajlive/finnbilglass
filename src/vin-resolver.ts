@@ -20,6 +20,7 @@ import { tierPris } from './matcher';
 import { matcherAar, parseAar } from './aar-parser';
 import { serieKey, normaliserKatalogModell } from './serie-mapping';
 import { dekodeEurokode, type Dekodet } from './eurokode-dekoder';
+import { karanteneGrunn } from './glass-karantene';
 
 export type ResolverUtfall = 'PINPOINT' | 'VERIFY' | 'FALLBACK';
 
@@ -182,10 +183,14 @@ export function erFrontrute(varenavn: string | null, varenr: string, dek: Dekode
  *  (bak/side/dør/takglass) og OEM-delnummer uten FRONTR-markør returnerer null. */
 async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | null> {
   const r = await env.FINNBILGLASS_DB.prepare(
-    `SELECT varenr, varenavn, pris, eurokode FROM glass_prisliste
+    `SELECT varenr, varenavn, pris, eurokode, kommentar FROM glass_prisliste
      WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
-  ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null }>();
+  ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null; kommentar: string | null }>();
   if (!r) return null;
+
+  // Karantene: rader merket som glass som egentlig er panel/list/kit
+  // (f.eks. TORPEDOVEGG). Se src/glass-karantene.ts.
+  if (karanteneGrunn(r.kommentar, r.varenavn)) return null;
 
   const dek = dekodeEurokode(r.eurokode);
   if (!erFrontrute(r.varenavn, r.varenr, dek)) return null; // bak/side/dør/takglass

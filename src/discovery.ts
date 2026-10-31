@@ -1,5 +1,7 @@
 import { normBrand, modellTokensAv, ordTreff } from './vin-resolver';
 import { LAVESTE_SITERBARE_LISTEPRIS } from './pricing/nok-prising';
+import { karanteneGrunn } from './glass-karantene';
+import { parseAar, matcherAar } from './aar-parser';
 
 /** Katalogen bruker kortformen (VW, ikke Volkswagen). Gjenbruker
  *  merke-aliasene fra resolveren saa /api/glass og kundereisen
@@ -47,6 +49,19 @@ const FULLE_KOLONNER = [...SLANKE_KOLONNER, 'typeCode', 'side'];
 
 const GT_KODE_MAKS = 60;
 const SIDE_STORRELSE = 20;
+/** Årsmodell utenfor dette vinduet er datastøy (verifisert: GT har 1500–2060). */
+const MIN_AAR = 1940;
+const MAKS_AAR = new Date().getUTCFullYear() + 1;
+
+/**
+ * Varenavn som bevisst navngir en annen rutetype. GT-koder peker på varenr, men
+ * en GT-rad kan i prinsippet peke på feil rad i prislista — navnet er siste
+ * kontroll før kunden får en dørrute presentert som frontrute.
+ */
+function erAnnenRutetype(varenavn: string | null | undefined): boolean {
+  const n = (varenavn ?? '').toUpperCase();
+  return /\b(BAKRUTE|BAKRUTA|DØRRUTE|DORRUTE|SIDERUTE|VENTILRUTE|VENTRUTE|SIDEGLASS|DØRGLASS|DORGLASS|TAKGLASS)\b/.test(n);
+}
 
 type Rad = {
   varenr: string;
@@ -93,8 +108,12 @@ async function gtFrontruteKoder(
   if (!tokens.length) return [];
   const like = tokens.map(() => 'model LIKE ?').join(' OR ');
   const params: (string | number)[] = [merke, ...tokens.map((t) => `%${t}%`)];
-  let sql = `SELECT model, frontrute_eurocode FROM ground_truth WHERE make = ? AND (${like})`;
+  // Årsvindu: GT inneholder rader med år 1500–2060 (datastøy). De skal aldri
+  // kunne matche et reelt kjøretøy.
+  let sql = `SELECT model, year, frontrute_eurocode FROM ground_truth
+              WHERE make = ? AND year BETWEEN ${MIN_AAR} AND ${MAKS_AAR} AND (${like})`;
   if (aar) {
+    if (aar < MIN_AAR || aar > MAKS_AAR) return [];
     sql += ' AND year = ?';
     params.push(aar);
   }
@@ -110,28 +129,63 @@ async function gtFrontruteKoder(
   return [...koder].slice(0, GT_KODE_MAKS);
 }
 
-/** Henter prisliste-rader for eksakte GT-koder. Navnet på raden avgjør ikke om
- *  det er en frontrute — koden er identiteten. Dette er grunnen til at
- *  «TOYOTA C-HR 5D CROSSOVER 16-» (uten ordet FRONTRUTE) nå blir funnet. */
-async function raderForKoder(env: { FINNBILGLASS_DB: any }, koder: string[]): Promise<Rad[]> {
+/**
+ * Henter prisliste-rader for GT-koder.
+ *
+ * To faser, fordi prefiksmatch er en hypotese og ikke en identitet:
+ *  1. EKSAKT: `varenr = kode` eller `eurokode = kode`. Dette er trygt alene.
+ *  2. PREFIKS: bare for koder som ikke fikk eksakt treff, og bare når raden
+ *     samtidig inneholder et modelltoken fra søket. Uten modellkontrollen kan
+ *     en prefiks fange en helt annen bil/rutetype.
+ *
+ * Navnet på raden avgjør ikke om det er en frontrute — koden er identiteten —
+ * men rader som eksplisitt navngir en annen rutetype forkastes (se
+ * erAnnenRutetype), og ikke-glass-rader går i karantene.
+ */
+async function raderForKoder(env: { FINNBILGLASS_DB: any }, koder: string[], tokens: string[]): Promise<Rad[]> {
   if (!koder.length) return [];
   const plasser = koder.map(() => '?').join(',');
-  const likePlasser = koder.map(() => 'eurokode LIKE ?').join(' OR ');
-  const bygg = (kolonner: string[]) =>
-    `SELECT ${kolonner.join(', ')}
-       FROM glass_prisliste
-      WHERE rad_type='glass'
-        AND (varenr IN (${plasser}) OR eurokode IN (${plasser}) OR ${likePlasser})
-      ORDER BY (pris IS NULL), (pris < ?), pris`;
-  const bind = () => [...koder, ...koder, ...koder.map((k) => `${k}%`), LAVESTE_SITERBARE_LISTEPRIS];
+  const sortering = 'ORDER BY (pris IS NULL), (pris < ?), pris';
 
-  try {
-    const r = await env.FINNBILGLASS_DB.prepare(bygg(FULLE_KOLONNER)).bind(...bind()).all();
-    return r.results ?? [];
-  } catch {
-    const r = await env.FINNBILGLASS_DB.prepare(bygg(SLANKE_KOLONNER)).bind(...bind()).all();
-    return r.results ?? [];
+  const kjor = async (sqlBygger: (kolonner: string[]) => string, params: (string | number)[]) => {
+    try {
+      const r = await env.FINNBILGLASS_DB.prepare(sqlBygger(FULLE_KOLONNER)).bind(...params).all();
+      return (r.results ?? []) as Rad[];
+    } catch {
+      const r = await env.FINNBILGLASS_DB.prepare(sqlBygger(SLANKE_KOLONNER)).bind(...params).all();
+      return (r.results ?? []) as Rad[];
+    }
+  };
+
+  // Fase 1 — eksakt identitet
+  const eksakte = await kjor(
+    (k) => `SELECT ${k.join(', ')} FROM glass_prisliste
+             WHERE rad_type='glass' AND (varenr IN (${plasser}) OR eurokode IN (${plasser}))
+             ${sortering}`,
+    [...koder, ...koder, LAVESTE_SITERBARE_LISTEPRIS],
+  );
+
+  const harTreff = new Set<string>();
+  for (const r of eksakte) {
+    if (r.varenr && koder.includes(r.varenr)) harTreff.add(r.varenr);
+    if (r.eurokode && koder.includes(r.eurokode)) harTreff.add(r.eurokode);
   }
+  const mangler = koder.filter((k) => !harTreff.has(k));
+
+  // Fase 2 — prefiks, kun for manglende koder, kun med modelltoken
+  let prefiksRader: Rad[] = [];
+  if (mangler.length && tokens.length) {
+    const likePlasser = mangler.map(() => 'eurokode LIKE ?').join(' OR ');
+    const modellPlasser = tokens.map(() => 'varenavn LIKE ?').join(' OR ');
+    prefiksRader = await kjor(
+      (k) => `SELECT ${k.join(', ')} FROM glass_prisliste
+               WHERE rad_type='glass' AND (${likePlasser}) AND (${modellPlasser})
+               ${sortering}`,
+      [...mangler.map((k) => `${k}%`), ...tokens.map((t) => `%${t}%`), LAVESTE_SITERBARE_LISTEPRIS],
+    );
+  }
+
+  return [...eksakte, ...prefiksRader];
 }
 
 /**
@@ -171,11 +225,28 @@ async function tekstFallback(
 
   try {
     const r = await env.FINNBILGLASS_DB.prepare(bygg(FULLE_KOLONNER)).bind(...params).all();
-    return r.results ?? [];
+    return filtrerPaaAar((r.results ?? []) as Rad[], aar);
   } catch {
     const r = await env.FINNBILGLASS_DB.prepare(bygg(SLANKE_KOLONNER)).bind(...params).all();
-    return r.results ?? [];
+    return filtrerPaaAar((r.results ?? []) as Rad[], aar);
   }
+}
+
+/**
+ * Årskontroll for tekstfallback: raden må ha et lesbart årsintervall i navnet
+ * som inneholder bilens år. Uten dette gir «C-HR 2005» treff på en 2016-+
+ * rute, fordi SQL-en bare ser ordet C-HR.
+ *
+ * Gjelder bare fallback — GT-stien har allerede matchet eksakt år i databasen.
+ * Ukjent intervall → ekskluder (false positive er verre enn tomt svar).
+ */
+function filtrerPaaAar(rader: Rad[], aar?: number): Rad[] {
+  if (!aar) return rader;
+  return rader.filter((r) => {
+    const intervall = parseAar(r.varenavn);
+    if (!intervall) return false;
+    return matcherAar(intervall, aar);
+  });
 }
 
 /**
@@ -196,25 +267,40 @@ export async function discoverFrontRute(
   cursor?: string
 ): Promise<DiscoveryResult> {
   const merkeNorm = normaliserMerke(merke);
+  const tokens = modellTokensAv(modell || '', merkeNorm);
+
+  // Umulig årsmodell skal aldri gi treff — verken via GT eller fallback.
+  // (GT inneholder støyår 1500–2060; åpne intervaller som «16-» matcher 2060.)
+  if (aar != null && (Number.isNaN(aar) || aar < MIN_AAR || aar > MAKS_AAR)) {
+    return { candidates: [], totalAvailable: 0, hasMore: false, kilde: 'ground_truth' };
+  }
 
   let rader: Rad[] = [];
   let kilde: 'ground_truth' | 'tekst' = 'ground_truth';
 
   const koder = await gtFrontruteKoder(env, merkeNorm, modell || '', aar);
-  if (koder.length) rader = await raderForKoder(env, koder);
+  if (koder.length) rader = await raderForKoder(env, koder, tokens);
   if (!rader.length) {
     kilde = 'tekst';
     rader = await tekstFallback(env, merkeNorm, modell || '', aar);
   }
 
   // Dedupe på varenr — samme SKU kan finnes med flere eurokoder.
+  // Forkast også rader som ikke er frontruter: karantene (panel/list/kit) og
+  // navn som eksplisitt sier dør-/side-/bak-/ventilrute.
   const unike: Rad[] = [];
   const sett = new Set<string>();
+  let forkastet = 0;
   for (const r of rader) {
     if (!r?.varenr || sett.has(r.varenr)) continue;
+    if (karanteneGrunn(r.kommentar, r.varenavn) || erAnnenRutetype(r.varenavn)) {
+      forkastet++;
+      continue;
+    }
     sett.add(r.varenr);
     unike.push(r);
   }
+  if (forkastet) console.warn(`discovery: forkastet ${forkastet} rad(er) som ikke er frontrute (${merkeNorm} ${modell ?? ''} ${aar ?? ''})`);
 
   const cursorIndex = cursor ? Number.parseInt(cursor, 10) || 0 : 0;
   const startIdx = cursorIndex;
