@@ -81,4 +81,8 @@ test('P1: discovery gjenbruker merke-alias fra resolveren', () => {
   const src = readFileSync(join(import.meta.dirname, '..', 'src', 'discovery.ts'), 'utf8');
   assert.match(src, /import\s*\{\s*normBrand\s*\}\s*from\s*'\.\/vin-resolver'/, 'må importere normBrand');
   assert.doesNotMatch(src, /merke\.toUpperCase\(\)/, 'skal ikke normalisere merke direkte');
+  // Både primær- og sekundærsøket må bruke den normaliserte verdien. Bruker
+  // seed-søket rå merke, gir «Volkswagen» 0 treff selv om primærfeltet er rett.
+  assert.doesNotMatch(src, /seedOrd\.unshift\(merke\)/, 'seed-søket må bruke normalisert merke');
+  assert.match(src, /seedOrd\.unshift\(merkeNorm\)/, 'seed-søket må bruke merkeNorm');
 });

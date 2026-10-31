@@ -53,10 +53,14 @@ export async function discoverFrontRute(
   if (aar) {
     seedOrd.push(String(aar));
   }
+  // Katalogen bruker kortform (VW, ikke Volkswagen). Normaliser én gang og
+  // bruk samme verdi i både primær- og sekundærsøket — ellers gir «Volkswagen»
+  // 0 treff selv om primærfeltet er riktig.
+  const merkeNorm = normaliserMerke(merke);
   // Always include the make as seed
-  seedOrd.unshift(merke);
+  seedOrd.unshift(merkeNorm);
 
-  const primaer = [normaliserMerke(merke)];
+  const primaer = [merkeNorm];
   const frontGlob =
     '(varenavn LIKE "%FRONTRUTE%" OR varenavn LIKE "%FRONT%")';
 
