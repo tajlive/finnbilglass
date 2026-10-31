@@ -1,0 +1,65 @@
+-- FORSLAG — IKKE GODKJENT, IKKE KJØRT.
+-- Filen ligger under migrations/proposed/ med .proposed-endelse slik at
+-- `wrangler d1 migrations apply` ikke plukker den opp.
+--
+-- 0037_schema_drift_reconcile.sql
+--
+-- Formål: bringe repoet i takt med objekter som FAKTISK finnes i produksjon,
+-- men som ingen migrasjon har laget. Dette er ikke en reparasjon av produksjonen
+-- — produksjonen har allerede objektene. Migrasjonen gjør dem reproduserbare.
+--
+-- Verifisert mot prod-skjema 2026-10-31 (61 tabeller, 77 indekser):
+--   evidence_cases      : closed_at, retention_until
+--   glass_reference     : brand_car, category, imported_at, price_eur, source, title, url
+--   vin_ktype_map       : expires_at
+--   12 indekser         : idx_glasspris_*, uq_glasspris_varenr_navn, idx_regnr_norm,
+--                         idx_ordre_*, idx_evidence_image_deletions_case
+--
+-- KRAV før kjøring:
+--   1. `wrangler d1 export` + time-travel-bokmerke
+--   2. Testet på isolert kopi av prod-skjema
+--   3. Egen Tom-godkjenning (destruktivt nei, men skjemaendring ja)
+--
+-- Merk: SQLite har ingen `ADD COLUMN IF NOT EXISTS`. Hver ALTER må derfor
+-- kjøres betinget. D1 kjører multi-statement i én transaksjon, så vi kan ikke
+-- bruke PRAGMA-basert sjekk i samme runde. Anbefalt fremgangsmåte:
+--   a) kjør SELECT-delen under mot prod først
+--   b) fjern de ALTER-linjene som allerede er oppfylt
+--   c) kjør resten
+
+-- ── Steg 0: forhåndssjekk (les) ────────────────────────────────────────────
+-- SELECT 'evidence_cases.closed_at' o, COUNT(*) n FROM pragma_table_info('evidence_cases') WHERE name IN ('closed_at','retention_until')
+-- UNION ALL
+-- SELECT 'glass_reference.drift', COUNT(*) FROM pragma_table_info('glass_reference')
+--   WHERE name IN ('brand_car','category','imported_at','price_eur','source','title','url')
+-- UNION ALL
+-- SELECT 'vin_ktype_map.expires_at', COUNT(*) FROM pragma_table_info('vin_ktype_map') WHERE name='expires_at';
+
+-- ── Steg 1: kolonner ───────────────────────────────────────────────────────
+ALTER TABLE evidence_cases ADD COLUMN closed_at TEXT;
+ALTER TABLE evidence_cases ADD COLUMN retention_until TEXT;
+
+ALTER TABLE glass_reference ADD COLUMN brand_car TEXT;
+ALTER TABLE glass_reference ADD COLUMN category TEXT;
+ALTER TABLE glass_reference ADD COLUMN imported_at TEXT;
+ALTER TABLE glass_reference ADD COLUMN price_eur REAL;
+ALTER TABLE glass_reference ADD COLUMN source TEXT;
+ALTER TABLE glass_reference ADD COLUMN title TEXT;
+ALTER TABLE glass_reference ADD COLUMN url TEXT;
+
+ALTER TABLE vin_ktype_map ADD COLUMN expires_at INTEGER;
+
+-- ── Steg 2: indekser (idempotente) ─────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_glasspris_varenr      ON glass_prisliste(varenr);
+CREATE INDEX IF NOT EXISTS idx_glasspris_alias       ON glass_prisliste(alias_av);
+CREATE INDEX IF NOT EXISTS idx_glasspris_eurokode    ON glass_prisliste(eurokode);
+CREATE INDEX IF NOT EXISTS idx_glasspris_rad_type    ON glass_prisliste(rad_type);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_glasspris_varenr_navn ON glass_prisliste(varenr, varenavn);
+CREATE INDEX IF NOT EXISTS idx_regnr_norm            ON regnr_logg(regnr_norm);
+CREATE INDEX IF NOT EXISTS idx_evidence_image_deletions_case ON evidence_image_deletions(case_id);
+
+-- idx_ordre_* legges IKKE inn her: `ordre`-tabellen har ukjent opphav og
+-- 0 rader. Den skal avklares med Tom før den eventuelt formaliseres.
+-- CREATE INDEX IF NOT EXISTS idx_ordre_status     ON ordre(status);
+-- CREATE INDEX IF NOT EXISTS idx_ordre_bilnummer  ON ordre(bilnummer);
+-- CREATE INDEX IF NOT EXISTS idx_ordre_epost      ON ordre(epost);
