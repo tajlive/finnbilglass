@@ -85,8 +85,27 @@ Fire POST ga `201`, femte ga `429` — grensen er 5 per IP per 10 minutter.
 ## 4. Katalogstatus
 
 - **50** verifiserte produkter i staging (`apify_catalog_products`), idempotent import (re-import: 0 nye, 50 oppdatert).
-- Full katalog = **4 621** URL-er fra `sitemap-guardian-en-products.xml`.
-- 4 621 URL-er er **ikke** 4 621 unike SKU-er — dedupe skjer på `eurokode` + `varenr`.
+- Full katalog = **4 621** URL-er fra `sitemap-guardian-en-products.xml` — men det er **frontrute**-undersetten, ikke hele katalogen.
+
+### Verifisert sitemap-innhold (31.10.2026, HTTP 200, 2 950 806 bytes)
+
+| Kategori | URL-er | Unike eurokoder |
+|---|---|---|
+| `en/windscreen` (frontrute) | 4 621 | **4 620** |
+| `en/backlight` (bakrute) | 710 | — |
+| `en/side-glass` (sideglass) | 676 | — |
+| **Alle glass** | **6 007** | **6 005** |
+| `en/accessories` | 721 | — |
+| `en/turbo-club-products` | 52 | — |
+| **Totalt i sitemap** | **6 785** | — |
+
+**Presisering av målet:** «4 621 URL-er» er frontruter. Hele glasskatalogen er **6 007 URL-er / 6 005 unike eurokoder**. Verktøy og tilbehør kommer i tillegg.
+
+**Dedupe:** 4 621 frontrute-URL-er gir 4 620 unike eurokoder — kun én kode har to varianter (`8552AGN1C`). Antakelsen «4 621 URL-er ≠ 4 621 SKU-er» er dermed nesten feil: forholdet er 1:1 minus én.
+
+**Format:** 4 521 av 4 620 eurokoder starter med fire siffer. 99 avviker og må undersøkes før de behandles som gyldige frontruter.
+
+**Sitemap-endring:** Den dokumenterte figuren var 4 621. Sitemapet inneholder nå 6 785 URL-er totalt fordi bakruter, sideglass og tilbehør er med. Frontrute-undersetten er fortsatt 4 621 — tallet var riktig, men ble lest som «hele katalogen».
 - Skaleringsgater: 250 → 1 000 → 4 621. Hver gate krever godkjenning.
 - EUR holdes i egne felt (`pris_eur`, `pris_valuta`); `pris` (NOK) er `NULL` for katalogprodukter uten bekreftet NOK-grunnlag.
 
