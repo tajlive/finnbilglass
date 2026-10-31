@@ -1,4 +1,4 @@
-import { normBrand } from './vin-resolver';
+import { normBrand, modellTokensAv, ordTreff } from './vin-resolver';
 import { LAVESTE_SITERBARE_LISTEPRIS } from './pricing/nok-prising';
 
 /** Katalogen bruker kortformen (VW, ikke Volkswagen). Gjenbruker
@@ -36,12 +36,157 @@ export interface DiscoveryResult {
   nextCursor?: string;
   /** Whether there are more pages available */
   hasMore: boolean;
+  /** Hvilken kilde kandidatene kom fra. 'ground_truth' = fasit, 'tekst' = fallback. */
+  kilde?: 'ground_truth' | 'tekst';
+}
+
+/** Kolonner som garantert finnes i både prod- og staging-prislista. */
+const SLANKE_KOLONNER = ['varenr', 'varenavn', 'kommentar', 'pris', 'eurokode', 'alias_av', 'rad_type'];
+/** Prod har også typeCode/side. Prøves først, faller tilbake til slank form. */
+const FULLE_KOLONNER = [...SLANKE_KOLONNER, 'typeCode', 'side'];
+
+const GT_KODE_MAKS = 60;
+const SIDE_STORRELSE = 20;
+
+type Rad = {
+  varenr: string;
+  varenavn: string;
+  kommentar?: string | null;
+  pris?: number | null;
+  eurokode?: string | null;
+  alias_av?: string | null;
+  rad_type?: string | null;
+  typeCode?: string | null;
+  side?: string | null;
+};
+
+function tilKandidat(r: Rad): Kandidat {
+  return {
+    varenr: r.varenr,
+    varenavn: r.varenavn,
+    eurokode: r.eurokode ?? '',
+    typeCode: r.typeCode ?? undefined,
+    side: (r.side as Kandidat['side']) ?? undefined,
+    canonicalUrl: `https://finnbilglass.no/glas/${r.varenr}`,
+    skuFingerprint: `${r.eurokode}-${r.varenr}`,
+    pris: typeof r.pris === 'number' ? r.pris : null,
+  };
 }
 
 /**
- * Discover front-rute candidates for a vehicle make.
- * Includes pagination, canonical URL support and SKU fingerprinting.
- * Limited to 20 results per page - full catalogue requires Tom approval.
+ * L1: fasit-koder fra ground_truth for merke + modell + EKSAKT år.
+ *
+ * Ground truth er verifiserte kjøretøy → frontrute (auto-glass.no). Den er den
+ * eneste kilden som faktisk vet at «TOYOTA C-HR 2018» har disse rutene —
+ * fritekstsøk i prislista gjør det ikke. Derfor prøves GT først.
+ *
+ * Uten år returneres koder fra alle år (kunden får da utvalg, aldri påstand
+ * om kompatibilitet).
+ */
+async function gtFrontruteKoder(
+  env: { FINNBILGLASS_DB: any },
+  merke: string,
+  modell: string,
+  aar?: number
+): Promise<string[]> {
+  const tokens = modellTokensAv(modell || '', merke);
+  if (!tokens.length) return [];
+  const like = tokens.map(() => 'model LIKE ?').join(' OR ');
+  const params: (string | number)[] = [merke, ...tokens.map((t) => `%${t}%`)];
+  let sql = `SELECT model, frontrute_eurocode FROM ground_truth WHERE make = ? AND (${like})`;
+  if (aar) {
+    sql += ' AND year = ?';
+    params.push(aar);
+  }
+  sql += ' ORDER BY confidence DESC LIMIT 300';
+  const rows = await env.FINNBILGLASS_DB.prepare(sql).bind(...params).all();
+  const koder = new Set<string>();
+  for (const r of rows.results ?? []) {
+    // Ordbasert modellkontroll — aldri substring.
+    if (!ordTreff(r?.model ?? '', tokens)) continue;
+    const kode = r?.frontrute_eurocode;
+    if (typeof kode === 'string' && kode.trim()) koder.add(kode.trim());
+  }
+  return [...koder].slice(0, GT_KODE_MAKS);
+}
+
+/** Henter prisliste-rader for eksakte GT-koder. Navnet på raden avgjør ikke om
+ *  det er en frontrute — koden er identiteten. Dette er grunnen til at
+ *  «TOYOTA C-HR 5D CROSSOVER 16-» (uten ordet FRONTRUTE) nå blir funnet. */
+async function raderForKoder(env: { FINNBILGLASS_DB: any }, koder: string[]): Promise<Rad[]> {
+  if (!koder.length) return [];
+  const plasser = koder.map(() => '?').join(',');
+  const likePlasser = koder.map(() => 'eurokode LIKE ?').join(' OR ');
+  const bygg = (kolonner: string[]) =>
+    `SELECT ${kolonner.join(', ')}
+       FROM glass_prisliste
+      WHERE rad_type='glass'
+        AND (varenr IN (${plasser}) OR eurokode IN (${plasser}) OR ${likePlasser})
+      ORDER BY (pris IS NULL), (pris < ?), pris`;
+  const bind = () => [...koder, ...koder, ...koder.map((k) => `${k}%`), LAVESTE_SITERBARE_LISTEPRIS];
+
+  try {
+    const r = await env.FINNBILGLASS_DB.prepare(bygg(FULLE_KOLONNER)).bind(...bind()).all();
+    return r.results ?? [];
+  } catch {
+    const r = await env.FINNBILGLASS_DB.prepare(bygg(SLANKE_KOLONNER)).bind(...bind()).all();
+    return r.results ?? [];
+  }
+}
+
+/**
+ * Tekstsøk i prislista — kun fallback når ground_truth ikke har kjøretøyet.
+ *
+ * FEIL SOM ER RETTET HER: tidligere ble merkenavnet lagt inn i OR-gruppa
+ * (seed-søket ble prependet med merket), slik at `varenavn LIKE '%TOYOTA%'`
+ * alene tilfredsstilte hele OR-gruppa. Modell og år ble dermed filtrende
+ * no-ops, og «TOYOTA C-HR 2018» returnerte COROLLA 97-01, RAV-4 03-05 og
+ * HI ACE 96 — feil biler, men med tilsynelatende gyldig pris
+ * (WRONG_GLASS-risiko). Nå bygges OR-gruppa KUN av modell- og årstokens;
+ * merke håndheves med AND.
+ */
+async function tekstFallback(
+  env: { FINNBILGLASS_DB: any },
+  merke: string,
+  modell: string,
+  aar?: number
+): Promise<Rad[]> {
+  const frontGlob = `(varenavn LIKE '%FRONTRUTE%' OR varenavn LIKE '%FRONT%')`;
+  const seedOrd: string[] = [];
+  if (modell) seedOrd.push(modell);
+  if (aar) seedOrd.push(String(aar));
+
+  const bygg = (kolonner: string[]) =>
+    `SELECT ${kolonner.join(', ')}
+       FROM glass_prisliste
+      WHERE rad_type='glass' AND ${frontGlob} AND varenavn LIKE ?
+        ${seedOrd.length ? `AND (${seedOrd.map(() => 'varenavn LIKE ?').join(' OR ')})` : ''}
+      ORDER BY (pris IS NULL), (pris < ?), pris`;
+
+  const params: (string | number)[] = [
+    `%${merke}%`,
+    ...seedOrd.map((o) => `%${o.toUpperCase()}%`),
+    LAVESTE_SITERBARE_LISTEPRIS,
+  ];
+
+  try {
+    const r = await env.FINNBILGLASS_DB.prepare(bygg(FULLE_KOLONNER)).bind(...params).all();
+    return r.results ?? [];
+  } catch {
+    const r = await env.FINNBILGLASS_DB.prepare(bygg(SLANKE_KOLONNER)).bind(...params).all();
+    return r.results ?? [];
+  }
+}
+
+/**
+ * Discovery: frontrute-kandidater for et kjøretøy.
+ *
+ * Rekkefølge:
+ *   1. ground_truth (fasit) — verifiserte kjøretøy → frontrute
+ *   2. tekstfallback (prisliste) — kun når GT ikke har kjøretøyet
+ *
+ * GT-treff fylles aldri opp av teksttreff: en blandet liste presenterer
+ * urelaterte biler som likeverdige kandidater.
  */
 export async function discoverFrontRute(
   env: { FINNBILGLASS_DB: any },
@@ -50,95 +195,41 @@ export async function discoverFrontRute(
   aar?: number,
   cursor?: string
 ): Promise<DiscoveryResult> {
-  const seedOrd: string[] = [];
-
-  if (modell) {
-    seedOrd.push(modell);
-  }
-  if (aar) {
-    seedOrd.push(String(aar));
-  }
-  // Katalogen bruker kortform (VW, ikke Volkswagen). Normaliser én gang og
-  // bruk samme verdi i både primær- og sekundærsøket — ellers gir «Volkswagen»
-  // 0 treff selv om primærfeltet er riktig.
   const merkeNorm = normaliserMerke(merke);
-  // Always include the make as seed
-  seedOrd.unshift(merkeNorm);
 
-  const primaer = [merkeNorm];
-  const frontGlob =
-    '(varenavn LIKE "%FRONTRUTE%" OR varenavn LIKE "%FRONT%")';
+  let rader: Rad[] = [];
+  let kilde: 'ground_truth' | 'tekst' = 'ground_truth';
 
-  const likePrim = primaer.map(() => 'varenavn LIKE ?').join(' AND ');
-  const likeSek = seedOrd.map(() => 'varenavn LIKE ?').join(' OR ');
-  const primParams = primaer.map((k) => `%${k.toUpperCase()}%`);
-  const sekParams = seedOrd.map((k) => `%${k.toUpperCase()}%`);
-
-  // Staging-D1 har en slankere glass_prisliste uten typeCode/side. Vi spør først
-  // om den fulle formen (beholder typeCode/side der de finnes), og faller tilbake
-  // til de kolonnene som garantert eksisterer. Uten dette gir /api/glass HTTP 500
-  // i staging, og en hardkodet slank SELECT ville mistet typeCode/side i prod.
-  const kolonner = ['varenr', 'varenavn', 'kommentar', 'pris', 'eurokode', 'alias_av', 'rad_type'];
-  const byggSql = (cols: string[]) =>
-    `SELECT ${cols.join(', ')}
-      FROM glass_prisliste
-      WHERE rad_type='glass' AND ${frontGlob} AND ${likePrim} AND (${likeSek})
-      ORDER BY (pris IS NULL), (pris < ?), pris`;
-  // Merk: (pris IS NULL) først, ellers sorterer SQLite NULL før alle tall.
-  // (pris < ?) skyver produkter under prisgulvet bak, slik at kunden ser det vi
-  // faktisk kan prise foerst i stedet for en side full av MANUAL_REVIEW.
-  // Samme varenr kan finnes i flere rader (ulik eurokode), og uten dette vant
-  // en rad uten pris over raden med pris — kunden fikk MANUAL_REVIEW på et
-  // produkt vi faktisk har pris på.
-
-  let seed;
-  try {
-    seed = await env.FINNBILGLASS_DB.prepare(byggSql([...kolonner, 'typeCode', 'side']))
-      .bind(...primParams, ...sekParams, LAVESTE_SITERBARE_LISTEPRIS)
-      .all();
-  } catch (e) {
-    console.warn('discovery: typeCode/side finnes ikke i glass_prisliste — bruker slank spørring:', e);
-    seed = await env.FINNBILGLASS_DB.prepare(byggSql(kolonner))
-      .bind(...primParams, ...sekParams, LAVESTE_SITERBARE_LISTEPRIS)
-      .all();
+  const koder = await gtFrontruteKoder(env, merkeNorm, modell || '', aar);
+  if (koder.length) rader = await raderForKoder(env, koder);
+  if (!rader.length) {
+    kilde = 'tekst';
+    rader = await tekstFallback(env, merkeNorm, modell || '', aar);
   }
 
-  // Apply pagination: 20 results per page
-  const PAGE_SIZE = 20;
-  const cursorIndex = cursor ? parseInt(cursor, 10) : 0;
+  // Dedupe på varenr — samme SKU kan finnes med flere eurokoder.
+  const unike: Rad[] = [];
+  const sett = new Set<string>();
+  for (const r of rader) {
+    if (!r?.varenr || sett.has(r.varenr)) continue;
+    sett.add(r.varenr);
+    unike.push(r);
+  }
+
+  const cursorIndex = cursor ? Number.parseInt(cursor, 10) || 0 : 0;
   const startIdx = cursorIndex;
-  const endIdx = startIdx + PAGE_SIZE;
+  const endIdx = startIdx + SIDE_STORRELSE;
+  const kandidater = unike.slice(startIdx, endIdx).map(tilKandidat);
 
-  const allCandidates: Kandidat[] = [];
-  const seen = new Set<string>();
-
-  for (let i = startIdx; i < Math.min(endIdx, seed.results?.length || 0); i++) {
-    const r = seed.results[i];
-    if (!r) continue;
-    const key = r.varenr;
-    if (!seen.has(key)) {
-      seen.add(key);
-      allCandidates.push({
-        varenr: r.varenr,
-        varenavn: r.varenavn,
-        eurokode: r.eurokode,
-        typeCode: r.typeCode,
-        side: r.side,
-        canonicalUrl: `https://finnbilglass.no/glas/${r.varenr}`,
-        skuFingerprint: `${r.eurokode}-${r.varenr}`,
-        pris: typeof r.pris === 'number' ? r.pris : null,
-      });
-    }
-  }
-
-  const hasMore = endIdx < (seed.results?.length || 0);
+  const hasMore = endIdx < unike.length;
   const nextCursor = hasMore ? String(endIdx) : undefined;
 
   return {
-    candidates: allCandidates,
-    totalAvailable: seed.results?.length || 0,
+    candidates: kandidater,
+    totalAvailable: unike.length,
     nextCursor,
     hasMore,
+    kilde,
   };
 }
 

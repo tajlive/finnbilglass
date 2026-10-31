@@ -36,6 +36,8 @@ export interface ResolverKandidat {
     kamera: boolean | null;
     adas: boolean | null;
     coated: boolean | null;
+    /** Varmetråder/varmefilm (eurokode H). ALDRI det samme som HUD. */
+    oppvarmet?: boolean | null;
   };
 }
 
@@ -188,7 +190,7 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
   const dek = dekodeEurokode(r.eurokode);
   if (!erFrontrute(r.varenavn, r.varenr, dek)) return null; // bak/side/dør/takglass
 
-  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
+  const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null, oppvarmet: null };
 
   // Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13),
   // men KUN når koden faktisk er en eurokode (gyldig posisjonsbokstav). OEM-delnummer
@@ -197,8 +199,13 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
     const eg = dek.egenskaper;
     attributter.sensor  = eg.includes('sensor');
     attributter.antenne = eg.includes('antenne');
-    attributter.hud     = eg.includes('oppvarmet');
     attributter.coated  = eg.includes('coated');
+    // H i eurokoden betyr varmetråder/varmefilm — det er OPPVARMET, ikke HUD.
+    // HUD er et projeksjonsbilde fra dashbordet og kan ikke leses av glasset
+    // (Tom, fagregel 17). Tidligere ble hud satt = oppvarmet, som ga kunden
+    // «med head-up-display» på en bil som bare har varmetråder.
+    attributter.oppvarmet = eg.includes('oppvarmet');
+    attributter.hud = null;
   }
 
   // glass_catalog kun for kamera + adas (ikke kodet i eurokoden)
@@ -225,7 +232,7 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
 /** Spørsmål som FAKTISK skiller kandidatene: felt der minst én kandidat har true OG minst én har false.
  *  Ukjente verdier (null) teller ikke — vi spør aldri om ting vi ikke kan skille på. */
 export function skillendeSporsmaal(kandidater: ResolverKandidat[]): string[] {
-  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'kamera', 'adas', 'coated'];
+  const felt: Array<keyof ResolverKandidat['attributter']> = ['sensor', 'antenne', 'hud', 'kamera', 'adas', 'coated', 'oppvarmet'];
   const ut: string[] = [];
   for (const f of felt) {
     const verdier = kandidater.map((k) => k.attributter[f]).filter((v): v is boolean => typeof v === 'boolean');
