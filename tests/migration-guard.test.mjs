@@ -78,18 +78,34 @@ test('0034_glass_catalog_multi.sql er merket PENDING, ikke anvendt', () => {
     );
 });
 
-test('PENDING-migrasjoner ligger UTENFOR migrations/ — ellers plukker wrangler dem', () => {
+test('PENDING og BLOCKED_DESTRUCTIVE ligger UTENFOR migrations/ — ellers plukker wrangler dem', () => {
     // Dette er selve håndhevelsen. `wrangler d1 migrations apply` skanner
     // migrations/ på toppnivå og ville kjørt enhver *.sql der. En JSON-status
     // stopper ingenting — plasseringen gjør det.
+    //
+    // BLOCKED_DESTRUCTIVE er like viktig som PENDING: 0020 kjører DROP TABLE og
+    // overskriver created_at på eksisterende rader.
+    const UTENFOR = new Set(['PENDING', 'BLOCKED_DESTRUCTIVE']);
     const toppnivå = new Set(readdirSync(join(ROOT, 'migrations')));
     for (const m of status.migrasjoner) {
-        if (m.status !== 'PENDING') continue;
+        if (!UTENFOR.has(m.status)) continue;
         assert.ok(
             !toppnivå.has(m.fil),
-            `${m.fil} er PENDING men ligger i migrations/ — wrangler ville kjørt den`
+            `${m.fil} har status ${m.status} men ligger i migrations/ — wrangler ville kjørt den`
         );
     }
+});
+
+test('0020 er merket BLOCKED_DESTRUCTIVE og ligger i pending/', () => {
+    const rad = status.migrasjoner.find((m) => m.fil === '0020_oem_probe_queue_fix.sql');
+    assert.ok(rad, '0020 mangler i migrations/_status.json');
+    assert.equal(rad.status, 'BLOCKED_DESTRUCTIVE');
+    assert.equal(rad.mappe, 'migrations/pending');
+    // Selve filen skal aldri finnes i den skannede mappen.
+    assert.ok(
+        !existsSync(join(ROOT, 'migrations', '0020_oem_probe_queue_fix.sql')),
+        '0020 ligger i migrations/ — den kjører DROP TABLE og må flyttes til pending/'
+    );
 });
 
 test('ingen migrasjon er feilaktig merket som anvendt uten bevis', () => {
