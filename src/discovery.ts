@@ -21,6 +21,8 @@ export interface Kandidat {
   skuFingerprint?: string;
   /** Listepris i NOK fra glass_prisliste. Intern — eksponeres aldri direkte. */
   pris?: number | null;
+  /** Fitment-status. Katalogsøk setter aldri BEKREFTET — det krever evidens. */
+  kompatibilitet?: 'BEKREFTET' | 'KATALOGTREFF';
 }
 
 /**

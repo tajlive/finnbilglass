@@ -48,7 +48,11 @@ export interface OffentligKandidat {
 }
 
 export interface OffentligGlassSvar {
+  /** OK kun når kompatibilitet er bekreftet OG pris finnes. Katalogtreff alene
+   *  er alltid MANUAL_REVIEW — pris skal aldri gi OK på egen hånd. */
   status: 'OK' | 'MANUAL_REVIEW';
+  /** Hva prisen i kandidatene faktisk er. Uavhengig av kompatibilitet. */
+  prisStatus: 'BEKREFTET' | 'DELVIS' | 'INGEN';
   candidates: OffentligKandidat[];
   totalAvailable: number;
   nextCursor?: string;
@@ -90,9 +94,17 @@ export function tilOffentligKandidat(k: Kandidat & { pris?: number | null }): Of
  */
 export function tilOffentligSvar(r: DiscoveryResult): OffentligGlassSvar {
   const candidates = r.candidates.map((k) => tilOffentligKandidat(k));
-  const harPris = candidates.some((k) => k.pris !== null);
+  const medPris = candidates.filter((k) => k.pris !== null).length;
+  const prisStatus: OffentligGlassSvar['prisStatus'] =
+    medPris === 0 ? 'INGEN' : medPris === candidates.length ? 'BEKREFTET' : 'DELVIS';
+
+  // Kompatibilitet har høyere prioritet enn pris: et katalogtreff bekrefter
+  // ikke at glasset passer bilen. Uten fitment-evidens er svaret MANUAL_REVIEW
+  // selv om prisen er bekreftet — ellers ville prisen alene gitt falsk trygghet.
+  const kompatibilitetBekreftet = r.candidates.some((k) => k.kompatibilitet === 'BEKREFTET');
   const ut: OffentligGlassSvar = {
-    status: candidates.length > 0 && harPris ? 'OK' : 'MANUAL_REVIEW',
+    status: candidates.length > 0 && kompatibilitetBekreftet && medPris > 0 ? 'OK' : 'MANUAL_REVIEW',
+    prisStatus,
     candidates,
     totalAvailable: r.totalAvailable,
     hasMore: r.hasMore,

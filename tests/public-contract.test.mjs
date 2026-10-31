@@ -51,20 +51,32 @@ test('offentlig pris: manglende eller ugyldig grunnlag gir null, ikke fabrikkert
   assert.equal(offentligPris(Number.NaN), null);
 });
 
-test('svar med pris er OK, svar uten pris er MANUAL_REVIEW', () => {
+test('pris alene gir MANUAL_REVIEW — kompatibilitet har høyere prioritet', () => {
   const medPris = tilOffentligSvar({
     candidates: [INTERN],
     totalAvailable: 1,
     hasMore: false,
   });
-  assert.equal(medPris.status, 'OK');
+  // Katalogtreff bekrefter ikke at glasset passer. Prisen er bekreftet, men
+  // status er MANUAL_REVIEW fordi kompatibiliteten ikke er det.
+  assert.equal(medPris.status, 'MANUAL_REVIEW');
+  assert.equal(medPris.prisStatus, 'BEKREFTET');
+  assert.notEqual(medPris.candidates[0].pris, null, 'prisen skal fortsatt vises');
 
-  const utenPris = tilOffentligSvar({
-    candidates: [{ ...INTERN, pris: null }],
+  const medKompatibilitet = tilOffentligSvar({
+    candidates: [{ ...INTERN, kompatibilitet: 'BEKREFTET' }],
     totalAvailable: 1,
     hasMore: false,
   });
-  assert.equal(utenPris.status, 'MANUAL_REVIEW');
+  assert.equal(medKompatibilitet.status, 'OK');
+
+  const utenPris = tilOffentligSvar({
+    candidates: [{ ...INTERN, kompatibilitet: 'BEKREFTET', pris: null }],
+    totalAvailable: 1,
+    hasMore: false,
+  });
+  assert.equal(utenPris.status, 'MANUAL_REVIEW', 'kompatibilitet uten pris er ikke OK');
+  assert.equal(utenPris.prisStatus, 'INGEN');
   assert.equal(utenPris.candidates[0].pris, null);
 });
 
@@ -111,4 +123,64 @@ test('discovery sorterer rader uten pris sist', () => {
   // MANUAL_REVIEW på et produkt vi har pris på. (pris < ?) skyver i tillegg
   // produkter under prisgulvet bak, så kunden ser siterbare varer først.
   assert.match(src, /ORDER BY \(pris IS NULL\), \(pris < \?\), pris/);
+});
+
+// ── Regresjon for pris- og sorteringsrettelsene (P0 2026-10-31) ────────────
+
+test('samme varenr med NULL-pris og gyldig pris: gyldig pris skal vinne', () => {
+  // Raden uten pris skal aldri skygge for raden med pris — det var feilen
+  // som gjorde at kunden fikk MANUAL_REVIEW på et produkt vi har pris på.
+  const medPris = tilOffentligKandidat({ ...INTERN, pris: 9980 });
+  const utenPris = tilOffentligKandidat({ ...INTERN, pris: null });
+  assert.deepEqual(medPris.pris, { kundePris: 5490, mva: 1098, prisEksMva: 4392 });
+  assert.equal(utenPris.pris, null);
+});
+
+test('flere varianter med ulik kompatibilitet: én bekreftet gir OK', () => {
+  const s = tilOffentligSvar({
+    candidates: [
+      { ...INTERN, varenr: 'A', kompatibilitet: 'KATALOGTREFF', pris: 8000 },
+      { ...INTERN, varenr: 'B', kompatibilitet: 'BEKREFTET', pris: 8000 },
+    ],
+    totalAvailable: 2,
+    hasMore: false,
+  });
+  assert.equal(s.status, 'OK');
+  assert.equal(s.prisStatus, 'BEKREFTET');
+});
+
+test('produkter under laveste siterbare listepris gir ingen pris', async () => {
+  const { LAVESTE_SITERBARE_LISTEPRIS } = await import('../src/pricing/nok-prising.ts');
+  assert.equal(LAVESTE_SITERBARE_LISTEPRIS, 6650, 'gulvet skal utledes fra TRINN/0.60');
+  assert.equal(offentligPris(LAVESTE_SITERBARE_LISTEPRIS - 1), null, 'under gulvet: ingen pris');
+  assert.notEqual(offentligPris(LAVESTE_SITERBARE_LISTEPRIS), null, 'på gulvet: pris');
+});
+
+test('prisStatus skiller INGEN, DELVIS og BEKREFTET', () => {
+  const ingen = tilOffentligSvar({ candidates: [{ ...INTERN, pris: null }], totalAvailable: 1, hasMore: false });
+  assert.equal(ingen.prisStatus, 'INGEN');
+  const delvis = tilOffentligSvar({
+    candidates: [{ ...INTERN, varenr: 'A', pris: 9980 }, { ...INTERN, varenr: 'B', pris: null }],
+    totalAvailable: 2,
+    hasMore: false,
+  });
+  assert.equal(delvis.prisStatus, 'DELVIS');
+  const alle = tilOffentligSvar({
+    candidates: [{ ...INTERN, varenr: 'A', pris: 9980 }, { ...INTERN, varenr: 'B', pris: 8000 }],
+    totalAvailable: 2,
+    hasMore: false,
+  });
+  assert.equal(alle.prisStatus, 'BEKREFTET');
+});
+
+test('ugyldig prisgrunnlag gir null, aldri en oppdiktet pris', () => {
+  for (const verdi of [null, undefined, 0, -1, Number.NaN, Infinity, '9980']) {
+    assert.equal(offentligPris(verdi), null, `skal avvise ${String(verdi)}`);
+  }
+});
+
+test('sorteringen er deterministisk og legger NULL og under-gulv sist', () => {
+  const src = readFileSync(join(import.meta.dirname, '..', 'src', 'discovery.ts'), 'utf8');
+  assert.match(src, /ORDER BY \(pris IS NULL\), \(pris < \?\), pris/);
+  assert.match(src, /LAVESTE_SITERBARE_LISTEPRIS/);
 });
