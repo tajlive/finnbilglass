@@ -1,0 +1,84 @@
+{
+  "_kommentar": [
+    "Maskinlesbar status for migrasjonene som ble hentet tilbake fra søsterbranchene 2026-10-31.",
+    "SHA256 låser filinnholdet: hvis en fil endres, feiler tests/migration-guard.test.mjs.",
+    "Status reflekterer FAKTISK produksjon (finnbilglass-db), verifisert skrivebeskyttet 2026-10-31.",
+    "Ingen av disse er kjørt av denne branchen. Filene er historikk, ikke handling."
+  ],
+  "prod_database": "finnbilglass-db",
+  "verifisert": "2026-10-31",
+  "statuser": {
+    "ANVENDT": "Skjemaeffekten finnes i produksjon",
+    "DELVIS": "Noe av skjemaeffekten finnes — resten mangler",
+    "EFFEKT_OPPNADD_ANNET_NAVN": "Effekten er oppnådd, men under et annet tabellnavn enn migrasjonen lager",
+    "PENDING": "Ikke anvendt i produksjon. Skal IKKE kjøres uten egen godkjenning."
+  },
+  "migrasjoner": [
+    {
+      "fil": "0019_oem_probe_queue.sql",
+      "sha256": "f62288560a90e1d3f834f70873ec89da6035585e499439f0dab9c3564c1ae7f2",
+      "status": "DELVIS",
+      "bevis": "Tabell oem_probe_queue finnes. Indeksene idx_oem_probe_portal, idx_oem_probe_status, idx_oem_probe_vin_hash mangler. idx_oem_probe_probe_id og idx_oem_probe_vin ligger på oem_probe_queue_old, ikke på aktiv tabell."
+    },
+    {
+      "fil": "0020_oem_probe_queue_fix.sql",
+      "sha256": "008ebf78782c9874c60149a838c2d56197fe9df5f111e428c8311e4904ad7c97",
+      "status": "EFFEKT_OPPNADD_ANNET_NAVN",
+      "bevis": "Migrasjonen lager oem_probe_queue_v2, som ikke finnes. Men alle v2-kolonnene (cost_eur, latency_ms, vilkar_lagring_ok, status, queried_at, decision, notes, created_at) finnes på oem_probe_queue. Skal ikke kjøres — ville laget duplikattabell."
+    },
+    {
+      "fil": "0028_inquiry_commercial.sql",
+      "sha256": "c35c496c5518d0a5afe6283b6bdd72ee6becbee369bbecbacf65ead4ca663685",
+      "status": "ANVENDT",
+      "bevis": "Tabell inquiry_commercial_events finnes."
+    },
+    {
+      "fil": "0029_voice_lab.sql",
+      "sha256": "4b5237d630e01c146e5e85db6cee9d8c1fdbdc4399ad4d6b457b2416f0b872bd",
+      "status": "ANVENDT",
+      "bevis": "Tabellene voice_sessions og voice_drafts finnes."
+    },
+    {
+      "fil": "0030_voice_lab_tuning.sql",
+      "sha256": "a261bfd662d311b80bf43c3dec6ca2be6170a6c1f937dc8284faaa9a1177ec41",
+      "status": "ANVENDT",
+      "bevis": "Kolonnene fra migrasjonen finnes på voice_sessions/voice_drafts."
+    },
+    {
+      "fil": "0031_glass_reference.sql",
+      "sha256": "a989dcb3d31ae848c01b4415aa0579ae5c0e42f7d4b3715f2b411294b2c453bb",
+      "status": "ANVENDT",
+      "bevis": "Tabell glass_reference finnes (med 7 drift-kolonner i tillegg, se 0037-forslag)."
+    },
+    {
+      "fil": "0032_glass_prisliste_lookup_indexes.sql",
+      "sha256": "1e4e8a5a0f8950ccc9d114b54e1edc82502af25d4b4662543bb3021be4607975",
+      "status": "ANVENDT",
+      "bevis": "Indeksene idx_glasspris_varenr, idx_glasspris_alias, idx_glasspris_eurokode, idx_glasspris_rad_type finnes."
+    },
+    {
+      "fil": "0033_inquiry_reply_history.sql",
+      "sha256": "8d4a266e69cb3bbcc170cfaafe25e1257e77778a4d2e897f3a2ff6b4c3d46189",
+      "status": "ANVENDT",
+      "bevis": "beta_inquiry_events.event_type CHECK inneholder 'reply'. Mellomtabellen er borte, som forventet etter RENAME."
+    },
+    {
+      "fil": "0034_glass_catalog_multi.sql",
+      "sha256": "5338d1aa1bb87715c775cf445428bf2f816db4259486abe119e7530f815ab408",
+      "status": "PENDING",
+      "bevis": "Tabellene glass_catalog_items og glass_vehicle_applications finnes IKKE i produksjon. Verifisert applikérbar på isolert kopi (2 tabeller + 3 indekser, integritet ok), men ikke kjørt."
+    },
+    {
+      "fil": "0035_inquiry_glass_request.sql",
+      "sha256": "b63cddb7826f73b3c193df6002813b94f077b80cf28d02c40bddef2f9ad1d275",
+      "status": "ANVENDT",
+      "bevis": "Kolonnen beta_inquiries.glass_request_json, client_request_id og request_fingerprint finnes, og ledgeren har raden."
+    },
+    {
+      "fil": "0036_glass_search_snapshots.sql",
+      "sha256": "dd31ebb12a5ee49ff05596bd7e5232902b564201641b3b19ac5710c7ed9adf5a",
+      "status": "ANVENDT",
+      "bevis": "Tabellene glass_search_snapshots og api_rate_limits finnes, og ledgeren har raden."
+    }
+  ]
+}

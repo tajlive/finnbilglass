@@ -13,17 +13,40 @@ allerede bruker. De er kopiert inn uendret.
 
 | Fil | SHA256 (16) | I prod |
 |---|---|---|
-| `0019_oem_probe_queue.sql` | `f62288560a90e1d3` | delvis |
-| `0020_oem_probe_queue_fix.sql` | `008ebf78782c9874` | effekt oppnådd under annet navn |
+| `0019_oem_probe_queue.sql` | `f62288560a90e1d3` | **DELVIS** — tabell finnes, 3 indekser mangler |
+| `0020_oem_probe_queue_fix.sql` | `008ebf78782c9874` | effekt oppnådd under annet tabellnavn |
 | `0028_inquiry_commercial.sql` | `c35c496c5518d0a5` | ja |
 | `0029_voice_lab.sql` | `4b5237d630e01c14` | ja |
 | `0030_voice_lab_tuning.sql` | `a261bfd662d311b8` | ja |
 | `0031_glass_reference.sql` | `a989dcb3d31ae848` | ja |
 | `0032_glass_prisliste_lookup_indexes.sql` | `1e4e8a5a0f8950cc` | ja |
 | `0033_inquiry_reply_history.sql` | `8d4a266e69cb3bbc` | ja |
-| `0034_glass_catalog_multi.sql` | `5338d1aa1bb87715` | **NEI** |
+| `0034_glass_catalog_multi.sql` | `5338d1aa1bb87715` | **NEI — PENDING** |
 | `0035_inquiry_glass_request.sql` | `dd31ebb12a5ee49f` | ja |
 | `0036_glass_search_snapshots.sql` | — | ja |
+
+### Statusfil med SHA256-lås
+
+`migrations/_status.json` er den maskinlesbare sannheten: status, bevis og full
+SHA256 per fil. `tests/migration-guard.test.mjs` feiler hvis en fil endres eller
+en status skrives om uten bevis. Filene selv er **ikke** redigert — de er
+byte-identiske med det som ble hentet.
+
+### `0019_oem_probe_queue` er DELVIS anvendt — ikke fullt
+
+Dette er viktig å ikke lese som «ferdig»:
+
+| Objekt | I prod |
+|---|---|
+| Tabell `oem_probe_queue` | finnes |
+| `idx_oem_probe_portal` | **mangler** |
+| `idx_oem_probe_status` | **mangler** |
+| `idx_oem_probe_vin_hash` | **mangler** |
+| `idx_oem_probe_probe_id` | finnes — men på `oem_probe_queue_old` |
+| `idx_oem_probe_vin` | finnes — men på `oem_probe_queue_old` |
+
+Den aktive tabellen har bare autoindeksen fra `probe_id UNIQUE`. Reparasjonen er
+tre `CREATE INDEX`-setninger — ikke kjørt, krever egen godkjenning.
 
 ## 2. Versjonskontroll (SHA256)
 
