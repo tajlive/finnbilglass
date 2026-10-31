@@ -6,11 +6,13 @@
 import type { Env } from './types';
 import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
-import { resolverModus } from './kill-switch';
+import { resolverModus, anvendResolverPolicy, henvendelserTillatt } from './kill-switch';
 import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
+import { tilOffentligSvar } from './public-contract';
+import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
 import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
 import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
@@ -19,9 +21,12 @@ import { operationsCenterUi } from './ops-center-ui';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
+import { discoverFrontRute } from './discovery';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
+import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
+import { handlePrisEstimat } from './routes/pris-estimat';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -271,6 +276,17 @@ export default {
       return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: count?.n ?? 0 });
     }
 
+    // Apify-katalog-import (admin, Bearer APIFY_SYNC_TOKEN) — skriver kun apify_catalog_products.
+    if (method === 'POST' && path === '/api/admin/apify-catalog/sync') {
+      return handleApifyCatalogSync(request, env);
+    }
+    if (method === 'GET' && path === '/api/admin/apify-catalog/status') {
+      return handleApifyCatalogStatus(request, env);
+    }
+    if (method === 'GET' && path === '/api/admin/pris-estimat') {
+      return handlePrisEstimat(request, env);
+    }
+
     if (method === 'POST' && path === '/api/frontrute') {
       let body: unknown;
       try {
@@ -284,10 +300,8 @@ export default {
         // Resolver først (PINPOINT/VERIFY). FALLBACK → eksisterende tekstmatcher (uendret).
         // Kill switch (G6): resolver_all → tvungen FALLBACK; resolver_pinpoint → degrader til VERIFY.
         let resolver = await resolveFrontrute(env, bil);
-        const modus = await resolverModus(env, resolver.utfall);
-        if (modus !== resolver.utfall) {
-          resolver = { ...resolver, utfall: modus, grunn: `kill switch: ${resolver.utfall}→${modus} (${resolver.grunn})` };
-        }
+        // Felles policy — samme funksjon som /api/regnr og /api/vin.
+        resolver = (await anvendResolverPolicy(env, resolver))!;
         if (resolver.utfall !== 'FALLBACK') {
           const topp = resolver.kandidater?.[0] ?? null;
           return json({
@@ -337,6 +351,11 @@ export default {
         return json({ ok: false, error: 'Ugyldig JSON' }, 400);
       }
       const b = body as Record<string, unknown>;
+      // Pilotstopp: stopper nye henvendelser umiddelbart, uten å vente på
+      // resolver-cachen. Sjekkes foran alt annet så ingen sak opprettes.
+      if (!(await henvendelserTillatt(env))) {
+        return json({ ok: false, error: 'Vi tar ikke imot nye forespørsler akkurat nå. Prøv igjen senere.' }, 503);
+      }
       const regnr = typeof b.regnr === 'string' ? b.regnr.trim().slice(0, 10) : '';
       const navn = typeof b.navn === 'string' ? b.navn.trim() : '';
       const kontakt = typeof b.kontakt === 'string' ? b.kontakt.trim() : '';
@@ -348,6 +367,31 @@ export default {
       const erTelefon = sifre.length >= 8;
       const erEpost = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt);
       if (!erTelefon && !erEpost) return json({ ok: false, error: 'Ugyldig telefon eller e-post' }, 400);
+      // P0 idempotens (Tom 2026-10-31): en dobbeltklikk eller nettverksretry
+      // skal ikke lage to saker i /ops. Nøkkelen reserveres FØR rate limit slik
+      // at en replay alltid får samme svar. Rate limit gjelder kun nye innsendinger.
+      const idemNokkel = gyldigNokkel(request.headers.get('Idempotency-Key'));
+      let idemHash = '';
+      if (idemNokkel) {
+        try {
+          idemHash = await requestHash(b);
+          const res = await reserver(env.FINNBILGLASS_DB as never, idemNokkel, idemHash);
+          if (res.status === 'REPLAY') {
+            return json({ ok: true, inquiryId: res.inquiryId, idempotent: true }, 201);
+          }
+          if (res.status === 'KONFLIKT') {
+            return json({ ok: false, error: 'Idempotency-Key er allerede brukt med annet innhold' }, 409);
+          }
+          if (res.status === 'PAGAR') {
+            return json({ ok: false, error: 'Innsendingen behandles allerede. Vent litt og prøv igjen.' }, 409);
+          }
+        } catch (e) {
+          // Mangler tabellen (migrasjon 0038) eller annen feil: idempotens er et
+          // vern, ikke en forutsetning. Kunden skal aldri blokkeres av det.
+          console.error('idempotens utilgjengelig:', e);
+          idemHash = '';
+        }
+      }
       // G12: abuse-beskyttelse — maks 5 henvendelser per IP per 10 min. Aldri blokkerende.
       try {
         const ip = geoAv(request).ip ?? 'ukjent';
@@ -357,6 +401,7 @@ export default {
           const nowRl = Date.now();
           const rl = await env.FINNBILGLASS_DB.prepare('SELECT window_start, count FROM inquiry_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
           if (rl && nowRl - rl.window_start < WINDOW_MS && rl.count >= MAX_PER_WINDOW) {
+            if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
             return json({ ok: false, error: 'For mange forespørsler. Prøv igjen senere.' }, 429);
           }
           if (rl) {
@@ -403,22 +448,27 @@ export default {
         }
       }
       try {
-        const inserted = await env.FINNBILGLASS_DB.prepare(
-          'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
-        ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson).run();
-        // Append-only 'created'-hendelse — starten på tidslinjen (G5).
-        const id = inserted.meta?.last_row_id;
-        if (id) {
-          try {
-            await env.FINNBILGLASS_DB.prepare(
-              "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'created', NULL, 'NEW', ?, ?, 'kunde')"
-            ).bind(`created-${id}-${crypto.randomUUID()}`, id, melding || null, Date.now()).run();
-          } catch (e) {
-            console.error('inquiry-created-event feilet:', e);
-          }
+        // db.batch() kjører i én implisitt transaksjon: henvendelsen og dens
+        // 'created'-hendelse kan aldri havne i utakt. Hendelsen finner raden via
+        // last_insert_rowid() i samme batch, så vi slipper å kjenne id-en på forhånd.
+        const naa = Date.now();
+        const resultater = await env.FINNBILGLASS_DB.batch([
+          env.FINNBILGLASS_DB.prepare(
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson),
+          env.FINNBILGLASS_DB.prepare(
+            "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
+          ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
+        ]);
+        const id = resultater[0]?.meta?.last_row_id;
+        if (idemNokkel && idemHash && id) {
+          try { await fullfor(env.FINNBILGLASS_DB as never, idemNokkel, id); } catch { /* best-effort */ }
         }
         return json({ ok: true, inquiryId: id ?? null }, 201);
       } catch (e) {
+        if (idemNokkel && idemHash) {
+          try { await frigjor(env.FINNBILGLASS_DB as never, idemNokkel); } catch { /* best-effort */ }
+        }
         console.error('inquiry-lagring feilet:', e);
         return json({ ok: false, error: 'Kunne ikke lagre forespørselen. Prøv igjen.' }, 500);
       }
@@ -506,7 +556,7 @@ export default {
           console.error('Resolver feilet:', e);
         }
       }
-      return json({ ok: true, lagret, bil, resolver });
+      return json({ ok: true, lagret, bil, resolver: await anvendResolverPolicy(env, resolver) });
     }
 
     if (method === 'POST' && path === '/api/vin') {
@@ -540,7 +590,7 @@ export default {
           console.error('Resolver feilet (VIN):', e);
         }
       }
-      return json({ ok: true, bil, resolver });
+      return json({ ok: true, bil, resolver: await anvendResolverPolicy(env, resolver) });
     }
 
     if (method === 'POST' && path === '/api/les-skilt') {
@@ -1146,6 +1196,25 @@ export default {
       return customerChatUi();
     }
 
+    // API-route: /api/glass for glass-søk via registreringsnummer
+    if (method === 'POST' && path === '/api/glass') {
+      try {
+        const body = (await request.json()) as { merke: string; modell?: string; aar?: number }
+        const merke: string = body.merke
+        if (!merke) {
+          return json({ error: 'Merke påkrevd' }, 400)
+        }
+        const modell: string = body.modell || ''
+        const aar: number = body.aar || 0
+        const result = await discoverFrontRute(env, merke, modell, aar)
+        // Offentlig kontrakt: kun kundevendte felt. Eurokode, SKU-fingeravtrykk,
+        // typeCode, side og kilde-metadata lekker aldri ut her.
+        return json({ success: true, data: tilOffentligSvar(result) })
+      } catch (e: any) {
+        console.error('Glass-søk feil:', e)
+        return json({ error: 'Intern feil', detail: e.message || String(e) }, 500)
+      }
+    }
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
     const STATISKE_SIDER = ['/bilglass-uten-forsikring', '/personvern', '/om-oss'];
     if (method === 'GET' && STATISKE_SIDER.includes(path)) {
