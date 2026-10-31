@@ -1007,6 +1007,15 @@
 
   // Idempotens-nøkkel for kundehenvendelsen. Lever så lenge innholdet er uendret,
   // slik at retry etter nettverksfeil treffer samme sak i stedet for å lage en ny.
+  // P0 invitasjonssperre: invitasjonskoden hentes fra URL (?invite=…) og sendes
+  // med henvendelsen. Sikker, tilfeldig kode — IKKE regnr/kontakt.
+  function hentInvitasjon() {
+    try {
+      var m = new URLSearchParams(window.location.search).get('invite');
+      return m || '';
+    } catch (e) { return ''; }
+  }
+
   var inquiryIdemKey = null;
   function nyInquiryNokkel() {
     if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
@@ -1038,7 +1047,7 @@
     fetch('/api/inquiry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Idempotency-Key': inquiryIdemKey },
-      body: JSON.stringify({ regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId })
+      body: JSON.stringify({ regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId, invite: hentInvitasjon() })
     })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
       .then(function (r) {

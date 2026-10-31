@@ -13,6 +13,10 @@ import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
 import { tilOffentligSvar } from './public-contract';
 import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
+import { gyldigInvitasjonskode, forbrukInvitasjon, opprettInvitasjoner, tilbakekallInvitasjon, kodeErTilgjengelig, listeInvitasjoner, MAX_PILOT_DELTAKERE } from './invitation';
+import { opprettLoginToken, verifiserLoginToken, finnEllerOpprettKunde, opprettSesjon, sesjonKunde, slettSesjon, bindInvitasjon, adminRolle, kanSkrive, loggAdmin, SESSION_TTL_MS, type Rolle } from './auth';
+import { loggInnPage, minSidePage } from './customer-ui';
+import { accessKonfigurert, accessAdminEmail } from './access-auth';
 import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
 import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
@@ -166,6 +170,38 @@ function dataUrlTilBytes(dataUrl: string): { bytes: Uint8Array; mime: string; ex
 function supportAuthorised(request: Request, env: Env): boolean {
   const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
+}
+
+type Admin = { email: string; rolle: Rolle };
+
+/**
+ * Admin-autorisasjon for Operations Center (Spor A).
+ * Når Cloudflare Access er konfigurert (ACCESS_TEAM_DOMAIN + ACCESS_AUD), kreves
+ * en gyldig Access-JWT (verifisert e-post) + en faktisk rolle i admin_roles.
+ * Fail-closed: manglende/ugyldig JWT eller manglende rolle → null.
+ * Manglende Access-konfigurasjon i PRODUKSJON = avslag (ingen delt-token-fallback).
+ * Delt token brukes kun i staging for testing (aldri som prod-admin-alternativ).
+ */
+async function adminAuthorised(request: Request, env: Env): Promise<Admin | null> {
+  if (accessKonfigurert(env)) {
+    const email = await accessAdminEmail(request, env);
+    if (!email) return null;
+    const rolle = await adminRolle(env.FINNBILGLASS_DB, email);
+    if (!rolle) return null;
+    return { email, rolle };
+  }
+  if (env.ENVIRONMENT === 'production') return null; // fail-closed i prod
+  return supportAuthorised(request, env) ? { email: 'delt-token', rolle: 'administrator' } : null;
+}
+
+const ROLLE_NIVA: Record<Rolle, number> = { administrator: 3, saksbehandler: 2, lesetilgang: 1 };
+
+/** Krev admin med minimum rolle. Returnerer Admin eller null (ingen/for lav rolle). */
+async function requireAdmin(request: Request, env: Env, minRolle: Rolle): Promise<Admin | null> {
+  const admin = await adminAuthorised(request, env);
+  if (!admin) return null;
+  if ((ROLLE_NIVA[admin.rolle] ?? 0) < (ROLLE_NIVA[minRolle] ?? 0)) return null;
+  return admin;
 }
 
 /** Send svar til kunde på e-post via Brevo (tidl. Sendinblue) v3 SMTP. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
@@ -341,6 +377,108 @@ export default {
       return json({ ok: true });
     }
 
+    // ── Autentisering og tilgangsstyring (P0) ──────────────────────────────
+    const lesSesjonCookie = (req: Request): string | null => {
+      const m = /(?:^|;\s*)fbg_session=([^;]+)/.exec(req.headers.get('Cookie') || '');
+      return m ? m[1] : null;
+    };
+    const settSesjonCookie = (sid: string): string =>
+      `fbg_session=${sid}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`;
+
+    // Passordfri innlogging — trinn 1: be om magic link (e-post + invitasjon).
+    if (method === 'POST' && path === '/api/auth/request') {
+      if (!(await henvendelserTillatt(env))) return json({ ok: false, error: 'Henvendelser er stengt.' }, 503);
+      // Rate limit: maks 5 innloggingsforsøk per IP per 15 min (brute-force/utsendelsesvern).
+      {
+        const ip = geoAv(request).ip ?? 'ukjent';
+        if (ip !== 'ukjent') {
+          const W = 15 * 60 * 1000, MAX = 5, now = Date.now();
+          const rl = await env.FINNBILGLASS_DB.prepare('SELECT window_start, count FROM auth_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
+          if (rl && now - rl.window_start < W && rl.count >= MAX) return json({ ok: false, error: 'For mange forsøk. Prøv igjen senere.' }, 429);
+          if (rl) {
+            if (now - rl.window_start >= W) await env.FINNBILGLASS_DB.prepare('UPDATE auth_rate_limits SET window_start = ?, count = 1 WHERE ip = ?').bind(now, ip).run();
+            else await env.FINNBILGLASS_DB.prepare('UPDATE auth_rate_limits SET count = count + 1 WHERE ip = ?').bind(ip).run();
+          } else {
+            await env.FINNBILGLASS_DB.prepare('INSERT INTO auth_rate_limits (ip, window_start, count) VALUES (?, ?, 1)').bind(ip, now).run();
+          }
+        }
+      }
+      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+      const invite = typeof body.invite === 'string' ? body.invite.trim() : '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: false, error: 'Ugyldig e-postadresse.' }, 400);
+      if (!gyldigInvitasjonskode(invite)) return json({ ok: false, error: 'Ugyldig invitasjonskode.' }, 403);
+      if (!(await kodeErTilgjengelig(env.FINNBILGLASS_DB, invite))) return json({ ok: false, error: 'Invitasjonen er ugyldig, utløpt eller allerede brukt.' }, 403);
+      const raw = await opprettLoginToken(env.FINNBILGLASS_DB, email, invite);
+      const base = url.origin;
+      const link = `${base}/api/auth/verify?token=${raw}`;
+      if (env.BREVO_API_KEY) {
+        await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender: { email: env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no', name: 'FinnBilglass' },
+            to: [{ email }],
+            subject: 'Din innlogging til FinnBilglass',
+            htmlContent: `<p>Klikk på lenken for å logge inn: <a href="${link}">${link}</a></p><p>Lenken utløper om 15 minutter og kan bare brukes én gang.</p>`,
+          }),
+        });
+      }
+      // Ikke lek om e-posten finnes — lik respons uansett.
+      return json({ ok: true, message: 'Sjekk e-posten din for innloggingslenken.' });
+    }
+
+    // Passordfri innlogging — trinn 2: verifiser magic link → økt (cookie).
+    // GET viser en bekreftelsesside (e-postskannere/prefetch forbruker IKKE
+    // tokenet); kun POST forbruker tokenet atomisk og setter økt-cookien.
+    if (path === '/api/auth/verify') {
+      const token = url.searchParams.get('token') || '';
+      if (method === 'GET') {
+        if (!token) return json({ ok: false, error: 'Manglende token.' }, 400);
+        const esc = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+        const html = `<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Logg inn — FinnBilglass</title><body style="font-family:system-ui;max-width:420px;margin:40px auto;padding:0 20px;color:#0B1220"><h1 style="font-size:24px">Logg inn</h1><p>Klikk under for å logge inn på FinnBilglass.</p><form method="POST" action="/api/auth/verify"><input type="hidden" name="token" value="${esc(token)}"><button type="submit" style="background:#F59E0B;color:#0B1220;border:0;padding:14px 22px;border-radius:12px;font-size:16px;font-weight:600">Logg inn</button></form><p style="color:#637286;font-size:13px;margin-top:24px">Lenken utløper og kan bare brukes én gang.</p></body></html>`;
+        return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
+      if (method === 'POST') {
+        // Token kan komme fra skjult felt (form) eller query.
+        const formToken = (await request.formData().catch(() => null))?.get('token');
+        const t = typeof formToken === 'string' && formToken ? formToken : token;
+        if (!t) return json({ ok: false, error: 'Manglende token.' }, 400);
+        const v = await verifiserLoginToken(env.FINNBILGLASS_DB, t);
+        if (!v) return json({ ok: false, error: 'Ugyldig eller utløpt innloggingslenke.' }, 403);
+        const customerId = await finnEllerOpprettKunde(env.FINNBILGLASS_DB, v.email);
+        if (v.inviteCode) await bindInvitasjon(env.FINNBILGLASS_DB, v.email, v.inviteCode);
+        const sid = await opprettSesjon(env.FINNBILGLASS_DB, customerId);
+        // Reroute til «Min side» uten token i URL, med økt-cookie.
+        return new Response(null, { status: 303, headers: { 'Location': '/min-side', 'Set-Cookie': settSesjonCookie(sid), ...CORS_HEADERS } });
+      }
+      return json({ ok: false, error: 'Metode ikke tillatt.' }, 405);
+    }
+
+    // Logg ut.
+    if (method === 'POST' && path === '/api/auth/logout') {
+      const sid = lesSesjonCookie(request);
+      if (sid) await slettSesjon(env.FINNBILGLASS_DB, sid);
+      return new Response(null, { status: 204, headers: { 'Set-Cookie': 'fbg_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0', ...CORS_HEADERS } });
+    }
+
+    // «Min side» — brukerens egne henvendelser (server-side koblet på customer_id).
+    if (method === 'GET' && path === '/api/me/inquiries') {
+      const sid = lesSesjonCookie(request);
+      const customerId = sid ? await sesjonKunde(env.FINNBILGLASS_DB, sid) : null;
+      if (!customerId) return json({ ok: false, error: 'Ikke innlogget.' }, 401);
+      const rader = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, created_at, status FROM beta_inquiries WHERE customer_id = ? ORDER BY created_at DESC').bind(customerId).all<{ id: number; regnr: string | null; created_at: number; status: string }>();
+      return json({ ok: true, henvendelser: rader.results });
+    }
+
+    // Kundesider (Spor D).
+    if (method === 'GET' && path === '/logg-inn') {
+      return new Response(loggInnPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (method === 'GET' && path === '/min-side') {
+      return new Response(minSidePage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+
     if (method === 'POST' && path === '/api/inquiry') {
       // Beta-henvendelse: kunden ber om tilbud/bekreftelse. Kun mottak + lagring.
       // Ingen prisberegning, ingen ordrebekreftelse, ingen automatisk beslutning.
@@ -391,6 +529,23 @@ export default {
           console.error('idempotens utilgjengelig:', e);
           idemHash = '';
         }
+      }
+      // P0 tilgangsstyring (Tom 2026-10-31): kun innloggede kunder med en
+      // invitasjon bundet til verifisert e-post kan sende henvendelse.
+      // Sjekkes ETTER idempotens-REPLAY (retry får replay uten ny innlogging)
+      // og FØR rate limit (uvedkommende bruker ikke kvoten).
+      const sessId = lesSesjonCookie(request);
+      const customerId = sessId ? await sesjonKunde(env.FINNBILGLASS_DB, sessId) : null;
+      if (!customerId) {
+        if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
+        return json({ ok: false, error: 'Du må logge inn for å sende en forespørsel.' }, 401);
+      }
+      const kunde = await env.FINNBILGLASS_DB.prepare('SELECT email FROM customers WHERE id = ?').bind(customerId).first<{ email: string }>();
+      const kundeEmail = kunde?.email ?? '';
+      const invitert = await env.FINNBILGLASS_DB.prepare("SELECT invite_hash FROM pilot_invitations WHERE used_by_email = ? AND status = 'used'").bind(kundeEmail).first<{ invite_hash: string }>();
+      if (!invitert) {
+        if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
+        return json({ ok: false, error: 'Kontoen din har ikke en gyldig pilot-invitasjon.' }, 403);
       }
       // G12: abuse-beskyttelse — maks 5 henvendelser per IP per 10 min. Aldri blokkerende.
       try {
@@ -454,8 +609,8 @@ export default {
         const naa = Date.now();
         const resultater = await env.FINNBILGLASS_DB.batch([
           env.FINNBILGLASS_DB.prepare(
-            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
-          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson),
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson, customerId),
           env.FINNBILGLASS_DB.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
@@ -722,7 +877,7 @@ export default {
     }
     if (method === 'GET' && path === '/api/ops/summary') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const statuses = await env.FINNBILGLASS_DB.prepare(`WITH review_latest AS (
         SELECT case_id, status, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY created_at DESC) AS n
         FROM evidence_case_review_events
@@ -750,10 +905,40 @@ export default {
       } catch { /* beta_inquiries krever migrasjon 0017 — eldre staging-DB uten tabellen er ok */ }
       return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, inquiries, inquiryStatus, latestInquiries, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
     }
+    // P0 invitasjonssperre — /ops-admin (Tom 2026-10-31). Sikre, tilfeldige
+    // invitasjoner: opprett/liste/tilbakekall. Token-gate som resten av /ops.
+    if (method === 'GET' && path === '/api/ops/invitations') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!(await requireAdmin(request, env, 'administrator'))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const inv = await listeInvitasjoner(env.FINNBILGLASS_DB as never);
+      return json({ ok: true, invitations: inv, maks: MAX_PILOT_DELTAKERE });
+    }
+    if (method === 'POST' && path === '/api/ops/invitations') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!(await requireAdmin(request, env, 'administrator'))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      let invBody: unknown;
+      try { invBody = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const b2 = invBody as Record<string, unknown>;
+      const antall = Math.min(Math.max(Number(b2?.antall) || 1, 1), MAX_PILOT_DELTAKERE);
+      const note = typeof b2?.note === 'string' ? b2.note.slice(0, 200) : '';
+      const timer = typeof b2?.expiresInHours === 'number' ? b2.expiresInHours : null;
+      const expiresAt = timer && timer > 0 ? Date.now() + Math.round(timer * 3600 * 1000) : null;
+      const res = await opprettInvitasjoner(env.FINNBILGLASS_DB as never, antall, 'ops', note, Date.now(), expiresAt);
+      await loggAdmin(env.FINNBILGLASS_DB as never, 'ops-token', 'invitasjoner:opprett', `${res.opprettet} koder`);
+      return json({ ok: res.ok, koder: res.koder, opprettet: res.opprettet, error: res.error });
+    }
+    if (method === 'POST' && path.startsWith('/api/ops/invitations/') && path.endsWith('/revoke')) {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!(await requireAdmin(request, env, 'administrator'))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const kode = path.slice('/api/ops/invitations/'.length, -'/revoke'.length);
+      const ok = await tilbakekallInvitasjon(env.FINNBILGLASS_DB as never, kode);
+      await loggAdmin(env.FINNBILGLASS_DB as never, 'ops-token', 'invitasjon:tilbakekall', ok ? 'ok' : 'feilet');
+      return json({ ok, message: ok ? 'Tilbakekalt' : 'Ikke funnet eller allerede brukt/revokert' });
+    }
     if (method === 'GET' && path === '/api/ops/inquiries') {
       // Beta-henvendelser med statusfilter + paginering (G8). Lesing er åpent i staging+prod (som summary).
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const url = new URL(request.url);
       const statusFilter = url.searchParams.get('status') ?? '';
       const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? '50') || 50, 1), 200);
@@ -771,7 +956,7 @@ export default {
     }
     if (method === 'GET' && path.startsWith('/api/ops/inquiries/')) {
       // Saksdetalj: én inquiry + append-only tidslinje + kundereise-kontekst (G3, G5, G9).
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const idRaw = path.slice('/api/ops/inquiries/'.length).split('/')[0];
       if (!/^\d+$/.test(idRaw)) return json({ ok: false, error: 'Ugyldig id' }, 400);
       const id = Number(idRaw);
@@ -787,7 +972,7 @@ export default {
       // Statusendring er skriving — åpen i staging+prod (beta er live, Tom er eneste operatør).
       // Beskyttet av support-token + append-only-displin. Aldri fitment-autoritet.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'saksbehandler'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
       if (!isInquiryStatus(to) || !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
@@ -808,7 +993,7 @@ export default {
     if (method === 'POST' && inquiryNoteMatch) {
       // Internt notat — append-only, aldri synlig i kundeflyten. Åpen i staging+prod som status.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'saksbehandler'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const actor = typeof body.actor === 'string' ? body.actor.trim() : '', note = body.note;
       if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(note)) return json({ ok: false, error: 'Ansvarlig og notat er påkrevd.' }, 400);
@@ -824,7 +1009,7 @@ export default {
       // Svar direkte til kunden på e-post (kanal #4). Append-only-logg som notater.
       // Avhengig av BREVO_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'saksbehandler'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       if (!env.BREVO_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
@@ -844,7 +1029,7 @@ export default {
       // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens
       // smeltet på session_id). Lesing, token-gate, kun staging+prod.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const inquiries = await env.FINNBILGLASS_DB.prepare(
         'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
       ).all<InquiryRow>();
@@ -863,7 +1048,7 @@ export default {
       // Fase A: konsolidert sakdetalj — inquiry + tilknyttede evidenssaker med
       // bilder + SKU-beslutning + tidslinje. Én visning for hele kundereisen.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const kind = sakDetailMatch[1];
       const rawId = sakDetailMatch[2];
 
@@ -925,7 +1110,7 @@ export default {
       // Thumbnail-serving (Oppgave 7): nedskalert skilt-bilde for raskere
       // lasting i /ops/sku. Token-beskyttet; nøkkelen er kun fra D1 (aldri brukerstyrt).
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
       const key = new URL(request.url).searchParams.get('key') ?? '';
       if (!key) return json({ ok: false, error: 'Mangler key' }, 400);
@@ -937,7 +1122,7 @@ export default {
       // AI-støtte-fanen: lese/triaging-flate over AI-observasjoner av opplastede
       // bilder (skilt/43R) + siste operatør-review. Token-beskyttet, lesing.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const observasjoner: unknown[] = [];
       try {
         const rows = await env.FINNBILGLASS_DB.prepare(
@@ -990,7 +1175,7 @@ export default {
       // (→ evidens, evidence_events VERIFIED) eller avvis. Aldri en
       // fitment-beslutning — kun om observasjonen kan brukes som evidens.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'saksbehandler'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>;
       try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const bildeId = Number(body.bilde_id);
@@ -1014,7 +1199,7 @@ export default {
       // SKU-beslutningsflate (Oppgave 3): henvendelser med kundereise-snapshot
       // (resolver-kandidater) + siste beslutning. Token-beskyttet, lesing.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const rows = await env.FINNBILGLASS_DB.prepare(
         `SELECT id, regnr, status, vehicle_json, session_id, created_at FROM beta_inquiries
          WHERE vehicle_json IS NOT NULL AND vehicle_json != ''
@@ -1045,7 +1230,7 @@ export default {
       // velg alternativ SKU / avslå. Append-only; overrides logges i
       // evidence_events. «godkjenn SKU» passerer godkjenningsGate (hard regel 1).
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'saksbehandler'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const idRaw = body.inquiry_id;
       const decision = String(body.decision ?? '');
@@ -1124,7 +1309,7 @@ export default {
       return supportEvidenceUi();
     }
     if (method === 'GET' && path === '/api/support/evidence') {
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const cases = await env.FINNBILGLASS_DB.prepare('SELECT case_id, created_at, status FROM evidence_cases ORDER BY created_at DESC LIMIT 100').all<{ case_id: string; created_at: number; status: string }>();
       const result = [];
       for (const c of cases.results) {
@@ -1158,7 +1343,7 @@ export default {
     if (method === 'POST' && statusMatch) {
       // Statusendring er skriving — styres av feature-flag (append-only, token-gate).
       if (!featureEnabled(env, 'EVIDENCE_STATUS_CHANGE_ENABLED')) return featureDisabled('EVIDENCE_STATUS_CHANGE_ENABLED');
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'saksbehandler'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
       if (!isSupportCaseStatus(to) || !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validReviewReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
@@ -1174,7 +1359,7 @@ export default {
     }
     const imageMatch = /^\/api\/support\/evidence\/([^/]+)\/([^/]+)$/.exec(path);
     if (method === 'GET' && imageMatch) {
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await requireAdmin(request, env, 'lesetilgang'))) return json({ ok: false, error: 'Unauthorised' }, 401);
       if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
       const row = await env.FINNBILGLASS_DB.prepare('SELECT r2_key, mime FROM evidence_case_images WHERE case_id = ? AND image_id = ?').bind(imageMatch[1], imageMatch[2]).first<{ r2_key: string; mime: string }>();
       if (!row) return json({ ok: false, error: 'Ikke funnet' }, 404);
