@@ -62,8 +62,6 @@
     "test:idempotens": "node --import tsx --test tests/inquiry-idempotency.test.mjs",
     "test:public-contract": "node --import tsx --test tests/public-contract.test.mjs",
     "test:p1-verify": "node --import tsx --test tests/p1-verify.test.ts",
-    "test:apify-adapter": "node --import tsx --test tests/apify-catalog-adapter.test.mjs",
-    "test:nok-prising": "node --import tsx --test tests/nok-prising.test.ts",
     "pilot:preflight": "node scripts/maintenance/pilot-preflight.mjs"
   },
   "devDependencies": {

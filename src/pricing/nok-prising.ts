@@ -30,6 +30,14 @@ export const PRISTLISTE_RABATT_FAKTOR = 0.6;
 /** Prisgruppene kunden ser (inkl. mva). */
 export const TRINN = [3990, 5490, 6990, 8490] as const;
 
+/**
+ * Laveste listepris som kan gi en siterbar kundepris.
+ * Under dette gulvet blir raa prisen lavere enn det billigste trinnet, og
+ * beregnPris nekter aa runde opp — kunden skal ikke faa en pris vi ikke kan
+ * staa inne for. Brukes til aa sortere siterbare produkter foerst.
+ */
+export const LAVESTE_SITERBARE_LISTEPRIS = TRINN[0] / PRISTLISTE_RABATT_FAKTOR;
+
 /** Norsk merverdiavgift. Trinnprisene er inkl. mva, så satsen brukes til uttrekk. */
 export const MVA_SATS = 0.25;
 
