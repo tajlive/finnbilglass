@@ -281,3 +281,18 @@ test('lignende modellnavn blandes ikke (C-HR vs C-HR CROSSOVER er samme, COROLLA
   assert.ok(res.candidates.length >= 1);
   assert.equal(res.candidates.every((c) => /C-HR/i.test(c.varenavn)), true);
 });
+
+test('pris-karantene: kit-priset glass skjules for prisen, men kandidaten beholdes', async () => {
+  const { prisKaranteneGrunn } = await import('../src/glass-karantene.ts');
+  assert.ok(prisKaranteneGrunn('10X I KIT'));
+  assert.ok(prisKaranteneGrunn('+++6 STYKKER I KIT'));
+  assert.equal(prisKaranteneGrunn('## NB MÅ HA 2741PYKIT'), null, 'merknad på ekte frontrute skal ikke rammes');
+  assert.equal(prisKaranteneGrunn('MAX 30%'), null);
+
+  const gt = [{ make: 'TOYOTA', model: 'C-HR CROSSOVER', year: 2018, frontrute_eurocode: 'KITKODE', confidence: 0.8 }];
+  const pris = [{ varenr: 'KITKODE', varenavn: 'TOYOTA C-HR 5D CROSSOVER 16-', kommentar: '10X I KIT', pris: 915, eurokode: 'KITKODE' }];
+  const db = miniDb(gt, pris);
+  const res = await discoverFrontRute({ FINNBILGLASS_DB: db }, 'TOYOTA', 'C-HR', 2018);
+  assert.equal(res.candidates.length, 1, 'kandidaten skal beholdes');
+  assert.equal(res.candidates[0].pris, null, 'kit-pris skal ikke vises som listepris');
+});

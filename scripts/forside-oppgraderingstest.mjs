@@ -18,7 +18,12 @@ import { mkdtempSync, readFileSync, existsSync, statSync, rmSync } from 'node:fs
 import { tmpdir } from 'node:os';
 import { join, extname, normalize } from 'node:path';
 
-const FORRIGE_REF = process.env.FORRIGE_REF || 'origin/main';
+// «Gammel» = ref-en som fortsatt har den forrige forsiden. Etter at PR #18
+// (moderne forside) ble merget til main, er origin/main den NYE siden — å peke
+// på den gjør testen meningsløs. 11185f8 er siste main-commit med den gamle
+// forsiden (den som ligger i produksjon frem til neste deploy). Oppdater denne
+// når produksjon faktisk kjører den nye siden, eller overstyr med FORRIGE_REF.
+const FORRIGE_REF = process.env.FORRIGE_REF || '11185f8';
 const GODKJENT = 'Riktig bilglass. En pris du forstår.';
 const GAMMEL = /Bilglass til riktig pris|Kjenner du Tom Arne/;
 

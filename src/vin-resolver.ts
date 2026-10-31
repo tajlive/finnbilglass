@@ -20,7 +20,7 @@ import { tierPris } from './matcher';
 import { matcherAar, parseAar } from './aar-parser';
 import { serieKey, normaliserKatalogModell } from './serie-mapping';
 import { dekodeEurokode, type Dekodet } from './eurokode-dekoder';
-import { karanteneGrunn } from './glass-karantene';
+import { karanteneGrunn, prisKaranteneGrunn } from './glass-karantene';
 
 export type ResolverUtfall = 'PINPOINT' | 'VERIFY' | 'FALLBACK';
 
@@ -188,9 +188,13 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
   ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null; kommentar: string | null }>();
   if (!r) return null;
 
-  // Karantene: rader merket som glass som egentlig er panel/list/kit
+  // Produkt-karantene: rader merket som glass som egentlig er panel/list
   // (f.eks. TORPEDOVEGG). Se src/glass-karantene.ts.
   if (karanteneGrunn(r.kommentar, r.varenavn)) return null;
+  // Pris-karantene: ekte glass, men listeprisen gjelder et kit/antall.
+  // Produktet beholdes; prisen skjules (listepris = null → ingen kundepris).
+  const prisKarantene = prisKaranteneGrunn(r.kommentar) != null;
+  if (prisKarantene) console.warn(`pris-karantene: ${r.varenr} — ${r.kommentar}`);
 
   const dek = dekodeEurokode(r.eurokode);
   if (!erFrontrute(r.varenavn, r.varenr, dek)) return null; // bak/side/dør/takglass
@@ -227,8 +231,8 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
   return {
     varenr: r.varenr,
     varenavn: r.varenavn,
-    pris: tierPris(r.pris),
-    listepris: r.pris,
+    pris: prisKarantene ? null : tierPris(r.pris),
+    listepris: prisKarantene ? null : r.pris,
     eurokode: r.eurokode,
     attributter,
   };
@@ -581,7 +585,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
   }
   return {
     utfall: 'VERIFY',
-    grunn: `L${lag}: ${kandidater.length} varianter — utstyr må verifiseres`,
+    grunn: `L${lag}: ${kandidater.length} varianter${kandidater.length > 6 ? ' (viser 6)' : ''} — utstyr må verifiseres`,
     confidence: Math.min(confidence, 0.5),
     kandidater: kandidater.slice(0, 6),
     sporsmaal: skillendeSporsmaal(kandidater.slice(0, 6)),

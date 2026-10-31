@@ -1,6 +1,6 @@
 import { normBrand, modellTokensAv, ordTreff } from './vin-resolver';
 import { LAVESTE_SITERBARE_LISTEPRIS } from './pricing/nok-prising';
-import { karanteneGrunn } from './glass-karantene';
+import { karanteneGrunn, prisKaranteneGrunn } from './glass-karantene';
 import { parseAar, matcherAar } from './aar-parser';
 
 /** Katalogen bruker kortformen (VW, ikke Volkswagen). Gjenbruker
@@ -297,6 +297,8 @@ export async function discoverFrontRute(
       forkastet++;
       continue;
     }
+    // Pris-karantene: produktet er ekte, men listeprisen gjelder et kit/antall.
+    if (prisKaranteneGrunn(r.kommentar)) r.pris = null;
     sett.add(r.varenr);
     unike.push(r);
   }

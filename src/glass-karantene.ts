@@ -44,3 +44,20 @@ export function karanteneGrunn(kommentar: string | null | undefined, varenavn?: 
   if (/\b(TORPEDO|INNERLIST|GUMMILIST)\b/.test(n)) return 'produktnavn angir ikke-frontrute';
   return null;
 }
+
+/**
+ * Pris-karantene: raden er en ekte frontrute, men prisen er oppgitt per kit
+ * eller per antall («10X I KIT», «6 STYKKER I KIT»). Da er listeprisen ikke
+ * en pris for ett glass, og skal ikke presenteres som kundepris.
+ *
+ * Dette er en annen karantene enn produkt-karantenen over: produktet beholdes,
+ * bare prisen skjules. Merknader som «MÅ HA 2741PYKIT» står på ekte
+ * frontruter og rammes ikke — de sier hva som må bestilles i tillegg.
+ */
+export function prisKaranteneGrunn(kommentar: string | null | undefined): string | null {
+  const k = (kommentar ?? '').trim();
+  if (!k) return null;
+  if (/\b\d+\s*X?\s*(STYKKER|STK)?\s*I\s*KIT\b/i.test(k)) return `pris per kit: «${k.slice(0, 40)}»`;
+  if (/\bTOPP\s*\+\s*SIDE\s*\+\s*BUNN\s*KIT\b/i.test(k)) return `kit-produkt: «${k.slice(0, 40)}»`;
+  return null;
+}
