@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Finnbilglass B2C bilglass \u2014 frontrute-matcher Worker + Pages-nettbutikk",
+  "description": "Finnbilglass B2C bilglass — frontrute-matcher Worker + Pages-nettbutikk",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "npm run typecheck && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:ops-consolidation && npm run test:glavista && npm run test:apify-adapter && npm run test:nok-prising && npm run test:p1-verify && npm run test:dekningsrapport",
+    "test": "npm run qa",
     "test:vin-aar": "node --import tsx --test tests/vin-modellaar.test.mjs",
     "test:svv": "node --import tsx --test tests/svv.test.mjs",
     "test:matcher": "node --import tsx --test tests/matcher.test.mjs",
@@ -54,21 +54,21 @@
     "test:ops-consolidation": "node --import tsx --test tests/ops-consolidation.test.mjs",
     "test:glavista": "node --import tsx --test tests/glavista-matcher.test.mjs",
     "test:dekningsrapport": "node --test tests/dekningsrapport.test.mjs",
+    "test:migration-guard": "node --test tests/migration-guard.test.mjs",
+    "rapport:dekning": "node scripts/dekningsrapport.mjs",
+    "selftest:50:staging": "node scripts/e2e-self-test-50-cars.mjs",
+    "test:ledger-backfill": "node --test tests/ledger-backfill.test.mjs",
+    "qa": "npm run typecheck && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:ops-consolidation && npm run test:glavista && npm run test:migration-guard && npm run test:ledger-backfill && npm run test:handling-c && npm run test:apify-adapter && npm run test:nok-prising && npm run test:p1-verify && npm run test:dekningsrapport",
+    "test:handling-c": "node --test tests/handling-c.test.mjs",
+    "qa:d1": "node scripts/maintenance/d1-integritet.mjs",
     "test:apify-adapter": "node --import tsx --test tests/apify-catalog-adapter.test.mjs",
     "test:nok-prising": "node --import tsx --test tests/nok-prising.test.ts",
-    "test:p1-verify": "node --import tsx --test tests/p1-verify.test.ts",
-    "rapport:dekning": "node scripts/dekningsrapport.mjs",
-    "selftest:50:staging": "node scripts/e2e-self-test-50-cars.mjs"
+    "test:p1-verify": "node --import tsx --test tests/p1-verify.test.ts"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20261030.1",
-    "apify-cli": "^1.11.0",
+    "@cloudflare/workers-types": "^5.20260811.1",
+    "tsx": "^4.23.12",
     "typescript": "^5.8.0",
     "wrangler": "^4.122.0"
-  },
-  "dependencies": {
-    "apify": "^3.7.2",
-    "cheerio": "^1.0.0-rc.12",
-    "tsx": "^4.23.12"
   }
 }
