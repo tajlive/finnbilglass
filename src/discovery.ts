@@ -1,4 +1,5 @@
 import { normBrand } from './vin-resolver';
+import { LAVESTE_SITERBARE_LISTEPRIS } from './pricing/nok-prising';
 
 /** Katalogen bruker kortformen (VW, ikke Volkswagen). Gjenbruker
  *  merke-aliasene fra resolveren saa /api/glass og kundereisen
@@ -80,17 +81,23 @@ export async function discoverFrontRute(
     `SELECT ${cols.join(', ')}
       FROM glass_prisliste
       WHERE rad_type='glass' AND ${frontGlob} AND ${likePrim} AND (${likeSek})
-      ORDER BY pris`;
+      ORDER BY (pris IS NULL), (pris < ?), pris`;
+  // Merk: (pris IS NULL) først, ellers sorterer SQLite NULL før alle tall.
+  // (pris < ?) skyver produkter under prisgulvet bak, slik at kunden ser det vi
+  // faktisk kan prise foerst i stedet for en side full av MANUAL_REVIEW.
+  // Samme varenr kan finnes i flere rader (ulik eurokode), og uten dette vant
+  // en rad uten pris over raden med pris — kunden fikk MANUAL_REVIEW på et
+  // produkt vi faktisk har pris på.
 
   let seed;
   try {
     seed = await env.FINNBILGLASS_DB.prepare(byggSql([...kolonner, 'typeCode', 'side']))
-      .bind(...primParams, ...sekParams)
+      .bind(...primParams, ...sekParams, LAVESTE_SITERBARE_LISTEPRIS)
       .all();
   } catch (e) {
     console.warn('discovery: typeCode/side finnes ikke i glass_prisliste — bruker slank spørring:', e);
     seed = await env.FINNBILGLASS_DB.prepare(byggSql(kolonner))
-      .bind(...primParams, ...sekParams)
+      .bind(...primParams, ...sekParams, LAVESTE_SITERBARE_LISTEPRIS)
       .all();
   }
 

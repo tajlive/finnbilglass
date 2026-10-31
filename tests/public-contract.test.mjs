@@ -103,3 +103,12 @@ test('discovery henter listepris slik at kontrakten kan beregne kundepris', () =
   assert.match(src, /pris\??:\s*number \| null/);
   assert.match(src, /pris:\s*typeof r\.pris === 'number'/);
 });
+
+test('discovery sorterer rader uten pris sist', () => {
+  const src = readFileSync(join(import.meta.dirname, '..', 'src', 'discovery.ts'), 'utf8');
+  // SQLite sorterer NULL foran alle tall. Uten (pris IS NULL) vinner en rad
+  // uten pris over en rad med pris for samme varenr, og kunden får
+  // MANUAL_REVIEW på et produkt vi har pris på. (pris < ?) skyver i tillegg
+  // produkter under prisgulvet bak, så kunden ser siterbare varer først.
+  assert.match(src, /ORDER BY \(pris IS NULL\), \(pris < \?\), pris/);
+});
