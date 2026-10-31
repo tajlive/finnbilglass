@@ -14,6 +14,7 @@ import { lesSkilt } from './les-skilt';
 import { tilOffentligSvar } from './public-contract';
 import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
 import { gyldigInvitasjonskode, brukInvitasjon, opprettInvitasjoner, tilbakekallInvitasjon } from './invitation';
+import { opprettLoginToken, verifiserLoginToken, finnEllerOpprettKunde, opprettSesjon, sesjonKunde, slettSesjon, bindInvitasjon, adminRolle, kanSkrive, loggAdmin, SESSION_TTL_MS } from './auth';
 import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
 import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
@@ -340,6 +341,75 @@ export default {
       }
       await loggHendelse(env, body, request);
       return json({ ok: true });
+    }
+
+    // ── Autentisering og tilgangsstyring (P0) ──────────────────────────────
+    const lesSesjonCookie = (req: Request): string | null => {
+      const m = /(?:^|;\s*)fbg_session=([^;]+)/.exec(req.headers.get('Cookie') || '');
+      return m ? m[1] : null;
+    };
+    const settSesjonCookie = (sid: string): string =>
+      `fbg_session=${sid}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.floor(SESSION_TTL_MS / 1000)}`;
+
+    // Passordfri innlogging — trinn 1: be om magic link (e-post + invitasjon).
+    if (method === 'POST' && path === '/api/auth/request') {
+      if (!(await henvendelserTillatt(env))) return json({ ok: false, error: 'Henvendelser er stengt.' }, 503);
+      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+      const invite = typeof body.invite === 'string' ? body.invite.trim() : '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: false, error: 'Ugyldig e-postadresse.' }, 400);
+      if (!gyldigInvitasjonskode(invite)) return json({ ok: false, error: 'Ugyldig invitasjonskode.' }, 403);
+      const inv = await env.FINNBILGLASS_DB.prepare("SELECT status FROM pilot_invitations WHERE invite_code = ?").bind(invite).first<{ status: string }>();
+      if (!inv || inv.status !== 'unused') return json({ ok: false, error: 'Invitasjonen er ugyldig eller allerede brukt.' }, 403);
+      const raw = await opprettLoginToken(env.FINNBILGLASS_DB, email, invite);
+      const base = url.origin;
+      const link = `${base}/api/auth/verify?token=${raw}`;
+      if (env.BREVO_API_KEY) {
+        await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender: { email: env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no', name: 'FinnBilglass' },
+            to: [{ email }],
+            subject: 'Din innlogging til FinnBilglass',
+            htmlContent: `<p>Klikk på lenken for å logge inn: <a href="${link}">${link}</a></p><p>Lenken utløper om 15 minutter og kan bare brukes én gang.</p>`,
+          }),
+        });
+      }
+      // Ikke lek om e-posten finnes — lik respons uansett.
+      return json({ ok: true, message: 'Sjekk e-posten din for innloggingslenken.' });
+    }
+
+    // Passordfri innlogging — trinn 2: verifiser magic link → økt (cookie).
+    if (method === 'GET' && path === '/api/auth/verify') {
+      const token = url.searchParams.get('token') || '';
+      if (!token) return json({ ok: false, error: 'Manglende token.' }, 400);
+      const v = await verifiserLoginToken(env.FINNBILGLASS_DB, token);
+      if (!v) return json({ ok: false, error: 'Ugyldig eller utløpt innloggingslenke.' }, 403);
+      const customerId = await finnEllerOpprettKunde(env.FINNBILGLASS_DB, v.email);
+      if (v.inviteCode) await bindInvitasjon(env.FINNBILGLASS_DB, v.email, v.inviteCode);
+      const sid = await opprettSesjon(env.FINNBILGLASS_DB, customerId);
+      return new Response('Innlogging vellykket. Du kan lukke dette vinduet.', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Set-Cookie': settSesjonCookie(sid), ...CORS_HEADERS },
+      });
+    }
+
+    // Logg ut.
+    if (method === 'POST' && path === '/api/auth/logout') {
+      const sid = lesSesjonCookie(request);
+      if (sid) await slettSesjon(env.FINNBILGLASS_DB, sid);
+      return new Response(null, { status: 204, headers: { 'Set-Cookie': 'fbg_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0', ...CORS_HEADERS } });
+    }
+
+    // «Min side» — brukerens egne henvendelser (server-side e-postmatch).
+    if (method === 'GET' && path === '/api/me/inquiries') {
+      const sid = lesSesjonCookie(request);
+      const customerId = sid ? await sesjonKunde(env.FINNBILGLASS_DB, sid) : null;
+      if (!customerId) return json({ ok: false, error: 'Ikke innlogget.' }, 401);
+      const kunde = await env.FINNBILGLASS_DB.prepare('SELECT email FROM customers WHERE id = ?').bind(customerId).first<{ email: string }>();
+      const rader = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, created_at, status FROM beta_inquiries WHERE kontakt = ? ORDER BY created_at DESC').bind(kunde?.email ?? '').all<{ id: number; regnr: string | null; created_at: number; status: string }>();
+      return json({ ok: true, henvendelser: rader.results });
     }
 
     if (method === 'POST' && path === '/api/inquiry') {
