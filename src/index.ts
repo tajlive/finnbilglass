@@ -13,6 +13,7 @@ import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
 import { tilOffentligSvar } from './public-contract';
 import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
+import { gyldigInvitasjonskode, brukInvitasjon, opprettInvitasjoner, tilbakekallInvitasjon } from './invitation';
 import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
 import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
@@ -392,6 +393,27 @@ export default {
           idemHash = '';
         }
       }
+      // P0 invitasjonssperre (Tom 2026-10-31): kun inviterte kunder kan sende
+      // henvendelse. Koden er en sikker, tilfeldig token — IKKE regnr/kontakt.
+      // Sjekkes ETTER idempotens-REPLAY (retry med samme nøkkel får replay uten
+      // å trenge koden på nytt) og FØR rate limit (uvedkommende bruker ikke kvoten).
+      const invitasjonKode = gyldigInvitasjonskode(
+        typeof b.invite === 'string' ? b.invite : (request.headers.get('X-Invitation') ?? '')
+      );
+      if (!invitasjonKode) {
+        if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
+        return json({ ok: false, error: 'Denne forespørselen krever en gyldig invitasjon.' }, 403);
+      }
+      const inv = await brukInvitasjon(env.FINNBILGLASS_DB as never, invitasjonKode);
+      if (inv.status !== 'OK') {
+        if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
+        const invMsg = inv.status === 'REVOKERT'
+          ? 'Invitasjonen er tilbakekalt.'
+          : inv.status === 'BRUKT'
+            ? 'Invitasjonen er allerede brukt.'
+            : 'Ugyldig invitasjon.';
+        return json({ ok: false, error: invMsg }, 403);
+      }
       // G12: abuse-beskyttelse — maks 5 henvendelser per IP per 10 min. Aldri blokkerende.
       try {
         const ip = geoAv(request).ip ?? 'ukjent';
@@ -749,6 +771,34 @@ export default {
         for (const r of st.results) inquiryStatus[r.status] = r.n;
       } catch { /* beta_inquiries krever migrasjon 0017 — eldre staging-DB uten tabellen er ok */ }
       return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, inquiries, inquiryStatus, latestInquiries, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
+    }
+    // P0 invitasjonssperre — /ops-admin (Tom 2026-10-31). Sikre, tilfeldige
+    // invitasjoner: opprett/liste/tilbakekall. Token-gate som resten av /ops.
+    if (method === 'GET' && path === '/api/ops/invitations') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const inv = await env.FINNBILGLASS_DB.prepare(
+        'SELECT invite_code, status, created_at, used_at, revoked_at, created_by, note FROM pilot_invitations ORDER BY created_at DESC'
+      ).all<{ invite_code: string; status: string; created_at: number; used_at: number | null; revoked_at: number | null; created_by: string; note: string | null }>();
+      return json({ ok: true, invitations: inv.results });
+    }
+    if (method === 'POST' && path === '/api/ops/invitations') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      let invBody: unknown;
+      try { invBody = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const b2 = invBody as Record<string, unknown>;
+      const antall = Math.min(Math.max(Number(b2?.antall) || 1, 1), 100);
+      const note = typeof b2?.note === 'string' ? b2.note.slice(0, 200) : '';
+      const koder = await opprettInvitasjoner(env.FINNBILGLASS_DB as never, antall, 'ops', note);
+      return json({ ok: true, koder });
+    }
+    if (method === 'POST' && path.startsWith('/api/ops/invitations/') && path.endsWith('/revoke')) {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const kode = path.slice('/api/ops/invitations/'.length, -'/revoke'.length);
+      const ok = await tilbakekallInvitasjon(env.FINNBILGLASS_DB as never, kode);
+      return json({ ok, message: ok ? 'Tilbakekalt' : 'Ikke funnet eller allerede brukt/revokert' });
     }
     if (method === 'GET' && path === '/api/ops/inquiries') {
       // Beta-henvendelser med statusfilter + paginering (G8). Lesing er åpent i staging+prod (som summary).

@@ -39,7 +39,6 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         with:
           args: --config=.gitleaks.toml --verbose
-        continue-on-error: true
 
   deploy:
     needs: [test-gate, security-check]
