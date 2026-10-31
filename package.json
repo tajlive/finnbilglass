@@ -71,7 +71,8 @@
     "test:access-auth": "node --import tsx --test tests/access-auth.test.mjs",
     "pilot:preflight": "node scripts/maintenance/pilot-preflight.mjs",
     "test:forside-regresjon": "node --test tests/forside-regresjon.test.mjs",
-    "test:forside:visuell": "node scripts/forside-visuell.mjs"
+    "test:forside:visuell": "node scripts/forside-visuell.mjs",
+    "test:forside:live": "node scripts/forside-live-sjekk.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
