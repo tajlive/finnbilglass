@@ -32,6 +32,14 @@ jobs:
             echo "::error::Hemmelighetsfil committet:"; echo "$LEAKS"; exit 1
           fi
           echo "OK — ingen hemmelighetsfiler i git"
+      # Hentet fra origin/main (gitleaks-allowlist). Ikke-blokkerende til
+      # .gitleaks.toml er verifisert mot kjente falske treff (tabellnavn som
+      # «evidence_cases» matcher generic-api-key).
+      - name: Secret scan (allowlist via gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: --config=.gitleaks.toml --verbose
+        continue-on-error: true
 
   deploy:
     needs: [test-gate, security-check]
