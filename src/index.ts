@@ -6,7 +6,7 @@
 import type { Env } from './types';
 import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
-import { resolverModus } from './kill-switch';
+import { resolverModus, anvendResolverPolicy } from './kill-switch';
 import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
@@ -300,10 +300,8 @@ export default {
         // Resolver først (PINPOINT/VERIFY). FALLBACK → eksisterende tekstmatcher (uendret).
         // Kill switch (G6): resolver_all → tvungen FALLBACK; resolver_pinpoint → degrader til VERIFY.
         let resolver = await resolveFrontrute(env, bil);
-        const modus = await resolverModus(env, resolver.utfall);
-        if (modus !== resolver.utfall) {
-          resolver = { ...resolver, utfall: modus, grunn: `kill switch: ${resolver.utfall}→${modus} (${resolver.grunn})` };
-        }
+        // Felles policy — samme funksjon som /api/regnr og /api/vin.
+        resolver = (await anvendResolverPolicy(env, resolver))!;
         if (resolver.utfall !== 'FALLBACK') {
           const topp = resolver.kandidater?.[0] ?? null;
           return json({
@@ -553,7 +551,7 @@ export default {
           console.error('Resolver feilet:', e);
         }
       }
-      return json({ ok: true, lagret, bil, resolver });
+      return json({ ok: true, lagret, bil, resolver: await anvendResolverPolicy(env, resolver) });
     }
 
     if (method === 'POST' && path === '/api/vin') {
@@ -587,7 +585,7 @@ export default {
           console.error('Resolver feilet (VIN):', e);
         }
       }
-      return json({ ok: true, bil, resolver });
+      return json({ ok: true, bil, resolver: await anvendResolverPolicy(env, resolver) });
     }
 
     if (method === 'POST' && path === '/api/les-skilt') {
