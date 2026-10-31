@@ -34,3 +34,6 @@ data/scrape/
 
 # Egentest-artefakter (50-bilers self-test) — genereres per kjøring
 output/
+
+# Apify CLI lokalt arbeidsområde (datasett/scrapes) — aldri i git
+storage/

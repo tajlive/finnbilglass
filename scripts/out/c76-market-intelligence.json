@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAt": "2026-08-18T03:04:32.457Z",
+    "generatedAt": "2026-08-18T03:24:51.068Z",
     "marketAds": 1385,
     "prinsipp": "Finn.no = markedsignal, aldri sannhet. SVV = truth. Katalog = kandidater. Kun evidens gir EXACT."
   },
@@ -72,7 +72,7 @@
       "marketAds": 135,
       "svvBiler": 94,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 135
     },
     {
@@ -80,7 +80,7 @@
       "marketAds": 133,
       "svvBiler": 86,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 133
     },
     {
@@ -88,7 +88,7 @@
       "marketAds": 131,
       "svvBiler": 83,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 131
     },
     {
@@ -96,7 +96,7 @@
       "marketAds": 99,
       "svvBiler": 72,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 99
     },
     {
@@ -104,7 +104,7 @@
       "marketAds": 93,
       "svvBiler": 76,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 93
     },
     {
@@ -112,7 +112,7 @@
       "marketAds": 91,
       "svvBiler": 49,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 91
     },
     {
@@ -120,7 +120,7 @@
       "marketAds": 88,
       "svvBiler": 50,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 88
     },
     {
@@ -128,7 +128,7 @@
       "marketAds": 53,
       "svvBiler": 52,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 53
     },
     {
@@ -140,27 +140,27 @@
       "roiScore": 45
     },
     {
-      "familie": "TRANSPORTER",
-      "marketAds": 89,
-      "svvBiler": 79,
-      "applikasjonsGapPct": 49,
-      "oeGapPct": 100,
-      "roiScore": 43.6
-    },
-    {
       "familie": "1-SERIE",
       "marketAds": 42,
       "svvBiler": 33,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 42
+    },
+    {
+      "familie": "TRANSPORTER",
+      "marketAds": 89,
+      "svvBiler": 79,
+      "applikasjonsGapPct": 27,
+      "oeGapPct": 43,
+      "roiScore": 24
     },
     {
       "familie": "CORSA",
       "marketAds": 15,
       "svvBiler": 6,
       "applikasjonsGapPct": 67,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 10.1
     },
     {
@@ -168,7 +168,7 @@
       "marketAds": 6,
       "svvBiler": 3,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 6
     },
     {
@@ -184,7 +184,7 @@
       "marketAds": 3,
       "svvBiler": 2,
       "applikasjonsGapPct": 100,
-      "oeGapPct": 100,
+      "oeGapPct": 0,
       "roiScore": 3
     }
   ],

@@ -123,8 +123,17 @@ async function tilKandidat(kode) {
 }
 
 test('fixtures: ground-truth.jsonl er til stede (dump-d1-fixtures.mjs)', { skip: !harFixtures }, () => {
-  assert.ok(gt.length > 40000, `forventet ≥ 40 000 GT-rader, fikk ${gt.length}`);
+  // Prod-D1 ground_truth = 36 180 rader (2026-08-19): gt-generert.sql = 34 393
+  // (34 201 i DB etter deduplisering) + b2b-seed. Terskel 35 000 gir margin for
+  // fremtidig filtrering — bevisst IKKE ≥ 40 000: prod-D1 er ikke komplett, og
+  // kjente sekundærgap (ece_r43 = 1 testrad, vin_ktype_map = 0) løses ikke her.
+  assert.ok(gt.length > 35000, `forventet ≥ 35 000 GT-rader, fikk ${gt.length}`);
   assert.ok(pl.length > 25000, `forventet ≥ 25 000 prisliste-rader, fikk ${pl.length}`);
+  // dump-d1-fixtures.mjs må fange også rest-radene utenfor 10-års-chunkene
+  // (year < 1940 / >= 2030 — prod har 321, bl.a. dummy-år 1500 og 2060).
+  // Denne guarden forhindrer at et stille data-tap (36 180 → 35 859) gjeninnføres.
+  const utenfor = gt.filter((r) => r.year < 1940 || r.year >= 2030).length;
+  assert.ok(utenfor >= 300, `dumpen skal inneholde rest-radene (≥ 300 utenfor 1940–2029), fikk ${utenfor}`);
 });
 
 test('GT-roundtrip: hver GT-rad er søkbar via egen (make, modell, år)', { skip: !harFixtures }, () => {
