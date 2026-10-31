@@ -1,0 +1,48 @@
+# PR-verifisering — kjører på alle pull requests, også draft.
+#
+# Hensikt: feature-brancher skal aldri være uverifisert. Denne workflowen gjør
+# nøyaktig det samme som test-gaten i deploy.yml, men deployer aldri og har ingen
+# tilgang til produksjonssecrets.
+#
+# Bevisst uten `environment:` og uten `secrets` — en PR fra en branch skal ikke
+# kunne nå Cloudflare.
+name: PR Verification
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-verify-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Testsuite
+        run: npm test
+
+      - name: Ingen hemmelighetsfiler i git
+        run: |
+          LEAKS=$(git ls-files | grep -E '(^|/)(\.env(\.local)?|\.dev\.vars|wrangler\..*\.jsonc)$' || true)
+          if [ -n "$LEAKS" ]; then
+            echo "::error::Hemmelighetsfil committet:"; echo "$LEAKS"; exit 1
+          fi
+          echo "OK — ingen hemmelighetsfiler i git"
