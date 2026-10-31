@@ -1,4 +1,5 @@
-import { normBrand, modellTokensAv, ordTreff } from './vin-resolver';
+import { normBrand, modellTokensAv, ordTreff, erFrontrute } from './vin-resolver';
+import { dekodeEurokode } from './eurokode-dekoder';
 import { LAVESTE_SITERBARE_LISTEPRIS } from './pricing/nok-prising';
 import { karanteneGrunn, prisKaranteneGrunn } from './glass-karantene';
 import { parseAar, matcherAar } from './aar-parser';
@@ -52,16 +53,6 @@ const SIDE_STORRELSE = 20;
 /** Årsmodell utenfor dette vinduet er datastøy (verifisert: GT har 1500–2060). */
 const MIN_AAR = 1940;
 const MAKS_AAR = new Date().getUTCFullYear() + 1;
-
-/**
- * Varenavn som bevisst navngir en annen rutetype. GT-koder peker på varenr, men
- * en GT-rad kan i prinsippet peke på feil rad i prislista — navnet er siste
- * kontroll før kunden får en dørrute presentert som frontrute.
- */
-function erAnnenRutetype(varenavn: string | null | undefined): boolean {
-  const n = (varenavn ?? '').toUpperCase();
-  return /\b(BAKRUTE|BAKRUTA|DØRRUTE|DORRUTE|SIDERUTE|VENTILRUTE|VENTRUTE|SIDEGLASS|DØRGLASS|DORGLASS|TAKGLASS)\b/.test(n);
-}
 
 type Rad = {
   varenr: string;
@@ -293,7 +284,14 @@ export async function discoverFrontRute(
   let forkastet = 0;
   for (const r of rader) {
     if (!r?.varenr || sett.has(r.varenr)) continue;
-    if (karanteneGrunn(r.kommentar, r.varenavn) || erAnnenRutetype(r.varenavn)) {
+    if (karanteneGrunn(r.kommentar, r.varenavn)) {
+      forkastet++;
+      continue;
+    }
+    // Samme frontrute-dom som resolveren bruker: navn (norsk + engelsk/tysk),
+    // varenr-mønster (PY/GU/K-suffiks, sideglass L/R) og eurokode-posisjon.
+    // Uten dette kunne «… FRONT DOORGLASS» slippe gjennom tekstfallbacken.
+    if (!erFrontrute(r.varenavn ?? null, r.varenr, dekodeEurokode(r.eurokode))) {
       forkastet++;
       continue;
     }

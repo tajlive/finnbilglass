@@ -325,3 +325,38 @@ test('/api/frontrute-projeksjon: eurokode og listepris lekker ikke til kunden', 
   assert.equal('confidence' in ut, false);
   assert.equal('grunn' in ut, false, 'grunn skal ikke ut i selve projeksjonen');
 });
+
+// ── Klassifiseringsrunde 2026-10-31: engelske dørmarkører ────────────────
+test('engelsk dørmarkør: «FRONT DOORGLASS» er ikke frontrute', async () => {
+  const { erFrontrute } = await import('../src/vin-resolver.ts');
+  const { dekodeEurokode } = await import('../src/eurokode-dekoder.ts');
+  const tilfeller = [
+    ['BYD T3  VAN 22- FRONT DOORGLASS', 'E409RCLV2', 'E409RCLV2FDW'], // eurokode finnes
+    ['HONGQI HS9 5D SUV 21- FRONT DOOR', 'EC01LGAR', 'EC01LGAR5FDKW'],
+    ['NIO FIREFLY 5 HBK 26- FRONT DOOR', 'EN07RGNH', 'EN07RGNH5FDZ'],
+  ];
+  for (const [navn, varenr, euro] of tilfeller) {
+    assert.equal(erFrontrute(navn, varenr, dekodeEurokode(euro)), false, `${navn} skal avvises`);
+  }
+  // Uten eurokode må navnet alene stoppe den
+  assert.equal(erFrontrute('BYD T3 VAN 22- FRONT DOORGLASS', 'E409RCLV2', dekodeEurokode(null)), false);
+});
+
+test('ekte frontrute uten ordet FRONTRUTE slipper fortsatt gjennom (WS-merke)', async () => {
+  const { erFrontrute } = await import('../src/vin-resolver.ts');
+  const { dekodeEurokode } = await import('../src/eurokode-dekoder.ts');
+  assert.equal(erFrontrute('VOLVO XC60 5D SUV APR17-21 WS', '8846ASMR', dekodeEurokode('8846ASMRL')), true);
+  assert.equal(erFrontrute('TOYOTA C-HR 5D CROSSOVER 16-', '8421ASGH', dekodeEurokode('8421ASGHB')), true);
+});
+
+test('discovery forkaster dørglass som tekstfallback ellers ville sluppet gjennom', async () => {
+  const gt = [];
+  const pris = [
+    { varenr: 'E409RCLV2', varenavn: 'BYD T3 VAN 22- FRONT DOORGLASS', kommentar: '', pris: 4000, eurokode: 'E409RCLV2FDW' },
+    { varenr: 'BYDWS1', varenavn: 'BYD T3 VAN 22- FRONT WS', kommentar: '', pris: 9000, eurokode: '7777AGNH' },
+  ];
+  const db = miniDb(gt, pris);
+  const res = await discoverFrontRute({ FINNBILGLASS_DB: db }, 'BYD', 'T3', 2022);
+  const navn = res.candidates.map((c) => c.varenavn).join(' | ');
+  assert.doesNotMatch(navn, /DOORGLASS/i);
+});

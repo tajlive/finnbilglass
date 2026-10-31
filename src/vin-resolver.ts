@@ -156,7 +156,10 @@ function modellAarIntervall(model: string | null): { start: number; slutt: numbe
  *  «VENT» må IKKE treffe «VENTURE»/«VENTO», «HATCH» må IKKE treffe «HATCHBACK». */
 const IKKE_FRONTRUTE = ['DØRRUTE', 'DORRUTE', 'SIDERUTE', 'SIDORUTE', 'SIDORUTA', 'SIDERUTA', 'BAKRUTE', 'BAGRUTE',
   'BACKLITE', 'SUNROOF', 'SOLTAK', 'HATCH', 'TAKLUKE', 'TAKRUTE', 'PANORAMA', 'REAR', 'QUARTER', 'VENT',
-  'PYNTELIST', 'GUMMILIST', 'KLIPS', 'PAKNING'];
+  'PYNTELIST', 'GUMMILIST', 'KLIPS', 'PAKNING',
+  // Engelske/tyske markører som betyr dør/side/bak — «FRONT» i navnet kan være
+  // «front door», ikke frontrute («BYD T3 FRONT DOORGLASS», «HONGQI HS9 FRONT DOOR»).
+  'DOOR', 'DOORGLASS', 'TUER', 'TÜR', 'HECK'];
 const IKKE_FRONTRUTE_RE = new RegExp(`(?<![A-ZÆØÅ0-9])(${IKKE_FRONTRUTE.join('|')})(?![A-ZÆØÅ0-9])`);
 
 /** Er raden en FRONTRUTE-kandidat? Samme doktrine som gt-generator.mjs: avvis KUN klare
