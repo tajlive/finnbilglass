@@ -245,17 +245,22 @@
     show('Sender forespørsel…');
     fetch('/api/inquiry', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: inquiryHeaders(),
       body: JSON.stringify({
         regnr: '', navn: name, kontakt: contact, melding: message, sessionId: sessionId,
         manualVehicle: { make: make, model: model, year: year }
       })
     })
       .then(function (r) {
-        return r.json().then(function (data) { return { ok: r.ok, data: data }; });
+        return r.json().then(function (data) { return { ok: r.ok, status: r.status, data: data }; });
       })
       .then(function (r) {
-        if (!r.ok || !r.data.ok) throw new Error(r.data.error || 'Kunne ikke sende forespørselen.');
+        if (!r.ok || !r.data.ok) {
+          var error = new Error(fortolkInquiryFeil(r.status, r.data.error));
+          error.status = r.status;
+          throw error;
+        }
+        inquiryIdemKey = null;
         show('Takk! Vi har mottatt forespørselen' +
           (r.data.inquiryId != null ? ' (saksnummer ' + r.data.inquiryId + ')' : '') +
           '. Vi kontrollerer bil og glass manuelt før tilbud. Ingen bestilling er gjennomført.');
@@ -1356,8 +1361,36 @@
     return 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 18);
   }
 
+  // ── P0 idempotens + tilgangsstyring (backend-kontrakt) ────────────────────
+  // Backend reserverer Idempotency-Key FØR rate limit, slik at retry av SAMME
+  // innhold gir replay (samme saksnummer) i stedet for en ny sak i /ops.
+  // Nøkkelen fornyes ved endret innhold, etter vellykket sending og ved 409 —
+  // da skal neste forsøk være en ny forespørsel, ikke en replay.
+  var inquiryIdemKey = null;
+
+  function nyInquiryNokkel() {
+    inquiryIdemKey = nyClientRequestId();
+    return inquiryIdemKey;
+  }
+
+  function inquiryHeaders() {
+    return { 'Content-Type': 'application/json', 'Idempotency-Key': inquiryIdemKey || nyInquiryNokkel() };
+  }
+
+  // 401/403 er tilgangsstyring (innlogging + pilotinvitasjon), ikke en teknisk feil.
+  // Vis vei videre i stedet for rå API-tekst.
+  function fortolkInquiryFeil(status, melding) {
+    if (status === 401) return 'Du må logge inn for å sende forespørselen. Bruk invitasjonslenken du fikk på e-post, eller åpne «Logg inn» øverst på siden.';
+    if (status === 403) return 'Kontoen din har ikke en gyldig pilot-invitasjon. Svar på invitasjons-e-posten, så ordner vi det.';
+    if (status === 429) return 'For mange forespørsler fra denne nettleseren. Prøv igjen om noen minutter.';
+    return melding || 'Kunne ikke sende forespørselen. Prøv igjen.';
+  }
+
   ['inquiry-navn', 'inquiry-kontakt', 'inquiry-telefon-ekstra', 'inquiry-melding', 'inquiry-kontaktpreferanse'].forEach(function (id) {
     $(id).addEventListener('input', function () {
+      // Endret innhold = ny forespørsel. Ny idempotensnøkkel, ellers ville
+      // backend svart 409 KONFLIKT (samme nøkkel, annet innhold).
+      inquiryIdemKey = null;
       if (state.glassRequest && state.inquiryAttempted) {
         state.clientRequestId = nyClientRequestId();
         state.inquiryAttempted = false;
@@ -1403,7 +1436,7 @@
     loggHendelse('tilbud_foresporsel', { regnr: regnr, navnLengde: navn.length, kontaktType: /@/.test(kontakt) ? 'epost' : 'telefon' });
     fetch('/api/inquiry', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: inquiryHeaders(),
       body: JSON.stringify({
         regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId,
         contactPreference: kontaktpreferanse,
@@ -1415,6 +1448,7 @@
       .then(function (r) {
         if (inquiryGeneration !== searchGeneration) return;
         if (!r.ok || !r.data.ok) { var error = new Error(r.data.error || 'Kunne ikke sende forespørselen.'); error.status = r.status; throw error; }
+        inquiryIdemKey = null;
         $('inquiry-form').classList.add('hidden');
         var b = $('inquiry-bekreftet');
         var id = r.data.inquiryId;
@@ -1425,7 +1459,8 @@
       })
       .catch(function (e) {
         if (inquiryGeneration !== searchGeneration) return;
-        inquiryFeil(e.message || 'Kunne ikke sende forespørselen. Prøv igjen.');
+        if (e.status === 409) inquiryIdemKey = null;
+        inquiryFeil(fortolkInquiryFeil(e.status, e.message));
         if (e.status === 409 && state.glassRequest && state.glassRequest.searchId) visManuellEtterUtloepsvarsel();
       })
       .finally(function () { knapp.disabled = false; knapp.textContent = org; });

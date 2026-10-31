@@ -118,6 +118,31 @@ body {
   border-radius: 999px;
 }
 
+/* Kundetilgang: innlogging og Min side. Holder seg unna søkefeltet. */
+.top-hoyre {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.top-lenke {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-decoration: none;
+  padding: 4px 2px;
+  border-bottom: 2px solid transparent;
+}
+.top-lenke:hover,
+.top-lenke:focus-visible {
+  color: var(--ink);
+  border-bottom-color: var(--brand);
+}
+@media (max-width: 480px) {
+  .top-hoyre { gap: 10px; }
+  .top-lenke { font-size: 12px; }
+  .top-lenke[href="/min-side"] { display: none; }
+}
+
 /* Beta-info er tilgjengelig uten å konkurrere med søket. */
 .beta-invitasjon {
   margin: 18px 0 0;
