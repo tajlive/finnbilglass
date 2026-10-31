@@ -29,6 +29,9 @@ Staging-versjonen er deployet fra en ren checkout av `c0b96b4`, ikke fra en arbe
 | #8 | `5e007a9` | Merget → `e2d1564` | — |
 | #9 | `723c2eb` | Merget → `94b3ca5` | — |
 | #10 | `c98d043` | Merget → `ddd78d1` | — |
+| **#12** | idempotens | Draft, CI grønn | P0 før pilot — se punkt 6 |
+| **#13** | offentlig kontrakt | Draft, CI grønn — stablet på #6 | P0 før pilot — se punkt 6b |
+| #11 | docs | Draft | Dette dokumentet |
 | #2, #3, #4, #5 | — | Åpne | **Erstattet** — se punkt 12 |
 
 ---
@@ -129,10 +132,41 @@ Fire POST ga `201`, femte ga `429` — grensen er 5 per IP per 10 minutter.
 | Fabrikkerte NOK-priser | ingen — `pris` er `NULL` der grunnlag mangler |
 | Ordre | ingen automatisk ordreopprettelse; kundehenvendelse er slutten på flyten |
 
-### ⚠️ Åpent funn: kundehenvendelser er ikke idempotente
-Fire identiske POST til `/api/inquiry` ga fire rader i `beta_inquiries`. Beskyttelsen er kun per-IP rate limit (5/10 min). En dobbeltklikk eller nettverksretry lager dermed to saker i `/ops`.
+### Produksjonskrav: idempotente kundehenvendelser
 
-**Anbefaling:** idempotency-nøkkel eller dedupe på `(regnr, kontakt, melding)` innenfor et tidsvindu. Krever Toms beslutning fordi det endrer kundevendt oppførsel.
+Målt i staging: fire identiske POST til `/api/inquiry` ga fire rader i `beta_inquiries`. Rate limiting (5/IP/10 min) er abuse-vern, ikke dedupe — en dobbeltklikk eller nettverksretry lager to saker i `/ops`.
+
+**Krav før pilot:** `Idempotency-Key` per innsending, håndhevet atomisk i D1.
+
+| Situasjon | Forventet resultat |
+|---|---|
+| Første innsending, ny nøkkel | 201, én henvendelse |
+| Retry, samme nøkkel + likt innhold | samme `inquiryId` |
+| Samme nøkkel, endret innhold | 409 Conflict |
+| To samtidige identiske forsøk | maksimalt én henvendelse |
+| Ny nøkkel ved bevisst innsending | ny henvendelse |
+
+**Status: implementert i PR #12.** Nøkkelen reserveres med `INSERT … ON CONFLICT DO NOTHING` mot PRIMARY KEY før henvendelsen opprettes, så parallelle kall kolliderer atomisk uten transaksjon. Tabellen lagrer kun nøkkel og sha256 av kanonisk body — ingen navn, telefon eller e-post. Rate limiting er beholdt og gjelder kun nye innsendinger. Mangler migrasjon 0038, degraderer handleren til dagens oppførsel: kunden blokkeres aldri.
+
+**Må aktiveres i staging før pilot:** kjør `migrations/0038_inquiry_idempotency.sql` mot staging og verifiser kontrakten ende-til-ende.
+
+---
+
+## 6b. Offentlig API-kontrakt
+
+**Beslutning:** offentlig søk skal vise produkter og bekreftet NOK-pris, men ikke interne data.
+
+| Kundevendt | Aldri offentlig |
+|---|---|
+| `varenr`, `varenavn`, `canonicalUrl` | `eurokode`, `skuFingerprint` |
+| `pris`: `kundePris`, `mva`, `prisEksMva` | `typeCode`, `side`, `alias_av`, `rad_type` |
+| `status`: `OK` / `MANUAL_REVIEW` | leverandør, innkjøpspris, kilde-metadata, diagnostikk |
+
+Ved usikker matching eller manglende prisgrunnlag: `MANUAL_REVIEW` og tilbudsforespørsel — aldri automatisk bekreftet kompatibilitet eller pris.
+
+**Status: implementert i PR #13** (stablet på PR #6 siden `/api/glass` bare finnes der). Hviteliste-mapping, ikke svarteliste. Ni kontrakttester sikrer at ingen interne felt lekker, også nøstet.
+
+**Dette erstatter PR #3s gamle kontrakt**, som krevde `MANUAL_REVIEW` med tomme kandidatlister i alle offentlige søk.
 
 ---
 
@@ -149,6 +183,18 @@ Produksjon `finnbilglass-db`: **61 tabeller · 77 indekser · 18 ledger-rader**.
 | 0037 | — | **Skal ikke kjøres** — kolonnene finnes allerede |
 
 Verifisert: `integrity_check ok`, `foreign_key_check` 0 avvik på eksport.
+
+### Rekkefølge (hver operasjon krever egen godkjenning)
+
+1. **Skrivebeskyttet status** — tabell- og indekstelling, ledger-antall, schema-fingerprint
+2. **Eksport + Time Travel-bokmerke** — før noe skrives
+3. **Ledger-backfill (15 → 33 rader)** — `ledger-backfill.mjs preflight` må være grønn
+4. **0019-indeksene** — `handling-c.mjs apply` (kun indeksene)
+5. **0034-tabellene** — samme verktøy, separat kjøring
+6. **Verify** — `foreign_key_check`, tabelltelling, tomhetssjekk av nye tabeller
+7. **Integritet på eksport** — `integrity_check` lokalt med `sqlite3`
+
+Etter hvert steg: ny eksport, ny kontroll. Rollback tilgjengelig hele veien.
 
 ### 0033 i staging — undersøkt
 0033 oppretter **ingen** `inquiry_reply_history`-tabell. Den bygger `beta_inquiry_events` på nytt slik at `event_type` også tillater `'reply'`.
@@ -177,6 +223,8 @@ idx_beta_inquiry_events_inquiry                                          ✓
 **Omfang:** 10–20 inviterte kunder. Ikke åpen trafikk.
 
 **Forutsetninger:**
+- PR #12 (idempotens) merget og `0038` kjørt i prod
+- PR #13 (offentlig kontrakt) merget — ingen eurokoder eller innkjøpspriser ut
 - Sikre glassmatcher (`PINPOINT` eller manuell verifisering)
 - Korrekt NOK-pris fra bekreftet grunnlag
 - Fungerende kundehenvendelse → `/ops`
@@ -220,7 +268,10 @@ Overvåking: `/health`, Cloudflare Analytics, `beta_inquiry_events`, QA-feil per
 
 | # | Handling | Status |
 |---|---|---|
-| 1 | Merge PR #6 til main | ⏸ **Avventer Tom** |
+| 1 | Merge PR #6 til main (`c0b96b40be8a`) | ⏸ **Avventer Tom sign-off på eksakt SHA** |
+| 1b | Merge PR #12 (idempotens) | ⏸ Etter #6 |
+| 1c | Merge PR #13 (offentlig kontrakt) | ⏸ Etter #6 |
+| 1d | Kjøre `0038` i staging og verifisere idempotens ende-til-ende | ⏸ Etter #12 |
 | 2 | Backfill produksjons-D1 (15 → 33 ledger-rader) | ⏸ Avventer |
 | 3 | Opprette 0019-indeksene i prod | ⏸ Avventer |
 | 4 | Kjøre 0034 i prod | ⏸ Avventer |
