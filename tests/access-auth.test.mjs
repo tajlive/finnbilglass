@@ -33,6 +33,12 @@ test('validerClaims: feil audience avvises', () => {
   assert.equal(validerClaims({ exp: now + 100, iss, aud: 'feil-aud', email: 'a@b.no' }, cfg, now), null);
 });
 
+test('validerClaims: nbf i fremtiden avvises (ikke gyldig ennå)', () => {
+  assert.equal(validerClaims({ exp: now + 100, nbf: now + 1, iss, aud: cfg.aud, email: 'a@b.no' }, cfg, now), null);
+  // nbf i fortiden er OK.
+  assert.equal(validerClaims({ exp: now + 100, nbf: now - 1, iss, aud: cfg.aud, email: 'a@b.no' }, cfg, now), 'a@b.no');
+});
+
 test('validerClaims: manglende e-post avvises', () => {
   assert.equal(validerClaims({ exp: now + 100, iss, aud: cfg.aud }, cfg, now), null);
 });

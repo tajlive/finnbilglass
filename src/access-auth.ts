@@ -40,11 +40,12 @@ function b64urlJson<T>(s: string): T {
  * Fail-closed: manglende/utløpt exp, feil iss/aud eller manglende e-post → null.
  */
 export function validerClaims(
-  payload: { exp?: number; iss?: string; aud?: string | string[]; email?: string },
+  payload: { exp?: number; nbf?: number; iss?: string; aud?: string | string[]; email?: string },
   cfg: AccessConfig,
   now: number,
 ): string | null {
   if (payload.exp == null || payload.exp < now) return null; // exp må finnes og være frem i tid
+  if (payload.nbf != null && payload.nbf > now) return null; // ikke gyldig før nbf
   if (payload.iss !== `https://${cfg.teamDomain}.cloudflareaccess.com`) return null; // feil issuer
   const audOk = Array.isArray(payload.aud) ? payload.aud.includes(cfg.aud) : payload.aud === cfg.aud;
   if (!audOk) return null; // feil audience
@@ -78,7 +79,7 @@ export async function verifiserAccessJwt(request: Request, cfg: AccessConfig | n
     const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', cryptoKey, sig, data);
     if (!ok) return null;
 
-    const payload = b64urlJson<{ exp?: number; iss?: string; aud?: string | string[]; email?: string }>(payloadB64);
+    const payload = b64urlJson<{ exp?: number; nbf?: number; iss?: string; aud?: string | string[]; email?: string }>(payloadB64);
     return validerClaims(payload, cfg, Math.floor(Date.now() / 1000));
   } catch {
     return null; // fail-closed på enhver parse-/kryptofeil
