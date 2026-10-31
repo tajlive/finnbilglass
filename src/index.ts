@@ -11,6 +11,7 @@ import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
+import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
 import { tilOffentligSvar } from './public-contract';
 import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
 import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
