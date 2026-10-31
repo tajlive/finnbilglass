@@ -11,6 +11,7 @@ import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
+import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
 import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
 import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
@@ -348,6 +349,31 @@ export default {
       const erTelefon = sifre.length >= 8;
       const erEpost = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt);
       if (!erTelefon && !erEpost) return json({ ok: false, error: 'Ugyldig telefon eller e-post' }, 400);
+      // P0 idempotens (Tom 2026-10-31): en dobbeltklikk eller nettverksretry
+      // skal ikke lage to saker i /ops. Nøkkelen reserveres FØR rate limit slik
+      // at en replay alltid får samme svar. Rate limit gjelder kun nye innsendinger.
+      const idemNokkel = gyldigNokkel(request.headers.get('Idempotency-Key'));
+      let idemHash = '';
+      if (idemNokkel) {
+        try {
+          idemHash = await requestHash(b);
+          const res = await reserver(env.FINNBILGLASS_DB as never, idemNokkel, idemHash);
+          if (res.status === 'REPLAY') {
+            return json({ ok: true, inquiryId: res.inquiryId, idempotent: true }, 201);
+          }
+          if (res.status === 'KONFLIKT') {
+            return json({ ok: false, error: 'Idempotency-Key er allerede brukt med annet innhold' }, 409);
+          }
+          if (res.status === 'PAGAR') {
+            return json({ ok: false, error: 'Innsendingen behandles allerede. Vent litt og prøv igjen.' }, 409);
+          }
+        } catch (e) {
+          // Mangler tabellen (migrasjon 0038) eller annen feil: idempotens er et
+          // vern, ikke en forutsetning. Kunden skal aldri blokkeres av det.
+          console.error('idempotens utilgjengelig:', e);
+          idemHash = '';
+        }
+      }
       // G12: abuse-beskyttelse — maks 5 henvendelser per IP per 10 min. Aldri blokkerende.
       try {
         const ip = geoAv(request).ip ?? 'ukjent';
@@ -357,6 +383,7 @@ export default {
           const nowRl = Date.now();
           const rl = await env.FINNBILGLASS_DB.prepare('SELECT window_start, count FROM inquiry_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
           if (rl && nowRl - rl.window_start < WINDOW_MS && rl.count >= MAX_PER_WINDOW) {
+            if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
             return json({ ok: false, error: 'For mange forespørsler. Prøv igjen senere.' }, 429);
           }
           if (rl) {
@@ -417,8 +444,14 @@ export default {
             console.error('inquiry-created-event feilet:', e);
           }
         }
+        if (idemNokkel && idemHash && id) {
+          try { await fullfor(env.FINNBILGLASS_DB as never, idemNokkel, id); } catch { /* best-effort */ }
+        }
         return json({ ok: true, inquiryId: id ?? null }, 201);
       } catch (e) {
+        if (idemNokkel && idemHash) {
+          try { await frigjor(env.FINNBILGLASS_DB as never, idemNokkel); } catch { /* best-effort */ }
+        }
         console.error('inquiry-lagring feilet:', e);
         return json({ ok: false, error: 'Kunne ikke lagre forespørselen. Prøv igjen.' }, 500);
       }
