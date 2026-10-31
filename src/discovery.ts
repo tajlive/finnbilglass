@@ -60,14 +60,28 @@ export async function discoverFrontRute(
   const primParams = primaer.map((k) => `%${k.toUpperCase()}%`);
   const sekParams = seedOrd.map((k) => `%${k.toUpperCase()}%`);
 
-  const seedSql = `SELECT varenr, varenavn, kommentar, pris, eurokode, typeCode, side, alias_av, rad_type
-    FROM glass_prisliste
-    WHERE rad_type='glass' AND ${frontGlob} AND ${likePrim} AND (${likeSek})
-    ORDER BY pris`;
+  // Staging-D1 har en slankere glass_prisliste uten typeCode/side. Vi spør først
+  // om den fulle formen (beholder typeCode/side der de finnes), og faller tilbake
+  // til de kolonnene som garantert eksisterer. Uten dette gir /api/glass HTTP 500
+  // i staging, og en hardkodet slank SELECT ville mistet typeCode/side i prod.
+  const kolonner = ['varenr', 'varenavn', 'kommentar', 'pris', 'eurokode', 'alias_av', 'rad_type'];
+  const byggSql = (cols: string[]) =>
+    `SELECT ${cols.join(', ')}
+      FROM glass_prisliste
+      WHERE rad_type='glass' AND ${frontGlob} AND ${likePrim} AND (${likeSek})
+      ORDER BY pris`;
 
-  const seed = await env.FINNBILGLASS_DB.prepare(seedSql)
-    .bind(...primParams, ...sekParams)
-    .all();
+  let seed;
+  try {
+    seed = await env.FINNBILGLASS_DB.prepare(byggSql([...kolonner, 'typeCode', 'side']))
+      .bind(...primParams, ...sekParams)
+      .all();
+  } catch (e) {
+    console.warn('discovery: typeCode/side finnes ikke i glass_prisliste — bruker slank spørring:', e);
+    seed = await env.FINNBILGLASS_DB.prepare(byggSql(kolonner))
+      .bind(...primParams, ...sekParams)
+      .all();
+  }
 
   // Apply pagination: 20 results per page
   const PAGE_SIZE = 20;

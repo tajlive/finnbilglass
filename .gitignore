@@ -39,3 +39,6 @@ output/
 storage
 node_modules
 .venv
+
+# Generert katalogdata (39 MB) — bygg med scripts/migrate-glass-skus.mjs
+data/glass-skus.json

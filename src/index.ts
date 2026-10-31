@@ -24,6 +24,7 @@ import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
 import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
+import { handlePrisEstimat } from './routes/pris-estimat';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -279,6 +280,9 @@ export default {
     }
     if (method === 'GET' && path === '/api/admin/apify-catalog/status') {
       return handleApifyCatalogStatus(request, env);
+    }
+    if (method === 'GET' && path === '/api/admin/pris-estimat') {
+      return handlePrisEstimat(request, env);
     }
 
     if (method === 'POST' && path === '/api/frontrute') {
