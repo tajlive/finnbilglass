@@ -20,9 +20,12 @@ import { operationsCenterUi } from './ops-center-ui';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
+import { discoverFrontRute } from './discovery';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
+import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
+import { handlePrisEstimat } from './routes/pris-estimat';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -270,6 +273,17 @@ export default {
     if (method === 'GET' && path === '/health') {
       const count = await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM glass_prisliste').first<{ n: number }>();
       return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: count?.n ?? 0 });
+    }
+
+    // Apify-katalog-import (admin, Bearer APIFY_SYNC_TOKEN) — skriver kun apify_catalog_products.
+    if (method === 'POST' && path === '/api/admin/apify-catalog/sync') {
+      return handleApifyCatalogSync(request, env);
+    }
+    if (method === 'GET' && path === '/api/admin/apify-catalog/status') {
+      return handleApifyCatalogStatus(request, env);
+    }
+    if (method === 'GET' && path === '/api/admin/pris-estimat') {
+      return handlePrisEstimat(request, env);
     }
 
     if (method === 'POST' && path === '/api/frontrute') {
@@ -1178,6 +1192,23 @@ export default {
       return customerChatUi();
     }
 
+    // API-route: /api/glass for glass-søk via registreringsnummer
+    if (method === 'POST' && path === '/api/glass') {
+      try {
+        const body = (await request.json()) as { merke: string; modell?: string; aar?: number }
+        const merke: string = body.merke
+        if (!merke) {
+          return json({ error: 'Merke påkrevd' }, 400)
+        }
+        const modell: string = body.modell || ''
+        const aar: number = body.aar || 0
+        const result = await discoverFrontRute(env, merke, modell, aar)
+        return json({ success: true, data: result })
+      } catch (e: any) {
+        console.error('Glass-søk feil:', e)
+        return json({ error: 'Intern feil', detail: e.message || String(e) }, 500)
+      }
+    }
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
     const STATISKE_SIDER = ['/bilglass-uten-forsikring', '/personvern', '/om-oss'];
     if (method === 'GET' && STATISKE_SIDER.includes(path)) {

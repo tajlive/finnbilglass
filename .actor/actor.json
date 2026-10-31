@@ -1,0 +1,37 @@
+{
+  "$schema": "https://apify.com/schemas/v1/actor.ide.json",
+  "actorSpecification": 1,
+  "name": "finnbilglass-catalog",
+  "version": "0.2",
+  "buildTag": "latest",
+  "environmentVariables": {},
+  "input": {
+    "title": "FinnBilGlass Catalog Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "probeMode": {
+        "title": "Probe mode (5 products for quick test)",
+        "type": "boolean",
+        "default": false,
+        "description": "Run with only 5 products for quick validation"
+      },
+      "limit": {
+        "title": "Product limit (max 50)",
+        "type": "integer",
+        "default": 20,
+        "minimum": 1,
+        "maximum": 50,
+        "description": "Maximum number of products to scrape"
+      },
+      "resume": {
+        "title": "Resume from checkpoint",
+        "type": "boolean",
+        "default": false,
+        "description": "Resume crawling from last checkpoint (requires previous run with same limit)"
+      }
+    }
+  },
+  "dockerfile": "Dockerfile",
+  "entrypoint": "node --import tsx actor-catalog.mjs"
+}
