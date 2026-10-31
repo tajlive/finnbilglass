@@ -78,6 +78,20 @@ test('0034_glass_catalog_multi.sql er merket PENDING, ikke anvendt', () => {
     );
 });
 
+test('PENDING-migrasjoner ligger UTENFOR migrations/ — ellers plukker wrangler dem', () => {
+    // Dette er selve håndhevelsen. `wrangler d1 migrations apply` skanner
+    // migrations/ på toppnivå og ville kjørt enhver *.sql der. En JSON-status
+    // stopper ingenting — plasseringen gjør det.
+    const toppnivå = new Set(readdirSync(join(ROOT, 'migrations')));
+    for (const m of status.migrasjoner) {
+        if (m.status !== 'PENDING') continue;
+        assert.ok(
+            !toppnivå.has(m.fil),
+            `${m.fil} er PENDING men ligger i migrations/ — wrangler ville kjørt den`
+        );
+    }
+});
+
 test('ingen migrasjon er feilaktig merket som anvendt uten bevis', () => {
     for (const m of status.migrasjoner) {
         assert.ok(m.bevis && m.bevis.length > 20, `${m.fil} mangler bevis for status`);
@@ -96,8 +110,8 @@ test('0019_oem_probe_queue er DELVIS, ikke fullt anvendt', () => {
 
 test('SHA256 på alle oppførte migrasjoner stemmer med filene', () => {
     for (const m of status.migrasjoner) {
-        const sti = join(ROOT, 'migrations', m.fil);
-        assert.ok(existsSync(sti), `${m.fil} finnes ikke`);
+        const sti = join(ROOT, m.mappe ?? 'migrations', m.fil);
+        assert.ok(existsSync(sti), `${m.fil} finnes ikke på ${m.mappe ?? 'migrations'}/`);
         const faktisk = createHash('sha256').update(readFileSync(sti)).digest('hex');
         assert.equal(
             faktisk,
@@ -128,8 +142,9 @@ test('alle 11 rekonstruerte migrasjoner er oppført i statusfilen', () => {
     const mangler = rekonstruert.filter((f) => !kjent.has(f));
     assert.deepEqual(mangler, [], `Rekonstruerte migrasjoner uten status: ${mangler.join(', ')}`);
 
-    for (const f of rekonstruert) {
-        assert.ok(existsSync(join(ROOT, 'migrations', f)), `${f} mangler på disk`);
+    for (const m of status.migrasjoner) {
+        const sti = join(ROOT, m.mappe ?? 'migrations', m.fil);
+        assert.ok(existsSync(sti), `${m.fil} mangler på disk (${m.mappe ?? 'migrations'}/)`);
     }
     assert.equal(status.migrasjoner.length, rekonstruert.length, 'Statusfilen har flere/ færre rader enn de 11');
 });

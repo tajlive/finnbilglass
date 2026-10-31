@@ -7,6 +7,12 @@
   ],
   "prod_database": "finnbilglass-db",
   "verifisert": "2026-10-31",
+  "verifisert_håndhevelse": {
+    "kommando": "wrangler d1 migrations list finnbilglass-db --remote",
+    "før_flytting": "0034_glass_catalog_multi.sql sto i listen over uanvendte migrasjoner — kommandoen `migrations apply` ville kjørt den",
+    "etter_flytting": "listen stopper på 0033_inquiry_reply_history.sql — 0034 er ikke lenger synlig for wrangler",
+    "prinsipp": "En PENDING-migrasjon skal ligge UTENFOR migrations/ på toppnivå. Status i JSON er dokumentasjon; plasseringen er håndhevelsen."
+  },
   "statuser": {
     "ANVENDT": "Skjemaeffekten finnes i produksjon",
     "DELVIS": "Noe av skjemaeffekten finnes — resten mangler",
@@ -64,9 +70,10 @@
     },
     {
       "fil": "0034_glass_catalog_multi.sql",
+      "mappe": "migrations/pending",
       "sha256": "5338d1aa1bb87715c775cf445428bf2f816db4259486abe119e7530f815ab408",
       "status": "PENDING",
-      "bevis": "Tabellene glass_catalog_items og glass_vehicle_applications finnes IKKE i produksjon. Verifisert applikérbar på isolert kopi (2 tabeller + 3 indekser, integritet ok), men ikke kjørt."
+      "bevis": "Tabellene glass_catalog_items og glass_vehicle_applications finnes IKKE i produksjon. Verifisert applikérbar på isolert kopi (2 tabeller + 3 indekser, integritet ok), men ikke kjørt. Ligger i migrations/pending/ fordi wrangler kun skanner migrations/ på toppnivå — se 'verifisert_håndhevelse'."
     },
     {
       "fil": "0035_inquiry_glass_request.sql",

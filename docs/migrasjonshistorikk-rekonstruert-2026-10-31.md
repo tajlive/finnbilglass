@@ -136,14 +136,42 @@ glass_reference  : brand_car, category, imported_at, price_eur, source, title, u
 vin_ktype_map    : expires_at
 ```
 
-## 6. `0034` — ikke anvendt, skal ikke kjøres nå
+## 6. `0034` — ikke anvendt, og nå faktisk sperret
 
-`0034_glass_catalog_multi.sql` er hentet inn som **fil** slik at historikken er
-komplett, men den er **ikke** registrert som anvendt og skal **ikke** kjøres mot
-produksjons-D1 i denne arbeidsordren.
+`0034_glass_catalog_multi.sql` er hentet inn slik at historikken er komplett,
+men den er **ikke** anvendt i produksjon og skal ikke kjøres.
 
-Verifisert at den applikerer rent på isolert kopi av prod-skjema (2 tabeller +
-3 indekser, integritet ok) — men det er en egen godkjenning å kjøre den.
+### Dokumentasjon var ikke nok — målt
+
+```
+$ wrangler d1 migrations list finnbilglass-db --remote
+  …
+  0033_inquiry_reply_history.sql
+  0034_glass_catalog_multi.sql     ← ville blitt kjørt av `migrations apply`
+```
+
+En `PENDING`-verdi i `_status.json` stopper ingenting: wrangler skanner mappen.
+
+### Håndhevelse: filen ligger utenfor skannet katalog
+
+```
+migrations/pending/0034_glass_catalog_multi.sql
+```
+
+SHA256 er uendret (`5338d1aa1bb87715…`) — innholdet er byte-identisk.
+
+Etter flyttingen:
+
+```
+$ wrangler d1 migrations list finnbilglass-db --remote
+  …
+  0033_inquiry_reply_history.sql    ← listen stopper her
+```
+
+`0034` er ikke lenger synlig for wrangler. `tests/migration-guard.test.mjs`
+feiler hvis en PENDING-migrasjon havner i `migrations/` på toppnivå igjen.
+
+**Prinsipp:** JSON-statusen er dokumentasjonen. Plasseringen er sperren.
 
 ## 7. Ingen automatisk skriving til produksjon
 
