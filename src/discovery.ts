@@ -18,6 +18,8 @@ export interface Kandidat {
   canonicalUrl?: string;
   /** SKU fingerprint for dedup */
   skuFingerprint?: string;
+  /** Listepris i NOK fra glass_prisliste. Intern — eksponeres aldri direkte. */
+  pris?: number | null;
 }
 
 /**
@@ -115,6 +117,7 @@ export async function discoverFrontRute(
         side: r.side,
         canonicalUrl: `https://finnbilglass.no/glas/${r.varenr}`,
         skuFingerprint: `${r.eurokode}-${r.varenr}`,
+        pris: typeof r.pris === 'number' ? r.pris : null,
       });
     }
   }
