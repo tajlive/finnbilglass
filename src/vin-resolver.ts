@@ -44,6 +44,8 @@ export interface ResolverKandidat {
 
 export interface ResolverResultat {
   utfall: ResolverUtfall;
+  /** Antall kandidater FUNNET, før visningsgrensen på 6. */
+  totalAntall?: number;
   grunn: string;            // sporbarhet: lag + kontekst
   confidence: number;
   varenr?: string;
@@ -566,6 +568,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
         utfall: 'VERIFY',
         grunn: `L${lag}: 1 kandidat, men ikke bekreftet av ground_truth — utstyr må verifiseres`,
         confidence: Math.min(confidence, 0.5),
+        totalAntall: 1,
         kandidater: [k],
         sporsmaal: skillendeSporsmaal([k]),
       };
@@ -574,6 +577,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
       utfall: 'PINPOINT',
       grunn: `L${lag}: entydig treff (${kandidater.length} kandidat)`,
       confidence,
+      totalAntall: 1,
       varenr: k.varenr,
       varenavn: k.varenavn,
       pris: k.pris,
@@ -587,6 +591,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
     utfall: 'VERIFY',
     grunn: `L${lag}: ${kandidater.length} varianter${kandidater.length > 6 ? ' (viser 6)' : ''} — utstyr må verifiseres`,
     confidence: Math.min(confidence, 0.5),
+    totalAntall: kandidater.length,
     kandidater: kandidater.slice(0, 6),
     sporsmaal: skillendeSporsmaal(kandidater.slice(0, 6)),
   };

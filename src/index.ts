@@ -28,6 +28,7 @@ import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-co
 import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
 import { handlePrisEstimat } from './routes/pris-estimat';
 import { skalLoggeSok } from './sok-logg-policy';
+import { tilOffentligResolverSvar } from './public-contract';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -304,25 +305,27 @@ export default {
         // Felles policy — samme funksjon som /api/regnr og /api/vin.
         resolver = (await anvendResolverPolicy(env, resolver))!;
         if (resolver.utfall !== 'FALLBACK') {
-          const topp = resolver.kandidater?.[0] ?? null;
+          // Offentlig projeksjon: eurokode, listepris og confidence blir liggende
+          // internt (samme kontrakt som /api/glass). Kunden får kandidater + pris.
           return json({
             ok: true,
-            ...resolver,
-            pinpoint: resolver.utfall === 'PINPOINT',
-            anbefaling: resolver.utfall === 'PINPOINT'
-              ? { varenr: resolver.varenr, varenavn: resolver.varenavn, pris: resolver.pris, listepris: resolver.listepris, eurokode: resolver.eurokode }
-              : (topp ? {
-                  varenr: topp.varenr,
-                  varenavn: topp.varenavn,
-                  pris: topp.pris,
-                  listepris: topp.listepris,
-                  eurokode: topp.eurokode,
-                } : null),
+            ...tilOffentligResolverSvar(resolver as unknown as Record<string, unknown>),
             meta: { resolver: true, grunn: resolver.grunn },
           });
         }
         const resultat = await matchFrontrute(env, bil);
-        return json({ ok: true, ...resultat, meta: { ...resultat.meta, resolver: false } });
+        // FALLBACK normaliseres gjennom samme projeksjon, slik at interne felt
+        // ikke lekker uansett hvilken vei som svarte.
+        return json({
+          ok: true,
+          ...tilOffentligResolverSvar({
+            utfall: 'FALLBACK',
+            kandidater: (resultat as unknown as { kandidater?: unknown[] }).kandidater ?? [],
+            sporsmaal: [],
+            totalAntall: ((resultat as unknown as { kandidater?: unknown[] }).kandidater ?? []).length,
+          }),
+          meta: { ...resultat.meta, resolver: false },
+        });
       } catch (e) {
         console.error('matchFrontrute feilet:', e);
         return json({ ok: false, error: 'Intern feil' }, 500);

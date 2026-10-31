@@ -1714,3 +1714,36 @@ footer {
     font-size: 12px;
   }
 }
+
+
+/* ── Frontrutesøk: kandidater, spørsmål og priser (2026-10-31) ─────────── */
+.varekort strong { display: block; font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.varekort .pris { font-size: 20px; font-weight: 800; color: var(--ink); margin: 4px 0 2px; }
+.alternativer { display: grid; gap: 0; margin: 8px 0 0; }
+.alt-rad {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 10px 0; border-top: 1px solid var(--border); font-size: var(--fs-sm);
+}
+.alt-rad .alt-pris { font-weight: 700; white-space: nowrap; }
+.sporsmaal-block {
+  margin: 14px 0 0; padding: 14px; border: 1px solid var(--border);
+  border-radius: 12px; background: var(--surface);
+}
+.sporsmaal-block h3 { margin: 0 0 6px; font-size: 16px; }
+.sporsmaal { margin: 12px 0 0; }
+.sporsmaal p { margin: 0 0 4px; }
+.sporsmaal .svar-rad { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.sporsmaal .svar-rad button {
+  flex: 1 1 140px; min-height: 44px; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--border-strong); background: var(--surface);
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.sporsmaal .svar-rad button[aria-pressed="true"] {
+  border-color: var(--brand); background: var(--brand-subtle); color: var(--brand-text);
+}
+.sporsmaal .svar-rad button:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+
+@media (max-width: 480px) {
+  .alt-rad { flex-direction: column; gap: 2px; }
+  .alt-rad .alt-pris { white-space: normal; }
+}

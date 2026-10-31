@@ -17,6 +17,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { discoverFrontRute } from '../src/discovery.ts';
 import { skalLoggeSok } from '../src/sok-logg-policy.ts';
+import { tilOffentligResolverSvar } from '../src/public-contract.ts';
 
 /** Falsk D1: registrerer hver spørring, svarer med forhåndsdefinerte rader. */
 function falskDb(svarFor) {
@@ -295,4 +296,32 @@ test('pris-karantene: kit-priset glass skjules for prisen, men kandidaten behold
   const res = await discoverFrontRute({ FINNBILGLASS_DB: db }, 'TOYOTA', 'C-HR', 2018);
   assert.equal(res.candidates.length, 1, 'kandidaten skal beholdes');
   assert.equal(res.candidates[0].pris, null, 'kit-pris skal ikke vises som listepris');
+});
+
+// ── Offentlig projeksjon av /api/frontrute ────────────────────────────────
+test('/api/frontrute-projeksjon: eurokode og listepris lekker ikke til kunden', () => {
+  const intern = {
+    utfall: 'VERIFY',
+    totalAntall: 7,
+    kandidater: [
+      { varenr: '8421AGAA', varenavn: 'TOYOTA C-HR 5D CROSSOVER 16-', pris: 6990, listepris: 13290, eurokode: '8421AGAACHMVZ', attributter: { sensor: true, hud: null } },
+      { varenr: '8421ASGH', varenavn: 'TOYOTA C-HR 5D CROSSOVER 16-', pris: null, listepris: 2830, eurokode: '8421ASGHB', attributter: { sensor: false } },
+    ],
+    sporsmaal: ['sensor'],
+    confidence: 0.5,
+    grunn: 'L1 (ground_truth): 7 varianter',
+  };
+  const ut = tilOffentligResolverSvar(intern);
+  assert.equal(ut.utfall, 'VERIFY');
+  assert.equal(ut.totalAntall, 7);
+  assert.equal(ut.kandidater.length, 2);
+  for (const k of ut.kandidater) {
+    assert.equal('eurokode' in k, false, 'eurokode skal ikke ut');
+    assert.equal('listepris' in k, false, 'listepris skal ikke ut');
+  }
+  assert.equal(ut.kandidater[0].pris, 6990);
+  assert.equal(ut.kandidater[1].pris, null);
+  assert.deepEqual(ut.anbefaling, { varenr: '8421AGAA', varenavn: 'TOYOTA C-HR 5D CROSSOVER 16-', pris: 6990 });
+  assert.equal('confidence' in ut, false);
+  assert.equal('grunn' in ut, false, 'grunn skal ikke ut i selve projeksjonen');
 });
