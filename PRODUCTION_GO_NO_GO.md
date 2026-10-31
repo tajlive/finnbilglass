@@ -197,6 +197,66 @@ Ved usikker matching eller manglende prisgrunnlag: `MANUAL_REVIEW` og tilbudsfor
 
 ---
 
+---
+
+## 6c. Kill switch — obligatorisk pilotkrav
+
+**Rotårsak funnet 31.10.2026:** `/api/frontrute` kalte `resolverModus()`, men `/api/regnr` og `/api/vin` returnerte resolveren rå. Et automatisk godkjent `PINPOINT` slapp dermed ut selv med `resolver_all = 0`. Stoppsignalet virket ikke der det betydde mest.
+
+### Beskyttede ruter
+
+| Rute | Policy |
+|---|---|
+| `/api/frontrute` | felles `anvendResolverPolicy()` |
+| `/api/regnr` | felles `anvendResolverPolicy()` |
+| `/api/vin` | felles `anvendResolverPolicy()` |
+| `/api/les-skilt` | bruker ikke resolveren — arver vern via `/api/regnr` |
+
+### Degradering
+
+| Flagg | Effekt |
+|---|---|
+| `resolver_all = 0` | **FALLBACK** på alle ruter — ingen automatisk godkjent match |
+| `resolver_pinpoint = 0` | `PINPOINT` → **VERIFY** (kandidatene beholdes) |
+| begge = 1 | normal atferd |
+| manglende rad / uleselig D1 | **FALLBACK** — feiler lukket, aldri utilsiktet PINPOINT |
+
+Kandidatlisten er identisk etter degradering. Matchmotoren er ikke endret — bare sikkerhetsstatusen, og `grunn` navngir hvilket flagg som slo inn.
+
+### Staging-bevis (ekte data, 31.10.2026)
+
+| Tilstand | `/api/regnr` | `/api/vin` |
+|---|---|---|
+| `resolver_all = 0` | **FALLBACK** | **FALLBACK** |
+| `resolver_pinpoint = 0` | **VERIFY** | **VERIFY** |
+| begge = 1 | **PINPOINT** | **PINPOINT** |
+
+`grunn` fra `/api/regnr`: `kill switch: PINPOINT→FALLBACK (vin_glass_overrides: entydig treff …)`.
+
+### Cache
+
+TTL **10 s** per Worker-isolat. Worst case fra flagget endres i D1 til alle isolater har sett det er 10 s. Lesefeil caches ikke, så en forbigående D1-feil låses ikke fast.
+
+### Nødstopp og tilbakestilling
+
+```sql
+-- Stopp alt automatisk
+UPDATE feature_flags SET enabled = 0 WHERE flag = 'resolver_all';
+-- Gjenopprett
+UPDATE feature_flags SET enabled = 1 WHERE flag IN ('resolver_all','resolver_pinpoint');
+```
+
+Verifiser med `npm run pilot:preflight` og ett `/api/regnr`-kall: `resolver.utfall` skal vise degradert verdi innen 10 s.
+
+### Resterende risiko
+
+1. **Propagering:** inntil 10 s per isolat. En kunde som treffer et isolat med gammel cache kan i det vinduet få PINPOINT.
+2. **Manuell operasjon:** nødstopp krever D1-skriving. Det finnes ingen egen admin-knapp i `/ops`.
+3. **Ingen overvåking:** ingen alarm hvis flagget står feil.
+4. **`/api/frontrute` viste `pinpoint=false` i alle testede tilstander** for testkjøretøyet fordi det traff tekstmatcheren, ikke resolverens PINPOINT-vei. Degraderingen er derfor bevist på `/api/regnr` og `/api/vin`, som faktisk returnerte PINPOINT.
+
+---
+
 ## 7. D1-rekonsilieringsplan
 
 Produksjon `finnbilglass-db`: **61 tabeller · 77 indekser · 18 ledger-rader**.
@@ -252,6 +312,7 @@ idx_beta_inquiry_events_inquiry                                          ✓
 **Forutsetninger:**
 - PR #12 (idempotens) merget og `0038` kjørt i prod
 - PR #13 (offentlig kontrakt) merget — ingen eurokoder eller innkjøpspriser ut
+- PR #14 (kill switch) merget — `resolver_all` stopper automatisk godkjenning på alle ruter
 - Sikre glassmatcher (`PINPOINT` eller manuell verifisering)
 - Korrekt NOK-pris fra bekreftet grunnlag
 - Fungerende kundehenvendelse → `/ops`
@@ -298,6 +359,7 @@ Overvåking: `/health`, Cloudflare Analytics, `beta_inquiry_events`, QA-feil per
 | 1 | Merge PR #6 til main (`c0b96b40be8a`) | ⏸ **Avventer Tom sign-off på eksakt SHA** |
 | 1b | Merge PR #12 (idempotens) | ⏸ Etter #6 |
 | 1c | Merge PR #13 (offentlig kontrakt) | ⏸ Etter #6 |
+| 1e | Merge PR #14 (kill switch, P0) | ⏸ Uavhengig av #6 |
 | 1d | Kjøre `0038` i staging og verifisere idempotens ende-til-ende | ⏸ Etter #12 |
 | 2 | Backfill produksjons-D1 (15 → 33 ledger-rader) | ⏸ Avventer |
 | 3 | Opprette 0019-indeksene i prod | ⏸ Avventer |
