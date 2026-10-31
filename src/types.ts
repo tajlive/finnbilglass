@@ -10,6 +10,7 @@ export interface Env {
   SUPPORT_EVIDENCE_TOKEN?: string;
   /** STAGING: konversasjonell assistent (fitment-v1/conversation-v1). Prod default: AV. */
   ASSISTANT_ENABLED?: string;
+  MULTI_GLASS_ENABLED?: string;
   /** Feature-flags for evidence-flyten (default false i production inntil staging-verifisert). */
   EVIDENCE_UPLOAD_ENABLED?: string;
   EVIDENCE_REVIEW_ENABLED?: string;
@@ -17,4 +18,9 @@ export interface Env {
   /** Utgående e-post-svar til kunder (Brevo v3 SMTP). Uten nøkkel er /reply 503 «ikke konfigurert». */
   BREVO_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
+  /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
+  APIFY_TOKEN?: string;
+  APIFY_DATASET_ID?: string;
+  APIFY_PROBE_ID?: string;
+  APIFY_SYNC_TOKEN?: string;
 }
