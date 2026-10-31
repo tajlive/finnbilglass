@@ -12,6 +12,8 @@
  *  - Admin: roller (administrator/saksbehandler/lesetilgang) + append-only audit.
  */
 
+import { forbrukInvitasjon } from './invitation';
+
 export interface AuthDb {
   prepare(sql: string): {
     bind(...v: unknown[]): {
@@ -103,19 +105,12 @@ export async function slettSesjon(db: AuthDb, sessionId: string): Promise<void> 
 
 /**
  * Knytt invitasjon til kundeidentitet (e-post) på serversiden.
- * Atomisk: invitasjonen går unused → used, og kundens invitation_code settes.
- * Returnerer false hvis invitasjonen allerede er brukt/tilbakekalt/ukjent.
+ * Forbruket skjer atomisk i pilot_invitations (unused → used + used_by_email).
+ * Returnerer false hvis invitasjonen allerede er brukt/tilbakekalt/utløpt/ukjent.
  */
 export async function bindInvitasjon(db: AuthDb, email: string, inviteCode: string, naa: number = Date.now()): Promise<boolean> {
-  const r = await db
-    .prepare("UPDATE pilot_invitations SET status = 'used', used_at = ? WHERE invite_code = ? AND status = 'unused'")
-    .bind(naa, inviteCode)
-    .run();
-  if ((r.meta?.changes ?? 0) > 0) {
-    await db.prepare('UPDATE customers SET invitation_code = ? WHERE email = ?').bind(inviteCode, email).run();
-    return true;
-  }
-  return false;
+  const status = await forbrukInvitasjon(db as never, inviteCode, email, naa);
+  return status === 'OK';
 }
 
 export type Rolle = 'administrator' | 'saksbehandler' | 'lesetilgang';

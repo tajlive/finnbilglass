@@ -13,8 +13,10 @@ import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
 import { lesSkilt } from './les-skilt';
 import { tilOffentligSvar } from './public-contract';
 import { gyldigNokkel, requestHash, reserver, fullfor, frigjor } from './inquiry-idempotency';
-import { gyldigInvitasjonskode, brukInvitasjon, opprettInvitasjoner, tilbakekallInvitasjon } from './invitation';
+import { gyldigInvitasjonskode, forbrukInvitasjon, opprettInvitasjoner, tilbakekallInvitasjon, kodeErTilgjengelig, listeInvitasjoner, MAX_PILOT_DELTAKERE } from './invitation';
 import { opprettLoginToken, verifiserLoginToken, finnEllerOpprettKunde, opprettSesjon, sesjonKunde, slettSesjon, bindInvitasjon, adminRolle, kanSkrive, loggAdmin, SESSION_TTL_MS } from './auth';
+import { loggInnPage, minSidePage } from './customer-ui';
+import { accessKonfigurert, accessAdminEmail } from './access-auth';
 import { featureEnabled, featureDisabled, erGyldigReviewDecision } from './evidence-features';
 import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_IMAGE_BYTES, registrationHash, type EvidenceImageQuality, type EvidenceImageType } from './evidence-capture-v01';
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
@@ -168,6 +170,19 @@ function dataUrlTilBytes(dataUrl: string): { bytes: Uint8Array; mime: string; ex
 function supportAuthorised(request: Request, env: Env): boolean {
   const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
+}
+
+/**
+ * Admin-autorisasjon for Operations Center (Spor A).
+ * Når Cloudflare Access er konfigurert (ACCESS_TEAM_DOMAIN + ACCESS_AUD), kreves
+ * en gyldig Access-JWT (verifisert e-post) — fail-closed, stoler ikke på header.
+ * I overgangsperioden (Access ikke konfigurert) faller det tilbake til det delte
+ * tokenet, som fjernes når Access er testet og godkjent.
+ * Returnerer verifisert admin-e-post (eller 'delt-token'), eller null = ingen adgang.
+ */
+async function adminAuthorised(request: Request, env: Env): Promise<string | null> {
+  if (accessKonfigurert(env)) return await accessAdminEmail(request, env);
+  return supportAuthorised(request, env) ? 'delt-token' : null;
 }
 
 /** Send svar til kunde på e-post via Brevo (tidl. Sendinblue) v3 SMTP. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
@@ -354,13 +369,27 @@ export default {
     // Passordfri innlogging — trinn 1: be om magic link (e-post + invitasjon).
     if (method === 'POST' && path === '/api/auth/request') {
       if (!(await henvendelserTillatt(env))) return json({ ok: false, error: 'Henvendelser er stengt.' }, 503);
+      // Rate limit: maks 5 innloggingsforsøk per IP per 15 min (brute-force/utsendelsesvern).
+      {
+        const ip = geoAv(request).ip ?? 'ukjent';
+        if (ip !== 'ukjent') {
+          const W = 15 * 60 * 1000, MAX = 5, now = Date.now();
+          const rl = await env.FINNBILGLASS_DB.prepare('SELECT window_start, count FROM auth_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
+          if (rl && now - rl.window_start < W && rl.count >= MAX) return json({ ok: false, error: 'For mange forsøk. Prøv igjen senere.' }, 429);
+          if (rl) {
+            if (now - rl.window_start >= W) await env.FINNBILGLASS_DB.prepare('UPDATE auth_rate_limits SET window_start = ?, count = 1 WHERE ip = ?').bind(now, ip).run();
+            else await env.FINNBILGLASS_DB.prepare('UPDATE auth_rate_limits SET count = count + 1 WHERE ip = ?').bind(ip).run();
+          } else {
+            await env.FINNBILGLASS_DB.prepare('INSERT INTO auth_rate_limits (ip, window_start, count) VALUES (?, ?, 1)').bind(ip, now).run();
+          }
+        }
+      }
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
       const invite = typeof body.invite === 'string' ? body.invite.trim() : '';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: false, error: 'Ugyldig e-postadresse.' }, 400);
       if (!gyldigInvitasjonskode(invite)) return json({ ok: false, error: 'Ugyldig invitasjonskode.' }, 403);
-      const inv = await env.FINNBILGLASS_DB.prepare("SELECT status FROM pilot_invitations WHERE invite_code = ?").bind(invite).first<{ status: string }>();
-      if (!inv || inv.status !== 'unused') return json({ ok: false, error: 'Invitasjonen er ugyldig eller allerede brukt.' }, 403);
+      if (!(await kodeErTilgjengelig(env.FINNBILGLASS_DB, invite))) return json({ ok: false, error: 'Invitasjonen er ugyldig, utløpt eller allerede brukt.' }, 403);
       const raw = await opprettLoginToken(env.FINNBILGLASS_DB, email, invite);
       const base = url.origin;
       const link = `${base}/api/auth/verify?token=${raw}`;
@@ -381,18 +410,30 @@ export default {
     }
 
     // Passordfri innlogging — trinn 2: verifiser magic link → økt (cookie).
-    if (method === 'GET' && path === '/api/auth/verify') {
+    // GET viser en bekreftelsesside (e-postskannere/prefetch forbruker IKKE
+    // tokenet); kun POST forbruker tokenet atomisk og setter økt-cookien.
+    if (path === '/api/auth/verify') {
       const token = url.searchParams.get('token') || '';
-      if (!token) return json({ ok: false, error: 'Manglende token.' }, 400);
-      const v = await verifiserLoginToken(env.FINNBILGLASS_DB, token);
-      if (!v) return json({ ok: false, error: 'Ugyldig eller utløpt innloggingslenke.' }, 403);
-      const customerId = await finnEllerOpprettKunde(env.FINNBILGLASS_DB, v.email);
-      if (v.inviteCode) await bindInvitasjon(env.FINNBILGLASS_DB, v.email, v.inviteCode);
-      const sid = await opprettSesjon(env.FINNBILGLASS_DB, customerId);
-      return new Response('Innlogging vellykket. Du kan lukke dette vinduet.', {
-        status: 200,
-        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Set-Cookie': settSesjonCookie(sid), ...CORS_HEADERS },
-      });
+      if (method === 'GET') {
+        if (!token) return json({ ok: false, error: 'Manglende token.' }, 400);
+        const esc = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+        const html = `<!doctype html><html lang="no"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Logg inn — FinnBilglass</title><body style="font-family:system-ui;max-width:420px;margin:40px auto;padding:0 20px;color:#0B1220"><h1 style="font-size:24px">Logg inn</h1><p>Klikk under for å logge inn på FinnBilglass.</p><form method="POST" action="/api/auth/verify"><input type="hidden" name="token" value="${esc(token)}"><button type="submit" style="background:#F59E0B;color:#0B1220;border:0;padding:14px 22px;border-radius:12px;font-size:16px;font-weight:600">Logg inn</button></form><p style="color:#637286;font-size:13px;margin-top:24px">Lenken utløper og kan bare brukes én gang.</p></body></html>`;
+        return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      }
+      if (method === 'POST') {
+        // Token kan komme fra skjult felt (form) eller query.
+        const formToken = (await request.formData().catch(() => null))?.get('token');
+        const t = typeof formToken === 'string' && formToken ? formToken : token;
+        if (!t) return json({ ok: false, error: 'Manglende token.' }, 400);
+        const v = await verifiserLoginToken(env.FINNBILGLASS_DB, t);
+        if (!v) return json({ ok: false, error: 'Ugyldig eller utløpt innloggingslenke.' }, 403);
+        const customerId = await finnEllerOpprettKunde(env.FINNBILGLASS_DB, v.email);
+        if (v.inviteCode) await bindInvitasjon(env.FINNBILGLASS_DB, v.email, v.inviteCode);
+        const sid = await opprettSesjon(env.FINNBILGLASS_DB, customerId);
+        // Reroute til «Min side» uten token i URL, med økt-cookie.
+        return new Response(null, { status: 303, headers: { 'Location': '/min-side', 'Set-Cookie': settSesjonCookie(sid), ...CORS_HEADERS } });
+      }
+      return json({ ok: false, error: 'Metode ikke tillatt.' }, 405);
     }
 
     // Logg ut.
@@ -402,14 +443,21 @@ export default {
       return new Response(null, { status: 204, headers: { 'Set-Cookie': 'fbg_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0', ...CORS_HEADERS } });
     }
 
-    // «Min side» — brukerens egne henvendelser (server-side e-postmatch).
+    // «Min side» — brukerens egne henvendelser (server-side koblet på customer_id).
     if (method === 'GET' && path === '/api/me/inquiries') {
       const sid = lesSesjonCookie(request);
       const customerId = sid ? await sesjonKunde(env.FINNBILGLASS_DB, sid) : null;
       if (!customerId) return json({ ok: false, error: 'Ikke innlogget.' }, 401);
-      const kunde = await env.FINNBILGLASS_DB.prepare('SELECT email FROM customers WHERE id = ?').bind(customerId).first<{ email: string }>();
-      const rader = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, created_at, status FROM beta_inquiries WHERE kontakt = ? ORDER BY created_at DESC').bind(kunde?.email ?? '').all<{ id: number; regnr: string | null; created_at: number; status: string }>();
+      const rader = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, created_at, status FROM beta_inquiries WHERE customer_id = ? ORDER BY created_at DESC').bind(customerId).all<{ id: number; regnr: string | null; created_at: number; status: string }>();
       return json({ ok: true, henvendelser: rader.results });
+    }
+
+    // Kundesider (Spor D).
+    if (method === 'GET' && path === '/logg-inn') {
+      return new Response(loggInnPage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
+    if (method === 'GET' && path === '/min-side') {
+      return new Response(minSidePage(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     }
 
     if (method === 'POST' && path === '/api/inquiry') {
@@ -463,26 +511,22 @@ export default {
           idemHash = '';
         }
       }
-      // P0 invitasjonssperre (Tom 2026-10-31): kun inviterte kunder kan sende
-      // henvendelse. Koden er en sikker, tilfeldig token — IKKE regnr/kontakt.
-      // Sjekkes ETTER idempotens-REPLAY (retry med samme nøkkel får replay uten
-      // å trenge koden på nytt) og FØR rate limit (uvedkommende bruker ikke kvoten).
-      const invitasjonKode = gyldigInvitasjonskode(
-        typeof b.invite === 'string' ? b.invite : (request.headers.get('X-Invitation') ?? '')
-      );
-      if (!invitasjonKode) {
+      // P0 tilgangsstyring (Tom 2026-10-31): kun innloggede kunder med en
+      // invitasjon bundet til verifisert e-post kan sende henvendelse.
+      // Sjekkes ETTER idempotens-REPLAY (retry får replay uten ny innlogging)
+      // og FØR rate limit (uvedkommende bruker ikke kvoten).
+      const sessId = lesSesjonCookie(request);
+      const customerId = sessId ? await sesjonKunde(env.FINNBILGLASS_DB, sessId) : null;
+      if (!customerId) {
         if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
-        return json({ ok: false, error: 'Denne forespørselen krever en gyldig invitasjon.' }, 403);
+        return json({ ok: false, error: 'Du må logge inn for å sende en forespørsel.' }, 401);
       }
-      const inv = await brukInvitasjon(env.FINNBILGLASS_DB as never, invitasjonKode);
-      if (inv.status !== 'OK') {
+      const kunde = await env.FINNBILGLASS_DB.prepare('SELECT email FROM customers WHERE id = ?').bind(customerId).first<{ email: string }>();
+      const kundeEmail = kunde?.email ?? '';
+      const invitert = await env.FINNBILGLASS_DB.prepare("SELECT invite_hash FROM pilot_invitations WHERE used_by_email = ? AND status = 'used'").bind(kundeEmail).first<{ invite_hash: string }>();
+      if (!invitert) {
         if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
-        const invMsg = inv.status === 'REVOKERT'
-          ? 'Invitasjonen er tilbakekalt.'
-          : inv.status === 'BRUKT'
-            ? 'Invitasjonen er allerede brukt.'
-            : 'Ugyldig invitasjon.';
-        return json({ ok: false, error: invMsg }, 403);
+        return json({ ok: false, error: 'Kontoen din har ikke en gyldig pilot-invitasjon.' }, 403);
       }
       // G12: abuse-beskyttelse — maks 5 henvendelser per IP per 10 min. Aldri blokkerende.
       try {
@@ -546,8 +590,8 @@ export default {
         const naa = Date.now();
         const resultater = await env.FINNBILGLASS_DB.batch([
           env.FINNBILGLASS_DB.prepare(
-            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
-          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson),
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson, customerId),
           env.FINNBILGLASS_DB.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
@@ -846,28 +890,30 @@ export default {
     // invitasjoner: opprett/liste/tilbakekall. Token-gate som resten av /ops.
     if (method === 'GET' && path === '/api/ops/invitations') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
-      const inv = await env.FINNBILGLASS_DB.prepare(
-        'SELECT invite_code, status, created_at, used_at, revoked_at, created_by, note FROM pilot_invitations ORDER BY created_at DESC'
-      ).all<{ invite_code: string; status: string; created_at: number; used_at: number | null; revoked_at: number | null; created_by: string; note: string | null }>();
-      return json({ ok: true, invitations: inv.results });
+      if (!(await adminAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const inv = await listeInvitasjoner(env.FINNBILGLASS_DB as never);
+      return json({ ok: true, invitations: inv, maks: MAX_PILOT_DELTAKERE });
     }
     if (method === 'POST' && path === '/api/ops/invitations') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let invBody: unknown;
       try { invBody = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const b2 = invBody as Record<string, unknown>;
-      const antall = Math.min(Math.max(Number(b2?.antall) || 1, 1), 100);
+      const antall = Math.min(Math.max(Number(b2?.antall) || 1, 1), MAX_PILOT_DELTAKERE);
       const note = typeof b2?.note === 'string' ? b2.note.slice(0, 200) : '';
-      const koder = await opprettInvitasjoner(env.FINNBILGLASS_DB as never, antall, 'ops', note);
-      return json({ ok: true, koder });
+      const timer = typeof b2?.expiresInHours === 'number' ? b2.expiresInHours : null;
+      const expiresAt = timer && timer > 0 ? Date.now() + Math.round(timer * 3600 * 1000) : null;
+      const res = await opprettInvitasjoner(env.FINNBILGLASS_DB as never, antall, 'ops', note, Date.now(), expiresAt);
+      await loggAdmin(env.FINNBILGLASS_DB as never, 'ops-token', 'invitasjoner:opprett', `${res.opprettet} koder`);
+      return json({ ok: res.ok, koder: res.koder, opprettet: res.opprettet, error: res.error });
     }
     if (method === 'POST' && path.startsWith('/api/ops/invitations/') && path.endsWith('/revoke')) {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const kode = path.slice('/api/ops/invitations/'.length, -'/revoke'.length);
       const ok = await tilbakekallInvitasjon(env.FINNBILGLASS_DB as never, kode);
+      await loggAdmin(env.FINNBILGLASS_DB as never, 'ops-token', 'invitasjon:tilbakekall', ok ? 'ok' : 'feilet');
       return json({ ok, message: ok ? 'Tilbakekalt' : 'Ikke funnet eller allerede brukt/revokert' });
     }
     if (method === 'GET' && path === '/api/ops/inquiries') {

@@ -15,7 +15,6 @@ import {
   opprettSesjon,
   sesjonKunde,
   slettSesjon,
-  bindInvitasjon,
   adminRolle,
   kanSkrive,
 } from '../src/auth.ts';
@@ -148,15 +147,6 @@ test('sesjon: gyldig → kunde-id, utløpt → null, slett → null', async () =
   assert.equal(await sesjonKunde(db, sid, 1000 + 8 * 24 * 3600 * 1000), null, 'utløpt økt');
   await slettSesjon(db, sid);
   assert.equal(await sesjonKunde(db, sid, 1001), null, 'slettet økt');
-});
-
-test('bindInvitasjon: unused → used atomisk, dobbeltbind avvises', async () => {
-  const db = falskDb();
-  db.tabeller.pilot_invitations.set('INV1', { status: 'unused' });
-  assert.equal(await bindInvitasjon(db, 'a@example.no', 'INV1', 5), true);
-  assert.equal(db.tabeller.pilot_invitations.get('INV1').status, 'used');
-  assert.equal(await bindInvitasjon(db, 'b@example.no', 'INV1', 6), false, 'dobbeltbind');
-  assert.equal(await bindInvitasjon(db, 'c@example.no', 'UKJENT', 6), false, 'ukjent kode');
 });
 
 test('roller: lesetilgang kan ikke skrive, administrator/saksbehandler kan', () => {

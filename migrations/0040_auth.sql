@@ -5,11 +5,11 @@
 -- Invitasjon (0039) knyttes til kundeidentitet (e-post) på serversiden.
 
 -- Kunder — identitet (kun e-post, ingen passord).
+-- Invitasjonsbindingen ligger i pilot_invitations.used_by_email (0039), ikke her.
 CREATE TABLE IF NOT EXISTS customers (
-  id              INTEGER PRIMARY KEY AUTOINCREMENT,
-  email           TEXT NOT NULL UNIQUE,
-  invitation_code TEXT,
-  created_at      INTEGER NOT NULL
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  email      TEXT NOT NULL UNIQUE,
+  created_at INTEGER NOT NULL
 );
 
 -- Magic-link-tokens (passordfri innlogging). Rå token sendes på e-post;
@@ -49,3 +49,10 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
   created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_admin_audit_created ON admin_audit_log (created_at);
+
+-- Rate limit for innloggingsforsøk (brute-force/utsendelsesvern).
+CREATE TABLE IF NOT EXISTS auth_rate_limits (
+  ip           TEXT PRIMARY KEY,
+  window_start INTEGER NOT NULL,
+  count        INTEGER NOT NULL
+);
