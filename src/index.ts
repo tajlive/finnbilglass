@@ -6,7 +6,7 @@
 import type { Env } from './types';
 import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
-import { resolverModus, anvendResolverPolicy } from './kill-switch';
+import { resolverModus, anvendResolverPolicy, henvendelserTillatt } from './kill-switch';
 import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
 import { customerChatUi } from './conversation-v1/customer-chat-ui.js';
@@ -351,6 +351,11 @@ export default {
         return json({ ok: false, error: 'Ugyldig JSON' }, 400);
       }
       const b = body as Record<string, unknown>;
+      // Pilotstopp: stopper nye henvendelser umiddelbart, uten å vente på
+      // resolver-cachen. Sjekkes foran alt annet så ingen sak opprettes.
+      if (!(await henvendelserTillatt(env))) {
+        return json({ ok: false, error: 'Vi tar ikke imot nye forespørsler akkurat nå. Prøv igjen senere.' }, 503);
+      }
       const regnr = typeof b.regnr === 'string' ? b.regnr.trim().slice(0, 10) : '';
       const navn = typeof b.navn === 'string' ? b.navn.trim() : '';
       const kontakt = typeof b.kontakt === 'string' ? b.kontakt.trim() : '';
