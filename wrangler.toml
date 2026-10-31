@@ -2,7 +2,7 @@ name = "finnbilglass-frontrute"
 main = "src/index.ts"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
-workers_dev = true
+workers_dev = false
 # Tvinger prod-konto (80d5b1d5) — hindrer at wrangler velger feil konto når
 # OAuth-login (som ser flere kontoer) er aktivt uten CLOUDFLARE_ACCOUNT_ID.
 account_id = "80d5b1d56a3e907150ba7348b6182894"

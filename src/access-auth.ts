@@ -36,6 +36,22 @@ function b64urlJson<T>(s: string): T {
 }
 
 /**
+ * Valider JWT-claims: exp (obligatorisk og frem i tid), iss, aud og e-post.
+ * Fail-closed: manglende/utløpt exp, feil iss/aud eller manglende e-post → null.
+ */
+export function validerClaims(
+  payload: { exp?: number; iss?: string; aud?: string | string[]; email?: string },
+  cfg: AccessConfig,
+  now: number,
+): string | null {
+  if (payload.exp == null || payload.exp < now) return null; // exp må finnes og være frem i tid
+  if (payload.iss !== `https://${cfg.teamDomain}.cloudflareaccess.com`) return null; // feil issuer
+  const audOk = Array.isArray(payload.aud) ? payload.aud.includes(cfg.aud) : payload.aud === cfg.aud;
+  if (!audOk) return null; // feil audience
+  return payload.email ?? null;
+}
+
+/**
  * Verifiser Cloudflare Access-JWT. Returnerer verifisert e-post eller null.
  * Fail-closed: enhver feil (signatur, iss, aud, exp, ukjent kid) → null.
  */
@@ -63,12 +79,7 @@ export async function verifiserAccessJwt(request: Request, cfg: AccessConfig | n
     if (!ok) return null;
 
     const payload = b64urlJson<{ exp?: number; iss?: string; aud?: string | string[]; email?: string }>(payloadB64);
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp != null && payload.exp < now) return null; // utløpt
-    if (payload.iss !== `https://${cfg.teamDomain}.cloudflareaccess.com`) return null; // feil issuer
-    const audOk = Array.isArray(payload.aud) ? payload.aud.includes(cfg.aud) : payload.aud === cfg.aud;
-    if (!audOk) return null; // feil audience
-    return payload.email ?? null;
+    return validerClaims(payload, cfg, Math.floor(Date.now() / 1000));
   } catch {
     return null; // fail-closed på enhver parse-/kryptofeil
   }
