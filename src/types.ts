@@ -28,6 +28,11 @@ export interface Env {
   /** Meta/Facebook Login. */
   FACEBOOK_APP_ID?: string;
   FACEBOOK_APP_SECRET?: string;
+  /**
+   * Kommaseparert liste over sosial innlogging som faktisk er slått på,
+   * f.eks. «google». Secrets alene aktiverer ingenting.
+   */
+  OAUTH_ENABLED_PROVIDERS?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;

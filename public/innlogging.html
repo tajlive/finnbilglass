@@ -54,13 +54,13 @@
         .sosial-info { background:#FFF7ED; border:1px solid #FED7AA; color:#9A3412; border-radius:12px;
           padding:10px 12px; font-size:14px; margin-top:6px; }
       </style>
-      <a class="sosial-knapp" data-provider="google" href="/api/auth/oauth/google/start" rel="nofollow">
+      <a class="sosial-knapp" data-provider="google" href="/api/auth/oauth/google/start" rel="nofollow" style="display:none">
         <span class="sosial-ikon" aria-hidden="true">G</span> Fortsett med Google
       </a>
-      <a class="sosial-knapp" data-provider="microsoft" href="/api/auth/oauth/microsoft/start" rel="nofollow">
+      <a class="sosial-knapp" data-provider="microsoft" href="/api/auth/oauth/microsoft/start" rel="nofollow" style="display:none">
         <span class="sosial-ikon" aria-hidden="true">M</span> Fortsett med Microsoft
       </a>
-      <a class="sosial-knapp" data-provider="facebook" href="/api/auth/oauth/facebook/start" rel="nofollow">
+      <a class="sosial-knapp" data-provider="facebook" href="/api/auth/oauth/facebook/start" rel="nofollow" style="display:none">
         <span class="sosial-ikon" aria-hidden="true">f</span> Fortsett med Facebook
       </a>
       <p class="error-msg" id="sosial-feil"></p>
@@ -314,17 +314,18 @@
 
   // ── Sosial innlogging: status fra redirect og kontokobling ────────────────
   let koblingsToken = '';
-  // Vis bare de leverandørene som faktisk er konfigurert i dette miljøet.
+  // Knappene er skjult i markup. Kun leverandører serveren eksplisitt melder som
+  // aktive blir synlige — feiler oppslaget, vises ingen av dem (OTP står alltid).
   (function visKonfigurerte() {
     fetch('/api/auth/oauth/providers', { credentials: 'include' })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         const p = (d && d.providers) || {};
         document.querySelectorAll('.sosial-knapp').forEach(function (a) {
-          if (!p[a.dataset.provider]) a.style.display = 'none';
+          a.style.display = p[a.dataset.provider] === true ? 'flex' : 'none';
         });
       })
-      .catch(function () { /* viser alle; serveren avviser ukonfigurerte uansett */ });
+      .catch(function () { /* fail-closed: ingen sosial-knapper vises */ });
   })();
   (function sosialStatus() {
     const feil = document.getElementById('sosial-feil');

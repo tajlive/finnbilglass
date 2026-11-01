@@ -62,6 +62,21 @@ const PROVIDERS: Record<Provider, (env: Env) => ProviderKonfig> = {
 
 const GYLDIGE: Provider[] = ['google', 'microsoft', 'facebook'];
 
+/**
+ * En leverandør er aktiv bare når den står eksplisitt i OAUTH_ENABLED_PROVIDERS
+ * OG har både client-id og secret. Secrets alene aktiverer ingenting — det gjør
+ * det umulig å få en utilsiktet pålogging ved å legge inn nøkler.
+ */
+function aktivert(env: Env, p: Provider): boolean {
+  const liste = String(env.OAUTH_ENABLED_PROVIDERS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (!liste.includes(p)) return false;
+  const cfg = PROVIDERS[p](env);
+  return !!(cfg.clientId && cfg.clientSecret);
+}
+
 function db(env: Env): D1Database | null {
   if (env.ENVIRONMENT === 'staging') return env.FINNBILGLASS_STAGING_AUTH ?? null;
   return env.FINNBILGLASS_DB ?? null;
@@ -175,8 +190,13 @@ export async function handleOAuthStart(request: Request, env: Env, provider: str
   if (!GYLDIGE.includes(provider as Provider)) return new Response('Ukjent leverandør', { status: 404 });
   const p = provider as Provider;
   const cfg = PROVIDERS[p](env);
-  if (!cfg.clientId || !cfg.clientSecret) {
-    return Response.redirect(`${baseUrl(request)}/innlogging?feil=ikke_konfigurert&leverandor=${p}`, 302);
+  if (!aktivert(env, p)) {
+    // Leverandøren er bevisst deaktivert i dette miljøet — avvises hardt,
+    // også om secrets tilfeldigvis skulle ligge der.
+    return new Response(JSON.stringify({ ok: false, error: 'LEVERANDOR_IKKE_AKTIVERT' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    });
   }
 
   const database = db(env);
@@ -192,8 +212,9 @@ export async function handleOAuthStart(request: Request, env: Env, provider: str
   ).bind(state, p, verifier, nonce, naa, naa + 10 * 60 * 1000).run();
 
   const challenge = b64url(await sha256(verifier));
+  const clientId = cfg.clientId as string;
   const u = new URL(cfg.authUrl);
-  u.searchParams.set('client_id', cfg.clientId);
+  u.searchParams.set('client_id', clientId);
   u.searchParams.set('redirect_uri', callbackUrl(request, p));
   u.searchParams.set('response_type', 'code');
   u.searchParams.set('scope', cfg.scope);
@@ -216,7 +237,12 @@ export async function handleOAuthCallback(request: Request, env: Env, provider: 
   const p = provider as Provider;
   const cfg = PROVIDERS[p](env);
   const database = db(env);
-  if (!database || !cfg.clientId || !cfg.clientSecret) return fail('ikke_konfigurert');
+  if (!database || !aktivert(env, p)) {
+    return new Response(JSON.stringify({ ok: false, error: 'LEVERANDOR_IKKE_AKTIVERT' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    });
+  }
 
   const url = new URL(request.url);
   const state = url.searchParams.get('state') || '';
@@ -232,12 +258,14 @@ export async function handleOAuthCallback(request: Request, env: Env, provider: 
   if (!rad || rad.provider !== p || rad.utloper < Date.now()) return fail('utlopt_state');
 
   // Veksle kode → tokens (PKCE).
+  const clientId = cfg.clientId as string;
+  const clientSecret = cfg.clientSecret as string;
   const kropp = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
     redirect_uri: callbackUrl(request, p),
-    client_id: cfg.clientId,
-    client_secret: cfg.clientSecret,
+    client_id: clientId,
+    client_secret: clientSecret,
     code_verifier: rad.code_verifier,
   });
   let tokens: TokenSvar = {};
@@ -262,7 +290,7 @@ export async function handleOAuthCallback(request: Request, env: Env, provider: 
   if (p === 'facebook') {
     if (!tokens.access_token) return fail('mangler_token');
     try {
-      const proof = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(cfg.clientSecret)));
+      const proof = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(clientSecret)));
       const r = await fetch(`${cfg.brukerInfo}&appsecret_proof=${encodeURIComponent(proof)}`, {
         headers: { Authorization: `Bearer ${tokens.access_token}`, accept: 'application/json' },
       });
@@ -280,7 +308,7 @@ export async function handleOAuthCallback(request: Request, env: Env, provider: 
     if (!tokens.id_token) return fail('mangler_id_token');
     let v;
     try {
-      v = await verifiserIdToken(tokens.id_token, cfg, cfg.clientId, rad.nonce);
+      v = await verifiserIdToken(tokens.id_token, cfg, clientId, rad.nonce);
     } catch {
       return fail('verifisering_feilet');
     }
@@ -365,12 +393,8 @@ async function opprettSesjon(
 
 /** GET /api/auth/oauth/providers — hvilke innloggingsmetoder er faktisk konfigurert. */
 export async function handleProviders(env: Env): Promise<Response> {
-  const klar = (p: Provider) => {
-    const c = PROVIDERS[p](env);
-    return !!(c.clientId && c.clientSecret);
-  };
   return new Response(
-    JSON.stringify({ ok: true, providers: { google: klar('google'), microsoft: klar('microsoft'), facebook: klar('facebook') } }),
+    JSON.stringify({ ok: true, providers: { google: aktivert(env, 'google'), microsoft: aktivert(env, 'microsoft'), facebook: aktivert(env, 'facebook') } }),
     { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } },
   );
 }
