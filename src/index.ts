@@ -187,6 +187,46 @@ function supportAuthorised(request: Request, env: Env): boolean {
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
 }
 
+/**
+ * Varsel til ansvarlig medarbeider om en ny pristilbudsforespørsel.
+ * Inneholder bevisst INGEN personopplysninger: kun saksnummer, tidspunkt og
+ * lenke til Operations Center. Navn, kontaktinfo og kjøretøy ligger kun der.
+ */
+async function sendInquiryAlert(env: Env, inquiryId: number | null): Promise<{ ok: boolean; error?: string }> {
+  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  const to = env.SUPPORT_NOTIFY_EMAIL || from;
+  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
+  const url = 'https://finnbilglass.no/ops';
+  const tid = new Date().toLocaleString('nb-NO', { timeZone: 'Europe/Oslo' });
+  const saksnr = inquiryId != null ? `#${inquiryId}` : '(ukjent nummer)';
+  const html =
+    `<h2 style="margin:0 0 8px">Ny pristilbudsforespørsel ${saksnr}</h2>` +
+    `<p><b>Tidspunkt:</b> ${tid}<br><b>Status:</b> Ny</p>` +
+    `<p><a href="${url}">Åpne Operations Center</a></p>` +
+    `<p style="color:#637286;font-size:12px">Av personvernhensyn inneholder denne e-posten ingen kundeopplysninger. ` +
+    `Navn, kontaktinfo og kjøretøy står kun i Operations Center.</p>`;
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { email: from, name: 'Finnbilglass' },
+        to: [{ email: to }],
+        subject: `Ny pristilbudsforespørsel ${saksnr}`,
+        htmlContent: html,
+        textContent: `Ny pristilbudsforespørsel ${saksnr}. Tidspunkt: ${tid}. Status: Ny. Åpne ${url}. Av personvernhensyn inneholder denne e-posten ingen kundeopplysninger.`,
+      }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      return { ok: false, error: `Brevo ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil ved varsling.' };
+  }
+}
+
 /** Send svar til kunde på e-post via Brevo (tidl. Sendinblue) v3 SMTP. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
 async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: string | null, message: string): Promise<{ ok: boolean; error?: string }> {
   const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
@@ -283,7 +323,7 @@ async function lagreOpplaeringBilde(
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
@@ -561,6 +601,14 @@ export default {
         const id = resultater[0]?.meta?.last_row_id;
         if (idemNokkel && idemHash && id) {
           try { await fullfor(inquiryDb as never, idemNokkel, id); } catch { /* best-effort */ }
+        }
+        // Varsle ansvarlig (uten kundeopplysninger) — aldri blokkerende for kunden.
+        if (id) {
+          const varsel = sendInquiryAlert(env, id).then((r) => {
+            if (r.ok) console.log('inquiry-varsel sendt for sak', id);
+            else console.error('inquiry-varsel feilet:', r.error);
+          });
+          try { ctx?.waitUntil(varsel); } catch { void varsel; }
         }
         return json({ ok: true, inquiryId: id ?? null }, 201);
       } catch (e) {

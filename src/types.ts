@@ -18,6 +18,7 @@ export interface Env {
   /** Utgående e-post-svar til kunder (Brevo v3 SMTP). Uten nøkkel er /reply 503 «ikke konfigurert». */
   BREVO_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
+  SUPPORT_NOTIFY_EMAIL?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;
