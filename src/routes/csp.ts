@@ -99,11 +99,12 @@ export function cspReportOnly(): string {
     "frame-ancestors 'self'",
     "form-action 'self'",
     // Inline-skript/stiler finnes i dag; hashing/flytting er egen oppgave.
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com",
+    // cloudflareinsights.com er Cloudflares egen Web Analytics (fanget via report-only).
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.googletagmanager.com https://static.cloudflareinsights.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://accounts.google.com",
+    "connect-src 'self' https://accounts.google.com https://cloudflareinsights.com",
     "frame-src https://accounts.google.com",
     "report-uri /api/csp-report",
   ].join('; ');
