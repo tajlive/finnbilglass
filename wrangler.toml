@@ -75,19 +75,10 @@ directory = "./public"
 binding = "ASSETS"
 run_worker_first = ["/", "/support/evidence", "/ops"]
 
-# ── Custom domains (opprettes av wrangler ved deploy) ──────────
-# apex + www serverer landingsside inntil Pages-frontenden tar over; api = matcher
-[[routes]]
-pattern = "finnbilglass.no"
-custom_domain = true
-zone_name = "finnbilglass.no"
-
-[[routes]]
-pattern = "www.finnbilglass.no"
-custom_domain = true
-zone_name = "finnbilglass.no"
-
-[[routes]]
-pattern = "api.finnbilglass.no"
-custom_domain = true
-zone_name = "finnbilglass.no"
+# ── Custom domains ────────────────────────────────────────────
+# finnbilglass.no / www / api er knyttet til denne Workeren via Workers
+# Domains-API-et (accounts/{acct}/workers/domains), IKKE via [[routes]].
+# De er bevisst fjernet herfra: CI-tokenet har ikke workers/routes-skriving,
+# og en [[routes]]-deklarasjon får wrangler til å forsøke å synkronisere
+# domenene på hver deploy (feiler med «No access to the specified resource»).
+# Domenene forblir tilknyttet Workeren uendret ved deploy.
