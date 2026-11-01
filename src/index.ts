@@ -348,6 +348,11 @@ export default {
     // (local-auth/staging-auth) skal aldri kunne brukes som innlogging i prod.
     if (env.ENVIRONMENT === 'staging' && env.FINNBILGLASS_STAGING_AUTH) {
       setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_STAGING_AUTH));
+    } else if (env.ENVIRONMENT === 'production' && env.FINNBILGLASS_DB) {
+      // Produksjon: auth-tabellene (migrasjon 0039) ligger i produksjons-D1.
+      // Mangler bindingen, kaster auth-laget AUTH_STORAGE_NOT_CONFIGURED (fail-closed)
+      // — det skal aldri falle tilbake til testdatabasene.
+      setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_DB));
     } else if (env.ENVIRONMENT !== 'production' && env.FINNBILGLASS_LOCAL_AUTH) {
       setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_LOCAL_AUTH));
     }
