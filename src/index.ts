@@ -290,11 +290,12 @@ export default {
 
     // Koble auth-lagring til riktig D1 (fail-closed) FØR routing — /api/auth,
     // /api/customer og /api/admin bruker alle requireAuth → auth.getSession.
-    // Staging: FINNBILGLASS_STAGING_AUTH. Lokal: FINNBILGLASS_LOCAL_AUTH.
-    // Produksjon: ingen auth ennå (getStorage kaster AUTH_STORAGE_NOT_CONFIGURED).
+    // Staging: FINNBILGLASS_STAGING_AUTH. Lokal utvikling: FINNBILGLASS_LOCAL_AUTH.
+    // Produksjon: INGEN auth-lagring — kundelogin er ikke lansert, og test-DB-ene
+    // (local-auth/staging-auth) skal aldri kunne brukes som innlogging i prod.
     if (env.ENVIRONMENT === 'staging' && env.FINNBILGLASS_STAGING_AUTH) {
       setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_STAGING_AUTH));
-    } else if (env.FINNBILGLASS_LOCAL_AUTH) {
+    } else if (env.ENVIRONMENT !== 'production' && env.FINNBILGLASS_LOCAL_AUTH) {
       setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_LOCAL_AUTH));
     }
 

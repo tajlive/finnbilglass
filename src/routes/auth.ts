@@ -72,6 +72,10 @@ export async function handleOtpSend(request: Request, env: Env): Promise<Respons
         429
       );
     }
+    // Auth-lagring finnes ikke i dette miljøet (produksjon uten kundelogin).
+    if (String((error as Error).message || '').startsWith('AUTH_STORAGE_NOT_CONFIGURED')) {
+      return json({ ok: false, error: 'INNLOGGING_IKKE_AKTIVERT' }, 503);
+    }
     return json({ ok: false, error: 'INTERN_FEIL' }, 500);
   }
 }
@@ -88,7 +92,15 @@ export async function handleOtpVerify(request: Request, env: Env): Promise<Respo
   }
 
   const { email, code } = body;
-  const result = await auth.verifyOtp({ email, code });
+  let result;
+  try {
+    result = await auth.verifyOtp({ email, code });
+  } catch (error) {
+    if (String((error as Error).message || '').startsWith('AUTH_STORAGE_NOT_CONFIGURED')) {
+      return json({ ok: false, error: 'INNLOGGING_IKKE_AKTIVERT' }, 503);
+    }
+    return json({ ok: false, error: 'INTERN_FEIL' }, 500);
+  }
 
   if (!result.success) {
     return json({ ok: false, error: result.error || 'FEIL_KODE' }, 401);
@@ -151,7 +163,13 @@ export async function handleSession(request: Request, env: Env): Promise<Respons
   const match = cookie.match(/fb_session=([^;]+)/);
   const sessionId = match ? match[1] : null;
 
-  const session = await auth.getSession(sessionId);
+  let session;
+  try {
+    session = await auth.getSession(sessionId);
+  } catch {
+    // Ingen auth-lagring i dette miljøet = ingen innlogget sesjon (fail-closed).
+    return json({ ok: false, authenticated: false, error: 'AUTH_IKKE_AKTIVERT' }, 401);
+  }
   if (!session) {
     return json({ ok: false, authenticated: false }, 401);
   }
@@ -186,7 +204,12 @@ export async function handleCsrfToken(request: Request, env: Env): Promise<Respo
   const match = cookie.match(/fb_session=([^;]+)/);
   const sessionId = match ? match[1] : null;
 
-  const session = await auth.getSession(sessionId);
+  let session;
+  try {
+    session = await auth.getSession(sessionId);
+  } catch {
+    return json({ ok: false, error: 'IKKE_AUTENTISERT' }, 401);
+  }
   if (!session) {
     return json({ ok: false, error: 'IKKE_AUTENTISERT' }, 401);
   }
@@ -266,7 +289,14 @@ export async function requireAuth(request: Request): Promise<AuthUser | null> {
   const cookie = request.headers.get('Cookie') ?? '';
   const match = cookie.match(/fb_session=([^;]+)/);
   const sessionId = match ? match[1] : null;
-  const session = await auth.getSession(sessionId);
+  let session;
+  try {
+    session = await auth.getSession(sessionId);
+  } catch {
+    // Auth-lagring ikke konfigurert i dette miljøet (produksjon uten kundelogin):
+    // fail-closed — ingen sesjon, ingen tilgang.
+    return null;
+  }
   if (!session) return null;
 
   return {

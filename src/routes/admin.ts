@@ -284,10 +284,8 @@ export async function handleAdminRoute(request: Request, env: Env): Promise<Resp
   const path = url.pathname.replace(/^\/api\/admin/, '');
   const method = request.method;
 
-  // Koble ekte lokal D1 til auth-lagring når tilgjengelig (wrangler --local)
-  if (env.FINNBILGLASS_LOCAL_AUTH) {
-    setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_LOCAL_AUTH));
-  }
+  // Auth-lagring er allerede koblet i toppen av fetch() (miljøstyrt, fail-closed).
+  // Ingen lokal test-DB skal kunne aktiveres herfra i produksjon.
 
   // Først: krev autentisering for alle admin-ruter
   const user = await requireAuth(request);
