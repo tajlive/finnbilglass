@@ -12,6 +12,8 @@
   // OTP elements
   const otpInputs = document.querySelectorAll('.otp-input');
   const verifyOtpBtn = document.getElementById('verify-otp-btn');
+  // Manglet tidligere: siden kastet «sendOtpBtn is not defined» og virket ikke.
+  const sendOtpBtn = document.getElementById('send-otp-btn');
   const backBtn = document.getElementById('back-btn');
   const resendText = document.getElementById('resend-text');
   const resendLink = document.getElementById('resend-link');

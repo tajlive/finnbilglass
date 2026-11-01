@@ -45,21 +45,33 @@ Ingen av disse inneholder navn, e-post, telefon eller kjøretøyidentitet knytte
 - **Evidensbilder:** bilder av kundens bil. Bør ha kortere levetid enn selve saken.
 - **Logger:** verifisert at Worker-logger ikke lagrer persondata (logging av/på-minne, ingen PII skrevet).
 
-## 3. Forslag til oppbevaringsregler
+## 3. Anbefalt oppbevaringspolicy (V5.1)
 
-| Datatype | Foreslått levetid | Begrunnelse |
+| Datatype | Levetid | Begrunnelse |
 |---|---|---|
-| Testsaker (`is_test = 1`) | 90 dager | nødvendig for feilsøking, ikke for drift |
-| Reelle henvendelser uten ordre | 24 måneder etter siste aktivitet | kunden skal kunne komme tilbake |
-| Henvendelser som blir ordre | 5 år | bokføringsplikt |
-| Svar/hendelseslogg | samme som saken | sporbarhet |
-| Sesjoner | slettes ved utløp + 7 dager | sikkerhet |
-| OAuth-tilstander | 10 minutter (allerede) | engangsbruk |
-| Ventende kontokoblinger | 15 minutter (allerede) | engangsbruk |
-| Evidensbilder | 12 måneder etter at saken er avsluttet | personvern |
+| Avsluttede tilbud **uten** ordre | **12 måneder** etter siste aktivitet | kunden skal kunne komme tilbake, men vi skal ikke lagre evig |
+| Tilhørende bilder (R2) | **90 dager** etter at saken er avsluttet | bilder av kundens bil er det mest sensitive |
+| Testsaker (`is_test = 1`) | **90 dager** | kun feilsøkingsverdi |
+| Henvendelser som blir **ordre** | 5 år | bokføringsplikt |
+| Svar-/hendelseslogg | samme som saken | sporbarhet |
+| Sesjoner | utløp + 7 dager | sikkerhet |
+| OAuth-tilstander / ventende koblinger | 10 / 15 minutter (aktivt) | engangsbruk |
 | Katalogdata | beholdes | ikke personopplysninger |
 
-**Unntak som blokkerer sletting:** data knyttet til åpne tvister, reklamasjoner eller bokføringspliktig dokumentasjon skal aldri slettes automatisk.
+**Unntak — skal aldri slettes automatisk:**
+
+- saker som ikke er avsluttet (`NEW`, `CONTACTED`, `NEEDS_INFO`, `QUOTED`, `CONFIRMED`)
+- saker med åpen tvist eller reklamasjon
+- dokumentasjon som er bokføringspliktig
+- alt som er flagget for manuell gjennomgang
+
+**Automatisk sletting er deaktivert.** Ingenting slettes før policyen er godkjent og en dry-run er gjennomgått.
+
+## 3b. Referanseintegritet D1 ↔ R2
+
+Før sletting kan vurderes må hver nøkkel i `evidence_case_images.r2_key` finnes i bøtta, og hver fil i `evidence-capture/` må ha en rad. Avvik betyr at sletting vil kunne ødelegge bevis.
+
+Verktøy: `GET /api/ops/r2-inventar` (token-gated, kun lesing) returnerer antall objekter, total størrelse, foreldreløse filer og manglende filer. Ingenting slettes av dette endepunktet.
 
 ## 4. Hva som må på plass før sletting kan kjøres
 
