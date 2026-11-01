@@ -21,14 +21,16 @@ const EPOST = process.env.FB_EPOST || 'kunde-a@test.no';
 
   const resultat = {};
 
-  // 1. Forsiden skal ha synlig inngang til Min side
+  // 1. Forsiden skal ha inngang til innlogging
   await side.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
-  const lenke = side.locator('header a', { hasText: 'Min side' });
-  resultat.forside_min_side_lenke = await lenke.count() > 0;
+  await side.waitForTimeout(1600);
+  const lenke = side.locator('#topp-konto');
+  resultat.topplenke_tekst = (await lenke.textContent().catch(() => '')) || '';
+  resultat.topplenke_href = (await lenke.getAttribute('href').catch(() => '')) || '';
 
-  // 2. Klikk den → havner på innlogging (via /min-side-redirect)
-  await lenke.first().click();
-  await side.waitForLoadState('domcontentloaded');
+  // 2. Klikk den → havner på innlogging
+  await lenke.click();
+  await side.waitForURL(/innlogging/, { timeout: 15000 }).catch(() => {});
   resultat.omdirigert_til_innlogging = side.url().includes('/innlogging');
 
   // 3. Send kode

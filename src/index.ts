@@ -30,6 +30,7 @@ import { handlePrisEstimat } from './routes/pris-estimat';
 import { handleAuthRoute, requireAuth, kundeInnlogget } from './routes/auth';
 import { handleGoogleConfig, handleGoogleLogin } from './routes/google-auth';
 import { handleOAuthStart, handleOAuthCallback, handleLinkInfo, handleProviders } from './routes/oauth';
+import { handleCspReport, cspReportOnly } from './routes/csp';
 import { handleAdminRoute } from './routes/admin';
 import { setAuthStorage } from './auth';
 import { D1AuthStorage } from './auth-storage';
@@ -351,6 +352,11 @@ export default {
     if (!h.has('Referrer-Policy')) h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
     if (!h.has('Strict-Transport-Security')) h.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     if (!h.has('Permissions-Policy')) h.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    // CSP i report-only: bryter ingenting, samler brudd for senere håndheving.
+    const ct = h.get('Content-Type') || '';
+    if (ct.includes('text/html') && !h.has('Content-Security-Policy-Report-Only')) {
+      h.set('Content-Security-Policy-Report-Only', cspReportOnly());
+    }
     return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
   },
 };
@@ -399,6 +405,11 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     }
     if (method === 'GET' && path === '/api/admin/pris-estimat') {
       return handlePrisEstimat(request, env);
+    }
+
+    // CSP-bruddrapporter (report-only-fasen).
+    if (path === '/api/csp-report' && method === 'POST') {
+      return handleCspReport(request, env);
     }
 
     // Auth-ruter (P0 Fase 5.5/5.8)
