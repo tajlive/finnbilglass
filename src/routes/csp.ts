@@ -59,6 +59,37 @@ function sti(url: unknown): string {
   }
 }
 
+/** Leser kroppen med hard byte-grense via strøm — uten å bufre mer enn taket. */
+async function lesBegrenset(request: Request, maks: number): Promise<string | null> {
+  const kropp = request.body;
+  if (!kropp) return '';
+  const leser = kropp.getReader();
+  const biter: Uint8Array[] = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await leser.read();
+      if (done) break;
+      if (!value) continue;
+      total += value.length;
+      if (total > maks) {
+        await leser.cancel(); // avbryt strømmen umiddelbart
+        return null;
+      }
+      biter.push(value);
+    }
+  } catch {
+    return null;
+  }
+  const samlet = new Uint8Array(total);
+  let p = 0;
+  for (const b of biter) {
+    samlet.set(b, p);
+    p += b.length;
+  }
+  return new TextDecoder().decode(samlet);
+}
+
 export async function handleCspReport(request: Request, env: Env): Promise<Response> {
   const tom = new Response(null, { status: 204 });
 
@@ -70,9 +101,10 @@ export async function handleCspReport(request: Request, env: Env): Promise<Respo
   const ip = request.headers.get('cf-connecting-ip') || 'ukjent';
   if (!innenforRate(ip)) return new Response(null, { status: 429 });
 
-  // 3) Les aldri mer enn taket, uansett hva headeren sier.
-  const tekst = (await request.text().catch(() => '')).slice(0, MAKS_KROPP + 1);
-  if (!tekst || tekst.length > MAKS_KROPP) return new Response(null, { status: 413 });
+  // 3) Strømlesing med hard grense — gjelder også når Content-Length mangler.
+  const tekst = await lesBegrenset(request, MAKS_KROPP);
+  if (tekst === null) return new Response(null, { status: 413 });
+  if (!tekst) return tom;
 
   let kropp: unknown;
   try {
