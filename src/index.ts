@@ -30,7 +30,8 @@ import { handlePrisEstimat } from './routes/pris-estimat';
 import { handleAuthRoute, requireAuth, kundeInnlogget } from './routes/auth';
 import { handleGoogleConfig, handleGoogleLogin } from './routes/google-auth';
 import { handleOAuthStart, handleOAuthCallback, handleLinkInfo, handleProviders } from './routes/oauth';
-import { handleCspReport, cspReportOnly } from './routes/csp';
+import { handleCspReport, cspReportOnly, reportingEndpoints } from './routes/csp';
+import { handleR2Inventar } from './routes/r2-inventar';
 import { handleAdminRoute } from './routes/admin';
 import { setAuthStorage } from './auth';
 import { D1AuthStorage } from './auth-storage';
@@ -356,6 +357,7 @@ export default {
     const ct = h.get('Content-Type') || '';
     if (ct.includes('text/html') && !h.has('Content-Security-Policy-Report-Only')) {
       h.set('Content-Security-Policy-Report-Only', cspReportOnly());
+      h.set('Reporting-Endpoints', reportingEndpoints());
     }
     return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
   },
@@ -410,6 +412,13 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     // CSP-bruddrapporter (report-only-fasen).
     if (path === '/api/csp-report' && method === 'POST') {
       return handleCspReport(request, env);
+    }
+
+    // R2-inventar (kun lesing, token-gated).
+    if (path === '/api/ops/r2-inventar' && method === 'GET') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleR2Inventar(env);
     }
 
     // Auth-ruter (P0 Fase 5.5/5.8)

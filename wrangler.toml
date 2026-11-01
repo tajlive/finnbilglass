@@ -78,6 +78,11 @@ database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
 [env.staging.ai]
 binding = "AI"
 
+# Samme arkivbøtte, kun for lesing/inventar i staging (bindings arves ikke).
+[[env.staging.r2_buckets]]
+binding = "OPPLAERING_BUCKET"
+bucket_name = "finnbilglass-opplaering"
+
 # ── Statisk frontend (prototype public/) ──────────────────────
 [assets]
 directory = "./public"
