@@ -128,7 +128,7 @@
       <span class="logo-tekst">finn<span>bilglass</span></span>
     </div>
     <span class="beta" aria-label="Betaversjon">Beta</span>
-    <a class="topp-lenke" href="/min-side">Logg inn</a>
+    <a class="topp-lenke" id="topp-konto" href="/innlogging">Logg inn</a>
   </header>
 
   <!-- Skjerm 1: Start / søk -->
@@ -448,11 +448,32 @@
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/min-side">Logg inn / Min side</a> · <a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling.html">Betaling kommer senere</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Vi dobbeltsjekker alle glassvalg og priser før bestilling.</p>
+    <p class="footer-bunn"><a href="/innlogging" id="bunn-konto">Logg inn / Min side</a> · <a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling.html">Betaling kommer senere</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Vi dobbeltsjekker alle glassvalg og priser før bestilling.</p>
   </footer>
 
 </div><!-- /.wrap -->
 <script src="frontrute-view.js?v=20261031-frontrute-v1"></script>
-<script src="app.js?v=20261031-frontrute-v1"></script>
+<script src="app.js?v=20261101-topplenke-v1"></script>
+<script>
+  // Topplenken viser «Min side» når kunden allerede er innlogget.
+  (function () {
+    var lenke = document.getElementById('topp-konto');
+    var bunn = document.getElementById('bunn-konto');
+    if (!lenke) return;
+    fetch('/api/auth/session', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.authenticated) {
+          lenke.textContent = 'Min side';
+          lenke.href = '/min-side';
+          if (bunn) bunn.textContent = 'Min side';
+        } else {
+          lenke.textContent = 'Logg inn';
+          lenke.href = '/innlogging';
+        }
+      })
+      .catch(function () { /* ikke innlogget – la «Logg inn» stå */ });
+  })();
+</script>
 </body>
 </html>

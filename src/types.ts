@@ -19,6 +19,8 @@ export interface Env {
   BREVO_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
   SUPPORT_NOTIFY_EMAIL?: string;
+  /** Google Identity Services (kundeinnlogging). client_id er offentlig; secret brukes ikke i denne flyten. */
+  GOOGLE_OAUTH_CLIENT_ID?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;

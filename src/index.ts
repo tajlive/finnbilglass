@@ -28,6 +28,7 @@ import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-co
 import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
 import { handlePrisEstimat } from './routes/pris-estimat';
 import { handleAuthRoute, requireAuth, kundeInnlogget } from './routes/auth';
+import { handleGoogleConfig, handleGoogleLogin } from './routes/google-auth';
 import { handleAdminRoute } from './routes/admin';
 import { setAuthStorage } from './auth';
 import { D1AuthStorage } from './auth-storage';
@@ -384,6 +385,9 @@ export default {
 
     // Auth-ruter (P0 Fase 5.5/5.8)
     if (path.startsWith('/api/auth/')) {
+      // Google-innlogging håndteres før den generelle auth-ruteren.
+      if (path === '/api/auth/google/config' && method === 'GET') return handleGoogleConfig(env);
+      if (path === '/api/auth/google' && method === 'POST') return handleGoogleLogin(request, env);
       // Auth-lagring er allerede koblet i toppen av fetch() (fail-closed).
       return handleAuthRoute(request, env);
     }
