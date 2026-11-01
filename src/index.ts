@@ -956,6 +956,11 @@ export default {
       });
     }
 
+    // Praktisk videresending: gammel/engelsk sti → faktisk innloggingsside.
+    if (method === 'GET' && (path === '/logg-inn' || path === '/login')) {
+      return Response.redirect(url.origin + '/innlogging', 302);
+    }
+
     if (method === 'GET' && path === '/api/ops/summary') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);

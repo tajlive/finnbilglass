@@ -129,6 +129,26 @@ export async function handleOtpSend(request: Request, env: Env): Promise<Respons
  * Verifiser OTP-kode og opprett sesjon.
  * Returnerer brukerprofil og setter HttpOnly-sesjonscookie.
  */
+/**
+ * Henter kundenavnet fra kundens siste forespørsel, slik at Min side viser
+ * navnet kunden selv oppga — ikke bare delen foran @ i e-postadressen.
+ */
+async function kundeNavnFraSaker(env: Env, email: string): Promise<string | null> {
+  const db = env.ENVIRONMENT === 'staging' ? env.FINNBILGLASS_STAGING_AUTH : env.FINNBILGLASS_DB;
+  if (!db) return null;
+  try {
+    const rad = await db
+      .prepare('SELECT navn FROM beta_inquiries WHERE lower(kontakt) LIKE ? ORDER BY created_at DESC LIMIT 1')
+      .bind(`%${email.toLowerCase()}%`)
+      .first<{ navn: string | null }>();
+    const navn = (rad?.navn || '').trim();
+    if (!navn || navn.includes('@') || navn.length > 80) return null;
+    return navn;
+  } catch {
+    return null;
+  }
+}
+
 export async function handleOtpVerify(request: Request, env: Env): Promise<Response> {
   const body = await parseBody(request);
   if (!body || typeof body.email !== 'string' || typeof body.code !== 'string') {
@@ -151,10 +171,13 @@ export async function handleOtpVerify(request: Request, env: Env): Promise<Respo
   }
 
   const user = result.user!;
+  // Vis kundens eget navn fra saken når det finnes; ellers det auth-laget har.
+  const navnFraSak = await kundeNavnFraSaker(env, user.email);
+  const visningsnavn = navnFraSak || user.name;
   const session = await auth.createSession({
     email: user.email,
     role: user.role,
-    name: user.name,
+    name: visningsnavn,
     userId: user.userId,
   });
 
@@ -168,7 +191,7 @@ export async function handleOtpVerify(request: Request, env: Env): Promise<Respo
         userId: user.userId,
         email: user.email,
         role: user.role,
-        name: user.name,
+        name: visningsnavn,
       },
       sessionId: session.sessionId,
       expiresAt: session.expiresAt,
