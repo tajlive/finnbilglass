@@ -338,7 +338,24 @@ async function lagreOpplaeringBilde(
 }
 
 export default {
+  /**
+   * Alle svar får sikkerhetsheadere. Ligger ytterst slik at både API-svar,
+   * omdirigeringer og statiske filer dekkes — også når svaret kommer fra
+   * ASSETS-bindingen.
+   */
   async fetch(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
+    const res = await handleRequest(request, env, ctx);
+    const h = new Headers(res.headers);
+    if (!h.has('X-Content-Type-Options')) h.set('X-Content-Type-Options', 'nosniff');
+    if (!h.has('X-Frame-Options')) h.set('X-Frame-Options', 'SAMEORIGIN');
+    if (!h.has('Referrer-Policy')) h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (!h.has('Strict-Transport-Security')) h.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    if (!h.has('Permissions-Policy')) h.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+  },
+};
+
+async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
@@ -1531,5 +1548,4 @@ export default {
       }
     }
     return asset;
-  },
-};
+}
