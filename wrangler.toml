@@ -48,6 +48,10 @@ invocation_logs = true
 [env.staging]
 # Staging beholder workers.dev-URL (prod har den av).
 workers_dev = true
+# Staging skal ALDRI eie produksjonsdomenene. Uten denne arver staging de
+# globale [[routes]]-oppføringene, og hver staging-deploy flytter
+# finnbilglass.no over til staging-konfigurasjonen (feil miljø, feil D1).
+routes = []
 [env.staging.vars]
 ENVIRONMENT = "staging"
 EVIDENCE_UPLOAD_ENABLED = "true"
