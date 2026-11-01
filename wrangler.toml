@@ -73,7 +73,7 @@ database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/", "/support/evidence", "/ops"]
+run_worker_first = ["/", "/support/evidence", "/ops", "/min-side", "/logg-inn", "/login"]
 
 # ── Custom domains ────────────────────────────────────────────
 # finnbilglass.no / www / api er knyttet til denne Workeren via Workers

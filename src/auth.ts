@@ -134,10 +134,12 @@ const auth = {
   /**
    * Avbryt sesjon (logout).
    */
-  destroySession(sessionId: string | null): void {
+  async destroySession(sessionId: string | null): Promise<void> {
     if (!sessionId) return;
     const store = getStorage();
-    store.sessionDelete(sessionId);
+    // Må awaiteres: D1-slettingen fullføres ellers ikke før requesten avsluttes,
+    // og sesjonen ville leve videre etter «logg ut».
+    await store.sessionDelete(sessionId);
   },
 
   /**

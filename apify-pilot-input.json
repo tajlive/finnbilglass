@@ -1,0 +1,16 @@
+{
+  "catalogUrls": [
+    "https://auto-glass.no/varer/nettbutikk/autoglass/mazda/cx-5/2012-2017-i/",
+    "https://auto-glass.no/varer/nettbutikk/autoglass/vw/caddy/2004-2015-iii/",
+    "https://auto-glass.no/varer/nettbutikk/autoglass/volvo/740_760-serie/760/1982-1993-760/",
+    "https://auto-glass.no/varer/nettbutikk/autoglass/bmw/1-serie/5d/2011-5d/",
+    "https://auto-glass.no/varer/nettbutikk/autoglass/peugeot/5008/2010-5008/"
+  ],
+  "mode": "probe",
+  "maxProducts": 10,
+  "maxPages": 20,
+  "includeProductPages": true,
+  "saveState": false,
+  "allowReconciliation": false,
+  "throttleMs": 1500
+}

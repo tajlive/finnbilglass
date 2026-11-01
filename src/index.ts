@@ -27,7 +27,7 @@ import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
 import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
 import { handlePrisEstimat } from './routes/pris-estimat';
-import { handleAuthRoute, requireAuth } from './routes/auth';
+import { handleAuthRoute, requireAuth, kundeInnlogget } from './routes/auth';
 import { handleAdminRoute } from './routes/admin';
 import { setAuthStorage } from './auth';
 import { D1AuthStorage } from './auth-storage';
@@ -959,6 +959,14 @@ export default {
     // Praktisk videresending: gammel/engelsk sti → faktisk innloggingsside.
     if (method === 'GET' && (path === '/logg-inn' || path === '/login')) {
       return Response.redirect(url.origin + '/innlogging', 302);
+    }
+
+    // Min side krever sesjon. Uten sesjon sendes kunden rett til innlogging —
+    // uten å vise siden først.
+    if (method === 'GET' && path === '/min-side') {
+      if (!(await kundeInnlogget(request))) {
+        return Response.redirect(url.origin + '/innlogging', 302);
+      }
     }
 
     if (method === 'GET' && path === '/api/ops/summary') {

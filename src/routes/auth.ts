@@ -149,6 +149,22 @@ async function kundeNavnFraSaker(env: Env, email: string): Promise<string | null
   }
 }
 
+/**
+ * true når requesten har en gyldig kundesesjon. Brukes for server-side
+ * omdirigering til innlogging i stedet for å vise Min side først.
+ */
+export async function kundeInnlogget(request: Request): Promise<boolean> {
+  const cookie = request.headers.get('Cookie') ?? '';
+  const match = cookie.match(/fb_session=([^;]+)/);
+  if (!match) return false;
+  try {
+    const session = await auth.getSession(match[1]);
+    return !!session;
+  } catch {
+    return false; // fail-closed: uten auth-lagring er ingen innlogget
+  }
+}
+
 export async function handleOtpVerify(request: Request, env: Env): Promise<Response> {
   const body = await parseBody(request);
   if (!body || typeof body.email !== 'string' || typeof body.code !== 'string') {
@@ -211,7 +227,7 @@ export async function handleLogout(request: Request, env: Env): Promise<Response
   const sessionId = match ? match[1] : null;
 
   if (sessionId) {
-    auth.destroySession(sessionId);
+    await auth.destroySession(sessionId);
   }
 
   return json(

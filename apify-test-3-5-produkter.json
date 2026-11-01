@@ -1,0 +1,17 @@
+{
+  "mode": "probe",
+  "catalogUrls": [
+    "https://auto-glass.no/produkt/mazda-cx5-5d-suv-12-ventilrutesotet-2/",
+    "https://auto-glass.no/produkt/bmw-1-serie-5d-hbk-04-ventilrute-mork-gn/",
+    "https://auto-glass.no/produkt/volvo-940-960-4d-sedan-91-bakrute-el-lam-obs/",
+    "https://auto-glass.no/produkt/chevrolet-blazer-s10-2-d-bakrute-sotet/",
+    "https://auto-glass.no/produkt/citroen-c5-5d-hbk-stv-08-fremre-ventilrute-innk/"
+  ],
+  "maxProducts": 5,
+  "maxPages": 5,
+  "includeProductPages": false,
+  "saveState": false,
+  "allowReconciliation": false,
+  "typekodeOnly": true,
+  "throttleMs": 1100
+}

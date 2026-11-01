@@ -1,0 +1,24 @@
+FinnBilGlass v1.0.13 – sidekonflikt og manuell kontroll (30.10.2026)
+
+1. Pakk ut ZIP-filen i Downloads. Ikke kopier enkeltfiler over i v1.0.12.
+2. Dobbeltklikk OPPDATER-APIFY.command i mappen FBG-ScrapePlan-v1.0.13.
+3. Skriptet finner Homebrew Node.js 22 automatisk og kjører:
+   - npm avhengighetskontroll + låsfilkontroll + sikkerhetsrapport
+   - npm run check
+   - npm test (forvent 39/39)
+   - Apify push, BARE når kontrollene består
+4. Apify: velg mode=probe; saveState=false; allowReconciliation=false.
+   For første kontroll: URL
+   https://auto-glass.no/produkt/mazda-cx5-5d-suv-12-ventilrutesotet-2/
+   maxPages=1, maxProducts=1, includeProductPages=true.
+5. Etter SUCCEEDED skal SKU 29730YP ha sideConflict=true,
+   reviewStatus=REQUIRES_MANUAL_REVIEW, automaticOrderAllowed=false,
+   typeCodeRaw fra leverandør uendret og customerPriceInclVat=null.
+6. Send Apify-kjøringslenken til ChatGPT for etterkontroll.
+
+Dette er IKKE en endring av kjøpsflyten på finnbilglass.no. Den eksisterende
+Actor er skrivebeskyttet og bestiller aldri varer. Kjøpsflyten på nettsiden
+må respektere reviewStatus/automaticOrderAllowed når den senere integreres.
+
+Ingen fullimport, automatiske tidsplaner, D1-synk eller kundevendte priser.
+Del aldri Autoglass-/Apify-passord, token eller innloggingskode.
