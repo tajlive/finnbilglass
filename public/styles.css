@@ -118,6 +118,20 @@ body {
   border-radius: 999px;
 }
 
+/* Inngang til kundesiden — «Min side» i toppraden. */
+.topp-lenke {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-1);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+.topp-lenke:hover { border-color: var(--brand); color: var(--brand-text); }
+
 /* Beta-info er tilgjengelig uten å konkurrere med søket. */
 .beta-invitasjon {
   margin: 18px 0 0;
