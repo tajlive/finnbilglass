@@ -263,7 +263,7 @@
         inquiryIdemKey = null;
         show('Takk! Vi har mottatt forespørselen' +
           (r.data.inquiryId != null ? ' (saksnummer ' + r.data.inquiryId + ')' : '') +
-          '. Vi kontrollerer bil og glass manuelt før tilbud. Ingen bestilling er gjennomført.');
+          '. Vi kontrollerer bil og glass manuelt før tilbud. Ingen bestilling er gjennomført. Du kan følge saken på Min side: finnbilglass.no/min-side');
         form.dataset.sent = 'true';
         form.querySelectorAll('input, textarea').forEach(function (field) { field.disabled = true; });
       })
