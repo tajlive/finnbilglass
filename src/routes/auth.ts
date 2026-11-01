@@ -33,10 +33,45 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 }
 
 /**
+ * Send OTP-koden på e-post via Brevo v3 SMTP.
+ * Returnerer { ok } — kunden skal aldri få «sendt» når utsendingen feilet.
+ */
+async function sendOtpEmail(env: Env, to: string, code: string): Promise<{ ok: boolean; error?: string }> {
+  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  const esc = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  if (!env.BREVO_API_KEY) return { ok: false, error: 'EPOST_IKKE_KONFIGURERT' };
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { email: from, name: 'Finnbilglass' },
+        to: [{ email: to }],
+        subject: `Din engangskode: ${code}`,
+        htmlContent:
+          `<p>Hei,</p><p>Engangskoden din er:</p>` +
+          `<p style="font-size:28px;font-weight:700;letter-spacing:6px;font-family:monospace">${esc(code)}</p>` +
+          `<p>Koden gjelder i 10 minutter og kan bare brukes én gang.</p>` +
+          `<p style="color:#637286;font-size:12px">Har du ikke bedt om koden, kan du se bort fra denne e-posten.</p>` +
+          `<p>— Finnbilglass</p>`,
+        textContent: `Engangskoden din er ${code}. Den gjelder i 10 minutter og kan bare brukes én gang.`,
+      }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      return { ok: false, error: `BREVO_${r.status}${txt ? ':' + txt.slice(0, 120) : ''}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message || 'NETTVERKSFEIL' };
+  }
+}
+
+/**
  * POST /api/auth/otp/send
  * Generer og send OTP-kode til e-postadresse.
- * I lokal testing: koden returneres i respons (mock e-post).
- * I produksjon: koden sendes via e-post, IKKE returnert.
+ * Utenfor produksjon: koden returneres i respons (test).
+ * I produksjon: koden sendes på e-post via Brevo og returneres ALDRI.
  */
 export async function handleOtpSend(request: Request, env: Env): Promise<Response> {
   const body = await parseBody(request);
@@ -55,6 +90,15 @@ export async function handleOtpSend(request: Request, env: Env): Promise<Respons
     // Testmodus KUN utenfor produksjon (lokal + staging). Produksjon returnerer
     // aldri koden — ingen header kan slå på testmodus i prod (auth-bypass).
     const isLocal = env.ENVIRONMENT !== 'production';
+
+    if (!isLocal) {
+      // Produksjon: faktisk e-postutsending. Feiler den, sier vi det ærlig.
+      const sendt = await sendOtpEmail(env, email, code);
+      if (!sendt.ok) {
+        console.error('OTP-e-post feilet:', sendt.error);
+        return json({ ok: false, error: 'KUNNE_IKKE_SENDE_EPOST' }, 502);
+      }
+    }
 
     return json({
       ok: true,
