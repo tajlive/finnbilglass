@@ -1068,8 +1068,11 @@ export default {
             const id = Number(inquiryReplyMatch[1]);
             const row = await getInquiryDb(env).prepare('SELECT id, navn, kontakt, regnr FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string; regnr: string | null }>();
             if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
-            const epost = (row.kontakt || '').trim();
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(epost)) return json({ ok: false, error: 'Kunden har ikke oppgitt e-post — e-post-svar krever en e-postadresse.' }, 409);
+            // Kontaktfeltet kan inneholde både telefon og e-post (f.eks. «92867502 · ma@x.no»).
+            // Trekk ut e-postadressen i stedet for å kreve at hele feltet er en adresse.
+            const kontaktRaa = (row.kontakt || '').trim();
+            const epost = (kontaktRaa.match(/[^\s@·,;|/]+@[^\s@·,;|/]+\.[A-Za-z]{2,}/) || [''])[0].trim();
+            if (!epost) return json({ ok: false, error: 'Kunden har ikke oppgitt e-post — e-post-svar krever en e-postadresse.' }, 409);
             const sendt = await sendReplyEmail(env, epost, row.navn, row.regnr, message);
             if (!sendt.ok) return json({ ok: false, error: sendt.error || 'Kunne ikke sende e-posten.' }, 502);
             const now = Date.now();
