@@ -17,17 +17,9 @@ binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db"
 database_id = "ac35018c-0d43-4742-adf8-d881b7274684"
 
-# ── D1 (lokal auth-lagring, KUN --local, aldri fjern) ──
-[[d1_databases]]
-binding = "FINNBILGLASS_LOCAL_AUTH"
-database_name = "finnbilglass-local-auth"
-database_id = "2e33566b-dfc0-4197-9d64-b63ba9699ad5"
-
-# ── D1 (staging auth-lagring, KUN staging) ──
-[[d1_databases]]
-binding = "FINNBILGLASS_STAGING_AUTH"
-database_name = "finnbilglass-staging-auth"
-database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
+# Test-auth-DB-er (FINNBILGLASS_LOCAL_AUTH / FINNBILGLASS_STAGING_AUTH) er
+# bevisst IKKE bundet her: toppnivå = produksjon. De finnes kun under
+# [env.staging] og i lokal utvikling via egen dev-konfig.
 
 # ── R2 (opplæringsbilder: skilt-foto + 43R-foto, ALDRI slettet uten avtale) ──
 [[r2_buckets]]

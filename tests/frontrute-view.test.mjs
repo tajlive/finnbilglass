@@ -58,7 +58,7 @@ test('status: FALLBACK uten kandidater blir MANUAL_REVIEW', () => {
 test('pris: dokumentert pris vises som fra-pris med forbehold', () => {
   const p = V.prisTekst(6990);
   assert.equal(p.visPris, true);
-  assert.equal(p.tekst, 'Fra 6 990 kr');
+  assert.equal(p.tekst, 'Veiledende fra 6 990 kr');
   assert.match(p.detalj, /inkl\. mva/);
   assert.match(p.detalj, /frakt/i);
 });

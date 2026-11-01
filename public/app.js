@@ -1719,7 +1719,10 @@
         var b = $('inquiry-bekreftet');
         var id = r.data.inquiryId;
         var routeSummary = state.glassRequest ? ' Valgt rute: ' + glassSelectionLabel(state.glassRequest.selection) + '.' : '';
-        b.textContent = 'Takk! Vi har mottatt forespørselen' + (id != null ? ' (saksnummer ' + id + ')' : '') + '.' + routeSummary + ' Vi dobbeltsjekker glasset og sender deg pris og levering før du bestemmer deg. Finnbilglass leverer glass, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte. Partnerverksteder kommer senere.';
+        var svarKanal = kontaktpreferanse === 'epost' ? 'på e-post'
+          : kontaktpreferanse === 'begge' ? 'på telefon og e-post'
+          : 'på telefon';
+        b.textContent = 'Takk! Vi har mottatt forespørselen' + (id != null ? ' (saksnummer ' + id + ')' : '') + '.' + routeSummary + ' Vi dobbeltsjekker glasset og gir deg pris og levering ' + svarKanal + ' før du bestemmer deg. Svarer vi ikke med en gang, ringer vi opp igjen — eller du kan ringe 40 40 82 41. Finnbilglass leverer glass, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte. Partnerverksteder kommer senere.';
         b.className = 'note status pinpoint';
         b.classList.remove('hidden');
       })

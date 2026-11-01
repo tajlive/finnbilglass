@@ -97,10 +97,10 @@
       return { tekst: 'Pris på forespørsel', usikker: true, visPris: false };
     }
     return {
-      tekst: 'Fra ' + nok + ' kr',
+      tekst: 'Veiledende fra ' + nok + ' kr',
       usikker: false,
       visPris: true,
-      detalj: 'inkl. mva. Frakt og eventuell levering avklares i tilbudet.'
+      detalj: 'Veiledende pris inkl. mva — endelig pris bekreftes i tilbudet. Frakt og eventuell levering avklares der.'
     };
   }
 
