@@ -21,6 +21,13 @@ export interface Env {
   SUPPORT_NOTIFY_EMAIL?: string;
   /** Google Identity Services (kundeinnlogging). client_id er offentlig; secret brukes ikke i denne flyten. */
   GOOGLE_OAUTH_CLIENT_ID?: string;
+  GOOGLE_OAUTH_CLIENT_SECRET?: string;
+  /** Microsoft Entra (personlige + jobb-/skolekontoer via «common»). */
+  MICROSOFT_CLIENT_ID?: string;
+  MICROSOFT_CLIENT_SECRET?: string;
+  /** Meta/Facebook Login. */
+  FACEBOOK_APP_ID?: string;
+  FACEBOOK_APP_SECRET?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;

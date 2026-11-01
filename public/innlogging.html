@@ -26,8 +26,7 @@
   .success-msg { color: #059669; font-size: 13px; margin-top: 8px; display: none; }
   .otp-inputs { display: flex; gap: 8px; margin-top: 8px; }
   .otp-input { width: 44px; height: 56px; border-radius: 12px; border: 1px solid #CBD5E1; background: #F8FAFC; text-align: center; font-size: 20px; font-weight: 700; font-family: 'Inter Tight', system-ui, sans-serif; letter-spacing: 4px; box-sizing: border-box; }
-  .otp-input:focus { outline: none; border-color: #F59E0B; }
-  .resend-text { text-align: center; margin-top: 12px; font-size: 13px; color: #64748B; }
+  .otp-input:focus { outline: none; border-color: #F59E0B; }  .resend-text { text-align: center; margin-top: 12px; font-size: 13px; color: #64748B; }
   .resend-link { color: #F59E0B; text-decoration: none; font-weight: 600; cursor: pointer; }
   .beta-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #ECFDF5; color: #059669; font-size: 11px; font-weight: 700; margin-bottom: 16px; }
 </style>
@@ -44,9 +43,28 @@
       <p class="auth-subtitle">Vi sender en engangskode til e-postadressen din. Koden gjelder én gang og i 10 minutter.</p>
     </div>
 
-    <div id="google-blokk" style="display:none;margin-bottom:18px;">
-      <div id="gsi-knapp" style="display:flex;justify-content:center;"></div>
-      <p id="google-feil" class="error-msg" style="margin-top:8px;">Kunne ikke logge inn med Google. Prøv e-post i stedet.</p>
+    <div id="sosial-blokk" style="margin-bottom:18px;">
+      <style>
+        .sosial-knapp { display:flex; align-items:center; gap:10px; justify-content:center; width:100%; box-sizing:border-box;
+          padding:12px 16px; margin-bottom:10px; border:1px solid #CBD5E1; border-radius:999px; background:#fff;
+          color:#0F172A; font-weight:700; font-size:15px; text-decoration:none; }
+        .sosial-knapp:hover { border-color:#94A3B8; background:#F8FAFC; }
+        .sosial-ikon { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px;
+          border-radius:50%; background:#F1F5F9; font-weight:800; font-size:13px; }
+        .sosial-info { background:#FFF7ED; border:1px solid #FED7AA; color:#9A3412; border-radius:12px;
+          padding:10px 12px; font-size:14px; margin-top:6px; }
+      </style>
+      <a class="sosial-knapp" data-provider="google" href="/api/auth/oauth/google/start" rel="nofollow">
+        <span class="sosial-ikon" aria-hidden="true">G</span> Fortsett med Google
+      </a>
+      <a class="sosial-knapp" data-provider="microsoft" href="/api/auth/oauth/microsoft/start" rel="nofollow">
+        <span class="sosial-ikon" aria-hidden="true">M</span> Fortsett med Microsoft
+      </a>
+      <a class="sosial-knapp" data-provider="facebook" href="/api/auth/oauth/facebook/start" rel="nofollow">
+        <span class="sosial-ikon" aria-hidden="true">f</span> Fortsett med Facebook
+      </a>
+      <p class="error-msg" id="sosial-feil"></p>
+      <div class="sosial-info" id="kobling-info" style="display:none;"></div>
       <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px;color:#94A3B8;font-size:13px;">
         <span style="flex:1;height:1px;background:#E2E8F0;"></span>eller med e-post<span style="flex:1;height:1px;background:#E2E8F0;"></span>
       </div>
@@ -264,7 +282,7 @@
       const response = await fetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, code, ...(koblingsToken ? { linkToken: koblingsToken } : {}) }),
       });
 
       if (response.status === 401) {
@@ -294,63 +312,64 @@
   // Initialize
   sendOtpBtn.disabled = true;
 
-  // ── Google-innlogging (Google Identity Services) ───────────────────────
-  // ID-tokenet verifiseres på serversiden; her vises bare Googles egen knapp.
-  (function initGoogle() {
-    const blokk = document.getElementById('google-blokk');
-    const feil = document.getElementById('google-feil');
-    if (!blokk) return;
-
-    fetch('/api/auth/google/config', { credentials: 'include' })
+  // ── Sosial innlogging: status fra redirect og kontokobling ────────────────
+  let koblingsToken = '';
+  // Vis bare de leverandørene som faktisk er konfigurert i dette miljøet.
+  (function visKonfigurerte() {
+    fetch('/api/auth/oauth/providers', { credentials: 'include' })
       .then(function (r) { return r.json(); })
-      .then(function (cfg) {
-        if (!cfg || !cfg.ok || !cfg.clientId) return; // ikke konfigurert → skjul
-        const s = document.createElement('script');
-        s.src = 'https://accounts.google.com/gsi/client';
-        s.async = true;
-        s.defer = true;
-        s.onload = function () {
-          try {
-            google.accounts.id.initialize({
-              client_id: cfg.clientId,
-              callback: googleSvar,
-              ux_mode: 'popup',
-              auto_select: false,
-            });
-            google.accounts.id.renderButton(document.getElementById('gsi-knapp'), {
-              theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill', locale: 'no', width: 320,
-            });
-            blokk.style.display = 'block';
-          } catch (e) {
-            console.warn('Google-knapp kunne ikke vises:', e && e.message);
-          }
-        };
-        s.onerror = function () { /* nettverksfeil → knappen vises ikke, OTP virker */ };
-        document.head.appendChild(s);
+      .then(function (d) {
+        const p = (d && d.providers) || {};
+        document.querySelectorAll('.sosial-knapp').forEach(function (a) {
+          if (!p[a.dataset.provider]) a.style.display = 'none';
+        });
       })
-      .catch(function () { /* ignorer – OTP er alltid tilgjengelig */ });
+      .catch(function () { /* viser alle; serveren avviser ukonfigurerte uansett */ });
+  })();
+  (function sosialStatus() {
+    const feil = document.getElementById('sosial-feil');
+    const info = document.getElementById('kobling-info');
+    const p = new URLSearchParams(window.location.search);
+    const feilKode = p.get('feil');
+    const koble = p.get('koble') || '';
+    const epostKreves = p.get('epost_kreves') || '';
 
-    function googleSvar(resp) {
-      if (!resp || !resp.credential) { feil.style.display = 'block'; return; }
-      fetch('/api/auth/google', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: resp.credential }),
-      })
-        .then(function (r) { return r.json().then(function (d) { return { st: r.status, d: d }; }); })
-        .then(function (res) {
-          if (res.st === 200 && res.d && res.d.ok) {
-            window.location.href = 'min-side.html';
-            return;
-          }
-          feil.textContent = res.d && res.d.error === 'EPOST_IKKE_VERIFISERT'
-            ? 'Google-kontoen må ha en bekreftet e-postadresse.'
-            : 'Kunne ikke logge inn med Google. Prøv e-post i stedet.';
-          feil.style.display = 'block';
-        })
-        .catch(function () { feil.style.display = 'block'; });
+    const tekster = {
+      avbrutt: 'Innloggingen ble avbrutt.',
+      ikke_konfigurert: 'Denne innloggingsmetoden er ikke tilgjengelig akkurat nå.',
+      utlopt_state: 'Innloggingen tok for lang tid. Prøv igjen.',
+      ugyldig_callback: 'Innloggingen feilet. Prøv igjen.',
+      token_feilet: 'Kunne ikke fullføre innloggingen hos leverandøren.',
+      ugyldig_signatur: 'Kunne ikke verifisere identiteten din.',
+      ugyldig_nonce: 'Kunne ikke verifisere identiteten din.',
+      ugyldig_audience: 'Kunne ikke verifisere identiteten din.',
+      ugyldig_utsteder: 'Kunne ikke verifisere identiteten din.',
+      utlopt_token: 'Identiteten er utløpt. Prøv igjen.',
+      profil_feilet: 'Kunne ikke hente profilen din.',
+    };
+    if (feilKode) {
+      feil.textContent = tekster[feilKode] || 'Innloggingen feilet. Prøv e-post i stedet.';
+      feil.style.display = 'block';
     }
+
+    const token = koble || epostKreves;
+    if (!token) return;
+    koblingsToken = token;
+    info.style.display = 'block';
+    info.innerHTML = 'Du er identifisert, men vi må bekrefte at kontoen er din.<br>' +
+      'Skriv e-postadressen din under og bekreft med engangskoden du får tilsendt.';
+
+    fetch('/api/auth/oauth/link-info?token=' + encodeURIComponent(token))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok && d.epostMaskert) {
+          info.innerHTML = 'Du er identifisert som <strong>' + d.epostMaskert + '</strong>.<br>' +
+            'Bekreft med engangskode for å koble kontoen.';
+          const felt = document.getElementById('email');
+          if (felt && !felt.value) { felt.value = ''; felt.placeholder = d.epostMaskert; }
+        }
+      })
+      .catch(function () { /* info står som den er */ });
   })();
 })();
 </script>

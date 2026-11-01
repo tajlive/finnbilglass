@@ -13,6 +13,7 @@
 
 import type { Env } from '../types';
 import { auth, type AuthUser } from '../auth';
+import { fullforKobling } from './oauth';
 
 // ── Lokale hjelpefunksjoner (isolerert fra index.ts for modulærhet) ──
 const CORS_HEADERS = {
@@ -172,6 +173,7 @@ export async function handleOtpVerify(request: Request, env: Env): Promise<Respo
   }
 
   const { email, code } = body;
+  const linkToken = typeof body.linkToken === 'string' ? body.linkToken.trim() : '';
   let result;
   try {
     result = await auth.verifyOtp({ email, code });
@@ -187,6 +189,12 @@ export async function handleOtpVerify(request: Request, env: Env): Promise<Respo
   }
 
   const user = result.user!;
+  // Bekreftet engangskode kan fullføre en ventende kobling av sosial identitet.
+  if (linkToken) {
+    try {
+      await fullforKobling(env, linkToken, user.email);
+    } catch { /* kobling er valgfri; innloggingen skal uansett lykkes */ }
+  }
   // Vis kundens eget navn fra saken når det finnes; ellers det auth-laget har.
   const navnFraSak = await kundeNavnFraSaker(env, user.email);
   const visningsnavn = navnFraSak || user.name;

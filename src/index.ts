@@ -29,6 +29,7 @@ import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify
 import { handlePrisEstimat } from './routes/pris-estimat';
 import { handleAuthRoute, requireAuth, kundeInnlogget } from './routes/auth';
 import { handleGoogleConfig, handleGoogleLogin } from './routes/google-auth';
+import { handleOAuthStart, handleOAuthCallback, handleLinkInfo, handleProviders } from './routes/oauth';
 import { handleAdminRoute } from './routes/admin';
 import { setAuthStorage } from './auth';
 import { D1AuthStorage } from './auth-storage';
@@ -388,6 +389,15 @@ export default {
       // Google-innlogging håndteres før den generelle auth-ruteren.
       if (path === '/api/auth/google/config' && method === 'GET') return handleGoogleConfig(env);
       if (path === '/api/auth/google' && method === 'POST') return handleGoogleLogin(request, env);
+      // Felles sosial innlogging (Google / Microsoft / Facebook) — authorization code + PKCE.
+      if (path === '/api/auth/oauth/providers' && method === 'GET') return handleProviders(env);
+      if (path === '/api/auth/oauth/link-info' && method === 'GET') return handleLinkInfo(request, env);
+      const oauthMatch = /^\/api\/auth\/oauth\/([a-z]+)\/(start|callback)$/.exec(path);
+      if (oauthMatch && method === 'GET') {
+        return oauthMatch[2] === 'start'
+          ? handleOAuthStart(request, env, oauthMatch[1])
+          : handleOAuthCallback(request, env, oauthMatch[1]);
+      }
       // Auth-lagring er allerede koblet i toppen av fetch() (fail-closed).
       return handleAuthRoute(request, env);
     }
