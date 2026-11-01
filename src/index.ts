@@ -188,6 +188,19 @@ function supportAuthorised(request: Request, env: Env): boolean {
 }
 
 /**
+ * Tydelig testpålogging: ugyldige kjennemerker (TEST…, ZZ 00000) eller
+ * testdomener i kontaktfeltet. Reelle kunder skal aldri havne her, så
+ * regelen er bevisst smal — bare mønstre som ikke kan være ekte.
+ */
+function erTydeligTest(regnr: string | null, kontakt: string): number {
+  const r = (regnr || '').toUpperCase().replace(/[\s-]/g, '');
+  if (r.startsWith('TEST') || r === 'ZZ00000') return 1;
+  const e = (kontakt || '').toLowerCase();
+  const testDomener = ['@test.no', '@example.com', '@example.org', '@localhost'];
+  return testDomener.some((d) => e.includes(d)) ? 1 : 0;
+}
+
+/**
  * Varsel til ansvarlig medarbeider om en ny pristilbudsforespørsel.
  * Inneholder bevisst INGEN personopplysninger: kun saksnummer, tidspunkt og
  * lenke til Operations Center. Navn, kontaktinfo og kjøretøy ligger kun der.
@@ -592,8 +605,8 @@ export default {
         const naa = Date.now();
         const resultater = await inquiryDb.batch([
           inquiryDb.prepare(
-            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
-          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson),
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson, erTydeligTest(regnr, kontakt)),
           inquiryDb.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
@@ -871,6 +884,73 @@ export default {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       return operationsCenterUi();
     }
+    if (method === 'POST' && path === '/api/ops/brevo-check') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'BREVO_API_KEY mangler' }, 503);
+      const kropp = (await request.json().catch(() => ({}))) as { handling?: string; domene?: string };
+      const domene = kropp.domene || 'finnbilglass.no';
+      if (kropp.handling === 'hent-records') {
+        const r = await fetch(`https://api.brevo.com/v3/senders/domains/${encodeURIComponent(domene)}`, {
+          headers: { 'api-key': env.BREVO_API_KEY, accept: 'application/json' },
+        });
+        const svar = await r.json().catch(() => null);
+        return json({ ok: r.ok, status: r.status, svar });
+      }
+      if (kropp.handling !== 'autentiser-domene') return json({ ok: false, error: 'Ukjent handling' }, 400);
+      const r = await fetch(`https://api.brevo.com/v3/senders/domains/${encodeURIComponent(domene)}/authenticate`, {
+        method: 'PUT',
+        headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
+      });
+      const svar = await r.json().catch(() => null);
+      return json({ ok: r.ok, status: r.status, svar });
+    }
+
+    if (method === 'GET' && path === '/api/ops/brevo-check') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'BREVO_API_KEY mangler' }, 503);
+      const brevo = async (p: string) => {
+        const r = await fetch(`https://api.brevo.com/v3${p}`, { headers: { 'api-key': env.BREVO_API_KEY as string, accept: 'application/json' } });
+        let b: unknown = null;
+        try { b = await r.json(); } catch { b = null; }
+        return { status: r.status, body: b };
+      };
+      const epostFilter = url.searchParams.get('epost') || env.SUPPORT_NOTIFY_EMAIL || env.SUPPORT_FROM_EMAIL || 'tomarnejensen@gmail.com';
+      const [konto, avsendere, eposter] = await Promise.all([
+        brevo('/account'),
+        brevo('/senders'),
+        brevo(`/smtp/emails?email=${encodeURIComponent(epostFilter)}&limit=20&sort=desc`),
+      ]);
+      const domener = url.searchParams.get('domener') ? await brevo('/senders/domains') : null;
+      const liste = ((eposter.body as { transactionalEmails?: Array<Record<string, unknown>> } | null)?.transactionalEmails) || [];
+      let detaljer: unknown = null;
+      const forsteId = (liste[0]?.uuid as string | undefined) || (liste[0]?.messageId as string | undefined);
+      if (forsteId) detaljer = (await brevo(`/smtp/emails/${forsteId}`)).body;
+      return json({
+        ok: true,
+        filter: epostFilter,
+        domener,
+        raa: liste.slice(0, 4),
+        detaljerForste: detaljer,
+        konto: konto.body,
+        avsendere: avsendere.body,
+        epostStatus: eposter.status,
+        epostRaa: JSON.stringify(eposter.body).slice(0, 300),
+        siste: liste.map((m) => ({
+          meldingId: m.messageId,
+          til: m.to,
+          fra: m.sender,
+          emne: m.subject,
+          status: m.status,
+          dato: m.date,
+          avvist: m.blocked,
+          grunn: m.errorReason ?? m.reason ?? null,
+          hendelser: m.events ?? null,
+        })),
+      });
+    }
+
     if (method === 'GET' && path === '/api/ops/summary') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
@@ -1002,7 +1082,7 @@ export default {
             if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
             if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
             const inquiries = await getInquiryDb(env).prepare(
-              'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
+              'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at, is_test FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
             ).all<InquiryRow>();
             // evidence_cases finnes kun på produksjon — på staging returneres tomt array
             let evidenceRows: { results: EvidenceCaseRow[] } = { results: [] };
