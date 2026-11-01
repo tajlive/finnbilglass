@@ -935,17 +935,32 @@
   function renderFrontrute(request, data, generation) {
     if (generation !== searchGeneration) return;
     var V = window.FBGView;
+    // Sikker mot null/undefined data fra API-et
+    if (!data || typeof data !== 'object') {
+      data = { kandidater: [], utfall: null, message: 'Ugyldig svar fra serveren.' };
+    }
     var kandidater = Array.isArray(data.kandidater) ? data.kandidater : [];
     var utfall = typeof data.utfall === 'string' ? data.utfall : null;
-    var status = V.resultatStatus(utfall, kandidater.length);
+    // Uavhengig evidens (OE/bilde/montør) kommer fra API-et; default false
+    // per C9-doktrinen: katalog alene gir aldri EXACT.
+    var harUavhengigEvidens = typeof data.harUavhengigEvidens === 'boolean' ? data.harUavhengigEvidens : false;
+    var status = V.resultatStatus(utfall, kandidater.length, harUavhengigEvidens);
 
     state.frontruteKandidater = kandidater;
     state.glassRequest = request;
     $('screen-resultat').querySelector('h2').textContent = status.tittel;
     var info = $('resultat-status');
-    info.textContent = status.melding;
-    info.className = 'note status' + (status.kode === 'VERIFY' ? ' verify' : '');
+    info.textContent = data.message || status.melding;
+    info.className = 'note status' + (status.kode === 'AMBIGUOUS' ? ' verify' : status.kode === 'EXACT' ? ' exact' : '');
     info.classList.remove('hidden');
+
+    // Pristilbud og manuell kontroll skal ALLTID være tilgjengelig,
+    // uavhengig av glassstatus (EXACT, PROVISIONAL, AMBIGUOUS, MANUAL_REVIEW).
+    // Ingen kunde skal bli nektet manuell forespørsel fordi glasset er usikkert.
+    // Direkt kjøp (canCheckout) krever ytterligere server-side kontroller og
+    // er IKTE knyttet til dette UI-feltet alene.
+    var inquiryBtn = $('btn-inquiry');
+    if (inquiryBtn) inquiryBtn.disabled = false;
 
     $('resultat-kort').textContent = '';
     $('resultat-alt').textContent = '';
@@ -962,17 +977,37 @@
     var vist = V.filtrerPaaSvar(kandidater, frontruteSvar);
     var liste = vist.kandidater;
 
-    // Hovedkort: første kandidat (uansett PINPOINT eller VERIFY).
+    // Ekstra sikring: aldri kall kandidatKort på en tom liste.
+    if (!liste || !liste.length) {
+      $('resultat-sporsmaal').classList.add('hidden');
+      $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
+      $('inquiry-glass-summary').classList.remove('hidden');
+      $('inquiry-regnr').value = state.regnr || '';
+      return;
+    }
+
+    // Hovedkort: første kandidat.
     var hoved = V.kandidatKort(liste[0]);
     $('resultat-kort').textContent = '';
-    if (utfall !== 'PINPOINT' && utfall !== 'VERIFY') {
-      // Uverifisert alternativ (typisk tekstmatcher): må merkes, ikke presenteres
-      // som et bekreftet treff.
-      var ubekreftet = document.createElement('p');
-      ubekreftet.className = 'note';
-      ubekreftet.textContent = 'Ubekreftet forslag — vi kontrollerer at dette er riktig frontrute før levering.';
-      $('resultat-kort').append(ubekreftet);
+
+    // Status-basert merking av hovedkortet.
+    if (status.kode === 'PROVISIONAL') {
+      var midlertidig = document.createElement('p');
+      midlertidig.className = 'note provisional';
+      midlertidig.textContent = 'Midlertidig treff — mangler uavhengig bekreftelse før bestilling.';
+      $('resultat-kort').append(midlertidig);
+    } else if (status.kode === 'AMBIGUOUS') {
+      var tvetydig = document.createElement('p');
+      tvetydig.className = 'note ambiguous';
+      tvetydig.textContent = 'Flere mulige varianter — velg utstyr nedenfor for å avgrense.';
+      $('resultat-kort').append(tvetydig);
+    } else if (status.kode === 'MANUAL_REVIEW') {
+      var manuell = document.createElement('p');
+      manuell.className = 'note manual';
+      manuell.textContent = 'Vi kontrollerer ruten manuelt før vi kan bekrefte riktig glass.';
+      $('resultat-kort').append(manuell);
     }
+
     var tittel = document.createElement('strong');
     tittel.textContent = hoved.navn;
     $('resultat-kort').append(tittel);

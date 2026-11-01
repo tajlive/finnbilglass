@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driftsenter – FinnBilGlass</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .ops-container { max-width: 1440px; margin: 0 auto; padding: 24px; }
+  .ops-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .ops-header h1 { font-size: 28px; font-weight: 800; color: #0F172A; margin: 0; }
+  .ops-actions { display: flex; gap: 12px; }
+  .btn-primary { padding: 12px 24px; border-radius: 12px; background: #F59E0B; color: #FFFFFF; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-secondary { padding: 12px 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E2E8F0; color: #0F172A; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-logout { padding: 12px 24px; border-radius: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; color: #64748B; font-size: 15px; cursor: pointer; }
+  .env-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FCD34D; color: #92400E; font-size: 12px; font-weight: 700; }
+  .env-badge::before { content: '●'; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; }
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .metric-card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; }
+  .metric-title { font-size: 13px; font-weight: 600; color: #94A3B8; margin-bottom: 8px; }
+  .metric-value { font-size: 32px; font-weight: 800; color: #0F172A; }
+  .metric-delta { font-size: 12px; margin-top: 4px; }
+  .delta-positive { color: #059669; }
+  .delta-negative { color: #B45309; }
+  .section { margin-bottom: 32px; }
+  .section-title { font-size: 18px; font-weight: 800; color: #0F172A; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .table-container { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; font-weight: 700; color: #94A3B8; padding: 12px 16px; border-bottom: 1px solid #E2E8F0; }
+  td { padding: 12px 16px; border-bottom: 1px solid #E2E8F0; font-size: 14px; color: #0F172A; }
+  tr:hover { background: #F8FAFC; }
+  .pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .pill-new { background: #FFFBEB; color: #B45309; }
+  .pill-contacted { background: #EFF6FF; color: #1E40AF; }
+  .pill-info { background: #F3F4F6; color: #4B5563; }
+  .pill-offered { background: #F0FDF4; color: #15803D; }
+  .pill-confirmed { background: #DCFCE7; color: #166534; }
+  .pill-closed { background: #F1F5F9; color: #64748B; }
+  .pill-rejected { background: #FEF2F2; color: #DC2626; }
+  .user-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: #F8FAFC; border: 1px solid #E2E8F0; font-size: 14px; color: #475569; margin-bottom: 24px; }
+  .alert-banner { background: #FFF7ED; border: 1px solid #FCD34D; border-radius: 12px; padding: 16px; margin-bottom: 24px; color: #92400E; font-size: 14px; }
+  .alert-banner strong { color: #B45309; }
+</style>
+</head>
+<body>
+<div class="ops-container">
+  <header class="ops-header">
+    <div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <span style="font-size:26px;font-weight:800;color:#0F172A;">finn</span>
+        <span style="font-size:26px;font-weight:800;color:#F59E0B;">bilglass</span>
+      </div>
+      <span class="env-badge">
+        <span>STAGING</span>
+      </span>
+    </div>
+    <div class="ops-actions">
+      <button class="btn-logout" id="logout-btn">Logg ut</button>
+    </div>
+  </header>
+
+  <div class="user-badge">
+    <span style="font-weight:700;" id="admin-user-name">Laster...</span>
+    <span style="font-weight:400;" id="admin-user-role"></span>
+  </div>
+
+  <!-- Alert banner -->
+  <div class="alert-banner">
+    <strong>Merk:</strong> Dette er et staging-miljø. Ingen produksjonsdata er endret. inquiries_enabled=0 beholdes.
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-title">Nye saker</div>
+      <div class="metric-value">12</div>
+      <div class="metric-delta delta-positive">+3 siden i går</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">Trenger info</div>
+      <div class="metric-value">4</div>
+      <div class="metric-delta delta-negative">-1 siden i går</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">Bekreftet</div>
+      <div class="metric-value">23</div>
+      <div class="metric-delta delta-positive">+5 siden i går</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">Katalog-dekning</div>
+      <div class="metric-value">10 / 100</div>
+      <div class="metric-delta">90 mangler URL</div>
+    </div>
+  </div>
+
+  <!-- Latest cases -->
+  <div class="section">
+    <div class="section-title">
+      <span>📋</span> Siste saker
+    </div>
+    <div class="card">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:80px;">Id</th>
+              <th style="width:160px;">Kunde</th>
+              <th>Bil / Skiltnummer</th>
+              <th style="width:120px;">Resolver</th>
+              <th style="width:120px;">Status</th>
+              <th style="width:100px;">Handling</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-family:monospace;">#HF-2042</td>
+              <td>Ola Nordmann</td>
+              <td>SU 18018 · VW Transporter T5 2005</td>
+              <td><span class="pill pill-contacted">VERIFY</span></td>
+              <td><span class="pill pill-new">Ny</span></td>
+              <td><button class="btn-secondary" style="padding:6px 12px;font-size:13px;">Åpne</button></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;">#HF-2041</td>
+              <td>Kari Nordmann</td>
+              <td>BN 44521 · Toyota RAV4 2019</td>
+              <td><span class="pill pill-confirmed">PINPOINT</span></td>
+              <td><span class="pill pill-contacted">Under behandling</span></td>
+              <td><button class="btn-secondary" style="padding:6px 12px;font-size:13px;">Åpne</button></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;">#HF-2040</td>
+              <td>Per Hansen</td>
+              <td>AB 12345 · BMW 3-serie 2018</td>
+              <td><span class="pill pill-info">FALLBACK</span></td>
+              <td><span class="pill pill-offered">Tilbudt</span></td>
+              <td><button class="btn-secondary" style="padding:6px 12px;font-size:13px;">Åpne</button></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;">#HF-2039</td>
+              <td>Lise Olsen</td>
+              <td>CD 56789 · Tesla Model 3 2021</td>
+              <td><span class="pill pill-confirmed">PINPOINT</span></td>
+              <td><span class="pill pill-confirmed">Bekreftet</span></td>
+              <td><button class="btn-secondary" style="padding:6px 12px;font-size:13px;">Åpne</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- System status -->
+  <div class="section">
+    <div class="section-title">
+      <span>🖥️</span> Systemstatus
+    </div>
+    <div class="card">
+      <div style="display:flex; gap:24px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+          <div class="card-title">D1-database</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+            <span style="font-size:14px;font-weight:700;color:#059669;">Tilkoblet</span>
+          </div>
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <div class="card-title">R2-lager</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+            <span style="font-size:14px;font-weight:700;color:#059669;">Tilkoblet</span>
+          </div>
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <div class="card-title">Apify Actor</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+            <span style="font-size:14px;font-weight:700;color:#059669;">Build 1.0.18</span>
+          </div>
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <div class="card-title">inquiries_enabled</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#DC2626;display:inline-block;"></span>
+            <span style="font-size:14px;font-weight:700;color:#DC2626;">Stengt (0)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="section">
+    <div class="section-title">
+      <span>⚡</span> Hurtigtilganger
+    </div>
+    <div class="card">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px;">
+        <div style="border:1px solid #E2E8F0;border-radius:12px;padding:20px;">
+          <div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:8px;">Gjennomgå glasskonflikter</div>
+          <div style="font-size:13px;color:#64748B;margin-bottom:12px;">REVIEWER-kø for uavklarte glasskonflikter</div>
+          <button class="btn-secondary" style="padding:10px 16px;font-size:13px;">Åpne REVIEWER-kø</button>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:12px;padding:20px;">
+          <div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:8px;">Katalog &amp; SKU-status</div>
+          <div style="font-size:13px;color:#64748B;margin-bottom:12px;">10 verifiserte / 90 manglende URL-er</div>
+          <button class="btn-secondary" style="padding:10px 16px;font-size:13px;">Åpne katalog</button>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:12px;padding:20px;">
+          <div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:8px;">Apify-kjøringer</div>
+          <div style="font-size:13px;color:#64748B;margin-bottom:12px;">Siste kjøring: 2 timer siden</div>
+          <button class="btn-secondary" style="padding:10px 16px;font-size:13px;">Vis historikk</button>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:12px;padding:20px;">
+          <div style="font-size:14px;font-weight:700;color:#0F172A;margin-bottom:8px;">Systemlogg</div>
+          <div style="font-size:13px;color:#64748B;margin-bottom:12px;">Siste 100 hendelser</div>
+          <button class="btn-secondary" style="padding:10px 16px;font-size:13px;">Vis logg</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Check admin authentication via server-side session
+  async function checkAuth() {
+    try {
+      const response = await fetch('/api/auth/session', {
+        credentials: 'include',
+      });
+
+      if (response.status === 401 || !response.ok) {
+        window.location.href = 'admin-innlogging.html';
+        return;
+      }
+
+      const data = await response.json();
+      if (!data.authenticated) {
+        window.location.href = 'admin-innlogging.html';
+        return;
+      }
+
+      const user = data.user;
+
+      // Check role - only ADMIN, REVIEWER, OPERATOR can access admin
+      if (user.role === 'CUSTOMER') {
+        window.location.href = 'min-side.html';
+        return;
+      }
+
+      document.getElementById('admin-user-name').textContent = user.name;
+      document.getElementById('admin-user-role').textContent = '· ' + user.role;
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      window.location.href = 'admin-innlogging.html';
+    }
+  }
+
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', async function() {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+    sessionStorage.clear();
+    document.cookie = 'fb_admin_session=; path=/; max-age=0';
+    window.location.href = 'admin-innlogging.html';
+  });
+
+  // Initialize
+  checkAuth();
+})();
+</script>
+</body>
+</html>

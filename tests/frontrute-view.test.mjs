@@ -16,31 +16,43 @@ require('../public/frontrute-view.js');
 const V = globalThis.FBGView;
 if (!V) throw new Error('FBGView ble ikke eksportert fra public/frontrute-view.js');
 
-test('status: ingen kandidater gir ærlig «fant ikke» — aldri andre bilers produkter', () => {
+test('status: ingen kandidater gir MANUAL_REVIEW — aldri andre bilers produkter', () => {
   const s = V.resultatStatus(null, 0);
-  assert.equal(s.kode, 'INGEN_TREFF');
+  assert.equal(s.kode, 'MANUAL_REVIEW');
   assert.match(s.tittel, /fant ikke en sikker frontrute/i);
+  assert.equal(s.kanBestille, false);
 });
 
-test('status: PINPOINT lover ikke garantert kompatibilitet', () => {
+test('status: PINPOINT uten evidens gir PROVISIONAL, ikke EXACT', () => {
   const s = V.resultatStatus('PINPOINT', 1);
-  assert.equal(s.kode, 'PINPOINT');
+  assert.equal(s.kode, 'PROVISIONAL');
   assert.doesNotMatch(s.tittel + ' ' + s.melding, /garantert|bekreftet kompatibel/i);
-  assert.match(s.melding, /kontrollerer/i);
+  assert.match(s.melding, /mangler uavhengig bekreftelse|garantere riktig glass/i);
+  assert.equal(s.kanBestille, false);
 });
 
-test('status: flere kandidater gir VERIFY-teksten Tom har bestemt', () => {
+test('status: PINPOINT med uavhengig evidens gir EXACT og kan bestilles', () => {
+  const s = V.resultatStatus('PINPOINT', 1, true);
+  assert.equal(s.kode, 'EXACT');
+  assert.match(s.tittel, /identifisert én frontrute/i);
+  assert.match(s.melding, /bekreftet/i);
+  assert.equal(s.kanBestille, true);
+});
+
+test('status: flere kandidater gir AMBIGUOUS, ikke VERIFY', () => {
   const s = V.resultatStatus('VERIFY', 4);
-  assert.equal(s.kode, 'VERIFY');
+  assert.equal(s.kode, 'AMBIGUOUS');
   assert.equal(s.tittel, 'Vi har funnet flere mulige frontruter til bilen din');
-  assert.equal(s.melding, 'Riktig variant avhenger av bilens utstyr.');
+  assert.match(s.melding, /utstyr/i);
+  assert.equal(s.kanBestille, false);
 });
 
-test('status: FALLBACK uten kandidater blir MANUAL_REVIEW-tekst', () => {
+test('status: FALLBACK uten kandidater blir MANUAL_REVIEW', () => {
   const s = V.resultatStatus('FALLBACK', 0);
-  assert.equal(s.kode, 'INGEN_TREFF');
+  assert.equal(s.kode, 'MANUAL_REVIEW');
+  assert.equal(s.kanBestille, false);
   const s2 = V.resultatStatus('FALLBACK', 2);
-  assert.equal(s2.kode, 'VERIFY');
+  assert.equal(s2.kode, 'AMBIGUOUS');
 });
 
 test('pris: dokumentert pris vises som fra-pris med forbehold', () => {

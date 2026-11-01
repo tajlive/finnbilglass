@@ -27,6 +27,10 @@ import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
 import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
 import { handlePrisEstimat } from './routes/pris-estimat';
+import { handleAuthRoute, requireAuth } from './routes/auth';
+import { handleAdminRoute } from './routes/admin';
+import { setAuthStorage } from './auth';
+import { D1AuthStorage } from './auth-storage';
 import { skalLoggeSok } from './sok-logg-policy';
 import { tilOffentligResolverSvar } from './public-contract';
 
@@ -40,6 +44,19 @@ const CORS_HEADERS = {
 interface SnapshotVehicle {
   bil?: { merke?: string; modell?: string; vin?: string | null };
   resolver?: { kandidater?: Record<string, unknown>[] };
+}
+
+/** Velger riktig D1 for beta_inquiries/beta_inquiry-events.
+ *  Staging: MÅ bruke FINNBILGLASS_STAGING_AUTH (fail-closed hvis mangler).
+ *  Produksjon/Lokal: bruker FINNBILGLASS_DB. */
+function getInquiryDb(env: Env): D1Database {
+  if (env.ENVIRONMENT === 'staging') {
+    if (!env.FINNBILGLASS_STAGING_AUTH) {
+      throw new Error('STAGING_MISSING_D1_BINDING: FINNBILGLASS_STAGING_AUTH er ikke konfigurert');
+    }
+    return env.FINNBILGLASS_STAGING_AUTH;
+  }
+  return env.FINNBILGLASS_DB;
 }
 
 function json(data: unknown, status = 200): Response {
@@ -271,11 +288,28 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
+    // Koble auth-lagring til riktig D1 (fail-closed) FØR routing — /api/auth,
+    // /api/customer og /api/admin bruker alle requireAuth → auth.getSession.
+    // Staging: FINNBILGLASS_STAGING_AUTH. Lokal: FINNBILGLASS_LOCAL_AUTH.
+    // Produksjon: ingen auth ennå (getStorage kaster AUTH_STORAGE_NOT_CONFIGURED).
+    if (env.ENVIRONMENT === 'staging' && env.FINNBILGLASS_STAGING_AUTH) {
+      setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_STAGING_AUTH));
+    } else if (env.FINNBILGLASS_LOCAL_AUTH) {
+      setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_LOCAL_AUTH));
+    }
+
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
 
     if (method === 'GET' && path === '/health') {
       const count = await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM glass_prisliste').first<{ n: number }>();
       return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: count?.n ?? 0 });
+    }
+
+    // Offentlig pilotstatus — styrer kundetekst om stengt pristilbudspilot.
+    // Én sannhetskilde: henvendelserTillatt(env) (env-flagget først, så D1).
+    if (method === 'GET' && path === '/api/pilot-status') {
+      const apen = await henvendelserTillatt(env);
+      return json({ ok: true, inquiries_enabled: apen, pilot: apen ? 'apen' : 'stengt' });
     }
 
     // Apify-katalog-import (admin, Bearer APIFY_SYNC_TOKEN) — skriver kun apify_catalog_products.
@@ -287,6 +321,61 @@ export default {
     }
     if (method === 'GET' && path === '/api/admin/pris-estimat') {
       return handlePrisEstimat(request, env);
+    }
+
+    // Auth-ruter (P0 Fase 5.5/5.8)
+    if (path.startsWith('/api/auth/')) {
+      // Auth-lagring er allerede koblet i toppen av fetch() (fail-closed).
+      return handleAuthRoute(request, env);
+    }
+
+    // Admin-ruter (P0 Fase 5.5)
+    if (path.startsWith('/api/admin/')) {
+      return handleAdminRoute(request, env);
+    }
+
+    // Kunde-ruter (P0 Fase 5.9) — krever autentisert sesjon
+    if (path.startsWith('/api/customer/')) {
+      const user = await requireAuth(request);
+      if (!user) {
+        return json({ ok: false, error: 'IKKE_AUTENTISERT' }, 401);
+      }
+
+      // GET /api/customer/inquiries — liste kundens forespørsler
+      if (method === 'GET' && path === '/api/customer/inquiries') {
+        try {
+          const sessions = await getInquiryDb(env).prepare(
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE session_id = ? OR kontakt = ? ORDER BY created_at DESC LIMIT 100',
+          ).bind(user.userId, user.email).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+          return json({ ok: true, inquiries: sessions.results ?? [] });
+        } catch (e) {
+          // Tabellen finnes ikke ennå (migrasjon ikke anvendt) — returner tom liste
+          return json({ ok: true, inquiries: [] });
+        }
+      }
+
+      // GET /api/customer/inquiries/:id — detaljer for én forespørsel
+      const inquiryMatch = /^\/api\/customer\/inquiries\/(\d+)$/.exec(path);
+      if (method === 'GET' && inquiryMatch) {
+        try {
+          const inquiryId = Number(inquiryMatch[1]);
+          const inquiry = await getInquiryDb(env).prepare(
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE id = ? AND (session_id = ? OR kontakt = ?)',
+          ).bind(inquiryId, user.userId, user.email).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+          if (!inquiry) {
+            return json({ ok: false, error: 'HENVENDELSE_FINNES_IKKE' }, 404);
+          }
+          const events = await getInquiryDb(env).prepare(
+            'SELECT event_type, previous_status, status, note, created_at, created_by FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC',
+          ).bind(inquiryId).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string }>();
+          return json({ ok: true, inquiry, history: events.results ?? [] });
+        } catch (e) {
+          // Tabellen finnes ikke ennå (migrasjon ikke anvendt)
+          return json({ ok: false, error: 'TABELL_FINNES_IKKE' }, 404);
+        }
+      }
+
+      return json({ ok: false, error: 'FINNES_IKKE' }, 404);
     }
 
     if (method === 'POST' && path === '/api/frontrute') {
@@ -355,6 +444,10 @@ export default {
         return json({ ok: false, error: 'Ugyldig JSON' }, 400);
       }
       const b = body as Record<string, unknown>;
+      // Staging: kundeforespørsler skrives til staging-D1 slik at admin kan se dem.
+      // Produksjon: FINNBILGLASS_DB er den eneste tilgjengelige D1.
+      // Fail-closed på staging: kaster feil hvis FINNBILGLASS_STAGING_AUTH mangler.
+      const inquiryDb: D1Database = getInquiryDb(env);
       // Pilotstopp: stopper nye henvendelser umiddelbart, uten å vente på
       // resolver-cachen. Sjekkes foran alt annet så ingen sak opprettes.
       if (!(await henvendelserTillatt(env))) {
@@ -379,7 +472,7 @@ export default {
       if (idemNokkel) {
         try {
           idemHash = await requestHash(b);
-          const res = await reserver(env.FINNBILGLASS_DB as never, idemNokkel, idemHash);
+          const res = await reserver(inquiryDb as never, idemNokkel, idemHash);
           if (res.status === 'REPLAY') {
             return json({ ok: true, inquiryId: res.inquiryId, idempotent: true }, 201);
           }
@@ -403,19 +496,19 @@ export default {
           const WINDOW_MS = 10 * 60 * 1000;
           const MAX_PER_WINDOW = 5;
           const nowRl = Date.now();
-          const rl = await env.FINNBILGLASS_DB.prepare('SELECT window_start, count FROM inquiry_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
+          const rl = await inquiryDb.prepare('SELECT window_start, count FROM inquiry_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
           if (rl && nowRl - rl.window_start < WINDOW_MS && rl.count >= MAX_PER_WINDOW) {
-            if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
+            if (idemNokkel && idemHash) await frigjor(inquiryDb as never, idemNokkel);
             return json({ ok: false, error: 'For mange forespørsler. Prøv igjen senere.' }, 429);
           }
           if (rl) {
             if (nowRl - rl.window_start >= WINDOW_MS) {
-              await env.FINNBILGLASS_DB.prepare('UPDATE inquiry_rate_limits SET window_start = ?, count = 1 WHERE ip = ?').bind(nowRl, ip).run();
+              await inquiryDb.prepare('UPDATE inquiry_rate_limits SET window_start = ?, count = 1 WHERE ip = ?').bind(nowRl, ip).run();
             } else {
-              await env.FINNBILGLASS_DB.prepare('UPDATE inquiry_rate_limits SET count = count + 1 WHERE ip = ?').bind(ip).run();
+              await inquiryDb.prepare('UPDATE inquiry_rate_limits SET count = count + 1 WHERE ip = ?').bind(ip).run();
             }
           } else {
-            await env.FINNBILGLASS_DB.prepare('INSERT INTO inquiry_rate_limits (ip, window_start, count) VALUES (?, ?, 1)').bind(ip, nowRl).run();
+            await inquiryDb.prepare('INSERT INTO inquiry_rate_limits (ip, window_start, count) VALUES (?, ?, 1)').bind(ip, nowRl).run();
           }
         }
       } catch (e) {
@@ -456,22 +549,22 @@ export default {
         // 'created'-hendelse kan aldri havne i utakt. Hendelsen finner raden via
         // last_insert_rowid() i samme batch, så vi slipper å kjenne id-en på forhånd.
         const naa = Date.now();
-        const resultater = await env.FINNBILGLASS_DB.batch([
-          env.FINNBILGLASS_DB.prepare(
+        const resultater = await inquiryDb.batch([
+          inquiryDb.prepare(
             'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
           ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson),
-          env.FINNBILGLASS_DB.prepare(
+          inquiryDb.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
         ]);
         const id = resultater[0]?.meta?.last_row_id;
         if (idemNokkel && idemHash && id) {
-          try { await fullfor(env.FINNBILGLASS_DB as never, idemNokkel, id); } catch { /* best-effort */ }
+          try { await fullfor(inquiryDb as never, idemNokkel, id); } catch { /* best-effort */ }
         }
         return json({ ok: true, inquiryId: id ?? null }, 201);
       } catch (e) {
         if (idemNokkel && idemHash) {
-          try { await frigjor(env.FINNBILGLASS_DB as never, idemNokkel); } catch { /* best-effort */ }
+          try { await frigjor(inquiryDb as never, idemNokkel); } catch { /* best-effort */ }
         }
         console.error('inquiry-lagring feilet:', e);
         return json({ ok: false, error: 'Kunne ikke lagre forespørselen. Prøv igjen.' }, 500);
@@ -751,10 +844,11 @@ export default {
       let latestInquiries: { id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string; status: string }[] = [];
       let inquiryStatus: Record<string, number> = {};
       try {
-        const q = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, created_at, status FROM beta_inquiries ORDER BY (status = \'NEW\') DESC, created_at DESC LIMIT 10').all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string; status: string }>();
+        const inquiryDb = getInquiryDb(env);
+        const q = await inquiryDb.prepare('SELECT id, regnr, navn, kontakt, melding, created_at, status FROM beta_inquiries ORDER BY (status = \'NEW\') DESC, created_at DESC LIMIT 10').all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string; status: string }>();
         latestInquiries = q.results;
-        inquiries = (await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM beta_inquiries').first<{ n: number }>())?.n ?? latestInquiries.length;
-        const st = await env.FINNBILGLASS_DB.prepare('SELECT status, COUNT(*) AS n FROM beta_inquiries GROUP BY status').all<{ status: string; n: number }>();
+        inquiries = (await inquiryDb.prepare('SELECT COUNT(*) AS n FROM beta_inquiries').first<{ n: number }>())?.n ?? latestInquiries.length;
+        const st = await inquiryDb.prepare('SELECT status, COUNT(*) AS n FROM beta_inquiries GROUP BY status').all<{ status: string; n: number }>();
         for (const r of st.results) inquiryStatus[r.status] = r.n;
       } catch { /* beta_inquiries krever migrasjon 0017 — eldre staging-DB uten tabellen er ok */ }
       return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, inquiries, inquiryStatus, latestInquiries, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
@@ -775,7 +869,8 @@ export default {
         bind.push(statusFilter);
       }
       bind.push(limit, offset);
-      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; created_at: string; updated_at: number | null }>();
+      const inquiryDb = getInquiryDb(env);
+      const rows = await inquiryDb.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; created_at: string; updated_at: number | null }>();
       return json({ ok: true, inquiries: rows.results.map(r => ({ ...r, status: isInquiryStatus(r.status) ? r.status : 'NEW' })) });
     }
     if (method === 'GET' && path.startsWith('/api/ops/inquiries/')) {
@@ -784,9 +879,10 @@ export default {
       const idRaw = path.slice('/api/ops/inquiries/'.length).split('/')[0];
       if (!/^\d+$/.test(idRaw)) return json({ ok: false, error: 'Ugyldig id' }, 400);
       const id = Number(idRaw);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null }>();
+      const inquiryDb = getInquiryDb(env);
+      const row = await inquiryDb.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
-      const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
+      const events = await inquiryDb.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
       let vehicle = null;
       try { if (row.vehicle_json) vehicle = JSON.parse(row.vehicle_json); } catch { /* ugyldig snapshot = ignorert */ }
       return json({ ok: true, inquiry: { ...row, status: isInquiryStatus(row.status) ? row.status : 'NEW', vehicle, history: events.results.map(e => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta = ignorert */ } return { ...e, meta }; }) } });
@@ -801,15 +897,16 @@ export default {
       const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
       if (!isInquiryStatus(to) || !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
       const id = Number(inquiryStatusMatch[1]);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT status FROM beta_inquiries WHERE id = ?').bind(id).first<{ status: string }>();
+      const inquiryDb = getInquiryDb(env);
+      const row = await inquiryDb.prepare('SELECT status FROM beta_inquiries WHERE id = ?').bind(id).first<{ status: string }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
       const from: InquiryStatus = isInquiryStatus(row.status) ? row.status : 'NEW';
       if (!canTransitionInquiry(from, to)) return json({ ok: false, error: `Overgang fra ${from} til ${to} er ikke tillatt.` }, 409);
       const meta = typeof body.meta === 'object' && body.meta !== null ? JSON.stringify(body.meta) : '{}';
       const now = Date.now();
-      await env.FINNBILGLASS_DB.batch([
-        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, meta),
-        env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind(to, now, actor, id),
+      await inquiryDb.batch([
+        inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, meta),
+        inquiryDb.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind(to, now, actor, id),
       ]);
       return json({ ok: true, status: to });
     }
@@ -822,10 +919,11 @@ export default {
       const actor = typeof body.actor === 'string' ? body.actor.trim() : '', note = body.note;
       if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(note)) return json({ ok: false, error: 'Ansvarlig og notat er påkrevd.' }, 400);
       const id = Number(inquiryNoteMatch[1]);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number }>();
+      const inquiryDb = getInquiryDb(env);
+      const row = await inquiryDb.prepare('SELECT id FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
       const now = Date.now();
-      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
+      await inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
       return json({ ok: true });
     }
     const inquiryReplyMatch = /^\/api\/ops\/inquiries\/(\d+)\/reply$/.exec(path);
@@ -833,39 +931,43 @@ export default {
       // Svar direkte til kunden på e-post (kanal #4). Append-only-logg som notater.
       // Avhengig av BREVO_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
-      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
-      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
-      const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
-      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);
-      const id = Number(inquiryReplyMatch[1]);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, navn, kontakt, regnr FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string; regnr: string | null }>();
-      if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
-      const epost = (row.kontakt || '').trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(epost)) return json({ ok: false, error: 'Kunden har ikke oppgitt e-post — e-post-svar krever en e-postadresse.' }, 409);
-      const sendt = await sendReplyEmail(env, epost, row.navn, row.regnr, message);
-      if (!sendt.ok) return json({ ok: false, error: sendt.error || 'Kunne ikke sende e-posten.' }, 502);
-      const now = Date.now();
-      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ to: epost, to_user: row.navn || null })).run();
-      return json({ ok: true, to: epost });
-    }
-    if (method === 'GET' && path === '/api/ops/saker') {
-      // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens
-      // smeltet på session_id). Lesing, token-gate, kun staging+prod.
-      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
-      const inquiries = await env.FINNBILGLASS_DB.prepare(
-        'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
-      ).all<InquiryRow>();
-      const evidenceRows = await env.FINNBILGLASS_DB.prepare(
-        `SELECT c.case_id, c.registration_hash, c.session_id,
-                COALESCE((SELECT r.status FROM evidence_case_review_events r WHERE r.case_id = c.case_id ORDER BY r.created_at DESC LIMIT 1), c.status) AS status,
-                c.created_at,
-                (SELECT COUNT(*) FROM evidence_case_images i WHERE i.case_id = c.case_id) AS image_count
-         FROM evidence_cases c ORDER BY c.created_at DESC LIMIT 500`,
-      ).all<EvidenceCaseRow>();
-      const saker = konsoliderSaker(inquiries.results ?? [], evidenceRows.results ?? []);
-      return json({ ok: true, saker, total: saker.length });
+            if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+            if (!env.BREVO_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
+            let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+            const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
+            if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);
+            const id = Number(inquiryReplyMatch[1]);
+            const row = await getInquiryDb(env).prepare('SELECT id, navn, kontakt, regnr FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string; regnr: string | null }>();
+            if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+            const epost = (row.kontakt || '').trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(epost)) return json({ ok: false, error: 'Kunden har ikke oppgitt e-post — e-post-svar krever en e-postadresse.' }, 409);
+            const sendt = await sendReplyEmail(env, epost, row.navn, row.regnr, message);
+            if (!sendt.ok) return json({ ok: false, error: sendt.error || 'Kunne ikke sende e-posten.' }, 502);
+            const now = Date.now();
+            await getInquiryDb(env).prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ to: epost, to_user: row.navn || null })).run();
+            return json({ ok: true, to: epost });
+          }
+          if (method === 'GET' && path === '/api/ops/saker') {
+            // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens
+            // smeltet på session_id). Lesing, token-gate, kun staging+prod.
+            if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+            if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+            const inquiries = await getInquiryDb(env).prepare(
+              'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
+            ).all<InquiryRow>();
+            // evidence_cases finnes kun på produksjon — på staging returneres tomt array
+            let evidenceRows: { results: EvidenceCaseRow[] } = { results: [] };
+            if (env.ENVIRONMENT === 'production') {
+              evidenceRows = await env.FINNBILGLASS_DB.prepare(
+                `SELECT c.case_id, c.registration_hash, c.session_id,
+                        COALESCE((SELECT r.status FROM evidence_case_review_events r WHERE r.case_id = c.case_id ORDER BY r.created_at DESC LIMIT 1), c.status) AS status,
+                        c.created_at,
+                        (SELECT COUNT(*) FROM evidence_case_images i WHERE i.case_id = c.case_id) AS image_count
+                     FROM evidence_cases c ORDER BY c.created_at DESC LIMIT 500`,
+              ).all<EvidenceCaseRow>();
+            }
+            const saker = konsoliderSaker(inquiries.results ?? [], evidenceRows.results ?? []);
+            return json({ ok: true, saker, total: saker.length });
     }
     const sakDetailMatch = /^\/api\/ops\/saker\/(inquiry|evidence)-(.+)$/.exec(path);
     if (method === 'GET' && sakDetailMatch) {
@@ -885,27 +987,37 @@ export default {
 
       if (kind === 'inquiry' && /^\d+$/.test(rawId)) {
         inquiryId = Number(rawId);
-        inquiry = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(inquiryId).first<InquiryDetail>();
+        inquiry = await getInquiryDb(env).prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(inquiryId).first<InquiryDetail>();
         if (inquiry) sessionId = inquiry.session_id;
       }
 
       const evidenceCases: EvidenceDetail[] = [];
       if (kind === 'evidence') {
-        const c = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE case_id = ?').bind(rawId).first<EvidenceDetail>();
-        if (c) { evidenceCases.push(c); if (!sessionId && c.session_id) sessionId = c.session_id; }
+        // evidence_cases finnes kun på produksjon
+        if (env.ENVIRONMENT === 'production') {
+          const c = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE case_id = ?').bind(rawId).first<EvidenceDetail>();
+          if (c) { evidenceCases.push(c); if (!sessionId && c.session_id) sessionId = c.session_id; }
+        }
       }
       if (sessionId) {
-        const bySession = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE session_id = ? ORDER BY created_at DESC').bind(sessionId).all<EvidenceDetail>();
-        for (const c of bySession.results ?? []) if (!evidenceCases.some((x) => x.case_id === c.case_id)) evidenceCases.push(c);
+        // evidence_cases by session finnes kun på produksjon
+        if (env.ENVIRONMENT === 'production') {
+          const bySession = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE session_id = ? ORDER BY created_at DESC').bind(sessionId).all<EvidenceDetail>();
+          for (const c of bySession.results ?? []) if (!evidenceCases.some((x) => x.case_id === c.case_id)) evidenceCases.push(c);
+        }
       }
       if (kind === 'evidence' && !inquiry && sessionId) {
-        inquiry = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE session_id = ? ORDER BY created_at DESC LIMIT 1').bind(sessionId).first<InquiryDetail>();
+        inquiry = await getInquiryDb(env).prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE session_id = ? ORDER BY created_at DESC LIMIT 1').bind(sessionId).first<InquiryDetail>();
         if (inquiry) inquiryId = inquiry.id;
       }
 
       const evidenceMedBilder = [];
       for (const c of evidenceCases) {
-        const images = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type, r2_key, thumb_r2_key FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string; r2_key: string; thumb_r2_key: string | null }>();
+        // evidence_case_images finnes kun på produksjon
+        let images = { results: [] as { image_id: string; image_type: string; r2_key: string; thumb_r2_key: string | null }[] };
+        if (env.ENVIRONMENT === 'production') {
+          images = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type, r2_key, thumb_r2_key FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string; r2_key: string; thumb_r2_key: string | null }>();
+        }
         evidenceMedBilder.push({
           caseId: c.case_id, status: c.status, createdAt: c.created_at,
           images: (images.results ?? []).map((i) => ({ imageId: i.image_id, imageType: i.image_type, thumbUrl: `/api/ops/thumb?key=${encodeURIComponent(i.thumb_r2_key ?? i.r2_key)}`, fullUrl: `/api/ops/thumb?key=${encodeURIComponent(i.r2_key)}` })),
@@ -914,12 +1026,15 @@ export default {
 
       let skuDecision: unknown = null;
       if (inquiryId) {
-        skuDecision = await env.FINNBILGLASS_DB.prepare('SELECT decision_type, sku, eurocode, reason, created_by, created_at FROM case_sku_decisions WHERE case_id = ? ORDER BY created_at DESC LIMIT 1').bind(String(inquiryId)).first<{ decision_type: string; sku: string | null; eurocode: string | null; reason: string | null; created_by: string; created_at: string }>();
+        // case_sku_decisions finnes kun på produksjon
+        if (env.ENVIRONMENT === 'production') {
+          skuDecision = await env.FINNBILGLASS_DB.prepare('SELECT decision_type, sku, eurocode, reason, created_by, created_at FROM case_sku_decisions WHERE case_id = ? ORDER BY created_at DESC LIMIT 1').bind(String(inquiryId)).first<{ decision_type: string; sku: string | null; eurocode: string | null; reason: string | null; created_by: string; created_at: string }>();
+        }
       }
 
       let timeline: unknown[] = [];
       if (inquiryId) {
-        const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(inquiryId).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
+        const events = await getInquiryDb(env).prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(inquiryId).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
         timeline = (events.results ?? []).map((e) => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta */ } return { ...e, meta }; });
       }
 
@@ -1070,7 +1185,8 @@ export default {
         return json({ ok: false, error: 'Ansvarlig og kort begrunnelse er påkrevd.' }, 400);
       }
       const id = Number(idRaw);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, status, vehicle_json FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; status: string; vehicle_json: string | null }>();
+      const inquiryDb = getInquiryDb(env);
+      const row = await inquiryDb.prepare('SELECT id, regnr, status, vehicle_json FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; status: string; vehicle_json: string | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
 
       // Kundereise-snapshot → kandidater for policy-sjekk.
@@ -1085,17 +1201,17 @@ export default {
 
       const now = Date.now();
       if (decision === 'request_better_image') {
-        await env.FINNBILGLASS_DB.batch([
-          env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'NEEDS_INFO', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
-          env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('NEEDS_INFO', now, actor, id),
+        await inquiryDb.batch([
+          inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'NEEDS_INFO', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
+          inquiryDb.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('NEEDS_INFO', now, actor, id),
         ]);
         await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, reason, actor });
         return json({ ok: true, status: 'NEEDS_INFO' });
       }
       if (decision === 'reject') {
-        await env.FINNBILGLASS_DB.batch([
-          env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'REJECTED', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
-          env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('REJECTED', now, actor, id),
+        await inquiryDb.batch([
+          inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'REJECTED', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
+          inquiryDb.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('REJECTED', now, actor, id),
         ]);
         await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, reason, actor });
         return json({ ok: true, status: 'REJECTED' });
@@ -1104,7 +1220,7 @@ export default {
       if (!sku) return json({ ok: false, error: 'SKU er påkrevd for godkjenning.' }, 400);
       const valgt = snapshotKandidater.find((k) =>
         String(k.varenr ?? '') === sku || String(k.eurokode ?? '') === (eurocode ?? '') ||
-        (eurocode && String(k.eurokode ?? '') === eurocode),
+        (eurocode && String(k.eurocode ?? '') === eurocode),
       );
       if (!valgt && !kandidater.length) return json({ ok: false, error: 'Saken har ingen kandidater å godkjenne.' }, 409);
       const valgtEuro = String(valgt?.eurocode ?? eurocode ?? '') || null;
@@ -1121,9 +1237,9 @@ export default {
         notes: `${decision}${valgt ? ` — kandidat fra sak ${row.regnr ?? ''}` : ''}${reason ? ` — ${reason}` : ''}`,
       });
       await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, sku, eurocode: valgtEuro, reason, actor });
-      await env.FINNBILGLASS_DB.batch([
-        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, 'CONFIRMED', ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, `${decision}: ${sku}${valgtEuro ? ` (${valgtEuro})` : ''}${reason ? ` — ${reason}` : ''}`, now, actor, JSON.stringify({ overrideId })),
-        env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('CONFIRMED', now, actor, id),
+      await inquiryDb.batch([
+        inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, 'CONFIRMED', ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, `${decision}: ${sku}${valgtEuro ? ` (${valgtEuro})` : ''}${reason ? ` — ${reason}` : ''}`, now, actor, JSON.stringify({ overrideId })),
+        inquiryDb.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('CONFIRMED', now, actor, id),
       ]);
       return json({ ok: true, status: 'CONFIRMED', overrideId });
     }

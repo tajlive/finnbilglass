@@ -17,6 +17,18 @@ binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db"
 database_id = "ac35018c-0d43-4742-adf8-d881b7274684"
 
+# ── D1 (lokal auth-lagring, KUN --local, aldri fjern) ──
+[[d1_databases]]
+binding = "FINNBILGLASS_LOCAL_AUTH"
+database_name = "finnbilglass-local-auth"
+database_id = "2e33566b-dfc0-4197-9d64-b63ba9699ad5"
+
+# ── D1 (staging auth-lagring, KUN staging) ──
+[[d1_databases]]
+binding = "FINNBILGLASS_STAGING_AUTH"
+database_name = "finnbilglass-staging-auth"
+database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
+
 # ── R2 (opplæringsbilder: skilt-foto + 43R-foto, ALDRI slettet uten avtale) ──
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
@@ -39,6 +51,25 @@ EVIDENCE_STATUS_CHANGE_ENABLED = "true"
 [observability.logs]
 enabled = false
 invocation_logs = true
+
+# ── Staging-miljø ──
+[env.staging]
+[env.staging.vars]
+ENVIRONMENT = "staging"
+EVIDENCE_UPLOAD_ENABLED = "true"
+EVIDENCE_REVIEW_ENABLED = "false"
+EVIDENCE_STATUS_CHANGE_ENABLED = "true"
+inquiries_enabled = "true"
+
+[[env.staging.d1_databases]]
+binding = "FINNBILGLASS_DB"
+database_name = "finnbilglass-staging-catalog"
+database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
+
+[[env.staging.d1_databases]]
+binding = "FINNBILGLASS_STAGING_AUTH"
+database_name = "finnbilglass-staging-auth"
+database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
 
 # ── Statisk frontend (prototype public/) ──────────────────────
 [assets]

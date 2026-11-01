@@ -23,4 +23,10 @@ export interface Env {
   APIFY_DATASET_ID?: string;
   APIFY_PROBE_ID?: string;
   APIFY_SYNC_TOKEN?: string;
+  /** Lokal D1 for autentiseringslagring (KUN wrangler --local, aldri fjern/prod). */
+  FINNBILGLASS_LOCAL_AUTH?: D1Database;
+  /** Staging D1 for autentiseringslagring (KUN staging). */
+  FINNBILGLASS_STAGING_AUTH?: D1Database;
+  /** inquiries_enabled: "true" aktiverer kundeforespørsler i staging. */
+  inquiries_enabled?: string;
 }

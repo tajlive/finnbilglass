@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Min side – FinnBilGlass</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .portal-container { max-width: 1120px; margin: 0 auto; padding: 24px; }
+  .portal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .portal-header h1 { font-size: 28px; font-weight: 800; color: #0F172A; margin: 0; }
+  .portal-actions { display: flex; gap: 12px; }
+  .btn-primary { padding: 12px 24px; border-radius: 12px; background: #F59E0B; color: #FFFFFF; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-secondary { padding: 12px 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E2E8F0; color: #0F172A; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-logout { padding: 12px 24px; border-radius: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; color: #64748B; font-size: 15px; cursor: pointer; }
+  .section { margin-bottom: 32px; }
+  .section-title { font-size: 18px; font-weight: 800; color: #0F172A; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .card-title { font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .car-card { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 12px; }
+  .car-info { flex: 1; }
+  .car-name { font-size: 16px; font-weight: 700; color: #0F172A; }
+  .car-regnr { font-size: 14px; color: #64748B; font-family: monospace; letter-spacing: 0.5px; }
+  .car-status { font-size: 13px; color: #94A3B8; margin-top: 4px; }
+  .quote-card { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 12px; }
+  .quote-info { flex: 1; }
+  .quote-name { font-size: 16px; font-weight: 700; color: #0F172A; }
+  .quote-price { font-size: 18px; font-weight: 800; color: #059669; font-family: monospace; }
+  .quote-status { font-size: 13px; color: #94A3B8; margin-top: 4px; }
+  .empty-state { text-align: center; padding: 48px 24px; color: #94A3B8; }
+  .empty-state h3 { font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 8px; }
+  .file-upload { border: 2px dashed #E2E8F0; border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; }
+  .file-upload:hover { border-color: #F59E0B; }
+  .upload-icon { font-size: 32px; margin-bottom: 12px; }
+  .upload-text { font-size: 15px; color: #64748B; }
+  .alert-banner { background: #FFF7ED; border: 1px solid #FCD34D; border-radius: 12px; padding: 16px; margin-bottom: 24px; color: #92400E; font-size: 14px; }
+  .alert-banner strong { color: #B45309; }
+  .user-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: #F8FAFC; border: 1px solid #E2E8F0; font-size: 14px; color: #475569; }
+  .nav-tabs { display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid #E2E8F0; padding-bottom: 16px; }
+  .nav-tab { font-size: 15px; font-weight: 600; color: #94A3B8; cursor: pointer; border-bottom: 2px solid transparent; }
+  .nav-tab.active { color: #F59E0B; border-bottom-color: #F59E0B; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+<div class="portal-container">
+  <header class="portal-header">
+    <div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <span style="font-size:26px;font-weight:800;color:#0F172A;">finn</span>
+        <span style="font-size:26px;font-weight:800;color:#F59E0B;">bilglass</span>
+      </div>
+      <span class="beta-badge" style="margin-left:12px;padding:4px 12px;border-radius:999px;background:#ECFDF5;color:#059669;font-size:11px;font-weight:700;">BETA</span>
+    </div>
+    <div class="portal-actions">
+      <button class="btn-logout" id="logout-btn">Logg ut</button>
+    </div>
+  </header>
+
+  <div class="user-badge" style="margin-bottom:24px;">
+    <span style="font-weight:700;" id="user-name">Laster...</span> <span style="font-weight:400;" id="user-email"></span>
+  </div>
+
+  <!-- Nav tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="cars">Mine biler</div>
+    <div class="nav-tab" data-tab="quotes">Mine pristilbud</div>
+    <div class="nav-tab" data-tab="documents">Dokumentasjon</div>
+    <div class="nav-tab" data-tab="settings">Innstillinger</div>
+  </div>
+
+  <!-- Mine biler tab -->
+  <div class="tab-content active" id="tab-cars">
+    <div class="section">
+      <div class="section-title">
+        <span>🚗</span> Mine biler
+      </div>
+      <div id="cars-list">
+        <!-- Bilkort legges til dynamisk -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Mine pristilbud tab -->
+  <div class="tab-content" id="tab-quotes">
+    <div class="section">
+      <div class="section-title">
+        <span>💰</span> Mine pristilbud
+      </div>
+      <div id="quotes-list">
+        <!-- Tilbudskort legges til dynamisk -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Dokumentasjon tab -->
+  <div class="tab-content" id="tab-documents">
+    <div class="section">
+      <div class="section-title">
+        <span>📎</span> Dokumentasjon
+      </div>
+      <div class="card">
+        <div class="card-title">Last opp bilder eller dokumenter</div>
+        <p style="color:#64748B;font-size:14px;margin-bottom:16px;">Last opp bilder av skiltnummeret eller glasset for å hjelpe oss med å finne riktig vare.</div>
+        <div class="file-upload" id="file-upload">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Velg filer eller dra dem hit</div>
+        </div>
+        <input type="file" id="file-input" multiple style="display:none;">
+      </div>
+    </div>
+  </div>
+
+  <!-- Innstillinger tab -->
+  <div class="tab-content" id="tab-settings">
+    <div class="section">
+      <div class="section-title">
+        <span>⚙️</span> Kontoinnstillinger
+      </div>
+      <div class="card">
+        <div class="card-title">Personvern</div>
+        <p style="color:#64748B;font-size:14px;">Dine personopplysninger behandles i samsvar med personopplysningsloven. Vi deler ikke data med tredjeparter uten ditt samtykke.</p>
+        <button class="btn-secondary" style="padding:10px 20px;">Vis personvernserklæring</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Sikkerhet</div>
+        <p style="color:#64748B;font-size:14px;">Engangskoder utløper etter 10 minutter. Sesjonen avsluttes automatisk etter inaktivitet.</p>
+        <button class="btn-secondary" style="padding:10px 20px;">Endre e-postadresse</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vises kun når pristilbudspiloten faktisk er stengt (serverbasert status) -->
+  <div class="alert-banner" id="pilot-note" style="margin-top:24px; display:none;">
+    <strong>Merk:</strong> Kundepiloten er for øyeblikket stengt. Du kan fortsatt se dine eksisterende forespørsler, men nye forespørsler kan ikke sendes før piloten åpnes igjen.
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Pilotstatus fra serveren — én sannhetskilde for om pristilbud er åpent.
+  // Meldingen vises kun når piloten faktisk er stengt (inquiries_enabled=0).
+  async function visPilotstatus() {
+    try {
+      const r = await fetch('/api/pilot-status', { credentials: 'include' });
+      if (!r.ok) return;
+      const d = await r.json();
+      const note = document.getElementById('pilot-note');
+      if (note) note.style.display = d.inquiries_enabled ? 'none' : 'block';
+    } catch (e) {
+      // Nettverksfeil: la meldingen være skjult (ikke skrem kunden unødig).
+    }
+  }
+
+  // Check authentication on load via server-side session
+  async function checkAuth() {
+    try {
+      const response = await fetch('/api/auth/session', {
+        credentials: 'include',
+      });
+
+      if (response.status === 401 || !response.ok) {
+        window.location.href = 'innlogging.html';
+        return;
+      }
+
+      const data = await response.json();
+      if (!data.authenticated) {
+        window.location.href = 'innlogging.html';
+        return;
+      }
+
+      const user = data.user;
+      document.getElementById('user-name').textContent = user.name;
+      document.getElementById('user-email').textContent = user.email;
+
+      // Load user data
+      loadUserData(user);
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      window.location.href = 'innlogging.html';
+    }
+  }
+
+  // Load user data
+  async function loadUserData(user) {
+    try {
+      const response = await fetch('/api/customer/inquiries', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Kunne ikke laste forespørsler');
+      }
+      const data = await response.json();
+      const inquiries = data.inquiries || [];
+
+      // Load cars (inquiries as car cards)
+      const carsList = document.getElementById('cars-list');
+      carsList.innerHTML = inquiries.map(inq => `
+        <div class="car-card">
+          <div class="car-info">
+            <div class="car-name">Forespørsel #${inq.id}</div>
+            <div class="car-regnr">${inq.regnr || 'Ikke oppgitt'}</div>
+            <div class="car-status">${inq.status} · ${new Date(inq.created_at).toLocaleDateString('nb-NO')}</div>
+          </div>
+          <button class="btn-primary" style="padding:8px 16px;font-size:14px;">Vis detaljer</button>
+        </div>
+      `).join('');
+
+      // Load quotes (same inquiries as quote cards)
+      const quotesList = document.getElementById('quotes-list');
+      quotesList.innerHTML = inquiries.map(inq => `
+        <div class="quote-card">
+          <div class="quote-info">
+            <div class="quote-name">Pristilbud — ${inq.regnr || 'Ikke oppgitt'}</div>
+            <div class="quote-status">${inq.status}</div>
+          </div>
+          <div class="quote-price">—</div>
+          <button class="btn-primary" style="padding:8px 16px;font-size:14px;">Se status</button>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error('Kunne ikke laste brukerdata:', err);
+      document.getElementById('cars-list').innerHTML = '<div class="empty-state"><h3>Kunne ikke laste data</h3><p>Prøv igjen senere.</p></div>';
+      document.getElementById('quotes-list').innerHTML = '<div class="empty-state"><h3>Ingen pristilbud</h3><p>Ingen data tilgjengelig.</p></div>';
+    }
+  }
+
+  // Nav tabs
+  const navTabs = document.querySelectorAll('.nav-tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  navTabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      navTabs.forEach(t => t.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', async function() {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+    sessionStorage.clear();
+    document.cookie = 'fb_session=; path=/; max-age=0';
+    window.location.href = 'index.html';
+  });
+
+  // File upload
+  const fileUpload = document.getElementById('file-upload');
+  const fileInput = document.getElementById('file-input');
+
+  fileUpload.addEventListener('click', function() {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', function() {
+    if (fileInput.files.length > 0) {
+      console.log('[MOCK] Filer valgt:', fileInput.files.length);
+      const files = Array.from(fileInput.files).map(f => f.name).join(', ');
+      fileUpload.innerHTML = '<div class="upload-icon">✓</div><div class="upload-text" style="color:#059669;font-weight:600;">' + files + '</div>';
+    }
+  });
+
+  // File drag & drop
+  ['dragenter', 'dragover'].forEach(eventName => {
+    fileUpload.addEventListener(eventName, function(e) {
+      e.preventDefault();
+      fileUpload.style.borderColor = '#F59E0B';
+    });
+  });
+  ['dragleave', 'drop'].forEach(eventName => {
+    fileUpload.addEventListener(eventName, function(e) {
+      e.preventDefault();
+      fileUpload.style.borderColor = '#E2E8F0';
+    });
+  });
+  fileUpload.addEventListener('drop', function(e) {
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      console.log('[MOCK] Filer sluppet:', files.length);
+      fileUpload.innerHTML = '<div class="upload-icon">✓</div><div class="upload-text" style="color:#059669;font-weight:600;">' + files.length + ' fil(er) valgt</div>';
+    }
+  });
+
+  // Initialize
+  visPilotstatus();
+  checkAuth();
+})();
+</script>
+</body>
+</html>

@@ -14,8 +14,10 @@
  *   - Pris vises bare når den er dokumentert; ellers «Pris på forespørsel».
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.FBGView = factory();
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory();
+    root.FBGView = module.exports;
+  } else root.FBGView = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
@@ -104,38 +106,63 @@
 
   /**
    * Status for resultatsteget.
+   * Nye statuskoder per CTO-ordre V3.0 (2026-11-01):
+   *   EXACT      — én kandidat med uavhengig evidens (OE/bilde/montør), klar for bestilling
+   *   PROVISIONAL — én eller flere kandidater fra katalogen, mangler uavhengig bekreftelse
+   *   AMBIGUOUS  — flere kandidater som skilles av utstyr, kunde må velge
+   *   MANUAL_REVIEW — ingen pålitelig kandidat, manuell gjennomgang kreves
+   *
+   * Prinsipper:
+   *   - Katalog alene gir aldri EXACT (krever uavhengig evidens).
+   *   - PINPOINT fra resolver uten bekreftelse = PROVISIONAL, ikke EXACT.
+   *   - VERIFY eller flere kandidater = AMBIGUOUS.
+   *   - Ingen treff = MANUAL_REVIEW.
    * @param {string|null} utfall PINPOINT | VERIFY | FALLBACK | null
    * @param {number} antall antall kandidater
+   * @param {boolean} harUavhengigEvidens om det finnes OE/bilde/montør-bekreftelse
    */
-  function resultatStatus(utfall, antall) {
+  function resultatStatus(utfall, antall, harUavhengigEvidens = false) {
     if (!antall) {
       return {
-        kode: 'INGEN_TREFF',
+        kode: 'MANUAL_REVIEW',
         tittel: 'Vi fant ikke en sikker frontrute i katalogen akkurat nå',
         melding:
-          'Vi kontrollerer manuelt hvilken frontrute bilen din bruker, og gir deg pris og levering før du bestemmer deg.'
+          'Vi kontrollerer manuelt hvilken frontrute bilen din bruker, og gir deg pris og levering før du bestemmer deg.',
+        kanBestille: false,
       };
     }
-    if (utfall === 'PINPOINT' && antall === 1) {
+    if (utfall === 'PINPOINT' && antall === 1 && harUavhengigEvidens) {
       return {
-        kode: 'PINPOINT',
+        kode: 'EXACT',
         tittel: 'Vi har identifisert én frontrute til bilen din',
         melding:
-          'Vi kontrollerer glassmerkingen og bilens utstyr før levering, slik at du får riktig variant.'
+          'Glassmerkingen og bilens utstyr er bekreftet. Du kan fortsette med tilbud.',
+        kanBestille: true,
+      };
+    }
+    if (utfall === 'PINPOINT' && antall === 1 && !harUavhengigEvidens) {
+      return {
+        kode: 'PROVISIONAL',
+        tittel: 'Vi har funnet en mulig frontrute til bilen din',
+        melding:
+          'Katalogen peker på én variant, men vi mangler uavhengig bekreftelse før vi kan garantere riktig glass.',
+        kanBestille: false,
       };
     }
     if (utfall === 'VERIFY' || antall > 1) {
       return {
-        kode: 'VERIFY',
+        kode: 'AMBIGUOUS',
         tittel: 'Vi har funnet flere mulige frontruter til bilen din',
-        melding: 'Riktig variant avhenger av bilens utstyr.'
+        melding: 'Riktig variant avhenger av bilens utstyr. Velg alternativet som passer.',
+        kanBestille: false,
       };
     }
     return {
       kode: 'MANUAL_REVIEW',
       tittel: 'Vi må kontrollere hvilken frontrute bilen bruker før vi kan bekrefte riktig glass',
       melding:
-        'Opplysningene om bilen er ikke entydige nok til å peke på én frontrute. Vi kontrollerer manuelt og sender deg pris og levering.'
+        'Opplysningene om bilen er ikke entydige nok til å peke på én frontrute. Vi kontrollerer manuelt og sender deg pris og levering.',
+      kanBestille: false,
     };
   }
 

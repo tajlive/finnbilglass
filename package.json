@@ -82,5 +82,8 @@
     "tsx": "^4.23.12",
     "typescript": "^5.8.0",
     "wrangler": "^4.122.0"
+  },
+  "dependencies": {
+    "csv-parse": "^7.0.3"
   }
 }

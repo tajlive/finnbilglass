@@ -158,5 +158,5 @@ test('/api/inquiry sjekker pilotstoppet foran alt annet', () => {
   const stopp = src.indexOf('await henvendelserTillatt(env)');
   assert.ok(stopp > 0, 'fant ikke kallet');
   assert.ok(stopp < src.indexOf('inquiry_rate_limits'), 'stoppet må sjekkes før rate limit');
-  assert.ok(stopp < src.indexOf('reserver(env.FINNBILGLASS_DB'), 'stoppet må sjekkes før nøkkelreservering');
+  assert.ok(stopp < src.indexOf('reserver(inquiryDb'), 'stoppet må sjekkes før nøkkelreservering');
 });

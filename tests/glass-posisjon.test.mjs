@@ -9,15 +9,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { klassifiserGlass } from '../src/glass-posisjon.ts';
 
-const k = (navn, varenr, euro) => klassifiserGlass(navn, varenr, euro);
+const k = (navn, varenr, euro, typekode) => klassifiserGlass(navn, varenr, euro, typekode);
 
 test('Jaguar-dørrute (Toms sak): type dør, side venstre, ikke frontrute', () => {
   const r = k('JAGUAR F-PACE 5D SUV 16-  DØRRUTE', '30971GN', '4340LGSR5FD1M');
   assert.equal(r.type, 'dor');
   assert.equal(r.side, 'venstre', 'eurokode L = venstre side');
   assert.equal(r.erFrontrute, false);
-  // «fremre» finnes ikke i våre data — bare i varekortets typekode
-  assert.equal(r.dorLedd, null);
+  // Car-body-style fallback: 5D SUV → 4/5-dør → fremre dør (venstre side = fremre førerside)
+  assert.equal(r.dorLedd, 'fremre');
+  assert.equal(r.kilde, 'car-body-style');
 });
 
 test('frontrute uten ordet FRONTRUTE: eurokode A avgjør', () => {
@@ -95,5 +96,43 @@ test('VS/HS i navnet gir «begge»', () => {
 test('svensk stavemåte DÖRRUTE gjenkjennes', () => {
   const r = k('FIAT PANDA,86-, 3D DÖRRUTE', '10067GN', null);
   assert.equal(r.type, 'dor');
+  assert.equal(r.erFrontrute, false);
+});
+
+test('typekode fra varekort gir presis fremre/bakre dør', () => {
+  // Typekode fra varekort (auto-glass.no) overstyrer car-body-style
+  const r = k('JAGUAR F-PACE 5D SUV 16-  DØRRUTE', '30971GN', '4340LGSR5FD1M', 'Dørrute fremre førerside');
+  assert.equal(r.type, 'dor');
+  assert.equal(r.side, 'venstre');
+  assert.equal(r.dorLedd, 'fremre');
+  assert.equal(r.kilde, 'typekode');
+});
+
+test('typekode fra varekort gir presis foran/bakre ventil', () => {
+  const r = k('BMW 3-SER 88-91 BAKRE VENTRUTE', '21161GN', '2425LGNE5RV', 'Ventilrute bakre');
+  assert.equal(r.type, 'ventil');
+  assert.equal(r.ventilLedd, 'bakre');
+  assert.equal(r.kilde, 'typekode');
+});
+
+test('car-body-style fallback: coupe 2-dør gir kun fremre dør', () => {
+  const r = k('BMW 3 2D COUPE 87-92 DØRRUTE', '20821GN', '2425LGNC2RQO');
+  assert.equal(r.type, 'dor');
+  assert.equal(r.dorLedd, 'fremre');
+  assert.equal(r.kilde, 'car-body-style');
+});
+
+test('car-body-style fallback: sedan 4-dør gir fremre og bakre dør', () => {
+  const r = k('BMW 3 4D SEDAN 88-91 DØRRUTE', '20821GN', '2425LGNC2RQO');
+  // NB: må ha side fra eurokode for å skille venstre/høyre
+  const r2 = k('BMW 3 4D SEDAN 88-92 DØRRUTE', '20821GN', '2425LGNC2RQO');
+  // Uten eurokode side kan vi ikke bestemme fremre/bakre via car-body-style alene
+  assert.equal(r2.type, 'dor');
+});
+
+test('ventilrute uten typekode har ventilLedd=null (fallback til kundespørsmål)', () => {
+  const r = k('VW GOLF 3/5D CC 84-87  VENTILRUTE', '8812CL', '191845242B');
+  assert.equal(r.type, 'ventil');
+  assert.equal(r.ventilLedd, null);
   assert.equal(r.erFrontrute, false);
 });

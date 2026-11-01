@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administrator – FinnBilGlass Driftsenter</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .auth-container { max-width: 440px; margin: 40px auto; padding: 24px; }
+  .auth-card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 32px; }
+  .auth-header { text-align: center; margin-bottom: 24px; }
+  .auth-logo { display: flex; align-items: center; gap: 2px; justify-content: center; margin-bottom: 16px; }
+  .auth-logo span:first-child { font-size: 26px; font-weight: 800; color: #0F172A; }
+  .auth-logo span:last-child { font-size: 26px; font-weight: 800; color: #F59E0B; }
+  .auth-title { font-size: 28px; font-weight: 800; color: #0F172A; margin: 8px 0; }
+  .auth-subtitle { font-size: 15px; color: #64748B; line-height: 1.5; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 600; color: #94A3B8; display: block; margin-bottom: 6px; }
+  .form-input { width: 100%; padding: 16px 20px; border-radius: 12px; border: 1px solid #CBD5E1; background: #F8FAFC; font-size: 16px; font-family: 'Inter Tight', system-ui, sans-serif; box-sizing: border-box; }
+  .form-input:focus { outline: none; border-color: #F59E0B; }
+  .btn-primary { width: 100%; padding: 16px 36px; border-radius: 12px; background: #0F172A; color: #FFFFFF; border: none; font-size: 17px; font-weight: 700; cursor: pointer; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .env-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #FFF7ED; color: #92400E; font-size: 11px; font-weight: 700; margin-bottom: 16px; border: 1px solid #FCD34D; }
+  .role-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #F8FAFC; border: 1px solid #E2E8F0; font-size: 12px; color: #475569; margin-bottom: 16px; }
+  .error-msg { color: #DC2626; font-size: 13px; margin-top: 8px; display: none; }
+  .security-note { margin-top: 20px; padding: 16px; background: #F8FAFC; border-radius: 12px; font-size: 13px; color: #64748B; line-height: 1.5; }
+  .security-note strong { color: #0F172A; }
+</style>
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">
+        <span>finn</span><span>bilglass</span>
+      </div>
+      <span class="env-badge">STAGING</span>
+      <h1 class="auth-title">Driftsenter</h1>
+      <p class="auth-subtitle">Administrator-innlogging. Kun autorisert personale har tilgang.</p>
+    </div>
+
+    <div id="email-step">
+      <div class="form-group">
+        <label class="form-label" for="email">E-postadresse</label>
+        <input type="email" id="email" class="form-input" placeholder="navn@finnbilglass.no">
+        <div class="error-msg" id="email-error">Oppgi en gyldig e-postadresse.</div>
+      </div>
+      <button class="btn-primary" id="send-otp-btn">Send engangskode</button>
+      <div class="resend-text" id="resend-text" style="display:none;">
+        Kode sendt. Mottar du ikke koden? <a href="#" class="resend-link" id="resend-link">Send på nytt</a>
+      </div>
+    </div>
+
+    <div id="otp-step" style="display:none;">
+      <div class="form-group">
+        <label class="form-label" for="otp">Engangskode</label>
+        <div class="otp-inputs">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+        </div>
+        <div class="error-msg" id="otp-error">Koden er ugyldig eller utløpt.</div>
+      </div>
+      <button class="btn-primary" id="verify-otp-btn" disabled>Verifiser og gå inn</button>
+      <button class="btn-secondary" id="back-btn">Tilbake</button>
+      <div class="resend-text">
+        Koden gjelder i 10 minutter. <a href="#" class="resend-link" id="resend-link-2">Send på nytt</a>
+      </div>
+    </div>
+
+    <div class="security-note">
+      <strong>Sikkerhet:</strong> Alle handlinger logges i audit-logg. Tilgang krever autorisert sesjon og gyldig rolle. Alternativer Worker-ruter omgår ikke autentisering.
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginBtn = document.getElementById('login-btn');
+  const emailError = document.getElementById('email-error');
+  const passwordError = document.getElementById('password-error');
+  const loginError = document.getElementById('login-error');
+
+  // OTP elements
+  const otpInputs = document.querySelectorAll('.otp-input');
+  const verifyOtpBtn = document.getElementById('verify-otp-btn');
+  const backBtn = document.getElementById('back-btn');
+  const resendText = document.getElementById('resend-text');
+  const resendLink = document.getElementById('resend-link');
+  const resendText2 = document.getElementById('resend-text-2');
+  const resendLink2 = document.getElementById('resend-link-2');
+  const otpError = document.getElementById('otp-error');
+
+  let resendTimer = null;
+  let resendSeconds = 60;
+  let rateLimitUntil = 0;
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  function isRateLimited() {
+    return Date.now() < rateLimitUntil;
+  }
+
+  function setRateLimit(seconds) {
+    rateLimitUntil = Date.now() + seconds * 1000;
+  }
+
+  // Email input change
+  emailInput.addEventListener('input', function() {
+    emailError.style.display = 'none';
+    loginError.style.display = 'none';
+    loginBtn.disabled = !isValidEmail(emailInput.value.trim()) || isRateLimited();
+    if (isRateLimited()) {
+      const remaining = Math.ceil((rateLimitUntil - Date.now()) / 1000);
+      loginBtn.textContent = `Prøv igjen om ${remaining}s`;
+    } else {
+      loginBtn.textContent = 'Send engangskode';
+    }
+  });
+
+  // Start resend timer
+  function startResendTimer() {
+    resendSeconds = 60;
+    resendText.style.display = 'block';
+    updateResendText();
+    resendTimer = setInterval(() => {
+      resendSeconds--;
+      updateResendText();
+      if (resendSeconds <= 0) {
+        clearInterval(resendTimer);
+        resendText.style.display = 'none';
+      }
+    }, 1000);
+  }
+
+  function updateResendText() {
+    resendText.textContent = `Koden gjelder i 10 minutter. Kan sende på nytt om ${resendSeconds}s.`;
+  }
+
+  // Send OTP via API
+  sendOtpBtn.addEventListener('click', async function() {
+    const email = emailInput.value.trim();
+    if (!isValidEmail(email)) {
+      emailError.style.display = 'block';
+      return;
+    }
+    if (isRateLimited()) return;
+
+    try {
+      const response = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.status === 429) {
+        const data = await response.json();
+        emailError.textContent = data.error || 'For mange forsøk. Vent litt.';
+        emailError.style.display = 'block';
+        setRateLimit(data.retryAfter || 60);
+        loginBtn.disabled = true;
+        return;
+      }
+
+      if (!response.ok) {
+        emailError.textContent = 'Kunne ikke sende kode. Prøv igjen.';
+        emailError.style.display = 'block';
+        return;
+      }
+
+      const data = await response.json();
+
+      emailStep.style.display = 'none';
+      otpStep.style.display = 'block';
+      resendText.style.display = 'block';
+      startResendTimer();
+      otpInputs[0].focus();
+    } catch (err) {
+      console.error('Feil ved sending av OTP:', err);
+      emailError.textContent = 'Nettverksfeil. Prøv igjen senere.';
+      emailError.style.display = 'block';
+    }
+  });
+
+  // OTP inputs - auto-focus next
+  otpInputs.forEach((input, index) => {
+    input.addEventListener('input', function() {
+      if (input.value && index < otpInputs.length - 1) {
+        otpInputs[index + 1].focus();
+      }
+      otpError.style.display = 'none';
+      updateVerifyBtn();
+    });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && !input.value && index > 0) {
+        otpInputs[index - 1].focus();
+      }
+    });
+  });
+
+  function updateVerifyBtn() {
+    const code = Array.from(otpInputs).map(i => i.value).join('');
+    verifyOtpBtn.disabled = code.length !== 6;
+  }
+
+  // Back button
+  backBtn.addEventListener('click', function() {
+    otpStep.style.display = 'none';
+    emailStep.style.display = 'block';
+    resendText.style.display = 'none';
+  });
+
+  // Resend links
+  resendLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    sendOtpBtn.click();
+  });
+  resendLink2.addEventListener('click', function(e) {
+    e.preventDefault();
+    sendOtpBtn.click();
+  });
+
+  // Verify OTP via API
+  verifyOtpBtn.addEventListener('click', async function() {
+    const code = Array.from(otpInputs).map(i => i.value).join('');
+    const email = emailInput.value.trim();
+
+    if (code.length !== 6) {
+      otpError.style.display = 'block';
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      });
+
+      if (response.status === 401) {
+        otpError.textContent = 'Ugyldig eller utløpt kode.';
+        otpError.style.display = 'block';
+        return;
+      }
+
+      if (!response.ok) {
+        otpError.textContent = 'Kunne ikke verifisere koden. Prøv igjen.';
+        otpError.style.display = 'block';
+        return;
+      }
+
+      const data = await response.json();
+
+      const user = data.user;
+
+      // Check role - only ADMIN, REVIEWER, OPERATOR can access admin
+      if (user.role === 'CUSTOMER') {
+        otpError.textContent = 'Du har ikke administratortilgang.';
+        otpError.style.display = 'block';
+        return;
+      }
+
+      // Session cookie is set automatically by the server (HttpOnly)
+      otpError.style.display = 'none';
+      window.location.href = 'admin-dashboard.html';
+    } catch (err) {
+      console.error('Feil ved verifisering:', err);
+      otpError.textContent = 'Nettverksfeil. Prøv igjen senere.';
+      otpError.style.display = 'block';
+    }
+  });
+
+  // Initialize
+  sendOtpBtn.disabled = true;
+})();
+</script>
+</body>
+</html>
