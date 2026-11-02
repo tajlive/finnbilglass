@@ -18,6 +18,8 @@ import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_I
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
+import { opsAdminUi } from './routes/ops-admin-ui';
+import { handleKatalogSok, handleKatalogGlass, handleGlassValg, handleTilbud, handleEpostHistorikk } from './routes/admin-katalog';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
@@ -27,6 +29,17 @@ import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
 import { handleApifyCatalogSync, handleApifyCatalogStatus } from './routes/apify-catalog-sync';
 import { handlePrisEstimat } from './routes/pris-estimat';
+import { handleAuthRoute, requireAuth, kundeInnlogget } from './routes/auth';
+import { handleGoogleConfig, handleGoogleLogin } from './routes/google-auth';
+import { handleOAuthStart, handleOAuthCallback, handleLinkInfo, handleProviders } from './routes/oauth';
+import { handleCspReport, cspReportOnly, reportingEndpoints } from './routes/csp';
+import { handleR2Inventar } from './routes/r2-inventar';
+import { handleAdminRoute } from './routes/admin';
+import { setAuthStorage } from './auth';
+import { verifiserAccess } from './access-jwt';
+import { D1AuthStorage } from './auth-storage';
+import { skalLoggeSok } from './sok-logg-policy';
+import { tilOffentligResolverSvar } from './public-contract';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -38,6 +51,19 @@ const CORS_HEADERS = {
 interface SnapshotVehicle {
   bil?: { merke?: string; modell?: string; vin?: string | null };
   resolver?: { kandidater?: Record<string, unknown>[] };
+}
+
+/** Velger riktig D1 for beta_inquiries/beta_inquiry-events.
+ *  Staging: MÅ bruke FINNBILGLASS_STAGING_AUTH (fail-closed hvis mangler).
+ *  Produksjon/Lokal: bruker FINNBILGLASS_DB. */
+function getInquiryDb(env: Env): D1Database {
+  if (env.ENVIRONMENT === 'staging') {
+    if (!env.FINNBILGLASS_STAGING_AUTH) {
+      throw new Error('STAGING_MISSING_D1_BINDING: FINNBILGLASS_STAGING_AUTH er ikke konfigurert');
+    }
+    return env.FINNBILGLASS_STAGING_AUTH;
+  }
+  return env.FINNBILGLASS_DB;
 }
 
 function json(data: unknown, status = 200): Response {
@@ -168,6 +194,83 @@ function supportAuthorised(request: Request, env: Env): boolean {
   return !!env.SUPPORT_EVIDENCE_TOKEN && !!token && token === env.SUPPORT_EVIDENCE_TOKEN;
 }
 
+/**
+ * Autorisasjon for administratortilgang.
+ *
+ * 1) Cloudflare Access-identitet (JWT verifisert på serversiden) + allowlist →
+ *    tillatt. Dette er den normale veien for mennesker i nettleseren; ingen
+ *    support-token må tastes.
+ * 2) Ellers: support-token i Authorization-header — beholdt KUN for
+ *    automatiseringer (cron, skript, CI). Fases ut når avhengighetene er kartlagt.
+ *
+ * En Access-identitet som ikke står i allowlisten avvises — vi faller ikke
+ * tilbake til token i det tilfellet.
+ */
+async function adminAutorisert(request: Request, env: Env): Promise<boolean> {
+  const identitet = await verifiserAccess(request, env);
+  if (identitet) {
+    const liste = String(env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+    return liste.includes(identitet.epost);
+  }
+  return supportAuthorised(request, env);
+}
+
+/**
+ * Tydelig testpålogging: ugyldige kjennemerker (TEST…, ZZ 00000) eller
+ * testdomener i kontaktfeltet. Reelle kunder skal aldri havne her, så
+ * regelen er bevisst smal — bare mønstre som ikke kan være ekte.
+ */
+function erTydeligTest(regnr: string | null, kontakt: string): number {
+  const r = (regnr || '').toUpperCase().replace(/[\s-]/g, '');
+  if (r.startsWith('TEST') || r === 'ZZ00000') return 1;
+  const e = (kontakt || '').toLowerCase();
+  const testDomener = ['@test.no', '@example.com', '@example.org', '@localhost'];
+  return testDomener.some((d) => e.includes(d)) ? 1 : 0;
+}
+
+/**
+ * Varsel til ansvarlig medarbeider om en ny pristilbudsforespørsel.
+ * Inneholder bevisst INGEN personopplysninger: kun saksnummer, tidspunkt og
+ * lenke til Operations Center. Navn, kontaktinfo og kjøretøy ligger kun der.
+ */
+async function sendInquiryAlert(env: Env, inquiryId: number | null): Promise<{ ok: boolean; error?: string }> {
+  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  const to = env.SUPPORT_NOTIFY_EMAIL || from;
+  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
+  const url = 'https://finnbilglass.no/ops';
+  const tid = new Date().toLocaleString('nb-NO', { timeZone: 'Europe/Oslo' });
+  const saksnr = inquiryId != null ? `#${inquiryId}` : '(ukjent nummer)';
+  const html =
+    `<h2 style="margin:0 0 8px">Ny pristilbudsforespørsel ${saksnr}</h2>` +
+    `<p><b>Tidspunkt:</b> ${tid}<br><b>Status:</b> Ny</p>` +
+    `<p><a href="${url}">Åpne Operations Center</a></p>` +
+    `<p style="color:#637286;font-size:12px">Av personvernhensyn inneholder denne e-posten ingen kundeopplysninger. ` +
+    `Navn, kontaktinfo og kjøretøy står kun i Operations Center.</p>`;
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { email: from, name: 'Finnbilglass' },
+        to: [{ email: to }],
+        subject: `Ny pristilbudsforespørsel ${saksnr}`,
+        htmlContent: html,
+        textContent: `Ny pristilbudsforespørsel ${saksnr}. Tidspunkt: ${tid}. Status: Ny. Åpne ${url}. Av personvernhensyn inneholder denne e-posten ingen kundeopplysninger.`,
+      }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      return { ok: false, error: `Brevo ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil ved varsling.' };
+  }
+}
+
 /** Send svar til kunde på e-post via Brevo (tidl. Sendinblue) v3 SMTP. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
 async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: string | null, message: string): Promise<{ ok: boolean; error?: string }> {
   const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
@@ -264,16 +367,62 @@ async function lagreOpplaeringBilde(
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  /**
+   * Alle svar får sikkerhetsheadere. Ligger ytterst slik at både API-svar,
+   * omdirigeringer og statiske filer dekkes — også når svaret kommer fra
+   * ASSETS-bindingen.
+   */
+  async fetch(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
+    const res = await handleRequest(request, env, ctx);
+    const h = new Headers(res.headers);
+    if (!h.has('X-Content-Type-Options')) h.set('X-Content-Type-Options', 'nosniff');
+    if (!h.has('X-Frame-Options')) h.set('X-Frame-Options', 'SAMEORIGIN');
+    if (!h.has('Referrer-Policy')) h.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    if (!h.has('Strict-Transport-Security')) h.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    if (!h.has('Permissions-Policy')) h.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    // CSP i report-only: bryter ingenting, samler brudd for senere håndheving.
+    const ct = h.get('Content-Type') || '';
+    if (ct.includes('text/html') && !h.has('Content-Security-Policy-Report-Only')) {
+      h.set('Content-Security-Policy-Report-Only', cspReportOnly());
+      h.set('Reporting-Endpoints', reportingEndpoints());
+    }
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+  },
+};
+
+async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
+
+    // Koble auth-lagring til riktig D1 (fail-closed) FØR routing — /api/auth,
+    // /api/customer og /api/admin bruker alle requireAuth → auth.getSession.
+    // Staging: FINNBILGLASS_STAGING_AUTH. Lokal utvikling: FINNBILGLASS_LOCAL_AUTH.
+    // Produksjon: INGEN auth-lagring — kundelogin er ikke lansert, og test-DB-ene
+    // (local-auth/staging-auth) skal aldri kunne brukes som innlogging i prod.
+    if (env.ENVIRONMENT === 'staging' && env.FINNBILGLASS_STAGING_AUTH) {
+      setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_STAGING_AUTH));
+    } else if (env.ENVIRONMENT === 'production' && env.FINNBILGLASS_DB) {
+      // Produksjon: auth-tabellene (migrasjon 0039) ligger i produksjons-D1.
+      // Mangler bindingen, kaster auth-laget AUTH_STORAGE_NOT_CONFIGURED (fail-closed)
+      // — det skal aldri falle tilbake til testdatabasene.
+      setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_DB));
+    } else if (env.ENVIRONMENT !== 'production' && env.FINNBILGLASS_LOCAL_AUTH) {
+      setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_LOCAL_AUTH));
+    }
 
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
 
     if (method === 'GET' && path === '/health') {
       const count = await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM glass_prisliste').first<{ n: number }>();
       return json({ ok: true, service: 'finnbilglass-frontrute', katalogRader: count?.n ?? 0 });
+    }
+
+    // Offentlig pilotstatus — styrer kundetekst om stengt pristilbudspilot.
+    // Én sannhetskilde: henvendelserTillatt(env) (env-flagget først, så D1).
+    if (method === 'GET' && path === '/api/pilot-status') {
+      const apen = await henvendelserTillatt(env);
+      return json({ ok: true, inquiries_enabled: apen, pilot: apen ? 'apen' : 'stengt' });
     }
 
     // Apify-katalog-import (admin, Bearer APIFY_SYNC_TOKEN) — skriver kun apify_catalog_products.
@@ -285,6 +434,85 @@ export default {
     }
     if (method === 'GET' && path === '/api/admin/pris-estimat') {
       return handlePrisEstimat(request, env);
+    }
+
+    // CSP-bruddrapporter (report-only-fasen).
+    if (path === '/api/csp-report' && method === 'POST') {
+      return handleCspReport(request, env);
+    }
+
+    // R2-inventar (kun lesing, token-gated).
+    if (path === '/api/ops/r2-inventar' && method === 'GET') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleR2Inventar(env);
+    }
+
+    // Auth-ruter (P0 Fase 5.5/5.8)
+    if (path.startsWith('/api/auth/')) {
+      // Google-innlogging håndteres før den generelle auth-ruteren.
+      if (path === '/api/auth/google/config' && method === 'GET') return handleGoogleConfig(env);
+      if (path === '/api/auth/google' && method === 'POST') return handleGoogleLogin(request, env);
+      // Felles sosial innlogging (Google / Microsoft / Facebook) — authorization code + PKCE.
+      if (path === '/api/auth/oauth/providers' && method === 'GET') return handleProviders(env);
+      if (path === '/api/auth/oauth/link-info' && method === 'GET') return handleLinkInfo(request, env);
+      const oauthMatch = /^\/api\/auth\/oauth\/([a-z]+)\/(start|callback)$/.exec(path);
+      if (oauthMatch && method === 'GET') {
+        return oauthMatch[2] === 'start'
+          ? handleOAuthStart(request, env, oauthMatch[1])
+          : handleOAuthCallback(request, env, oauthMatch[1]);
+      }
+      // Auth-lagring er allerede koblet i toppen av fetch() (fail-closed).
+      return handleAuthRoute(request, env);
+    }
+
+    // Admin-ruter (P0 Fase 5.5)
+    if (path.startsWith('/api/admin/')) {
+      return handleAdminRoute(request, env);
+    }
+
+    // Kunde-ruter (P0 Fase 5.9) — krever autentisert sesjon
+    if (path.startsWith('/api/customer/')) {
+      const user = await requireAuth(request);
+      if (!user) {
+        return json({ ok: false, error: 'IKKE_AUTENTISERT' }, 401);
+      }
+
+      // GET /api/customer/inquiries — liste kundens forespørsler
+      if (method === 'GET' && path === '/api/customer/inquiries') {
+        try {
+          const sessions = await getInquiryDb(env).prepare(
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE session_id = ? OR kontakt = ? ORDER BY created_at DESC LIMIT 100',
+          ).bind(user.userId, user.email).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+          return json({ ok: true, inquiries: sessions.results ?? [] });
+        } catch (e) {
+          // Tabellen finnes ikke ennå (migrasjon ikke anvendt) — returner tom liste
+          return json({ ok: true, inquiries: [] });
+        }
+      }
+
+      // GET /api/customer/inquiries/:id — detaljer for én forespørsel
+      const inquiryMatch = /^\/api\/customer\/inquiries\/(\d+)$/.exec(path);
+      if (method === 'GET' && inquiryMatch) {
+        try {
+          const inquiryId = Number(inquiryMatch[1]);
+          const inquiry = await getInquiryDb(env).prepare(
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE id = ? AND (session_id = ? OR kontakt = ?)',
+          ).bind(inquiryId, user.userId, user.email).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+          if (!inquiry) {
+            return json({ ok: false, error: 'HENVENDELSE_FINNES_IKKE' }, 404);
+          }
+          const events = await getInquiryDb(env).prepare(
+            'SELECT event_type, previous_status, status, note, created_at, created_by FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC',
+          ).bind(inquiryId).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string }>();
+          return json({ ok: true, inquiry, history: events.results ?? [] });
+        } catch (e) {
+          // Tabellen finnes ikke ennå (migrasjon ikke anvendt)
+          return json({ ok: false, error: 'TABELL_FINNES_IKKE' }, 404);
+        }
+      }
+
+      return json({ ok: false, error: 'FINNES_IKKE' }, 404);
     }
 
     if (method === 'POST' && path === '/api/frontrute') {
@@ -303,25 +531,27 @@ export default {
         // Felles policy — samme funksjon som /api/regnr og /api/vin.
         resolver = (await anvendResolverPolicy(env, resolver))!;
         if (resolver.utfall !== 'FALLBACK') {
-          const topp = resolver.kandidater?.[0] ?? null;
+          // Offentlig projeksjon: eurokode, listepris og confidence blir liggende
+          // internt (samme kontrakt som /api/glass). Kunden får kandidater + pris.
           return json({
             ok: true,
-            ...resolver,
-            pinpoint: resolver.utfall === 'PINPOINT',
-            anbefaling: resolver.utfall === 'PINPOINT'
-              ? { varenr: resolver.varenr, varenavn: resolver.varenavn, pris: resolver.pris, listepris: resolver.listepris, eurokode: resolver.eurokode }
-              : (topp ? {
-                  varenr: topp.varenr,
-                  varenavn: topp.varenavn,
-                  pris: topp.pris,
-                  listepris: topp.listepris,
-                  eurokode: topp.eurokode,
-                } : null),
+            ...tilOffentligResolverSvar(resolver as unknown as Record<string, unknown>),
             meta: { resolver: true, grunn: resolver.grunn },
           });
         }
         const resultat = await matchFrontrute(env, bil);
-        return json({ ok: true, ...resultat, meta: { ...resultat.meta, resolver: false } });
+        // FALLBACK normaliseres gjennom samme projeksjon, slik at interne felt
+        // ikke lekker uansett hvilken vei som svarte.
+        return json({
+          ok: true,
+          ...tilOffentligResolverSvar({
+            utfall: 'FALLBACK',
+            kandidater: (resultat as unknown as { kandidater?: unknown[] }).kandidater ?? [],
+            sporsmaal: [],
+            totalAntall: ((resultat as unknown as { kandidater?: unknown[] }).kandidater ?? []).length,
+          }),
+          meta: { ...resultat.meta, resolver: false },
+        });
       } catch (e) {
         console.error('matchFrontrute feilet:', e);
         return json({ ok: false, error: 'Intern feil' }, 500);
@@ -351,6 +581,10 @@ export default {
         return json({ ok: false, error: 'Ugyldig JSON' }, 400);
       }
       const b = body as Record<string, unknown>;
+      // Staging: kundeforespørsler skrives til staging-D1 slik at admin kan se dem.
+      // Produksjon: FINNBILGLASS_DB er den eneste tilgjengelige D1.
+      // Fail-closed på staging: kaster feil hvis FINNBILGLASS_STAGING_AUTH mangler.
+      const inquiryDb: D1Database = getInquiryDb(env);
       // Pilotstopp: stopper nye henvendelser umiddelbart, uten å vente på
       // resolver-cachen. Sjekkes foran alt annet så ingen sak opprettes.
       if (!(await henvendelserTillatt(env))) {
@@ -375,7 +609,7 @@ export default {
       if (idemNokkel) {
         try {
           idemHash = await requestHash(b);
-          const res = await reserver(env.FINNBILGLASS_DB as never, idemNokkel, idemHash);
+          const res = await reserver(inquiryDb as never, idemNokkel, idemHash);
           if (res.status === 'REPLAY') {
             return json({ ok: true, inquiryId: res.inquiryId, idempotent: true }, 201);
           }
@@ -399,19 +633,19 @@ export default {
           const WINDOW_MS = 10 * 60 * 1000;
           const MAX_PER_WINDOW = 5;
           const nowRl = Date.now();
-          const rl = await env.FINNBILGLASS_DB.prepare('SELECT window_start, count FROM inquiry_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
+          const rl = await inquiryDb.prepare('SELECT window_start, count FROM inquiry_rate_limits WHERE ip = ?').bind(ip).first<{ window_start: number; count: number }>();
           if (rl && nowRl - rl.window_start < WINDOW_MS && rl.count >= MAX_PER_WINDOW) {
-            if (idemNokkel && idemHash) await frigjor(env.FINNBILGLASS_DB as never, idemNokkel);
+            if (idemNokkel && idemHash) await frigjor(inquiryDb as never, idemNokkel);
             return json({ ok: false, error: 'For mange forespørsler. Prøv igjen senere.' }, 429);
           }
           if (rl) {
             if (nowRl - rl.window_start >= WINDOW_MS) {
-              await env.FINNBILGLASS_DB.prepare('UPDATE inquiry_rate_limits SET window_start = ?, count = 1 WHERE ip = ?').bind(nowRl, ip).run();
+              await inquiryDb.prepare('UPDATE inquiry_rate_limits SET window_start = ?, count = 1 WHERE ip = ?').bind(nowRl, ip).run();
             } else {
-              await env.FINNBILGLASS_DB.prepare('UPDATE inquiry_rate_limits SET count = count + 1 WHERE ip = ?').bind(ip).run();
+              await inquiryDb.prepare('UPDATE inquiry_rate_limits SET count = count + 1 WHERE ip = ?').bind(ip).run();
             }
           } else {
-            await env.FINNBILGLASS_DB.prepare('INSERT INTO inquiry_rate_limits (ip, window_start, count) VALUES (?, ?, 1)').bind(ip, nowRl).run();
+            await inquiryDb.prepare('INSERT INTO inquiry_rate_limits (ip, window_start, count) VALUES (?, ?, 1)').bind(ip, nowRl).run();
           }
         }
       } catch (e) {
@@ -452,22 +686,30 @@ export default {
         // 'created'-hendelse kan aldri havne i utakt. Hendelsen finner raden via
         // last_insert_rowid() i samme batch, så vi slipper å kjenne id-en på forhånd.
         const naa = Date.now();
-        const resultater = await env.FINNBILGLASS_DB.batch([
-          env.FINNBILGLASS_DB.prepare(
-            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json) VALUES (?, ?, ?, ?, ?, ?)'
-          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson),
-          env.FINNBILGLASS_DB.prepare(
+        const resultater = await inquiryDb.batch([
+          inquiryDb.prepare(
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sessionId(body, request), vehicleJson, erTydeligTest(regnr, kontakt)),
+          inquiryDb.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
         ]);
         const id = resultater[0]?.meta?.last_row_id;
         if (idemNokkel && idemHash && id) {
-          try { await fullfor(env.FINNBILGLASS_DB as never, idemNokkel, id); } catch { /* best-effort */ }
+          try { await fullfor(inquiryDb as never, idemNokkel, id); } catch { /* best-effort */ }
+        }
+        // Varsle ansvarlig (uten kundeopplysninger) — aldri blokkerende for kunden.
+        if (id) {
+          const varsel = sendInquiryAlert(env, id).then((r) => {
+            if (r.ok) console.log('inquiry-varsel sendt for sak', id);
+            else console.error('inquiry-varsel feilet:', r.error);
+          });
+          try { ctx?.waitUntil(varsel); } catch { void varsel; }
         }
         return json({ ok: true, inquiryId: id ?? null }, 201);
       } catch (e) {
         if (idemNokkel && idemHash) {
-          try { await frigjor(env.FINNBILGLASS_DB as never, idemNokkel); } catch { /* best-effort */ }
+          try { await frigjor(inquiryDb as never, idemNokkel); } catch { /* best-effort */ }
         }
         console.error('inquiry-lagring feilet:', e);
         return json({ ok: false, error: 'Kunne ikke lagre forespørselen. Prøv igjen.' }, 500);
@@ -517,23 +759,28 @@ export default {
       if (typeof regnr !== 'string' || !regnr.trim()) return json({ ok: false, error: 'regnr påkrevd' }, 400);
       const ren = regnr.trim();
       const norm = ren.toUpperCase().replace(/[\s\-–—.]+/g, '');
+      // Ren identifikasjon (skilt → bil) skal ikke etterlate loggrader.
+      // Frontend sender lookupOnly:true; se src/sok-logg-policy.ts.
+      const skalLogge = skalLoggeSok(body);
       let lagret = false;
-      try {
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
-        ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
-        lagret = true;
-      } catch (e) {
-        console.error('regnr-lagring feilet:', e);
-      }
-      // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
-      try {
-        const g = geoAv(request);
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
-      } catch (e) {
-        console.error('søkelogg feilet:', e);
+      if (skalLogge) {
+        try {
+          await env.FINNBILGLASS_DB.prepare(
+            'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
+          ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
+          lagret = true;
+        } catch (e) {
+          console.error('regnr-lagring feilet:', e);
+        }
+        // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
+        try {
+          const g = geoAv(request);
+          await env.FINNBILGLASS_DB.prepare(
+            'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
+        } catch (e) {
+          console.error('søkelogg feilet:', e);
+        }
       }
       // SVV-oppslag: kjennemerke → bil. Null ved feil/ukjent — frontend faller til manuell.
       let bil = null;
@@ -718,11 +965,103 @@ export default {
 
     if (method === 'GET' && path === '/ops') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      return operationsCenterUi();
+      return opsAdminUi();
     }
+    if (method === 'POST' && path === '/api/ops/brevo-check') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'BREVO_API_KEY mangler' }, 503);
+      const kropp = (await request.json().catch(() => ({}))) as { handling?: string; domene?: string };
+      const domene = kropp.domene || 'finnbilglass.no';
+      if (kropp.handling === 'hent-records') {
+        const r = await fetch(`https://api.brevo.com/v3/senders/domains/${encodeURIComponent(domene)}`, {
+          headers: { 'api-key': env.BREVO_API_KEY, accept: 'application/json' },
+        });
+        const svar = await r.json().catch(() => null);
+        return json({ ok: r.ok, status: r.status, svar });
+      }
+      if (kropp.handling !== 'autentiser-domene') return json({ ok: false, error: 'Ukjent handling' }, 400);
+      const r = await fetch(`https://api.brevo.com/v3/senders/domains/${encodeURIComponent(domene)}/authenticate`, {
+        method: 'PUT',
+        headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
+      });
+      const svar = await r.json().catch(() => null);
+      return json({ ok: r.ok, status: r.status, svar });
+    }
+
+    if (method === 'GET' && path === '/api/ops/brevo-check') {
+      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'BREVO_API_KEY mangler' }, 503);
+      const brevo = async (p: string) => {
+        const r = await fetch(`https://api.brevo.com/v3${p}`, { headers: { 'api-key': env.BREVO_API_KEY as string, accept: 'application/json' } });
+        let b: unknown = null;
+        try { b = await r.json(); } catch { b = null; }
+        return { status: r.status, body: b };
+      };
+      const epostFilter = url.searchParams.get('epost') || env.SUPPORT_NOTIFY_EMAIL || env.SUPPORT_FROM_EMAIL || 'tomarnejensen@gmail.com';
+      const [konto, avsendere, eposter] = await Promise.all([
+        brevo('/account'),
+        brevo('/senders'),
+        brevo(`/smtp/emails?email=${encodeURIComponent(epostFilter)}&limit=20&sort=desc`),
+      ]);
+      const domener = url.searchParams.get('domener') ? await brevo('/senders/domains') : null;
+      const liste = ((eposter.body as { transactionalEmails?: Array<Record<string, unknown>> } | null)?.transactionalEmails) || [];
+      let detaljer: unknown = null;
+      const forsteId = (liste[0]?.uuid as string | undefined) || (liste[0]?.messageId as string | undefined);
+      if (forsteId) detaljer = (await brevo(`/smtp/emails/${forsteId}`)).body;
+      return json({
+        ok: true,
+        filter: epostFilter,
+        domener,
+        raa: liste.slice(0, 4),
+        detaljerForste: detaljer,
+        konto: konto.body,
+        avsendere: avsendere.body,
+        epostStatus: eposter.status,
+        epostRaa: JSON.stringify(eposter.body).slice(0, 300),
+        siste: liste.map((m) => ({
+          meldingId: m.messageId,
+          til: m.to,
+          fra: m.sender,
+          emne: m.subject,
+          status: m.status,
+          dato: m.date,
+          avvist: m.blocked,
+          grunn: m.errorReason ?? m.reason ?? null,
+          hendelser: m.events ?? null,
+        })),
+      });
+    }
+
+    // Praktisk videresending: gammel/engelsk sti → faktisk innloggingsside.
+    if (method === 'GET' && (path === '/logg-inn' || path === '/login')) {
+      return Response.redirect(url.origin + '/innlogging', 302);
+    }
+
+    // Min side krever sesjon. Uten sesjon sendes kunden rett til innlogging —
+    // uten å vise siden først.
+    if (method === 'GET' && path === '/min-side') {
+      if (!(await kundeInnlogget(request))) {
+        return Response.redirect(url.origin + '/innlogging', 302);
+      }
+    }
+
+    // Hvem er jeg? Brukes av admin-UI for å vise identitet uten support-token.
+    if (method === 'GET' && path === '/api/ops/whoami') {
+      const ident = await verifiserAccess(request, env);
+      if (ident) {
+        const liste = String(env.ADMIN_EMAILS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+        if (!liste.includes(ident.epost)) return json({ ok: false, error: 'IKKE_TILLATT' }, 403);
+        return json({ ok: true, metode: 'access', epost: ident.epost });
+      }
+      if (supportAuthorised(request, env)) return json({ ok: true, metode: 'token', epost: null });
+      return json({ ok: false, error: 'IKKE_AUTENTISERT' }, 401);
+    }
+
     if (method === 'GET' && path === '/api/ops/summary') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const statuses = await env.FINNBILGLASS_DB.prepare(`WITH review_latest AS (
         SELECT case_id, status, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY created_at DESC) AS n
         FROM evidence_case_review_events
@@ -742,10 +1081,11 @@ export default {
       let latestInquiries: { id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string; status: string }[] = [];
       let inquiryStatus: Record<string, number> = {};
       try {
-        const q = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, created_at, status FROM beta_inquiries ORDER BY (status = \'NEW\') DESC, created_at DESC LIMIT 10').all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string; status: string }>();
+        const inquiryDb = getInquiryDb(env);
+        const q = await inquiryDb.prepare('SELECT id, regnr, navn, kontakt, melding, created_at, status FROM beta_inquiries ORDER BY (status = \'NEW\') DESC, created_at DESC LIMIT 10').all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; created_at: string; status: string }>();
         latestInquiries = q.results;
-        inquiries = (await env.FINNBILGLASS_DB.prepare('SELECT COUNT(*) AS n FROM beta_inquiries').first<{ n: number }>())?.n ?? latestInquiries.length;
-        const st = await env.FINNBILGLASS_DB.prepare('SELECT status, COUNT(*) AS n FROM beta_inquiries GROUP BY status').all<{ status: string; n: number }>();
+        inquiries = (await inquiryDb.prepare('SELECT COUNT(*) AS n FROM beta_inquiries').first<{ n: number }>())?.n ?? latestInquiries.length;
+        const st = await inquiryDb.prepare('SELECT status, COUNT(*) AS n FROM beta_inquiries GROUP BY status').all<{ status: string; n: number }>();
         for (const r of st.results) inquiryStatus[r.status] = r.n;
       } catch { /* beta_inquiries krever migrasjon 0017 — eldre staging-DB uten tabellen er ok */ }
       return json({ ok: true, environment: env.ENVIRONMENT, cases: total, newCases: byStatus.get('NEW') ?? 0, needsInfo: byStatus.get('NEEDS_CUSTOMER_INFO') ?? 0, confirmed: byStatus.get('CONFIRMED') ?? 0, aiObservations, inquiries, inquiryStatus, latestInquiries, d1: 'tilkoblet', r2: env.OPPLAERING_BUCKET ? 'tilkoblet' : 'ikke konfigurert', fitmentAuthority: 'ingen — menneskelig beslutning kreves' });
@@ -753,7 +1093,7 @@ export default {
     if (method === 'GET' && path === '/api/ops/inquiries') {
       // Beta-henvendelser med statusfilter + paginering (G8). Lesing er åpent i staging+prod (som summary).
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const url = new URL(request.url);
       const statusFilter = url.searchParams.get('status') ?? '';
       const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? '50') || 50, 1), 200);
@@ -766,41 +1106,72 @@ export default {
         bind.push(statusFilter);
       }
       bind.push(limit, offset);
-      const rows = await env.FINNBILGLASS_DB.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; created_at: string; updated_at: number | null }>();
+      const inquiryDb = getInquiryDb(env);
+      const rows = await inquiryDb.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; created_at: string; updated_at: number | null }>();
       return json({ ok: true, inquiries: rows.results.map(r => ({ ...r, status: isInquiryStatus(r.status) ? r.status : 'NEW' })) });
     }
-    if (method === 'GET' && path.startsWith('/api/ops/inquiries/')) {
+    if (method === 'GET' && path.startsWith('/api/ops/inquiries/') && !path.slice('/api/ops/inquiries/'.length).includes('/')) {
       // Saksdetalj: én inquiry + append-only tidslinje + kundereise-kontekst (G3, G5, G9).
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const idRaw = path.slice('/api/ops/inquiries/'.length).split('/')[0];
       if (!/^\d+$/.test(idRaw)) return json({ ok: false, error: 'Ugyldig id' }, 400);
       const id = Number(idRaw);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null }>();
+      const inquiryDb = getInquiryDb(env);
+      const row = await inquiryDb.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; vehicle_json: string | null; session_id: string | null; created_at: string; updated_at: number | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
-      const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
+      const events = await inquiryDb.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(id).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
       let vehicle = null;
       try { if (row.vehicle_json) vehicle = JSON.parse(row.vehicle_json); } catch { /* ugyldig snapshot = ignorert */ }
       return json({ ok: true, inquiry: { ...row, status: isInquiryStatus(row.status) ? row.status : 'NEW', vehicle, history: events.results.map(e => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta = ignorert */ } return { ...e, meta }; }) } });
     }
+    // ── Katalogsøk (Admin v1.2) ─────────────────────────────────────────────
+    if (method === 'GET' && path === '/api/ops/katalog/sok') {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleKatalogSok(env, url);
+    }
+    const katalogGlassMatch = /^\/api\/ops\/katalog\/glass\/([A-Za-z0-9._-]{2,40})$/.exec(path);
+    if (method === 'GET' && katalogGlassMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleKatalogGlass(env, katalogGlassMatch[1]);
+    }
+
+    // ── Glassvalg, tilbud og e-posthistorikk på en sak ──────────────────────
+    const glassValgMatch = /^\/api\/ops\/inquiries\/(\d+)\/glass$/.exec(path);
+    if (method === 'POST' && glassValgMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleGlassValg(request, env, Number(glassValgMatch[1]));
+    }
+    const tilbudMatch = /^\/api\/ops\/inquiries\/(\d+)\/tilbud$/.exec(path);
+    if (tilbudMatch && (method === 'GET' || method === 'POST')) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleTilbud(request, env, Number(tilbudMatch[1]), method);
+    }
+    const epostMatch = /^\/api\/ops\/inquiries\/(\d+)\/epost$/.exec(path);
+    if (method === 'GET' && epostMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleEpostHistorikk(env, Number(epostMatch[1]));
+    }
+
     const inquiryStatusMatch = /^\/api\/ops\/inquiries\/(\d+)\/status$/.exec(path);
     if (method === 'POST' && inquiryStatusMatch) {
       // Statusendring er skriving — åpen i staging+prod (beta er live, Tom er eneste operatør).
       // Beskyttet av support-token + append-only-displin. Aldri fitment-autoritet.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
       if (!isInquiryStatus(to) || !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
       const id = Number(inquiryStatusMatch[1]);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT status FROM beta_inquiries WHERE id = ?').bind(id).first<{ status: string }>();
+      const inquiryDb = getInquiryDb(env);
+      const row = await inquiryDb.prepare('SELECT status FROM beta_inquiries WHERE id = ?').bind(id).first<{ status: string }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
       const from: InquiryStatus = isInquiryStatus(row.status) ? row.status : 'NEW';
       if (!canTransitionInquiry(from, to)) return json({ ok: false, error: `Overgang fra ${from} til ${to} er ikke tillatt.` }, 409);
       const meta = typeof body.meta === 'object' && body.meta !== null ? JSON.stringify(body.meta) : '{}';
       const now = Date.now();
-      await env.FINNBILGLASS_DB.batch([
-        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, meta),
-        env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind(to, now, actor, id),
+      await inquiryDb.batch([
+        inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, meta),
+        inquiryDb.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind(to, now, actor, id),
       ]);
       return json({ ok: true, status: to });
     }
@@ -808,15 +1179,16 @@ export default {
     if (method === 'POST' && inquiryNoteMatch) {
       // Internt notat — append-only, aldri synlig i kundeflyten. Åpen i staging+prod som status.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const actor = typeof body.actor === 'string' ? body.actor.trim() : '', note = body.note;
       if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(note)) return json({ ok: false, error: 'Ansvarlig og notat er påkrevd.' }, 400);
       const id = Number(inquiryNoteMatch[1]);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number }>();
+      const inquiryDb = getInquiryDb(env);
+      const row = await inquiryDb.prepare('SELECT id FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
       const now = Date.now();
-      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
+      await inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
       return json({ ok: true });
     }
     const inquiryReplyMatch = /^\/api\/ops\/inquiries\/(\d+)\/reply$/.exec(path);
@@ -824,46 +1196,53 @@ export default {
       // Svar direkte til kunden på e-post (kanal #4). Append-only-logg som notater.
       // Avhengig av BREVO_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
-      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
-      let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
-      const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
-      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);
-      const id = Number(inquiryReplyMatch[1]);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, navn, kontakt, regnr FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string; regnr: string | null }>();
-      if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
-      const epost = (row.kontakt || '').trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(epost)) return json({ ok: false, error: 'Kunden har ikke oppgitt e-post — e-post-svar krever en e-postadresse.' }, 409);
-      const sendt = await sendReplyEmail(env, epost, row.navn, row.regnr, message);
-      if (!sendt.ok) return json({ ok: false, error: sendt.error || 'Kunne ikke sende e-posten.' }, 502);
-      const now = Date.now();
-      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ to: epost, to_user: row.navn || null })).run();
-      return json({ ok: true, to: epost });
-    }
-    if (method === 'GET' && path === '/api/ops/saker') {
-      // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens
-      // smeltet på session_id). Lesing, token-gate, kun staging+prod.
-      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
-      const inquiries = await env.FINNBILGLASS_DB.prepare(
-        'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
-      ).all<InquiryRow>();
-      const evidenceRows = await env.FINNBILGLASS_DB.prepare(
-        `SELECT c.case_id, c.registration_hash, c.session_id,
-                COALESCE((SELECT r.status FROM evidence_case_review_events r WHERE r.case_id = c.case_id ORDER BY r.created_at DESC LIMIT 1), c.status) AS status,
-                c.created_at,
-                (SELECT COUNT(*) FROM evidence_case_images i WHERE i.case_id = c.case_id) AS image_count
-         FROM evidence_cases c ORDER BY c.created_at DESC LIMIT 500`,
-      ).all<EvidenceCaseRow>();
-      const saker = konsoliderSaker(inquiries.results ?? [], evidenceRows.results ?? []);
-      return json({ ok: true, saker, total: saker.length });
+            if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+            if (!env.BREVO_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
+            let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+            const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
+            if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);
+            const id = Number(inquiryReplyMatch[1]);
+            const row = await getInquiryDb(env).prepare('SELECT id, navn, kontakt, regnr FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string; regnr: string | null }>();
+            if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
+            // Kontaktfeltet kan inneholde både telefon og e-post (f.eks. «92867502 · ma@x.no»).
+            // Trekk ut e-postadressen i stedet for å kreve at hele feltet er en adresse.
+            const kontaktRaa = (row.kontakt || '').trim();
+            const epost = (kontaktRaa.match(/[^\s@·,;|/]+@[^\s@·,;|/]+\.[A-Za-z]{2,}/) || [''])[0].trim();
+            if (!epost) return json({ ok: false, error: 'Kunden har ikke oppgitt e-post — e-post-svar krever en e-postadresse.' }, 409);
+            const sendt = await sendReplyEmail(env, epost, row.navn, row.regnr, message);
+            if (!sendt.ok) return json({ ok: false, error: sendt.error || 'Kunne ikke sende e-posten.' }, 502);
+            const now = Date.now();
+            await getInquiryDb(env).prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ to: epost, to_user: row.navn || null })).run();
+            return json({ ok: true, to: epost });
+          }
+          if (method === 'GET' && path === '/api/ops/saker') {
+            // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens
+            // smeltet på session_id). Lesing, token-gate, kun staging+prod.
+            if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+            if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+            const inquiries = await getInquiryDb(env).prepare(
+              'SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at, is_test FROM beta_inquiries ORDER BY created_at DESC LIMIT 500',
+            ).all<InquiryRow>();
+            // evidence_cases finnes kun på produksjon — på staging returneres tomt array
+            let evidenceRows: { results: EvidenceCaseRow[] } = { results: [] };
+            if (env.ENVIRONMENT === 'production') {
+              evidenceRows = await env.FINNBILGLASS_DB.prepare(
+                `SELECT c.case_id, c.registration_hash, c.session_id,
+                        COALESCE((SELECT r.status FROM evidence_case_review_events r WHERE r.case_id = c.case_id ORDER BY r.created_at DESC LIMIT 1), c.status) AS status,
+                        c.created_at,
+                        (SELECT COUNT(*) FROM evidence_case_images i WHERE i.case_id = c.case_id) AS image_count
+                     FROM evidence_cases c ORDER BY c.created_at DESC LIMIT 500`,
+              ).all<EvidenceCaseRow>();
+            }
+            const saker = konsoliderSaker(inquiries.results ?? [], evidenceRows.results ?? []);
+            return json({ ok: true, saker, total: saker.length });
     }
     const sakDetailMatch = /^\/api\/ops\/saker\/(inquiry|evidence)-(.+)$/.exec(path);
     if (method === 'GET' && sakDetailMatch) {
       // Fase A: konsolidert sakdetalj — inquiry + tilknyttede evidenssaker med
       // bilder + SKU-beslutning + tidslinje. Én visning for hele kundereisen.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const kind = sakDetailMatch[1];
       const rawId = sakDetailMatch[2];
 
@@ -876,27 +1255,37 @@ export default {
 
       if (kind === 'inquiry' && /^\d+$/.test(rawId)) {
         inquiryId = Number(rawId);
-        inquiry = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(inquiryId).first<InquiryDetail>();
+        inquiry = await getInquiryDb(env).prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE id = ?').bind(inquiryId).first<InquiryDetail>();
         if (inquiry) sessionId = inquiry.session_id;
       }
 
       const evidenceCases: EvidenceDetail[] = [];
       if (kind === 'evidence') {
-        const c = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE case_id = ?').bind(rawId).first<EvidenceDetail>();
-        if (c) { evidenceCases.push(c); if (!sessionId && c.session_id) sessionId = c.session_id; }
+        // evidence_cases finnes kun på produksjon
+        if (env.ENVIRONMENT === 'production') {
+          const c = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE case_id = ?').bind(rawId).first<EvidenceDetail>();
+          if (c) { evidenceCases.push(c); if (!sessionId && c.session_id) sessionId = c.session_id; }
+        }
       }
       if (sessionId) {
-        const bySession = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE session_id = ? ORDER BY created_at DESC').bind(sessionId).all<EvidenceDetail>();
-        for (const c of bySession.results ?? []) if (!evidenceCases.some((x) => x.case_id === c.case_id)) evidenceCases.push(c);
+        // evidence_cases by session finnes kun på produksjon
+        if (env.ENVIRONMENT === 'production') {
+          const bySession = await env.FINNBILGLASS_DB.prepare('SELECT case_id, status, created_at, session_id FROM evidence_cases WHERE session_id = ? ORDER BY created_at DESC').bind(sessionId).all<EvidenceDetail>();
+          for (const c of bySession.results ?? []) if (!evidenceCases.some((x) => x.case_id === c.case_id)) evidenceCases.push(c);
+        }
       }
       if (kind === 'evidence' && !inquiry && sessionId) {
-        inquiry = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE session_id = ? ORDER BY created_at DESC LIMIT 1').bind(sessionId).first<InquiryDetail>();
+        inquiry = await getInquiryDb(env).prepare('SELECT id, regnr, navn, kontakt, melding, status, assigned_to, vehicle_json, session_id, created_at, updated_at FROM beta_inquiries WHERE session_id = ? ORDER BY created_at DESC LIMIT 1').bind(sessionId).first<InquiryDetail>();
         if (inquiry) inquiryId = inquiry.id;
       }
 
       const evidenceMedBilder = [];
       for (const c of evidenceCases) {
-        const images = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type, r2_key, thumb_r2_key FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string; r2_key: string; thumb_r2_key: string | null }>();
+        // evidence_case_images finnes kun på produksjon
+        let images = { results: [] as { image_id: string; image_type: string; r2_key: string; thumb_r2_key: string | null }[] };
+        if (env.ENVIRONMENT === 'production') {
+          images = await env.FINNBILGLASS_DB.prepare('SELECT image_id, image_type, r2_key, thumb_r2_key FROM evidence_case_images WHERE case_id = ? ORDER BY created_at').bind(c.case_id).all<{ image_id: string; image_type: string; r2_key: string; thumb_r2_key: string | null }>();
+        }
         evidenceMedBilder.push({
           caseId: c.case_id, status: c.status, createdAt: c.created_at,
           images: (images.results ?? []).map((i) => ({ imageId: i.image_id, imageType: i.image_type, thumbUrl: `/api/ops/thumb?key=${encodeURIComponent(i.thumb_r2_key ?? i.r2_key)}`, fullUrl: `/api/ops/thumb?key=${encodeURIComponent(i.r2_key)}` })),
@@ -905,12 +1294,15 @@ export default {
 
       let skuDecision: unknown = null;
       if (inquiryId) {
-        skuDecision = await env.FINNBILGLASS_DB.prepare('SELECT decision_type, sku, eurocode, reason, created_by, created_at FROM case_sku_decisions WHERE case_id = ? ORDER BY created_at DESC LIMIT 1').bind(String(inquiryId)).first<{ decision_type: string; sku: string | null; eurocode: string | null; reason: string | null; created_by: string; created_at: string }>();
+        // case_sku_decisions finnes kun på produksjon
+        if (env.ENVIRONMENT === 'production') {
+          skuDecision = await env.FINNBILGLASS_DB.prepare('SELECT decision_type, sku, eurocode, reason, created_by, created_at FROM case_sku_decisions WHERE case_id = ? ORDER BY created_at DESC LIMIT 1').bind(String(inquiryId)).first<{ decision_type: string; sku: string | null; eurocode: string | null; reason: string | null; created_by: string; created_at: string }>();
+        }
       }
 
       let timeline: unknown[] = [];
       if (inquiryId) {
-        const events = await env.FINNBILGLASS_DB.prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(inquiryId).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
+        const events = await getInquiryDb(env).prepare('SELECT event_type, previous_status, status, note, created_at, created_by, meta_json FROM beta_inquiry_events WHERE inquiry_id = ? ORDER BY created_at ASC').bind(inquiryId).all<{ event_type: string; previous_status: string | null; status: string | null; note: string | null; created_at: number; created_by: string; meta_json: string | null }>();
         timeline = (events.results ?? []).map((e) => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta */ } return { ...e, meta }; });
       }
 
@@ -925,7 +1317,7 @@ export default {
       // Thumbnail-serving (Oppgave 7): nedskalert skilt-bilde for raskere
       // lasting i /ops/sku. Token-beskyttet; nøkkelen er kun fra D1 (aldri brukerstyrt).
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
       const key = new URL(request.url).searchParams.get('key') ?? '';
       if (!key) return json({ ok: false, error: 'Mangler key' }, 400);
@@ -937,7 +1329,7 @@ export default {
       // AI-støtte-fanen: lese/triaging-flate over AI-observasjoner av opplastede
       // bilder (skilt/43R) + siste operatør-review. Token-beskyttet, lesing.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const observasjoner: unknown[] = [];
       try {
         const rows = await env.FINNBILGLASS_DB.prepare(
@@ -990,7 +1382,7 @@ export default {
       // (→ evidens, evidence_events VERIFIED) eller avvis. Aldri en
       // fitment-beslutning — kun om observasjonen kan brukes som evidens.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>;
       try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const bildeId = Number(body.bilde_id);
@@ -1014,7 +1406,7 @@ export default {
       // SKU-beslutningsflate (Oppgave 3): henvendelser med kundereise-snapshot
       // (resolver-kandidater) + siste beslutning. Token-beskyttet, lesing.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const rows = await env.FINNBILGLASS_DB.prepare(
         `SELECT id, regnr, status, vehicle_json, session_id, created_at FROM beta_inquiries
          WHERE vehicle_json IS NOT NULL AND vehicle_json != ''
@@ -1045,7 +1437,7 @@ export default {
       // velg alternativ SKU / avslå. Append-only; overrides logges i
       // evidence_events. «godkjenn SKU» passerer godkjenningsGate (hard regel 1).
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const idRaw = body.inquiry_id;
       const decision = String(body.decision ?? '');
@@ -1061,7 +1453,8 @@ export default {
         return json({ ok: false, error: 'Ansvarlig og kort begrunnelse er påkrevd.' }, 400);
       }
       const id = Number(idRaw);
-      const row = await env.FINNBILGLASS_DB.prepare('SELECT id, regnr, status, vehicle_json FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; status: string; vehicle_json: string | null }>();
+      const inquiryDb = getInquiryDb(env);
+      const row = await inquiryDb.prepare('SELECT id, regnr, status, vehicle_json FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; regnr: string | null; status: string; vehicle_json: string | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
 
       // Kundereise-snapshot → kandidater for policy-sjekk.
@@ -1076,17 +1469,17 @@ export default {
 
       const now = Date.now();
       if (decision === 'request_better_image') {
-        await env.FINNBILGLASS_DB.batch([
-          env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'NEEDS_INFO', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
-          env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('NEEDS_INFO', now, actor, id),
+        await inquiryDb.batch([
+          inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'NEEDS_INFO', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
+          inquiryDb.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('NEEDS_INFO', now, actor, id),
         ]);
         await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, reason, actor });
         return json({ ok: true, status: 'NEEDS_INFO' });
       }
       if (decision === 'reject') {
-        await env.FINNBILGLASS_DB.batch([
-          env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'REJECTED', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
-          env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('REJECTED', now, actor, id),
+        await inquiryDb.batch([
+          inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) VALUES (?, ?, 'status', ?, 'REJECTED', ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, reason, now, actor),
+          inquiryDb.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('REJECTED', now, actor, id),
         ]);
         await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, reason, actor });
         return json({ ok: true, status: 'REJECTED' });
@@ -1095,7 +1488,7 @@ export default {
       if (!sku) return json({ ok: false, error: 'SKU er påkrevd for godkjenning.' }, 400);
       const valgt = snapshotKandidater.find((k) =>
         String(k.varenr ?? '') === sku || String(k.eurokode ?? '') === (eurocode ?? '') ||
-        (eurocode && String(k.eurokode ?? '') === eurocode),
+        (eurocode && String(k.eurocode ?? '') === eurocode),
       );
       if (!valgt && !kandidater.length) return json({ ok: false, error: 'Saken har ingen kandidater å godkjenne.' }, 409);
       const valgtEuro = String(valgt?.eurocode ?? eurocode ?? '') || null;
@@ -1112,9 +1505,9 @@ export default {
         notes: `${decision}${valgt ? ` — kandidat fra sak ${row.regnr ?? ''}` : ''}${reason ? ` — ${reason}` : ''}`,
       });
       await skrivBeslutning(env, { caseId: String(id), decision: decision as BeslutningType, sku, eurocode: valgtEuro, reason, actor });
-      await env.FINNBILGLASS_DB.batch([
-        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, 'CONFIRMED', ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, `${decision}: ${sku}${valgtEuro ? ` (${valgtEuro})` : ''}${reason ? ` — ${reason}` : ''}`, now, actor, JSON.stringify({ overrideId })),
-        env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('CONFIRMED', now, actor, id),
+      await inquiryDb.batch([
+        inquiryDb.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, 'CONFIRMED', ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, row.status, `${decision}: ${sku}${valgtEuro ? ` (${valgtEuro})` : ''}${reason ? ` — ${reason}` : ''}`, now, actor, JSON.stringify({ overrideId })),
+        inquiryDb.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind('CONFIRMED', now, actor, id),
       ]);
       return json({ ok: true, status: 'CONFIRMED', overrideId });
     }
@@ -1124,7 +1517,7 @@ export default {
       return supportEvidenceUi();
     }
     if (method === 'GET' && path === '/api/support/evidence') {
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const cases = await env.FINNBILGLASS_DB.prepare('SELECT case_id, created_at, status FROM evidence_cases ORDER BY created_at DESC LIMIT 100').all<{ case_id: string; created_at: number; status: string }>();
       const result = [];
       for (const c of cases.results) {
@@ -1158,7 +1551,7 @@ export default {
     if (method === 'POST' && statusMatch) {
       // Statusendring er skriving — styres av feature-flag (append-only, token-gate).
       if (!featureEnabled(env, 'EVIDENCE_STATUS_CHANGE_ENABLED')) return featureDisabled('EVIDENCE_STATUS_CHANGE_ENABLED');
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
       if (!isSupportCaseStatus(to) || !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validReviewReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
@@ -1174,7 +1567,7 @@ export default {
     }
     const imageMatch = /^\/api\/support\/evidence\/([^/]+)\/([^/]+)$/.exec(path);
     if (method === 'GET' && imageMatch) {
-      if (!supportAuthorised(request, env)) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       if (!env.OPPLAERING_BUCKET) return json({ ok: false, error: 'Bildearkiv er ikke konfigurert' }, 503);
       const row = await env.FINNBILGLASS_DB.prepare('SELECT r2_key, mime FROM evidence_case_images WHERE case_id = ? AND image_id = ?').bind(imageMatch[1], imageMatch[2]).first<{ r2_key: string; mime: string }>();
       if (!row) return json({ ok: false, error: 'Ikke funnet' }, 404);
@@ -1242,5 +1635,4 @@ export default {
       }
     }
     return asset;
-  },
-};
+}

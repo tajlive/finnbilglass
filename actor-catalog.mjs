@@ -112,37 +112,6 @@ async function clearCheckpoint() {
 }
 
 /**
- * Parse a price string from Glavista ("1,487.38 €" / "1.487,38 €" / "525 €")
- * Returns { amount: number|null, currency: string }
- * NEVER guesses a currency: EUR only when the € symbol is present.
- */
-function parsePrice(raw) {
-    const s = stripTags(raw);
-    if (!s) return { amount: null, currency: null };
-
-    const currency = s.includes('€') ? 'EUR' : (s.toUpperCase().includes('NOK') ? 'NOK' : null);
-    const digits = s.replace(/[^\d.,-]/g, '').trim();
-    if (!digits) return { amount: null, currency };
-
-    const lastComma = digits.lastIndexOf(',');
-    const lastDot = digits.lastIndexOf('.');
-    let normalized = digits;
-
-    if (lastComma > -1 && lastDot > -1) {
-        // Both present: the rightmost one is the decimal separator
-        if (lastComma > lastDot) normalized = digits.replace(/\./g, '').replace(',', '.');
-        else normalized = digits.replace(/,/g, '');
-    } else if (lastComma > -1) {
-        // Only comma: decimal separator if exactly 2 trailing digits, else thousands
-        const trailing = digits.length - lastComma - 1;
-        normalized = trailing === 2 ? digits.replace(',', '.') : digits.replace(/,/g, '');
-    }
-
-    const amount = Number.parseFloat(normalized);
-    return { amount: Number.isFinite(amount) ? amount : null, currency };
-}
-
-/**
  * Fetch a URL with retries (Glavista intermittently answers 504)
  */
 async function fetchWithRetry(url, { attempts = 4, baseDelayMs = 2000 } = {}) {
@@ -230,18 +199,20 @@ function extractGlavistaProduct($, url = '') {
     const eurocode = normEurocode(mpn);
     if (!eurocode) return null;
 
-    // Price: Glavista exposes a suggested retail price. Record what the source
-    // actually says (currency + origin) instead of inventing a NOK price.
-    const srp = parsePrice(features['Suggested retail price']);
+    // Pris hentes IKKE fra Glavista (Tom 2026-10-31). Kilden oppgir en veiledende
+    // utsalgspris i EUR som aldri er vår salgspris; å lagre den ga bare støy og
+    // fristet til å presentere et EUR-tall som NOK. Vi henter den derfor ikke,
+    // og fjerner den også fra features-listen.
+    delete features['Suggested retail price'];
 
     return {
         varenr: eurocode,
         varenavn: navn || eurocode,
         eurokode: eurocode,
-        pris: srp.currency === 'NOK' ? srp.amount : null,
-        pris_valuta: srp.currency,
-        pris_kilde: srp.amount !== null ? 'glavista_suggested_retail' : '',
-        pris_eur: srp.currency === 'EUR' ? srp.amount : null,
+        pris: null,
+        pris_valuta: null,
+        pris_kilde: '',
+        pris_eur: null,
         brand_title: brand,
         category_string: 'Windscreen',
         url: url,

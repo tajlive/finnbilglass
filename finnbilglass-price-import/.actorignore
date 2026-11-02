@@ -1,0 +1,8 @@
+node_modules
+storage
+.git
+.env
+*.zip
+*.log
+audit-reports/
+*.bak

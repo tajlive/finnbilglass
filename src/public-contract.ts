@@ -128,3 +128,50 @@ export function lekkerInterneFelt(obj: unknown): string[] {
   gaa(obj);
   return funnet;
 }
+
+
+/**
+ * Offentlig projeksjon av et resolver-svar (/api/frontrute).
+ *
+ * Resolveren returnerer interne felt (eurokode, listepris, confidence, grunn)
+ * fordi den også brukes server-side. Kunden skal se kandidatene og prisen,
+ * men aldri eurokoden eller listeprisen — samme kontrakt som /api/glass
+ * (Tom-beslutning 2026-10-31).
+ */
+export interface OffentligResolverKandidat {
+  varenr: string | null;
+  varenavn: string | null;
+  pris: number | null;
+  attributter: Record<string, boolean | null>;
+}
+
+export function tilOffentligResolverKandidat(k: Record<string, unknown> | null | undefined): OffentligResolverKandidat {
+  const kilde = k ?? {};
+  const attributter: Record<string, boolean | null> = {};
+  const råAttr = (kilde.attributter ?? {}) as Record<string, unknown>;
+  for (const [nøkkel, verdi] of Object.entries(råAttr)) {
+    if (typeof verdi === 'boolean' || verdi === null) attributter[nøkkel] = verdi as boolean | null;
+  }
+  const pris = typeof kilde.pris === 'number' && Number.isFinite(kilde.pris) && kilde.pris > 0 ? kilde.pris : null;
+  return {
+    varenr: typeof kilde.varenr === 'string' ? kilde.varenr : null,
+    varenavn: typeof kilde.varenavn === 'string' ? kilde.varenavn : null,
+    pris,
+    attributter,
+  };
+}
+
+export function tilOffentligResolverSvar(resolver: Record<string, unknown> | null | undefined) {
+  const r = resolver ?? {};
+  const kandidater = Array.isArray(r.kandidater) ? r.kandidater.map((k) => tilOffentligResolverKandidat(k as Record<string, unknown>)) : [];
+  const topp = kandidater[0] ?? null;
+  const utfall = typeof r.utfall === 'string' ? r.utfall : null;
+  return {
+    utfall,
+    totalAntall: typeof r.totalAntall === 'number' ? r.totalAntall : kandidater.length,
+    kandidater,
+    sporsmaal: Array.isArray(r.sporsmaal) ? r.sporsmaal.filter((s): s is string => typeof s === 'string') : [],
+    pinpoint: utfall === 'PINPOINT',
+    anbefaling: topp ? { varenr: topp.varenr, varenavn: topp.varenavn, pris: topp.pris } : null,
+  };
+}

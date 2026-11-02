@@ -38,7 +38,7 @@
 }
 </script>
 
-<link rel="stylesheet" href="styles.css?v=20261030-customer-flow-v4">
+<link rel="stylesheet" href="styles.css?v=20261101-min-side-lenke">
 <link rel="icon" type="image/svg+xml" href="ikon.svg?v=20261029-customer-design-v1">
 </head>
 <body class="customer-site">
@@ -128,6 +128,7 @@
       <span class="logo-tekst">finn<span>bilglass</span></span>
     </div>
     <span class="beta" aria-label="Betaversjon">Beta</span>
+    <a class="topp-lenke" id="topp-konto" href="/innlogging">Logg inn</a>
   </header>
 
   <!-- Skjerm 1: Start / søk -->
@@ -362,6 +363,7 @@
     <div id="resultat-kort" class="varekort" role="region" aria-label="Glassdetaljer"></div>
     <div id="resultat-regnr" class="note regnr-note hidden" aria-label="Kjennemerke"></div>
     <div id="resultat-alt" class="alternativer" aria-label="Andre mulige varianter"></div>
+    <div id="resultat-sporsmaal" class="sporsmaal-block hidden" aria-label="Spørsmål om bilens utstyr" aria-live="polite"></div>
     <div class="prislinje" role="status" aria-live="polite">
       <p class="prisforklaring">Vi dobbeltsjekker riktig glass og sender deg et tilbud med pris og levering før du bestemmer deg.</p>
     </div>
@@ -446,10 +448,12 @@
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling.html">Betaling kommer senere</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Vi dobbeltsjekker alle glassvalg og priser før bestilling.</p>
+    <p class="footer-bunn"><a href="/innlogging" id="bunn-konto">Logg inn / Min side</a> · <a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling.html">Betaling kommer senere</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Vi dobbeltsjekker alle glassvalg og priser før bestilling.</p>
   </footer>
 
 </div><!-- /.wrap -->
-<script src="app.js?v=20261030-customer-flow-v4"></script>
+<script src="frontrute-view.js?v=20261031-frontrute-v1"></script>
+<script src="app.js?v=20261101-topplenke-v1"></script>
+<script src="/topplenke.js?v=20261102" defer></script>
 </body>
 </html>

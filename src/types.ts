@@ -18,9 +18,35 @@ export interface Env {
   /** Utgående e-post-svar til kunder (Brevo v3 SMTP). Uten nøkkel er /reply 503 «ikke konfigurert». */
   BREVO_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
+  SUPPORT_NOTIFY_EMAIL?: string;
+  /** Google Identity Services (kundeinnlogging). client_id er offentlig; secret brukes ikke i denne flyten. */
+  GOOGLE_OAUTH_CLIENT_ID?: string;
+  GOOGLE_OAUTH_CLIENT_SECRET?: string;
+  /** Microsoft Entra (personlige + jobb-/skolekontoer via «common»). */
+  MICROSOFT_CLIENT_ID?: string;
+  MICROSOFT_CLIENT_SECRET?: string;
+  /** Meta/Facebook Login. */
+  FACEBOOK_APP_ID?: string;
+  FACEBOOK_APP_SECRET?: string;
+  /**
+   * Kommaseparert liste over sosial innlogging som faktisk er slått på,
+   * f.eks. «google». Secrets alene aktiverer ingenting.
+   */
+  OAUTH_ENABLED_PROVIDERS?: string;
+  /** Cloudflare Access: team-domene (f.eks. tomarnejensen.cloudflareaccess.com) og appens AUD-tag. */
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
+  /** Kommaseparert liste over Access-e-poster som får administratortilgang. */
+  ADMIN_EMAILS?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;
   APIFY_PROBE_ID?: string;
   APIFY_SYNC_TOKEN?: string;
+  /** Lokal D1 for autentiseringslagring (KUN wrangler --local, aldri fjern/prod). */
+  FINNBILGLASS_LOCAL_AUTH?: D1Database;
+  /** Staging D1 for autentiseringslagring (KUN staging). */
+  FINNBILGLASS_STAGING_AUTH?: D1Database;
+  /** inquiries_enabled: "true" aktiverer kundeforespørsler i staging. */
+  inquiries_enabled?: string;
 }

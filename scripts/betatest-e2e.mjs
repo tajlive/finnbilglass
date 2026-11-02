@@ -66,19 +66,25 @@ async function kjorBil(browser, b) {
     await page.locator(aktiv ? '.glassopt.aktiv' : '.glassopt[data-type="front"]').click({ force: true });
 
     // P1: antall UI-spørsmål skal være nøyaktig resolverens sporsmaal.
+    // Ny UI (2026-11): spørsmålene rendres inline i resultatvisningen som .sporsmaal,
+    // i samme render som resultatkortet. Vent på kortinnholdet før telling.
+    await page.waitForSelector('#resultat-kort strong', { timeout: 20000 }).catch(() => {});
     let uiAntall = 0;
     const spmSynlig = await page.isVisible('#screen-spm');
     if (spmSynlig) {
       const teller = (await page.textContent('#spm-teller') || '').trim(); // «1/2»
       uiAntall = parseInt((teller.split('/')[1] || '0'), 10);
+    } else {
+      uiAntall = await page.locator('#screen-resultat .sporsmaal').count();
     }
     if (forventetSpm) {
-      if (!spmSynlig && forventetSpm.length === 0) {
+      const ingenSpm = !spmSynlig && uiAntall === 0;
+      if (ingenSpm && forventetSpm.length === 0) {
         console.log(`  P1 ✓ PINPOINT/ingen skillende spørsmål → direkte resultat`);
-      } else if (spmSynlig && uiAntall === forventetSpm.length) {
+      } else if (uiAntall === forventetSpm.length) {
         console.log(`  P1 ✓ ${uiAntall} spørsmål == resolver.sporsmaal (${forventetSpm.join(', ')})`);
       } else {
-        funnPush('P1', `${navn}: UI viser ${spmSynlig ? uiAntall : 0} spørsmål, resolver sier ${forventetSpm.length} (${forventetSpm.join(', ')}). Doktrinebrudd!`);
+        funnPush('P1', `${navn}: UI viser ${uiAntall} spørsmål, resolver sier ${forventetSpm.length} (${forventetSpm.join(', ')}). Doktrinebrudd!`);
       }
     }
 
@@ -94,9 +100,11 @@ async function kjorBil(browser, b) {
     }
     await page.waitForSelector('#screen-resultat:not(.hidden)', { timeout: 20000 });
 
-    // Resultat: navn, pris.
-    const kortnavn = (await page.textContent('#resultat-kort .name') || '').trim();
-    const pris = (await page.textContent('#resultat-pris') || '').trim();
+    // Resultat: navn, pris. Ny UI: navn i <strong>, pris i .pris inne i #resultat-kort.
+    const kortnavn = ((await page.textContent('#resultat-kort strong').catch(() => '')) ||
+                      (await page.textContent('#resultat-kort .name').catch(() => '')) || '').trim();
+    const pris = ((await page.textContent('#resultat-kort .pris').catch(() => '')) ||
+                  (await page.textContent('#resultat-pris').catch(() => '')) || '').trim();
     console.log(`  resultat: «${kortnavn}» — ${pris}`);
 
     // P2: ingen duplisert merke («NISSAN NISSAN LEAF»).
