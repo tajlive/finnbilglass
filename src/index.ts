@@ -914,14 +914,14 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
             kandidater = [];
           } else {
             kandidater = matches.map((k: any) => ({
-              varenr: k.varenr,
-              varenavn: k.varenavn,
-              // E: aldri eksponere listepris / innkjøpspris / ubekreftede priser
-              pris: typeof k.pris === 'number' ? k.pris : null,
-              eurokode: k.eurokode,
-              posisjon: k.posisjon ?? null,
-              attributter: k.attributter,
-            }));
+            varenr: k.varenr,
+            varenavn: k.varenavn,
+            // E: aldri eksponere listepris / innkjøpspris / ubekreftede priser (CTO C6.0-E)
+            pris: typeof k.pris === 'number' ? Math.round(k.pris * 100) / 100 : null,
+            eurokode: k.eurokode,
+            posisjon: k.posisjon ?? null,
+            attributter: k.attributter,
+          }));
           }
           sokKilde = kandidater.length ? 'typekode+katalog' : 'ingen';
         } catch (e) { console.error('finnGlassKandidater-feil:', e); }
