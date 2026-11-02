@@ -38,7 +38,7 @@ ENVIRONMENT = "production"
 OAUTH_ENABLED_PROVIDERS = "google"
 # Cloudflare Access: Workeren verifiserer Access-JWT-en på serversiden.
 ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
-ACCESS_AUD = "5636455530f3188397dd61767b1728f59df582f645f44f7447a154b1a26c5a98"
+ACCESS_AUD = "c4db2f749f5262849a8bf3f96963e608e8a9345970c51255176423ae7b21790e"
 ADMIN_EMAILS = "tomarnejensen@gmail.com"
 # Evidence-flyt feature-flags — avgrenset release (Tom 2026-08-19): kun opplasting åpen.
 EVIDENCE_UPLOAD_ENABLED = "true"
