@@ -28,8 +28,8 @@
   function compare(col, a, b, dir) {
     var ma = isEmpty(a, col), mb = isEmpty(b, col);
     if (ma && mb) return 0;
-    if (ma) return dir === 'asc' ? 1 : -1;
-    if (mb) return dir === 'asc' ? -1 : 1;
+    if (ma) return 1;
+    if (mb) return -1;
     if (col === 'pris') return dir === 'asc' ? sortValue(col, a) - sortValue(col, b) : sortValue(col, b) - sortValue(col, a);
     return dir === 'asc' ? collator.compare(String(sortValue(col, a)), String(sortValue(col, b))) : collator.compare(String(sortValue(col, b)), String(sortValue(col, a)));
   }
