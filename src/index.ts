@@ -867,13 +867,15 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       const side = typeof b?.side === 'string' ? b.side.trim().toLowerCase() : null;
       if (!regnr && !merke && !sok) return json({ ok: false, error: 'Regnr, merke eller søk påkrevd' }, 400);
       const validKlasser = ['frontrute','bakrute','dor','side','ventil','tak'];
-      if (glassklasse && !validKlasser.includes(glassklasse)) return json({ ok: false, error: 'Ugyldig glassklasse' }, 400);
+      // C6.0-C frotnend-kompatibilitet: frontend bruker 'door', endpoint bruker 'dor'
+      const normalizedKlasse = glassklasse ? (glassklasse === 'door' ? 'dor' : glassklasse === 'rear' ? 'bakrute' : glassklasse === 'roof' ? 'tak' : glassklasse === 'front' ? 'frontrute' : glassklasse) : null;
+      if (normalizedKlasse && !validKlasser.includes(normalizedKlasse)) return json({ ok: false, error: 'Ugyldig glassklasse' }, 400);
       if (dorLedd && !['fremre','bakre'].includes(dorLedd)) return json({ ok: false, error: 'Ugyldig dørledd' }, 400);
       if (ventilLedd && !['foran','bakre'].includes(ventilLedd)) return json({ ok: false, error: 'Ugyldig ventilledd' }, 400);
       if (side && !['venstre','hoyre','begge'].includes(side)) return json({ ok: false, error: 'Ugyldig side' }, 400);
 
       const onske: Posisjonsonske = {};
-      if (glassklasse) onske.glassklasse = glassklasse as Posisjonsonske['glassklasse'];
+      if (normalizedKlasse) onske.glassklasse = normalizedKlasse as Posisjonsonske['glassklasse'];
       if (dorLedd) onske.dorLedd = dorLedd as Posisjonsonske['dorLedd'];
       if (ventilLedd) onske.ventilLedd = ventilLedd as Posisjonsonske['ventilLedd'];
       if (side) onske.sideKilde = side as Posisjonsonske['sideKilde'];
