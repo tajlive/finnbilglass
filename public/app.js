@@ -854,18 +854,77 @@
 
     var generation = ++searchGeneration;
 
-    // Første lansering: bare frontruter går mot den ekte søkemotoren.
-    // Øvrige rutetyper beholder manuell kontroll (uendret).
+    // 3. ALL_GLASS_CANDIDATES: Oppdatert API-flyt for ALLE glassklasser (V6.6.0-C).
     if (selection && selection.kind === 'windshield') {
       sokFrontrute(request, generation);
       return;
     }
 
-    visGlassResultat(request, {
-      status: 'MANUAL_REVIEW',
-      candidates: [],
-      message: 'Vi har registrert hvilken rute du trenger. Vi kontrollerer riktig glass, pris og levering før vi sender tilbud.'
-    }, generation);
+    // C6.0-C: Utvidet søk for andre glasstyper (dør, side, bak, ventil, tak).
+    // Bruker nå samme sikre backend-flyt som frontrute.
+    sokGlasskategori(request, generation);
+  }
+
+  // Ny kategorisøk-funksjon (lik sokFrontrute, men for alle klasser)
+  function sokGlasskategori(request, generation) {
+    var V = window.FBGView;
+    state.glassRequest = request;
+    state.clientRequestId = null;
+
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
+    $('resultat-sporsmaal').classList.add('hidden');
+    $('btn-inquiry').disabled = true;
+    $('inquiry-form').classList.add('hidden');
+    $('screen-resultat').querySelector('h2').textContent = 'Søker etter glass…';
+    var info = $('resultat-status');
+    info.textContent = 'Vi henter glasskandidater til bilen din.';
+    info.className = 'note status';
+    info.classList.remove('hidden');
+    show('resultat');
+
+    fetch('/api/glass/kandidater', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        regnr: state.regnr,
+        vin: state.vin,
+        glassklasse: request.selection.kind,
+        posisjon: request.selection.posisjon || null
+      })
+    })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (generation !== searchGeneration) return;
+      renderGlassResultat(request, data, generation);
+    })
+    .catch(function () {
+      if (generation !== searchGeneration) return;
+      $('screen-resultat').querySelector('h2').textContent = 'Vi fikk ikke hentet glasset akkurat nå';
+      info.textContent = 'Prøv igjen om litt, eller ring oss på 40 40 82 41.';
+      $('btn-inquiry').disabled = false;
+    });
+  }
+
+  function renderGlassResultat(request, data, generation) {
+    if (generation !== searchGeneration) return;
+    
+    // C6.0-D: Hvis kjøretøybasert matching mangler → MANUAL_REVIEW (ingen vilkårlige produkt).
+    var message = data.message || 'Vi har registrert hvilken rute du trenger. Vi kontrollerer riktig glass, pris og levering før vi sender tilbud.';
+    if (data.advarsel) {
+        message = data.advarsel;
+    }
+
+    $('screen-resultat').querySelector('h2').textContent = 'Glassfunn til din bil';
+    var info = $('resultat-status');
+    info.textContent = message;
+    info.className = 'note status';
+    info.classList.remove('hidden');
+    
+    $('btn-inquiry').disabled = false;
+    $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
+    $('inquiry-glass-summary').classList.remove('hidden');
+    $('inquiry-regnr').value = state.regnr || '';
   }
 
   // ── Frontrutesøk mot /api/frontrute (P0 2026-10-31) ─────────────────────
