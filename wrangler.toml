@@ -51,7 +51,7 @@ EVIDENCE_STATUS_CHANGE_ENABLED = "true"
 enabled = false
 invocation_logs = true
 
-# ── Staging-miljø ──
+# Staging-miljø
 [env.staging]
 # Staging beholder workers.dev-URL (prod har den av).
 workers_dev = true
@@ -63,7 +63,7 @@ routes = []
 ENVIRONMENT = "staging"
 OAUTH_ENABLED_PROVIDERS = "google"
 ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
-ACCESS_AUD = "5636455530f3188397dd61767b1728f59df582f645f44f7447a154b1a26c5a98"
+ACCESS_AUD = "8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb"
 ADMIN_EMAILS = "tomarnejensen@gmail.com"
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
