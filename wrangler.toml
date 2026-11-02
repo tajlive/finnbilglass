@@ -36,6 +36,10 @@ ENVIRONMENT = "production"
 # Sosial innlogging: kun leverandører som står her er aktive. Secrets alene
 # aktiverer ingenting — Microsoft/Facebook er bevisst utsatt.
 OAUTH_ENABLED_PROVIDERS = "google"
+# Cloudflare Access: Workeren verifiserer Access-JWT-en på serversiden.
+ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
+ACCESS_AUD = "5636455530f3188397dd61767b1728f59df582f645f44f7447a154b1a26c5a98"
+ADMIN_EMAILS = "tomarnejensen@gmail.com"
 # Evidence-flyt feature-flags — avgrenset release (Tom 2026-08-19): kun opplasting åpen.
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
@@ -58,6 +62,9 @@ routes = []
 [env.staging.vars]
 ENVIRONMENT = "staging"
 OAUTH_ENABLED_PROVIDERS = "google"
+ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
+ACCESS_AUD = "5636455530f3188397dd61767b1728f59df582f645f44f7447a154b1a26c5a98"
+ADMIN_EMAILS = "tomarnejensen@gmail.com"
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
 EVIDENCE_STATUS_CHANGE_ENABLED = "true"

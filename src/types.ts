@@ -33,6 +33,11 @@ export interface Env {
    * f.eks. «google». Secrets alene aktiverer ingenting.
    */
   OAUTH_ENABLED_PROVIDERS?: string;
+  /** Cloudflare Access: team-domene (f.eks. tomarnejensen.cloudflareaccess.com) og appens AUD-tag. */
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
+  /** Kommaseparert liste over Access-e-poster som får administratortilgang. */
+  ADMIN_EMAILS?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;

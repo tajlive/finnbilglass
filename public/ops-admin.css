@@ -88,6 +88,7 @@ button.btn.teal:hover { background: #0c5f59; }
 button.btn.ghost { background: #e8eef5; color: var(--ink); }
 button.btn.ghost:hover { background: #dde6f0; }
 button.btn:disabled { opacity: .45; cursor: not-allowed; }
+.ident { font-size: 13px; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; white-space: nowrap; }
 
 /* ── Kort og KPI ───────────────────────────────────────── */
 .card {

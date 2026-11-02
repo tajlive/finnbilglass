@@ -40,8 +40,7 @@ export function opsAdminUi(): Response {
         <p class="sub">Kundesaker, glasskontroll og oppfølging</p>
       </div>
       <div class="token-bar">
-        <input id="token" type="password" placeholder="Support-token" autocomplete="current-password">
-        <button class="btn teal" id="load">Åpne</button>
+        <span class="ident" id="ident">Sjekker innlogging…</span>
       </div>
     </div>
 

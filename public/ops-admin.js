@@ -16,11 +16,11 @@
     });
   }
 
-  function token() { return sessionStorage.getItem(TOKEN_KEY) || ''; }
+  // Access-identiteten bæres av HttpOnly-cookien; ingenting hemmelig lagres i JS.
 
   function api(sti, opts) {
     opts = opts || {};
-    var h = { Authorization: 'Bearer ' + token() };
+    var h = {};
     if (opts.body) h['Content-Type'] = 'application/json';
     return fetch(sti, {
       method: opts.method || 'GET',
@@ -257,7 +257,7 @@
       var img = document.createElement('img');
       img.alt = im.imageType || 'bilde';
       rad.appendChild(img);
-      fetch(im.thumbUrl, { headers: { Authorization: 'Bearer ' + token() } })
+      fetch(im.thumbUrl, { credentials: 'include' })
         .then(function (r) { return r.ok ? r.blob() : null; })
         .then(function (b) { if (b) img.src = URL.createObjectURL(b); })
         .catch(function () { /* ignorer */ });
@@ -312,19 +312,44 @@
 
   // ── Oppstart ───────────────────────────────────────────
   function start() {
-    var inp = $('#token');
-    if (token()) inp.value = token();
-    $('#load').addEventListener('click', function () {
-      sessionStorage.setItem(TOKEN_KEY, inp.value.trim());
-      vis('dashboard');
-    });
-    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') $('#load').click(); });
     $$('.nav-item').forEach(function (b) {
       b.addEventListener('click', function () { vis(b.dataset.view); });
     });
     var filter = $('#innboks-filter');
-    if (filter) filter.addEventListener('change', function () { state.filter = filter.value; renderTabell('#innboks-tabell', state.saker.filter(function (s) { return !state.filter || s.status === state.filter; })); });
-    if (token()) vis('dashboard');
+    if (filter) {
+      filter.addEventListener('change', function () {
+        state.filter = filter.value;
+        renderTabell('#innboks-tabell', state.saker.filter(function (s) { return !state.filter || s.status === state.filter; }));
+      });
+    }
+    sjekkIdentitet();
+  }
+
+  // Verifiserer Access-identiteten på serversiden via /api/ops/whoami.
+  function sjekkIdentitet() {
+    var el = document.getElementById('ident');
+    fetch('/api/ops/whoami', { credentials: 'include' })
+      .then(function (r) { return r.json().then(function (d) { return { st: r.status, d: d }; }); })
+      .then(function (res) {
+        if (res.st === 200 && res.d && res.d.ok) {
+          if (el) el.innerHTML = '<span style="color:var(--ok);font-weight:700">●</span> ' +
+            esc(res.d.epost || 'automatisering') + ' <span class="muted">(' + esc(res.d.metode) + ')</span>';
+          vis('dashboard');
+          return;
+        }
+        if (el) el.innerHTML = '<span style="color:var(--danger);font-weight:700">●</span> Ikke innlogget';
+        var innhold = document.getElementById('kpi-grid');
+        if (innhold) {
+          innhold.innerHTML = '<div class="error-box">' +
+            (res.st === 403
+              ? 'Access-identiteten din har ikke administratortilgang. Kontakt eier av kontoen.'
+              : 'Du er ikke innlogget. <a href="/ops">Logg inn med Cloudflare Access</a> og prøv igjen.') +
+            '</div>';
+        }
+      })
+      .catch(function () {
+        if (el) el.textContent = 'Kunne ikke sjekke innlogging';
+      });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
