@@ -9,6 +9,31 @@
   var $ = function (sel) { return document.querySelector(sel); };
   var $$ = function (sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); };
 
+  var collator = new Intl.Collator('nb', { numeric: true, sensitivity: 'base' });
+  var sortState = { col: null, dir: 'asc' };
+
+  function sortValue(col, t) {
+    if (col === 'pris') { var v = t.pris ? parseFloat(String(t.pris).replace(/[^\d.,]/g, '').replace(',', '.')) : NaN; return isNaN(v) ? Infinity : v; }
+    if (col === 'varenr') return (t.varenr || t.eurokode || '');
+    if (col === 'plassering') return (t.glassklasse || t.plassering || '');
+    if (col === 'beskrivelse') return (t.beskrivelse || '');
+    if (col === 'bil') return (t.bil || '');
+    if (col === 'kilde') return (t.kilde || '');
+    return '';
+  }
+  function isEmpty(t, col) {
+    if (col === 'pris') return !t.pris || String(t.pris).trim() === '';
+    var s = sortValue(col, t); return s === '' || s === null || s === undefined;
+  }
+  function compare(col, a, b, dir) {
+    var ma = isEmpty(a, col), mb = isEmpty(b, col);
+    if (ma && mb) return 0;
+    if (ma) return dir === 'asc' ? 1 : -1;
+    if (mb) return dir === 'asc' ? -1 : 1;
+    if (col === 'pris') return dir === 'asc' ? sortValue(col, a) - sortValue(col, b) : sortValue(col, b) - sortValue(col, a);
+    return dir === 'asc' ? collator.compare(String(sortValue(col, a)), String(sortValue(col, b))) : collator.compare(String(sortValue(col, b)), String(sortValue(col, a)));
+  }
+
   function esc(v) {
     return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -342,7 +367,29 @@
           (d.utfall === 'EXACT' ? 'CONFIRMED' : d.utfall === 'AMBIGUOUS' ? 'NEEDS_INFO' : 'NEW') + '">' +
           esc(d.utfall) + '</span>' + (d.filter && d.filter.advarsel ? ' · <span style="color:var(--danger)">' + esc(d.filter.advarsel) + '</span>' : '');
         if (!d.treff.length) { ut.innerHTML = '<div class="empty">Ingen treff.</div>'; return; }
-        ut.innerHTML = '<table class="list"><thead><tr><th>Varenr/Eurokode</th><th>Plassering</th><th>Beskrivelse</th><th>Bil</th><th>Pris</th><th>Kilde</th></tr></thead><tbody>' +
+
+        // Sorter treff før rendering
+        var colMap = { 'varenr': 0, 'plassering': 1, 'beskrivelse': 2, 'bil': 3, 'pris': 4, 'kilde': 5 };
+        var sortCol = sortState.col;
+        if (sortCol && colMap[sortCol] !== undefined) {
+          d.treff.sort(function (a, b) { return compare(sortCol, a, b, sortState.dir); });
+        }
+
+        function sortBtn(label, col) {
+          var isActive = sortState.col === col;
+          var arrow = '';
+          if (isActive) arrow = sortState.dir === 'asc' ? ' <span aria-hidden="true">↑</span>' : ' <span aria-hidden="true">↓</span>';
+          return '<th><button type="button" class="sort-btn" data-sort="' + col + '" aria-label="Sorter ' + label + (isActive ? (sortState.dir === 'asc' ? ', stigende' : ', synkende') : '') + '">' + esc(label) + arrow + '</button></th>';
+        }
+
+        ut.innerHTML = '<table class="list"><thead><tr>' +
+          sortBtn('Varenr/Eurokode', 'varenr') +
+          sortBtn('Plassering', 'plassering') +
+          sortBtn('Beskrivelse', 'beskrivelse') +
+          sortBtn('Bil', 'bil') +
+          sortBtn('Pris', 'pris') +
+          sortBtn('Kilde', 'kilde') +
+          '</tr></thead><tbody>' +
           d.treff.map(function (t) {
             var id = t.varenr || t.eurokode || '';
             var detalj = [];
@@ -367,6 +414,17 @@
               '<td>' + (t.pris ? esc(t.pris) + ' kr' : '<span class="muted">—</span>') + '</td>' +
               '<td class="muted">' + esc(t.kilde) + '</td></tr>';
           }).join('') + '</tbody></table>';
+
+        // Bind sorter-knapper
+        ut.querySelectorAll('button.sort-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var col = btn.dataset.sort;
+            if (sortState.col === col) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+            else { sortState.col = col; sortState.dir = 'asc'; }
+            katalogSok(); // ny søk med samme q, men sortert
+          });
+        });
+
       })
       .catch(function (e) { status.textContent = ''; feil('#katalog-treff', e.message); });
   }

@@ -13,7 +13,7 @@ export function opsAdminUi(): Response {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Center — Finnbilglass</title>
-<link rel="stylesheet" href="/ops-admin.css?v=20261102">
+<link rel="stylesheet" href="/ops-admin.css?v=20261103">
 </head>
 <body class="admin">
 <div class="admin-shell">
@@ -129,7 +129,7 @@ export function opsAdminUi(): Response {
     </section>
   </main>
 </div>
-<script src="/ops-admin.js?v=20261102" defer></script>
+<script src="/ops-admin.js?v=20261103" defer></script>
 </body>
 </html>`;
   return new Response(html, {
