@@ -329,18 +329,34 @@
     if (q.length < 2) { status.textContent = 'Skriv minst to tegn.'; return; }
     status.textContent = 'Søker…';
     ut.innerHTML = '';
-    api('/api/ops/katalog/sok?q=' + encodeURIComponent(q))
+    var klasse = (document.getElementById('katalog-klasse') || {}).value || '';
+    var side = (document.getElementById('katalog-side') || {}).value || '';
+    var url = '/api/ops/katalog/sok?q=' + encodeURIComponent(q);
+    if (klasse) url += '&glassklasse=' + encodeURIComponent(klasse);
+    if (side) url += '&side_kilde=' + encodeURIComponent(side);
+    api(url)
       .then(function (d) {
         status.innerHTML = '<strong>' + d.antall + ' treff</strong> · utfall: <span class="pill ' +
           (d.utfall === 'EXACT' ? 'CONFIRMED' : d.utfall === 'AMBIGUOUS' ? 'NEEDS_INFO' : 'NEW') + '">' +
-          esc(d.utfall) + '</span>' + (d.advarsel ? ' · <span style="color:var(--danger)">' + esc(d.advarsel) + '</span>' : '');
+          esc(d.utfall) + '</span>' + (d.filter && d.filter.advarsel ? ' · <span style="color:var(--danger)">' + esc(d.filter.advarsel) + '</span>' : '');
         if (!d.treff.length) { ut.innerHTML = '<div class="empty">Ingen treff.</div>'; return; }
         ut.innerHTML = '<table class="list"><thead><tr><th>Varenr/Eurokode</th><th>Plassering</th><th>Beskrivelse</th><th>Bil</th><th>Pris</th><th>Kilde</th></tr></thead><tbody>' +
           d.treff.map(function (t) {
             var id = t.varenr || t.eurokode || '';
+            var detalj = [];
+            if (t.side_kilde) detalj.push(t.side_kilde === 'forer' ? 'førerside' : 'passasjerside');
+            if (t.fysisk_side) detalj.push(t.fysisk_side);
+            else if (t.fysisk_side_krever_avklaring) detalj.push('fysisk side må bekreftes');
+            if (t.dor_ledd) detalj.push(t.dor_ledd + ' dør');
+            if (t.ventil_ledd) detalj.push(t.ventil_ledd + ' ventil');
+            if (t.siderute_nummer) detalj.push('siderute ' + t.siderute_nummer);
+            if (t.delt_bakrute) detalj.push('delt bakrute');
+            var plassCelle = '<span class="pill' + (t.glassklasse === 'frontrute' ? ' CONFIRMED' : '') + '">' + esc(t.glassklasse || t.plassering || '—') + '</span>' +
+              (t.typekode ? ' <span class="muted" title="' + esc(t.plassering_grunn || '') + '">' + esc(t.typekode) + '</span>' : ' <span class="muted">uten typekode</span>') +
+              (detalj.length ? '<br><span class="muted">' + esc(detalj.join(' · ')) + '</span>' : '') +
+              (t.typekode_konflikt ? '<br><span style="color:var(--danger)">konflikt — må kontrolleres</span>' : '');
             return '<tr><td><strong>' + esc(id) + '</strong>' + (t.eurokode && id !== t.eurokode ? '<br><span class="muted">' + esc(t.eurokode) + '</span>' : '') + '</td>' +
-              '<td><span class="pill' + (t.plassering === 'Frontrute' ? ' CONFIRMED' : '') + '">' + esc(t.glassklasse || t.plassering || '—') + '</span>' +
-              (t.typekode ? ' <span class="muted" title="' + esc(t.plassering_grunn || '') + '">' + esc(t.typekode) + '</span>' : ' <span class="muted">uten typekode</span>') + '</td>' +
+              '<td>' + plassCelle + '</td>' +
               '<td>' + esc(t.beskrivelse || '') + '</td>' +
               '<td class="muted">' + esc(t.bil || '') + '</td>' +
               '<td>' + (t.pris ? esc(t.pris) + ' kr' : '<span class="muted">—</span>') + '</td>' +

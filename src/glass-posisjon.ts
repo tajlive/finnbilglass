@@ -41,6 +41,8 @@ export interface Posisjonsresultat {
   kilde: 'eurokode' | 'navn' | 'begge' | 'typekode' | 'car-body-style' | 'ingen';
   /** Sann når navn og eurokode er uenige om TYPE. Skal ikke auto-avgjøres. */
   typekonflikt: boolean;
+  /** Sann når typekoden motsier navn/eurokode. Blokkerer alltid auto-godkjenning. */
+  typekodeKonflikt: boolean;
   navnType: GlassType | null;
   eurokodeType: GlassType | null;
   grunn: string;
@@ -58,10 +60,10 @@ export interface TypekodePosisjon {
   type: GlassType;
   /** Kildens egen betegnelse — fører/passasjer, ikke venstre/høyre. */
   side: 'forer' | 'passasjer' | null;
-  /** Fysisk side. Null når styretype er ukjent — aldri gjettet. */
+  /** Fysisk side. Alltid null når styretypen ikke er kjent — aldri gjettet. */
   fysiskSide: GlassSide;
-  /** Sann når fysiskSide er utledet fra en antatt venstrestyring. */
-  fysiskSideAntatt: boolean;
+  /** Sann når det mangler dokumentert styretype og fysisk side må avklares. */
+  fysiskSideKreverAvklaring: boolean;
   dorLedd: DorLedd;
   ventilLedd: VentilLedd;
   /** 1, 2 eller 3 for nummererte bakre sideruter. */
@@ -90,18 +92,21 @@ export function fraTypekode(
   const k = kode.trim().toUpperCase();
   if (!TYPEKODE_MONSTER.test(k)) return null;
 
-  const antatt = kjorestyring === null;
-  const styring = kjorestyring ?? 'venstre';
-  const forerErVenstre = styring === 'venstre';
-  const fysisk = (side: 'forer' | 'passasjer' | null): GlassSide =>
-    side === null ? null : side === 'forer' ? (forerErVenstre ? 'venstre' : 'hoyre') : forerErVenstre ? 'hoyre' : 'venstre';
+  // Uten dokumentert styretype finnes ingen fysisk side. Vi lagrer aldri en
+  // antakelse som om den var et faktum — kunden må avklare styretypen først.
+  const kreverAvklaring = kjorestyring === null;
+  const forerErVenstre = kjorestyring === 'venstre';
+  const fysisk = (side: 'forer' | 'passasjer' | null): GlassSide => {
+    if (side === null || kreverAvklaring) return null;
+    return side === 'forer' ? (forerErVenstre ? 'venstre' : 'hoyre') : forerErVenstre ? 'hoyre' : 'venstre';
+  };
 
   const base: TypekodePosisjon = {
     kode: k,
     type: 'ukjent',
     side: null,
     fysiskSide: null,
-    fysiskSideAntatt: antatt,
+    fysiskSideKreverAvklaring: kreverAvklaring,
     dorLedd: null,
     ventilLedd: null,
     sideruteNummer: null,
@@ -182,13 +187,19 @@ const FREMME_ORD = ['FREMME', 'FRAMME', 'FRAM', 'FORAN', 'FRONT'] as const;
 const BAKRE_ORD = ['BAK', 'BAKRE', 'REAR'] as const;
 const LIST_ORD = ['PYNTELIST', 'GUMMILIST', 'KLIPS', 'PAKNING', 'LIST'] as const;
 
-/** Car-body-style mapping fra varenavn → antall dører → fremre/bakre logikk.
+/**
+ * Hvilke dører bilen HAR ifølge karosseritypen.
+ *
+ * Denne funksjonen sier IKKE hvilken dørrute et bestemt glass er, og brukes
+ * derfor aldri til å sette `dorLedd`. Bare typekoden gir det svaret.
+ *
  *  2-dør (coupe, cabriolet, hardtop, 2D, 2-DOOR) → kun fremre dør
  *  3-dør (hatchback 3d, 3D, 3-DOOR) → kun fremre dør
  *  4/5-dør (sedan, kombi, st.vogn, station wagon, 4D, 5D, 4-DOOR, 5-DOOR) → fremre + bakre dør
  *  SUV / CROSSOVER / ESTATE / AVANT / TOURING / SPORTBACK ofte 4/5-dør
- *  Returnerer { harFremre: boolean, harBakre: boolean } eller null hvis ukjent. */
-function carBodyStyleFraNavn(navn: string): { harFremre: boolean; harBakre: boolean } | null {
+ *  Returnerer { harFremre: boolean, harBakre: boolean } eller null hvis ukjent.
+ */
+export function carBodyStyleFraNavn(navn: string): { harFremre: boolean; harBakre: boolean } | null {
   const n = navn.toUpperCase();
   // 2-dør indikatorer
   if (/(?<![A-ZÆØÅ])COUPE(?![A-ZÆØÅ])|(?<![A-ZÆØÅ])CABRIOLET(?![A-ZÆØÅ])|(?<![A-ZÆØÅ])HARDTOP(?![A-ZÆØÅ])|(?<![A-ZÆØÅ])2D(?![A-ZÆØÅ])|(?<![A-ZÆØÅ])2-DOOR(?![A-ZÆØÅ])/.test(n)) {
@@ -351,24 +362,9 @@ export function klassifiserGlass(
 
   // Car-body-style fallback for dørruter: KUN når ingen typekode-parameter ble sendt
   // (typekode fra varekort er eneste autoritative kilde; car-body-style er kun estimat)
-  if (!dorLedd && type === 'dor' && !harTypekode) {
-    const cbs = carBodyStyleFraNavn(navn);
-    if (cbs) {
-      // Hvis eurokode side = venstre → fremre førerside (venstre)
-      // Hvis eurokode side = høyre → fremre passasjerside (høyre)
-      // For bakre: motsatt side av fremre på samme bil
-      // Enkel logikk: venstre side = fremre venstre (førerside), høyre side = fremre høyre (passasjerside)
-      // Bakre dør er samme side som fremre (venstre/høyre), men bakre
-      if (side === 'venstre' && cbs.harFremre) dorLedd = 'fremre';
-      else if (side === 'hoyre' && cbs.harFremre) dorLedd = 'fremre';
-      else if (side === 'venstre' && cbs.harBakre) dorLedd = 'bakre';
-      else if (side === 'hoyre' && cbs.harBakre) dorLedd = 'bakre';
-      // Hvis bilen har både fremre og bakre (4/5-dør), bestem utfra kontekst:
-      // De fleste dørruter i katalogen er fremre — men vi vet det ikke uten typekode.
-      // Så vi setter ikke dorLedd her uten typekode, men logger at car-body-style finnes.
-      if (dorLedd) kilde = 'car-body-style';
-    }
-  }
+  // Karosseritype sier hvilke dører bilen HAR, ikke hvilken dørrute dette glasset er.
+  // Den kan derfor aldri sette dorLedd — bare bekrefte at posisjonen er mulig.
+  // Uten typekode forblir dorLedd null, og posisjonen må avklares med kunden.
 
   // Ikke-glass: dekorlist, klips, pakning og klips-kit.
   const erListe = harOrd(navn, LIST_ORD) || /(?:PY|GU)[A-Z]{0,4}$/.test(vr) || /^\d{3,5}K$/.test(vr);
@@ -393,6 +389,7 @@ export function klassifiserGlass(
     erFrontrute,
     kilde: kildeOverride ? 'typekode' : kilde,
     typekonflikt,
+    typekodeKonflikt,
     navnType,
     eurokodeType: gruppe,
     grunn,
@@ -408,4 +405,48 @@ export function erFrontruteRad(
   typekode?: string | null,
 ): boolean {
   return klassifiserGlass(varenavn, varenr, eurokode, typekode).erFrontrute;
+}
+
+/**
+ * Ønske om en bestemt glassposisjon — slik kunden eller saksbehandleren har uttrykt det.
+ * Alle felt er valgfrie: det som ikke er oppgitt, filtrerer ikke.
+ */
+export interface Posisjonsonske {
+  glassklasse?: 'frontrute' | 'bakrute' | 'dor' | 'ventil' | 'side' | null;
+  sideKilde?: 'forer' | 'passasjer' | null;
+  dorLedd?: 'fremre' | 'bakre' | null;
+  ventilLedd?: 'foran' | 'bakre' | null;
+  sideruteNummer?: number | null;
+  deltBakrute?: boolean | null;
+}
+
+/**
+ * Filtrerer kandidater på posisjon.
+ *
+ * Regler:
+ *  - Bare oppgitte ønsker filtrerer. «Siderute» uten nummer beholder 1, 2 og 3.
+ *  - Kandidat uten dokumentert plassering beholdes når ønsket er bredt, men
+ *    fjernes når ønsket er spesifikt (vi kan ikke bevise at den passer).
+ *  - Filtrering gir aldri EXACT. Den fjerner bare det som beviselig er feil plass.
+ */
+export function filtrerPaPosisjon<T extends { varenavn?: string | null; varenr?: string | null; eurokode?: string | null; typekode?: string | null }>(
+  kandidater: T[],
+  onske: Posisjonsonske | null | undefined,
+): T[] {
+  if (!onske) return kandidater;
+  const spesifikt = Boolean(onske.glassklasse || onske.sideKilde || onske.dorLedd || onske.ventilLedd || onske.sideruteNummer != null || onske.deltBakrute != null);
+  if (!spesifikt) return kandidater;
+
+  return kandidater.filter((k) => {
+    const tp = fraTypekode(k.typekode ?? null);
+    // Ingen dokumentert plassering: behold bare når vi ikke leter etter noe bestemt.
+    if (!tp || !tp.gyldig || tp.type === 'ukjent') return false;
+    if (onske.glassklasse && tp.type !== onske.glassklasse) return false;
+    if (onske.sideKilde && tp.side !== onske.sideKilde) return false;
+    if (onske.dorLedd && tp.dorLedd !== onske.dorLedd) return false;
+    if (onske.ventilLedd && tp.ventilLedd !== onske.ventilLedd) return false;
+    if (onske.sideruteNummer != null && tp.sideruteNummer !== onske.sideruteNummer) return false;
+    if (onske.deltBakrute != null && tp.deltBakrute !== onske.deltBakrute) return false;
+    return true;
+  });
 }

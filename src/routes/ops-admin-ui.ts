@@ -93,7 +93,20 @@ export function opsAdminUi(): Response {
         <h2>Katalogsøk</h2>
         <p class="hint">Søk med registreringsnummer, VIN, eurokode, OE-nummer, varenummer eller bilmodell.</p>
         <div class="token-bar" style="margin-bottom:12px">
-          <input id="katalog-q" placeholder="SU 18018 · 7939AGSV · 3152GN · SUBARU XV" style="width:340px">
+          <input id="katalog-q" placeholder="SU 18018 · 7939AGSV · 3152GN · SUBARU XV" style="width:300px">
+          <select id="katalog-klasse" aria-label="Glassklasse">
+            <option value="">Alle glassklasser</option>
+            <option value="frontrute">Frontrute</option>
+            <option value="bakrute">Bakrute</option>
+            <option value="dor">Dørrute</option>
+            <option value="ventil">Ventilrute</option>
+            <option value="side">Siderute</option>
+          </select>
+          <select id="katalog-side" aria-label="Side">
+            <option value="">Begge sider</option>
+            <option value="forer">Førerside</option>
+            <option value="passasjer">Passasjerside</option>
+          </select>
           <button class="btn teal" id="katalog-sok">Søk</button>
         </div>
         <div id="katalog-status" class="muted"></div>

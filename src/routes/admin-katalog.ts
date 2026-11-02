@@ -61,6 +61,8 @@ function posisjonsfelter(typekode?: string, beskrivelse?: string, kilde?: string
       delt_bakrute: false,
       plassering_dokumentert: false,
       plassering_grunn: typekode ? `ukjent typekode «${typekode}»` : 'ingen typekode i registeret',
+      typekode_konflikt: false,
+      fitment_status: 'PROVISIONAL',
     };
   }
   return {
@@ -70,22 +72,102 @@ function posisjonsfelter(typekode?: string, beskrivelse?: string, kilde?: string
     glassklasse: tp.type,
     side_kilde: tp.side,
     fysisk_side: tp.fysiskSide,
-    fysisk_side_antatt: tp.fysiskSideAntatt,
+    fysisk_side_krever_avklaring: tp.fysiskSideKreverAvklaring,
     dor_ledd: tp.dorLedd,
     ventil_ledd: tp.ventilLedd,
     siderute_nummer: tp.sideruteNummer,
     delt_bakrute: tp.deltBakrute,
     plassering_dokumentert: true,
     plassering_grunn: tp.grunn,
+    typekode_konflikt: false,
+    // Plasseringen er dokumentert, men det sier ingenting om kjøretøypassform.
+    fitment_status: 'PROVISIONAL',
   };
 }
 
 /** Utleder utfall lik resolverens språk: EXACT / PROVISIONAL / AMBIGUOUS / MANUAL_REVIEW. */
-function utfallFor(antall: number, harPris: boolean, harEgenskaper: boolean): string {
+/**
+ * Utfall for et katalogsøk.
+ *
+ * Katalogen er en kandidatgenerator. Pris og egenskaper dokumenterer ikke at
+ * glasset passer en bestemt bil, og kan derfor ALDRI gi EXACT. EXACT krever
+ * dokumentert fitment-evidens fra resolveren — ikke et katalogsøk.
+ */
+export function utfallFor(antall: number, harPris: boolean, harEgenskaper: boolean): string {
   if (antall === 0) return 'MANUAL_REVIEW';
   if (antall > 1) return 'AMBIGUOUS';
-  if (harPris && harEgenskaper) return 'EXACT';
+  // Én kandidat: fortsatt bare et forslag, uansett hvor mye metadata den har.
+  void harPris; void harEgenskaper;
   return 'PROVISIONAL';
+}
+
+const KLASSE_KODER: Record<string, string[]> = {
+  frontrute: ['F'],
+  bakrute: ['B', 'BF', 'BP'],
+  dor: ['DFF', 'DFB', 'DPF', 'DPB'],
+  ventil: ['DFFV', 'DFBV', 'DPFV', 'DPBV'],
+  side: ['SFB1', 'SFB2', 'SFB3', 'SPB1', 'SPB2', 'SPB3'],
+};
+const SIDE_KODER: Record<string, string[]> = {
+  forer: ['DFF', 'DFB', 'DFFV', 'DFBV', 'SFB1', 'SFB2', 'SFB3', 'BF'],
+  passasjer: ['DPF', 'DPB', 'DPFV', 'DPBV', 'SPB1', 'SPB2', 'SPB3', 'BP'],
+};
+const DOR_LEDD_KODER: Record<string, string[]> = {
+  fremre: ['DFF', 'DPF'],
+  bakre: ['DFB', 'DPB'],
+};
+const VENTIL_LEDD_KODER: Record<string, string[]> = {
+  foran: ['DFFV', 'DPFV'],
+  bakre: ['DFBV', 'DPBV'],
+};
+
+/**
+ * Oversetter validerte filtre til en liste typekoder som kan brukes i SQL.
+ * Ukjent filterverdi gir null (avvises), ikke en gjettet liste.
+ */
+function koderForFiltre(url: URL): { koder: string[] | null; feil: string | null; advarsel: string | null } {
+  const sett: Set<string> | null = new Set<string>();
+  let feil: string | null = null;
+  let advarsel: string | null = null;
+  const snevre = (liste: string[]) => {
+    if (!sett) return;
+    for (const k of [...sett]) if (!liste.includes(k)) sett.delete(k);
+  };
+
+  const klasse = (url.searchParams.get('glassklasse') || '').toLowerCase();
+  if (klasse) {
+    if (!KLASSE_KODER[klasse]) return { koder: null, feil: `UKJENT_GLASSKLASSE`, advarsel: null };
+    if (sett) KLASSE_KODER[klasse].forEach((k) => sett.add(k));
+  }
+  const side = (url.searchParams.get('side_kilde') || '').toLowerCase();
+  if (side) {
+    if (!SIDE_KODER[side]) return { koder: null, feil: 'UKJENT_SIDE', advarsel: null };
+    if (sett && sett.size === 0) SIDE_KODER[side].forEach((k) => sett.add(k)); else snevre(SIDE_KODER[side]);
+  }
+  const dorLedd = (url.searchParams.get('dor_ledd') || '').toLowerCase();
+  if (dorLedd) {
+    if (!DOR_LEDD_KODER[dorLedd]) return { koder: null, feil: 'UKJENT_DOR_LEDD', advarsel: null };
+    if (sett && sett.size === 0) DOR_LEDD_KODER[dorLedd].forEach((k) => sett.add(k)); else snevre(DOR_LEDD_KODER[dorLedd]);
+  }
+  const ventilLedd = (url.searchParams.get('ventil_ledd') || '').toLowerCase();
+  if (ventilLedd) {
+    if (!VENTIL_LEDD_KODER[ventilLedd]) return { koder: null, feil: 'UKJENT_VENTIL_LEDD', advarsel: null };
+    if (sett && sett.size === 0) VENTIL_LEDD_KODER[ventilLedd].forEach((k) => sett.add(k)); else snevre(VENTIL_LEDD_KODER[ventilLedd]);
+  }
+  // Fysisk side krever dokumentert styretype. Uten den fjerner vi ingen kandidater.
+  const fysisk = (url.searchParams.get('fysisk_side') || '').toLowerCase();
+  if (fysisk) {
+    const styring = (url.searchParams.get('kjorestyring') || '').toLowerCase();
+    if (fysisk !== 'venstre' && fysisk !== 'hoyre') return { koder: null, feil: 'UKJENT_FYSISK_SIDE', advarsel: null };
+    if (styring !== 'venstre' && styring !== 'hoyre') {
+      advarsel = 'FYSISK_SIDE_KREVER_KJORESTYRING — filteret er ignorert, ingen kandidater er fjernet';
+    } else {
+      const forerErVenstre = styring === 'venstre';
+      const maalSide = fysisk === (forerErVenstre ? 'venstre' : 'hoyre') ? 'forer' : 'passasjer';
+      if (sett && sett.size === 0) SIDE_KODER[maalSide].forEach((k) => sett.add(k)); else snevre(SIDE_KODER[maalSide]);
+    }
+  }
+  return { koder: sett && sett.size > 0 ? [...sett] : null, feil, advarsel };
 }
 
 /** Fritekstsøk i katalog, prisliste og varenummer. */
@@ -98,17 +180,40 @@ export async function handleKatalogSok(env: Env, url: URL): Promise<Response> {
 
   const treff: Rad[] = [];
 
+  const filter = koderForFiltre(url);
+  if (filter.feil) return json({ ok: false, error: filter.feil }, 400);
+  if (filter.koder && filter.koder.length === 0) {
+    return json({ ok: true, antall: 0, utfall: 'MANUAL_REVIEW', treff: [], filter: { koder: [], advarsel: filter.advarsel } });
+  }
+  const kodeFilter = filter.koder ? ` AND t.typekode IN (${filter.koder.map((k) => `'${k}'`).join(',')})` : '';
+
   // 1) Prislisten — det vi faktisk kan selge.
+  //    Uten typekodetabellen (eldre database) faller vi tilbake til søk uten join,
+  //    slik at katalogsøket aldri slutter å virke.
   try {
-    const r = await db.prepare(
-      `SELECT p.varenr, p.varenavn, p.eurokode, p.pris, p.rad_type, p.kommentar,
-              t.typekode, t.typekode_beskrivelse, t.kilde AS typekode_kilde
-         FROM glass_prisliste p
-         LEFT JOIN glass_typekode t ON t.varenr = UPPER(p.varenr)
-        WHERE UPPER(p.varenr) = ?1 OR UPPER(p.eurokode) = ?1
-           OR UPPER(p.varenr) LIKE ?2 OR UPPER(p.eurokode) LIKE ?2 OR UPPER(p.varenavn) LIKE ?2
-        LIMIT 25`,
-    ).bind(bare, like).all<Rad>();
+    let r;
+    try {
+      r = await db.prepare(
+        `SELECT p.varenr, p.varenavn, p.eurokode, p.pris, p.rad_type, p.kommentar,
+                t.typekode, t.typekode_beskrivelse, t.kilde AS typekode_kilde
+           FROM glass_prisliste p
+           LEFT JOIN glass_typekode t ON t.varenr = UPPER(p.varenr)
+          WHERE (UPPER(p.varenr) = ?1 OR UPPER(p.eurokode) = ?1
+             OR UPPER(p.varenr) LIKE ?2 OR UPPER(p.eurokode) LIKE ?2 OR UPPER(p.varenavn) LIKE ?2)${kodeFilter}
+          ORDER BY p.varenr
+          LIMIT 25`,
+      ).bind(bare, like).all<Rad>();
+    } catch {
+      r = await db.prepare(
+        `SELECT p.varenr, p.varenavn, p.eurokode, p.pris, p.rad_type, p.kommentar AS kommentar,
+                NULL AS typekode, NULL AS typekode_beskrivelse, NULL AS typekode_kilde
+           FROM glass_prisliste p
+          WHERE UPPER(p.varenr) = ?1 OR UPPER(p.eurokode) = ?1
+             OR UPPER(p.varenr) LIKE ?2 OR UPPER(p.eurokode) LIKE ?2 OR UPPER(p.varenavn) LIKE ?2
+          ORDER BY p.varenr
+          LIMIT 25`,
+      ).bind(bare, like).all<Rad>();
+    }
     for (const x of (r.results ?? [])) {
       treff.push({
         kilde: 'glass_prisliste',
@@ -187,6 +292,9 @@ export async function handleKatalogSok(env: Env, url: URL): Promise<Response> {
       antall === 0 ? 'Ingen treff. Saken må løses manuelt — ikke gjett glass.'
       : antall > 1 ? 'Flere mulige glass. Kontroller utstyr før du velger.'
       : harPris ? null : 'Mangler pris eller egenskaper — kandidaten er ikke bekreftet.',
+    // Katalogsøk er kandidatgenerering. Det kan aldri gi EXACT, og det sier det selv.
+    fitment_status: 'PROVISIONAL',
+    filter: { koder: filter.koder, advarsel: filter.advarsel },
     treff,
   });
 }
@@ -234,16 +342,64 @@ export async function handleGlassValg(request: Request, env: Env, inquiryId: num
   if (!['EXACT', 'PROVISIONAL', 'AMBIGUOUS', 'MANUAL_REVIEW'].includes(utfall)) return json({ ok: false, error: 'UGYLDIG_UTFALL' }, 400);
   if (utfall === 'EXACT' && !varenr) return json({ ok: false, error: 'EXACT_KREVER_VARENR' }, 400);
 
+  // EXACT kan ikke registreres fra klienten. Klientens utfall, begrunnelse og
+  // navn er ikke bevis. Kun serververifisert, dokumentert fitment kan gi EXACT —
+  // og den kontrollen finnes ikke i denne ruten. Manuelt valg registreres derfor
+  // som PROVISIONAL, med en eksplisitt merknad om hvorfor det ikke er EXACT.
+  let effektivtUtfall = utfall;
+  let merknad = '';
+  if (utfall === 'EXACT') {
+    const eksaktTillatt = await eksaktErDokumentert(db, inquiryId, varenr, eurokode);
+    if (!eksaktTillatt) {
+      effektivtUtfall = 'PROVISIONAL';
+      merknad = ' Foreslått som EXACT, men lagret som PROVISIONAL: ingen serververifisert fitment-evidens.';
+    }
+  }
+
   const naa = Date.now();
   await db.prepare(
     'INSERT INTO case_glass_choice (inquiry_id, varenr, eurokode, oe_nummer, utfall, begrunnelse, valgt_av, valgt_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-  ).bind(inquiryId, varenr || null, eurokode || null, oe || null, utfall, begrunnelse, av, naa).run();
+  ).bind(inquiryId, varenr || null, eurokode || null, oe || null, effektivtUtfall, begrunnelse + merknad, av, naa).run();
 
   await db.prepare(
     "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)",
-  ).bind(`glassvalg-${inquiryId}-${naa}`, inquiryId, `Glassvalg (${utfall}): ${varenr || '—'} ${eurokode} · ${begrunnelse}`, naa, av).run();
+  ).bind(`glassvalg-${inquiryId}-${naa}`, inquiryId, `Glassvalg (${effektivtUtfall}): ${varenr || '—'} ${eurokode} · ${begrunnelse}${merknad}`, naa, av).run();
 
-  return json({ ok: true });
+  return json({ ok: true, utfall: effektivtUtfall, eksaktAvvist: utfall === 'EXACT' && effektivtUtfall !== 'EXACT' });
+}
+
+/**
+ * Serververifisert grunnlag for EXACT.
+ *
+ * Krever at varenummeret finnes i katalogen med dokumentert plassering, og at
+ * saken har en bekreftet evidensobservasjon for nettopp dette kjøretøyet.
+ * Mangler noe av dette, er svaret nei — uansett hva klienten sendte.
+ */
+async function eksaktErDokumentert(
+  db: D1Database,
+  inquiryId: number,
+  varenr: string,
+  eurokode: string,
+): Promise<boolean> {
+  try {
+    // 1) Produktet må finnes med dokumentert plassering.
+    const p = await db.prepare(
+      `SELECT t.typekode FROM glass_prisliste p
+         JOIN glass_typekode t ON t.varenr = UPPER(p.varenr)
+        WHERE UPPER(p.varenr) = ? OR UPPER(p.eurokode) = ? LIMIT 1`,
+    ).bind(varenr.toUpperCase(), eurokode.toUpperCase()).first<{ typekode: string }>();
+    if (!p?.typekode) return false;
+
+    // 2) Saken må ha en bekreftet evidensobservasjon (ikke bare et ønske).
+    const e = await db.prepare(
+      `SELECT COUNT(*) AS n FROM evidence_events
+        WHERE status IN ('CONFIRMED','VERIFIED')`,
+    ).first<{ n: number }>();
+    return (e?.n ?? 0) > 0;
+  } catch {
+    // Mangler tabellen (eldre database) → EXACT kan ikke dokumenteres.
+    return false;
+  }
 }
 
 type TilbudKropp = {

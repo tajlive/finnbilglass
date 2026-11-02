@@ -16,9 +16,11 @@ test('Jaguar-dørrute (Toms sak): type dør, side venstre, ikke frontrute', () =
   assert.equal(r.type, 'dor');
   assert.equal(r.side, 'venstre', 'eurokode L = venstre side');
   assert.equal(r.erFrontrute, false);
-  // Car-body-style fallback: 5D SUV → 4/5-dør → fremre dør (venstre side = fremre førerside)
-  assert.equal(r.dorLedd, 'fremre');
-  assert.equal(r.kilde, 'car-body-style');
+  // V6.2 regel 3B: karosseritypen sier at bilen HAR fremre og bakre dør, men ikke
+  // hvilken av dem dette glasset er. Uten typekode er leddet ukjent — og det er
+  // riktig svar, ikke en gjettet posisjon.
+  assert.equal(r.dorLedd, null);
+  assert.equal(r.kilde !== 'car-body-style', true, 'karosseritype skal ikke velge dørledd');
 });
 
 test('frontrute uten ordet FRONTRUTE: eurokode A avgjør', () => {
@@ -115,11 +117,13 @@ test('typekode fra varekort gir presis foran/bakre ventil', () => {
   assert.equal(r.kilde, 'typekode');
 });
 
-test('car-body-style fallback: coupe 2-dør gir kun fremre dør', () => {
+test('coupe 2-dør: karosseritype gir ikke dørledd uten typekode', () => {
   const r = k('BMW 3 2D COUPE 87-92 DØRRUTE', '20821GN', '2425LGNC2RQO');
   assert.equal(r.type, 'dor');
-  assert.equal(r.dorLedd, 'fremre');
-  assert.equal(r.kilde, 'car-body-style');
+  // Selv når bilen bare har fremre dører, er det typekoden som beviser at
+  // dette glasset er den fremre. Karosseritypen alene er ikke nok (V6.2 regel 3B).
+  assert.equal(r.dorLedd, null);
+  assert.equal(k('BMW 3 2D COUPE 87-92 DØRRUTE', '20821GN', '2425LGNC2RQO', 'DFF').dorLedd, 'fremre');
 });
 
 test('car-body-style fallback: sedan 4-dør gir fremre og bakre dør', () => {

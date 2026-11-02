@@ -10,7 +10,8 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fraTypekode, klassifiserGlass } from '../src/glass-posisjon.ts';
+import { fraTypekode, klassifiserGlass, filtrerPaPosisjon } from '../src/glass-posisjon.ts';
+import { utfallFor } from '../src/routes/admin-katalog.ts';
 
 test('frontrute og bakrute', () => {
   assert.equal(fraTypekode('F').type, 'frontrute');
@@ -75,20 +76,21 @@ test('delt bakrute merkes som delt', () => {
 });
 
 test('fører/passasjer er ikke det samme som venstre/høyre', () => {
-  // Venstrestyrt (norsk standard): fører = venstre
-  const lhd = fraTypekode('DFF', 'venstre');
-  assert.equal(lhd.fysiskSide, 'venstre');
-  assert.equal(lhd.fysiskSideAntatt, false);
+  // Venstrestyrt: fører = venstre
+  assert.equal(fraTypekode('DFF', 'venstre').fysiskSide, 'venstre');
+  // Høyrestyrt: fører = høyre — samme kode, motsatt fysisk side
+  assert.equal(fraTypekode('DFF', 'hoyre').fysiskSide, 'hoyre');
+  // Passasjer på høyrestyrt bil er fysisk venstre
+  assert.equal(fraTypekode('DPF', 'hoyre').fysiskSide, 'venstre');
+  // Kildenbetegnelsen endres aldri av styretypen
+  assert.equal(fraTypekode('DFF', 'hoyre').side, 'forer');
+});
 
-  // Høyrestyrt: fører = høyre. Samme kode, motsatt fysisk side.
-  const rhd = fraTypekode('DFF', 'hoyre');
-  assert.equal(rhd.fysiskSide, 'hoyre');
-  assert.equal(rhd.side, 'forer', 'kildebetegnelsen endres ikke av styretypen');
-  assert.notEqual(lhd.fysiskSide, rhd.fysiskSide);
-
-  // Ukjent styretype: aldri gjettet stille
-  const ukjent = fraTypekode('DFF');
-  assert.equal(ukjent.fysiskSideAntatt, true, 'antakelsen må være synlig');
+test('ukjent styretype gir ingen fysisk side — aldri gjettet', () => {
+  const u = fraTypekode('DFF');
+  assert.equal(u.fysiskSide, null, 'uten styretype finnes ingen fysisk side');
+  assert.equal(u.fysiskSideKreverAvklaring, true);
+  assert.equal(u.side, 'forer', 'fører/passasjer er kjent selv om fysisk side er ukjent');
 });
 
 test('ukjente koder tolkes ikke', () => {
@@ -121,4 +123,55 @@ test('riktig typekode gir frontrute uten konflikt', () => {
   assert.equal(r.type, 'frontrute');
   assert.equal(r.erFrontrute, true);
   assert.equal(r.typekode?.kode, 'F');
+});
+
+test('karosseritype alene velger aldri dørledd', () => {
+  // 5-dørs bil uten typekode: karosseriet sier at bilen HAR begge dører,
+  // men ikke hvilken av dem dette glasset er.
+  const golf = klassifiserGlass('VW GOLF V 5D DØRRUTE VS', '12345', '1234AGN', null);
+  assert.equal(golf.dorLedd, null, 'uten typekode er leddet ukjent');
+
+  const med = klassifiserGlass('VW GOLF V 5D DØRRUTE VS', '12345', '1234AGN', 'DFB');
+  assert.equal(med.dorLedd, 'bakre');
+
+  // 3-dørs bil: fortsatt ingen automatisk fremre ledd
+  const tredor = klassifiserGlass('VW UP 3D DØRRUTE VS', '22345', '2234AGN', null);
+  assert.equal(tredor.dorLedd, null);
+});
+
+test('katalogsøk kan aldri gi EXACT', () => {
+  // Én kandidat med både pris og egenskaper er fortsatt bare et forslag.
+  assert.notEqual(utfallFor(1, true, true), 'EXACT');
+  assert.equal(utfallFor(1, true, true), 'PROVISIONAL');
+  assert.equal(utfallFor(3, true, true), 'AMBIGUOUS');
+  assert.equal(utfallFor(0, false, false), 'MANUAL_REVIEW');
+});
+
+test('konfliktstatus følger med i resultatet', () => {
+  const ok = klassifiserGlass('FIAT PANDA FRONTRUTE', '10025GN', '1002AGN', 'F');
+  assert.equal(ok.typekodeKonflikt, false);
+
+  const konflikt = klassifiserGlass('FIAT PANDA BAKRUTE', '10025C', '1002AGN', 'F');
+  assert.equal(konflikt.typekodeKonflikt, true, 'motstrid skal flagges i resultatet');
+  assert.equal(konflikt.erFrontrute, false);
+});
+
+test('posisjonsfilter fjerner bare beviselig feil plass', () => {
+  const kandidater = [
+    { varenr: '1', typekode: 'DFF' },
+    { varenr: '2', typekode: 'DFB' },
+    { varenr: '3', typekode: 'SFB1' },
+    { varenr: '4', typekode: 'SFB2' },
+    { varenr: '5', typekode: null },
+  ];
+  // Fremre dørrute: bare DFF
+  assert.deepEqual(filtrerPaPosisjon(kandidater, { glassklasse: 'dor', dorLedd: 'fremre' }).map((k) => k.varenr), ['1']);
+  // Siderute uten nummer: beholder 1, 2 og 3
+  assert.deepEqual(filtrerPaPosisjon(kandidater, { glassklasse: 'side' }).map((k) => k.varenr), ['3', '4']);
+  // Siderute nummer 2: bare den
+  assert.deepEqual(filtrerPaPosisjon(kandidater, { glassklasse: 'side', sideruteNummer: 2 }).map((k) => k.varenr), ['4']);
+  // Uten ønske: alt beholdes, også rader uten plassering
+  assert.equal(filtrerPaPosisjon(kandidater, null).length, 5);
+  // Tomt ønske filtrerer ikke
+  assert.equal(filtrerPaPosisjon(kandidater, {}).length, 5);
 });

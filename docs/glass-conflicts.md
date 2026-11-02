@@ -1,8 +1,35 @@
 # Konflikter i glassdata
 
-Sist oppdatert 2026-11-02 etter typekode-import til staging. Ingen persondata i dette dokumentet.
+Sist oppdatert 2026-11-02 etter **full bulk-skann av alle 14 793 koblede rader**.
+Ingen persondata. Skriptet er skrivebeskyttet og rører ingen D1-rader.
 
-## 1. Registerkonflikter etter import (målt)
+## 1. Bulk-skann (målt)
+
+Kjørt med `scripts/audit-typekode-conflicts.mjs` mot `finnbilglass-staging-catalog`,
+med de samme funksjonene produksjonskoden bruker (`fraTypekode`, `klassifiserGlass`).
+
+| Klasse | Rader | Andel |
+|---|---:|---:|
+| `NO_CONFLICT` | 5 376 | 36,34 % |
+| `SIDE_UNCERTAIN_STEERING` | 9 296 | 62,84 % |
+| `TYPE_CONFLICT` | 84 | 0,57 % |
+| `NON_GLASS_PRODUCT` | 27 | 0,18 % |
+| `EUROCODE_CONFLICT` | 5 | 0,03 % |
+| `FRONT_REAR_CONFLICT` | 5 | 0,03 % |
+| `VENTIL_DOOR_CONFLICT` | 0 | 0 % |
+| `UNKNOWN_TYPE` | 0 | 0 % |
+| **Analysert** | **14 793** | **100 %** |
+
+Avvik mellom forventet og analysert antall: **0**.
+
+`SIDE_UNCERTAIN_STEERING` er **ikke** en konflikt: typekoden oppgir fører- eller
+passasjerside, men bilens styretype er ukjent. Systemet lagrer da `fysisk_side = null`
+og merker at siden må avklares — aldri en antatt venstre/høyre som om den var et faktum.
+
+**Ekte konflikter: 94 rader (0,64 %)** = 84 type + 5 eurokode + 5 front/bak.
+Alle blokkeres fra automatisk godkjenning og vises med konfliktmarkør i Admin.
+
+## 2. Registerkonflikter etter import (målt)
 
 | Kontroll | Resultat |
 |---|---:|
@@ -12,20 +39,15 @@ Sist oppdatert 2026-11-02 etter typekode-import til staging. Ingen persondata i 
 | Kilder representert | 1 (`autoglass-no`) |
 
 Registeret er internt konsistent. Det betyr ikke at det er riktig — bare at det ikke
-motsier seg selv. Krysskontroll mot andre kilder gjenstår.
+motsier seg selv.
 
-## 2. Konflikter som oppstår i bruk (detekteres nå, men er ikke kvantifisert i bulk)
+## 3. Konflikter som oppstår i bruk
 
 `klassifiserGlass()` returnerer `typekodeKonflikt = true` når typekoden motsier
-navn eller eurokode. Når det skjer:
-
-- `erFrontrute` blir `false` uansett hva navnet sier
-- `grunn` forklarer hvilken kode som motsier hva
-- utfallet skal bli `MANUAL_REVIEW`, aldri EXACT
-
-Dette er enhetstestet (`tests/typekode-posisjon.test.mjs`, 10 tester).
-En full bulk-skanning av alle 14 793 koblede rader for å telle faktiske motstrid
-er ikke kjørt ennå — det er neste kvalitetssteg.
+navn eller eurokode. Da blir `erFrontrute` `false` uansett hva navnet sier,
+`grunn` forklarer hva som motsier hva, og utfallet skal bli `MANUAL_REVIEW`.
+Flagget følger med i resultatobjektet helt ut til katalog-API-et.
+Enhetstestet i `tests/typekode-posisjon.test.mjs`.
 
 ## 3. Kjente, åpne produktkonflikter
 

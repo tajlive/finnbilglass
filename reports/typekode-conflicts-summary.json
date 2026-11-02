@@ -1,0 +1,97 @@
+{
+  "generert": "2026-11-02T05:00:54.853Z",
+  "database": "finnbilglass-staging-catalog",
+  "koblede_rader": 14793,
+  "analysert": 14793,
+  "avvik": 0,
+  "konfliktklasser": {
+    "NO_CONFLICT": 5376,
+    "SIDE_UNCERTAIN_STEERING": 9296,
+    "TYPE_CONFLICT": 84,
+    "NON_GLASS_PRODUCT": 27,
+    "EUROCODE_CONFLICT": 5,
+    "FRONT_REAR_CONFLICT": 5
+  },
+  "per_typekode": {
+    "B": {
+      "NO_CONFLICT": 2429,
+      "EUROCODE_CONFLICT": 1,
+      "TYPE_CONFLICT": 4,
+      "NON_GLASS_PRODUCT": 3
+    },
+    "DFFV": {
+      "SIDE_UNCERTAIN_STEERING": 476,
+      "TYPE_CONFLICT": 11
+    },
+    "DFF": {
+      "SIDE_UNCERTAIN_STEERING": 1248,
+      "TYPE_CONFLICT": 4,
+      "FRONT_REAR_CONFLICT": 4
+    },
+    "DFB": {
+      "SIDE_UNCERTAIN_STEERING": 1349,
+      "TYPE_CONFLICT": 9
+    },
+    "SPB1": {
+      "SIDE_UNCERTAIN_STEERING": 1165,
+      "TYPE_CONFLICT": 3,
+      "NON_GLASS_PRODUCT": 1
+    },
+    "F": {
+      "NO_CONFLICT": 2947,
+      "NON_GLASS_PRODUCT": 23,
+      "EUROCODE_CONFLICT": 4,
+      "TYPE_CONFLICT": 6
+    },
+    "SFB1": {
+      "SIDE_UNCERTAIN_STEERING": 1344,
+      "TYPE_CONFLICT": 3
+    },
+    "DPF": {
+      "SIDE_UNCERTAIN_STEERING": 1128,
+      "TYPE_CONFLICT": 5,
+      "FRONT_REAR_CONFLICT": 1
+    },
+    "SPB3": {
+      "TYPE_CONFLICT": 2,
+      "SIDE_UNCERTAIN_STEERING": 16
+    },
+    "SFB2": {
+      "SIDE_UNCERTAIN_STEERING": 49,
+      "TYPE_CONFLICT": 5
+    },
+    "SPB2": {
+      "SIDE_UNCERTAIN_STEERING": 43,
+      "TYPE_CONFLICT": 4
+    },
+    "DPB": {
+      "SIDE_UNCERTAIN_STEERING": 1187,
+      "TYPE_CONFLICT": 4
+    },
+    "DFBV": {
+      "SIDE_UNCERTAIN_STEERING": 466,
+      "TYPE_CONFLICT": 8
+    },
+    "DPBV": {
+      "SIDE_UNCERTAIN_STEERING": 416,
+      "TYPE_CONFLICT": 11
+    },
+    "DPFV": {
+      "SIDE_UNCERTAIN_STEERING": 363,
+      "TYPE_CONFLICT": 3
+    },
+    "BF": {
+      "SIDE_UNCERTAIN_STEERING": 7
+    },
+    "BP": {
+      "SIDE_UNCERTAIN_STEERING": 7,
+      "TYPE_CONFLICT": 1
+    },
+    "SFB3": {
+      "SIDE_UNCERTAIN_STEERING": 32,
+      "TYPE_CONFLICT": 1
+    }
+  },
+  "andel_uten_konflikt": 36.34,
+  "andel_usikker_side": 62.84
+}
