@@ -19,6 +19,7 @@ import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, ty
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
 import { opsAdminUi } from './routes/ops-admin-ui';
+import { handleKatalogSok, handleKatalogGlass, handleGlassValg, handleTilbud, handleEpostHistorikk } from './routes/admin-katalog';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
@@ -1109,7 +1110,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       const rows = await inquiryDb.prepare(`SELECT id, regnr, navn, kontakt, melding, status, assigned_to, created_at, updated_at FROM beta_inquiries ${where} ORDER BY (status = 'NEW') DESC, created_at DESC LIMIT ? OFFSET ?`).bind(...bind).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; assigned_to: string | null; created_at: string; updated_at: number | null }>();
       return json({ ok: true, inquiries: rows.results.map(r => ({ ...r, status: isInquiryStatus(r.status) ? r.status : 'NEW' })) });
     }
-    if (method === 'GET' && path.startsWith('/api/ops/inquiries/')) {
+    if (method === 'GET' && path.startsWith('/api/ops/inquiries/') && !path.slice('/api/ops/inquiries/'.length).includes('/')) {
       // Saksdetalj: én inquiry + append-only tidslinje + kundereise-kontekst (G3, G5, G9).
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       const idRaw = path.slice('/api/ops/inquiries/'.length).split('/')[0];
@@ -1123,6 +1124,34 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       try { if (row.vehicle_json) vehicle = JSON.parse(row.vehicle_json); } catch { /* ugyldig snapshot = ignorert */ }
       return json({ ok: true, inquiry: { ...row, status: isInquiryStatus(row.status) ? row.status : 'NEW', vehicle, history: events.results.map(e => { let meta: unknown = null; try { if (e.meta_json) meta = JSON.parse(e.meta_json); } catch { /* ugyldig meta = ignorert */ } return { ...e, meta }; }) } });
     }
+    // ── Katalogsøk (Admin v1.2) ─────────────────────────────────────────────
+    if (method === 'GET' && path === '/api/ops/katalog/sok') {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleKatalogSok(env, url);
+    }
+    const katalogGlassMatch = /^\/api\/ops\/katalog\/glass\/([A-Za-z0-9._-]{2,40})$/.exec(path);
+    if (method === 'GET' && katalogGlassMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleKatalogGlass(env, katalogGlassMatch[1]);
+    }
+
+    // ── Glassvalg, tilbud og e-posthistorikk på en sak ──────────────────────
+    const glassValgMatch = /^\/api\/ops\/inquiries\/(\d+)\/glass$/.exec(path);
+    if (method === 'POST' && glassValgMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleGlassValg(request, env, Number(glassValgMatch[1]));
+    }
+    const tilbudMatch = /^\/api\/ops\/inquiries\/(\d+)\/tilbud$/.exec(path);
+    if (tilbudMatch && (method === 'GET' || method === 'POST')) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleTilbud(request, env, Number(tilbudMatch[1]), method);
+    }
+    const epostMatch = /^\/api\/ops\/inquiries\/(\d+)\/epost$/.exec(path);
+    if (method === 'GET' && epostMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleEpostHistorikk(env, Number(epostMatch[1]));
+    }
+
     const inquiryStatusMatch = /^\/api\/ops\/inquiries\/(\d+)\/status$/.exec(path);
     if (method === 'POST' && inquiryStatusMatch) {
       // Statusendring er skriving — åpen i staging+prod (beta er live, Tom er eneste operatør).

@@ -26,6 +26,7 @@ export function opsAdminUi(): Response {
     <button class="nav-item" data-view="dashboard" aria-current="page">Oversikt</button>
     <button class="nav-item" data-view="innboks">Innboks <span class="badge" id="innboks-badge">–</span></button>
     <button class="nav-item" data-view="sak">Saksdetalj</button>
+    <button class="nav-item" data-view="katalog">Katalog</button>
     <button class="nav-item" data-view="drift">Drift</button>
     <div class="sidebar-foot">
       Intern arbeidsflate.<br>
@@ -85,6 +86,19 @@ export function opsAdminUi(): Response {
 
     <section class="view" id="view-sak">
       <div id="sak-innhold"><div class="empty">Velg en sak i innboksen.</div></div>
+    </section>
+
+    <section class="view" id="view-katalog">
+      <div class="card">
+        <h2>Katalogsøk</h2>
+        <p class="hint">Søk med registreringsnummer, VIN, eurokode, OE-nummer, varenummer eller bilmodell.</p>
+        <div class="token-bar" style="margin-bottom:12px">
+          <input id="katalog-q" placeholder="SU 18018 · 7939AGSV · 3152GN · SUBARU XV" style="width:340px">
+          <button class="btn teal" id="katalog-sok">Søk</button>
+        </div>
+        <div id="katalog-status" class="muted"></div>
+        <div id="katalog-treff" class="empty">Ingen søk gjort.</div>
+      </div>
     </section>
 
     <section class="view" id="view-drift">
