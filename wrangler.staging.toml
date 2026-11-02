@@ -17,8 +17,8 @@ binding = "AI"
 # ── D1 staging (resolver-data + prisliste-kopi) ─────────────────
 [[d1_databases]]
 binding = "FINNBILGLASS_DB"
-database_name = "finnbilglass-db-staging"
-database_id = "6c8c3eeb-e4bb-41c7-831f-25e5a735717c"
+database_name = "finnbilglass-staging-catalog"
+database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
 
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
