@@ -933,10 +933,22 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           : (!kandidater.length ? 'Ingen kandidater funnet. Bekreft bilens merke/modell/år eller ta bilde av skiltnummeret.' : null);
       }
 
+      // E: aldri eksponere listepris / innkjøpspris fra frontrute-resultat
+      const safeFrontrute = frontruteResult ? (() => {
+        const c = { ...frontruteResult };
+        if (c.kandidater) c.kandidater = (c.kandidater as any[]).map((k: any) => {
+          const r = { ...k };
+          delete (r as any).listepris;
+          delete (r as any).innkjøpspris;
+          return r;
+        });
+        return c;
+      })() : null;
+
       return json({
         ok: true,
         bil: bil ? { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null, vin: bil.vin ?? null } : null,
-        frontrute: frontruteResult,
+        frontrute: safeFrontrute,
         kandidater,
         sokKilde,
         advarsel,
