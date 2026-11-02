@@ -11,6 +11,7 @@
  */
 import type { Env } from '../types';
 import { canTransitionInquiry, isInquiryStatus } from '../inquiry-workflow';
+import { fraTypekode, type TypekodePosisjon } from '../glass-posisjon';
 
 type Rad = Record<string, unknown>;
 
@@ -39,6 +40,46 @@ function plassering(navn: unknown, radType?: unknown): string {
   return 'Ukjent plassering';
 }
 
+/**
+ * Strukturert plassering fra typekode-registeret.
+ * Ukjent informasjon returneres som null — aldri som en antagelse.
+ */
+function posisjonsfelter(typekode?: string, beskrivelse?: string, kilde?: string): Record<string, unknown> {
+  const tp: TypekodePosisjon | null = fraTypekode(typekode ?? null);
+  if (!tp || !tp.gyldig) {
+    return {
+      typekode: typekode ?? null,
+      typekode_beskrivelse: beskrivelse ?? null,
+      typekode_kilde: kilde ?? null,
+      glassklasse: null,
+      side_kilde: null,
+      fysisk_side: null,
+      fysisk_side_antatt: false,
+      dor_ledd: null,
+      ventil_ledd: null,
+      siderute_nummer: null,
+      delt_bakrute: false,
+      plassering_dokumentert: false,
+      plassering_grunn: typekode ? `ukjent typekode «${typekode}»` : 'ingen typekode i registeret',
+    };
+  }
+  return {
+    typekode: tp.kode,
+    typekode_beskrivelse: beskrivelse ?? null,
+    typekode_kilde: kilde ?? null,
+    glassklasse: tp.type,
+    side_kilde: tp.side,
+    fysisk_side: tp.fysiskSide,
+    fysisk_side_antatt: tp.fysiskSideAntatt,
+    dor_ledd: tp.dorLedd,
+    ventil_ledd: tp.ventilLedd,
+    siderute_nummer: tp.sideruteNummer,
+    delt_bakrute: tp.deltBakrute,
+    plassering_dokumentert: true,
+    plassering_grunn: tp.grunn,
+  };
+}
+
 /** Utleder utfall lik resolverens språk: EXACT / PROVISIONAL / AMBIGUOUS / MANUAL_REVIEW. */
 function utfallFor(antall: number, harPris: boolean, harEgenskaper: boolean): string {
   if (antall === 0) return 'MANUAL_REVIEW';
@@ -60,10 +101,12 @@ export async function handleKatalogSok(env: Env, url: URL): Promise<Response> {
   // 1) Prislisten — det vi faktisk kan selge.
   try {
     const r = await db.prepare(
-      `SELECT varenr, varenavn, eurokode, pris, rad_type, kommentar
-         FROM glass_prisliste
-        WHERE UPPER(varenr) = ?1 OR UPPER(eurokode) = ?1
-           OR UPPER(varenr) LIKE ?2 OR UPPER(eurokode) LIKE ?2 OR UPPER(varenavn) LIKE ?2
+      `SELECT p.varenr, p.varenavn, p.eurokode, p.pris, p.rad_type, p.kommentar,
+              t.typekode, t.typekode_beskrivelse, t.kilde AS typekode_kilde
+         FROM glass_prisliste p
+         LEFT JOIN glass_typekode t ON t.varenr = UPPER(p.varenr)
+        WHERE UPPER(p.varenr) = ?1 OR UPPER(p.eurokode) = ?1
+           OR UPPER(p.varenr) LIKE ?2 OR UPPER(p.eurokode) LIKE ?2 OR UPPER(p.varenavn) LIKE ?2
         LIMIT 25`,
     ).bind(bare, like).all<Rad>();
     for (const x of (r.results ?? [])) {
@@ -76,6 +119,7 @@ export async function handleKatalogSok(env: Env, url: URL): Promise<Response> {
         rad_type: x.rad_type,
         plassering: plassering(x.varenavn, x.rad_type),
         kommentar: x.kommentar,
+        ...posisjonsfelter(x.typekode as string | undefined, x.typekode_beskrivelse as string | undefined, x.typekode_kilde as string | undefined),
       });
     }
   } catch { /* tabellen kan mangle i et miljø */ }

@@ -44,6 +44,96 @@ export interface Posisjonsresultat {
   navnType: GlassType | null;
   eurokodeType: GlassType | null;
   grunn: string;
+  /** Normalisert typekode når registeret har en dokumentert plassering. */
+  typekode?: TypekodePosisjon | null;
+}
+
+/**
+ * Fullstendig, normalisert plassering fra typekode-registeret.
+ * Typekodene er dokumentert i `docs/glass-position-codebook.md` og verifisert
+ * mot 20 601 rader i `glass_typekode`.
+ */
+export interface TypekodePosisjon {
+  kode: string;
+  type: GlassType;
+  /** Kildens egen betegnelse — fører/passasjer, ikke venstre/høyre. */
+  side: 'forer' | 'passasjer' | null;
+  /** Fysisk side. Null når styretype er ukjent — aldri gjettet. */
+  fysiskSide: GlassSide;
+  /** Sann når fysiskSide er utledet fra en antatt venstrestyring. */
+  fysiskSideAntatt: boolean;
+  dorLedd: DorLedd;
+  ventilLedd: VentilLedd;
+  /** 1, 2 eller 3 for nummererte bakre sideruter. */
+  sideruteNummer: number | null;
+  /** BF/BP = delt bakrute (to glass), ikke vanlig bakrute. */
+  deltBakrute: boolean;
+  gyldig: boolean;
+  grunn: string;
+}
+
+/** Alle kodene som finnes i registeret. Ukjente koder skal ikke tolkes. */
+const TYPEKODE_MONSTER = /^(F|B|BF|BP|D[FP][FB][V]?|S[FP]B[123])$/;
+
+/**
+ * Oversetter en typekode til full posisjon.
+ *
+ * @param kjorestyring — 'venstre' (LHD, norsk standard) eller 'hoyre' (RHD).
+ *   Sendes den ikke, utledes fysisk side ikke, og `fysiskSideAntatt` blir true
+ *   bare når vi faller tilbake på venstrestyring. Fører/passasjer lagres alltid.
+ */
+export function fraTypekode(
+  kode: string | null | undefined,
+  kjorestyring: 'venstre' | 'hoyre' | null = null,
+): TypekodePosisjon | null {
+  if (!kode) return null;
+  const k = kode.trim().toUpperCase();
+  if (!TYPEKODE_MONSTER.test(k)) return null;
+
+  const antatt = kjorestyring === null;
+  const styring = kjorestyring ?? 'venstre';
+  const forerErVenstre = styring === 'venstre';
+  const fysisk = (side: 'forer' | 'passasjer' | null): GlassSide =>
+    side === null ? null : side === 'forer' ? (forerErVenstre ? 'venstre' : 'hoyre') : forerErVenstre ? 'hoyre' : 'venstre';
+
+  const base: TypekodePosisjon = {
+    kode: k,
+    type: 'ukjent',
+    side: null,
+    fysiskSide: null,
+    fysiskSideAntatt: antatt,
+    dorLedd: null,
+    ventilLedd: null,
+    sideruteNummer: null,
+    deltBakrute: false,
+    gyldig: true,
+    grunn: '',
+  };
+
+  if (k === 'F') return { ...base, type: 'frontrute', grunn: 'frontrute' };
+  if (k === 'B') return { ...base, type: 'bakrute', grunn: 'bakrute' };
+  if (k === 'BF' || k === 'BP') {
+    const side = k === 'BF' ? 'forer' : 'passasjer';
+    return { ...base, type: 'bakrute', side, fysiskSide: fysisk(side), deltBakrute: true, grunn: `delt bakrute, ${side}` };
+  }
+  if (/^D[FP][FB]$/.test(k)) {
+    const side = k[1] === 'F' ? 'forer' : 'passasjer';
+    const ledd: DorLedd = k[2] === 'F' ? 'fremre' : 'bakre';
+    return { ...base, type: 'dor', side, fysiskSide: fysisk(side), dorLedd: ledd, grunn: `dørrute ${ledd} ${side}` };
+  }
+  if (/^D[FP][FB]V$/.test(k)) {
+    const side = k[1] === 'F' ? 'forer' : 'passasjer';
+    const ledd: VentilLedd = k[2] === 'F' ? 'foran' : 'bakre';
+    return { ...base, type: 'ventil', side, fysiskSide: fysisk(side), ventilLedd: ledd, grunn: `ventilrute ${ledd} ${side}` };
+  }
+  const sideRute = /^(S[FP])B([123])$/.exec(k);
+  if (sideRute) {
+    const side = sideRute[1] === 'SF' ? 'forer' : 'passasjer';
+    const nummer = Number(sideRute[2]);
+    return { ...base, type: 'side', side, fysiskSide: fysisk(side), sideruteNummer: nummer, grunn: `siderute ${nummer} ${side}` };
+  }
+
+  return { ...base, gyldig: false, grunn: `ukjent typekode «${k}»` };
 }
 
 /**
@@ -217,18 +307,37 @@ export function klassifiserGlass(
   }
 
   const typekonflikt = !!(navnType && gruppe && !forenlig(navnType, gruppe));
-  const side = sideFraNavn(navn) ?? euroSide;
+  let side = sideFraNavn(navn) ?? euroSide;
 
-  // Typekode fra varekort (høyest prioritet for fremre/bakre, foran/bakre ventil)
-  const tk = parseTypekode(typekode);
-  let dorLedd: DorLedd = null;
-  let ventilLedd: VentilLedd = null;
+  // Typekode først: registeret (F, B, DFF, DFB, DPF, DPB, SFB1-3, DFFV …)
+  // er autoritativt. Beskrivelsesstrenger («Dørrute fremre førerside») er reserve.
+  const tp = fraTypekode(typekode);
+  const tk = tp && tp.gyldig ? null : parseTypekode(typekode);
+  let dorLedd: DorLedd = tp?.dorLedd ?? null;
+  let ventilLedd: VentilLedd = tp?.ventilLedd ?? null;
   let kildeOverride = false;
   const harTypekode = !!typekode; // typekode-parameter ble eksplisitt sendt (kan være tom streng)
 
   if (tk) {
     if (tk.dorLedd) { dorLedd = tk.dorLedd; kildeOverride = true; }
     if (tk.ventilLedd) { ventilLedd = tk.ventilLedd; kildeOverride = true; }
+  }
+
+  // Typekoden bestemmer hva slags glass det er — men bare når den ikke
+  // motsier navn/eurokode. Motstrid blokkerer automatisk godkjenning.
+  let typekodeKonflikt = false;
+  if (tp && tp.gyldig && tp.type !== 'ukjent') {
+    if (type !== 'ukjent' && type !== 'sidefamilie' && tp.type !== type) {
+      typekodeKonflikt = true;
+    } else {
+      type = tp.type;
+      kildeOverride = true;
+      if (tp.fysiskSide && side === null) side = tp.fysiskSide;
+      else if (tp.fysiskSide && side !== 'begge' && tp.fysiskSide !== side) {
+        // Navn/eurokode sier én side, typekoden en annen.
+        typekodeKonflikt = true;
+      }
+    }
   }
 
   // Navn-basert fremre/bakre (hvis typekode ikke ga svar)
@@ -263,10 +372,11 @@ export function klassifiserGlass(
 
   // Ikke-glass: dekorlist, klips, pakning og klips-kit.
   const erListe = harOrd(navn, LIST_ORD) || /(?:PY|GU)[A-Z]{0,4}$/.test(vr) || /^\d{3,5}K$/.test(vr);
-  const erFrontrute = type === 'frontrute' && !erListe && !typekonflikt;
+  const erFrontrute = type === 'frontrute' && !erListe && !typekonflikt && !typekodeKonflikt;
 
   let grunn: string;
-  if (typekonflikt) grunn = `navn sier ${navnType}, eurokode sier ${gruppe} — må verifiseres`;
+  if (typekodeKonflikt) grunn = `typekode ${tp?.kode} (${tp?.grunn}) motsier navn/eurokode (${type}) — må verifiseres`;
+  else if (typekonflikt) grunn = `navn sier ${navnType}, eurokode sier ${gruppe} — må verifiseres`;
   else if (erListe) grunn = 'list/klips/pakning, ikke glass';
   else if (type === 'ukjent') grunn = 'ingen posisjon i navn eller eurokode';
   else if (type === 'sidefamilie') grunn = `sideglass (${side ?? 'ukjent side'}), type ikke oppgitt i navnet`;
@@ -286,6 +396,7 @@ export function klassifiserGlass(
     navnType,
     eurokodeType: gruppe,
     grunn,
+    typekode: tp,
   };
 }
 

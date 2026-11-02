@@ -339,7 +339,8 @@
           d.treff.map(function (t) {
             var id = t.varenr || t.eurokode || '';
             return '<tr><td><strong>' + esc(id) + '</strong>' + (t.eurokode && id !== t.eurokode ? '<br><span class="muted">' + esc(t.eurokode) + '</span>' : '') + '</td>' +
-              '<td><span class="pill' + (t.plassering === 'Frontrute' ? ' CONFIRMED' : '') + '">' + esc(t.plassering || '—') + '</span></td>' +
+              '<td><span class="pill' + (t.plassering === 'Frontrute' ? ' CONFIRMED' : '') + '">' + esc(t.glassklasse || t.plassering || '—') + '</span>' +
+              (t.typekode ? ' <span class="muted" title="' + esc(t.plassering_grunn || '') + '">' + esc(t.typekode) + '</span>' : ' <span class="muted">uten typekode</span>') + '</td>' +
               '<td>' + esc(t.beskrivelse || '') + '</td>' +
               '<td class="muted">' + esc(t.bil || '') + '</td>' +
               '<td>' + (t.pris ? esc(t.pris) + ' kr' : '<span class="muted">—</span>') + '</td>' +
