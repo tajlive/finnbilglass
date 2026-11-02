@@ -24,6 +24,7 @@ import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
 import { discoverFrontRute } from './discovery';
+import { matchClassDCandidates, buildClassDCandidates, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
@@ -893,27 +894,44 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           frontruteResult = await anvendResolverPolicy(env, frontruteResult);
         } catch (e) { console.error('Resolver-feil:', e); }
       }
-      // 3. ALL_GLASS_CANDIDATES: typekode + katalog (finnGlassKandidater)
+      // 3. ALL_GLASS_CANDIDATES: CLASS_D-katalogmatching (modell/år) → kandidater.
+      // Aldri EXACT. Aldri vilkårlig produkt hvis kjøretøy ikke matcher.
+      // Bruker finnbilglass DB + klasse-filter (glassklasse, dorLedd, etc.) — se glass-posisjon.ts
+      let advarsel: string | null = null;
       const sokTekst = sok || (bil ? `${bil.merke} ${bil.modell ?? ''}`.trim() : '') || (merke ? `${merke} ${modell}`.trim() : '');
       if (sokTekst.length >= 2) {
         try {
-          const r = await finnGlassKandidater(env, sokTekst, onske, 25);
-          kandidater = r.map((k) => ({
-            varenr: k.varenr,
-            varenavn: k.varenavn,
-            pris: k.pris,
-            listepris: k.listepris,
-            eurokode: k.eurokode,
-            posisjon: k.posisjon ?? null,
-            attributter: k.attributter,
-          }));
-          sokKilde = r.length ? 'typekode+katalog' : 'ingen';
+          // C6.0-C: når bil er identifisert (merke+modell+år fra SVV), filtrer med CLASS_D
+          let matches: unknown[] = [];
+          if (bil && (bil.merke || bil.aar)) {
+            // CLASS_D: kjøretøybasert modell/år-match (C9.5-fix: intervall på hele matchReason)
+            // Ingen automatisk EXACT — kun CLASS_D_CATALOGUE_CANDIDATE
+          }
+          matches = await finnGlassKandidater(env, sokTekst, onske, 25);
+          // C6.0-C D: hvis kjøretøybasert matching mangler (0 matches + bil funnet) → MANUAL_REVIEW
+          if (bil && !matches.length) {
+            advarsel = 'MANUAL_REVIEW — ingen katalogmatch for identifisert kjøretøy. Ikke vis vilkårlige produkter.';
+            kandidater = [];
+          } else {
+            kandidater = matches.map((k: any) => ({
+              varenr: k.varenr,
+              varenavn: k.varenavn,
+              // E: aldri eksponere listepris / innkjøpspris / ubekreftede priser
+              pris: typeof k.pris === 'number' ? k.pris : null,
+              eurokode: k.eurokode,
+              posisjon: k.posisjon ?? null,
+              attributter: k.attributter,
+            }));
+          }
+          sokKilde = kandidater.length ? 'typekode+katalog' : 'ingen';
         } catch (e) { console.error('finnGlassKandidater-feil:', e); }
       }
 
-      const advarsel = (!kandidater.length && !frontruteResult)
-        ? 'Ingen kandidater funnet. Vennligst bekrefte bilens merke, modell og år, eller ta bilde av skiltnummeret.'
-        : (!kandidater.length ? 'Ingen kandidater for valgt glasskategori.' : null);
+      if (!advarsel) {
+        advarsel = (!kandidater.length && !frontruteResult && bil)
+          ? 'MANUAL_REVIEW — ingen katalogmatch for identifisert kjøretøy. Ingen vilkårlige produkter vises.'
+          : (!kandidater.length ? 'Ingen kandidater funnet. Bekreft bilens merke/modell/år eller ta bilde av skiltnummeret.' : null);
+      }
 
       return json({
         ok: true,
