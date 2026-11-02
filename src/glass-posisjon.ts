@@ -60,10 +60,22 @@ export interface TypekodePosisjon {
   type: GlassType;
   /** Kildens egen betegnelse — fører/passasjer, ikke venstre/høyre. */
   side: 'forer' | 'passasjer' | null;
-  /** Fysisk side. Alltid null når styretypen ikke er kjent — aldri gjettet. */
-  fysiskSide: GlassSide;
-  /** Sann når det mangler dokumentert styretype og fysisk side må avklares. */
-  fysiskSideKreverAvklaring: boolean;
+
+  /**
+   * Produktets fysiske side, slik katalogen beskriver det.
+   *
+   * Dette er EGENSKAPEN TIL GLASSET, ikke til bilen. En venstresiderute blir
+   * ikke en høyresiderute fordi bilen har rattet på høyre side — den er samme
+   * fysiske glass, bare på bilens passasjerside.
+   */
+  produktFysiskSide: GlassSide;
+
+  /** 'ANTATT_LHD_MARKED' = utledet av norsk markedsstandard, ikke dokumentert. */
+  sideGrunnlag: 'ANTATT_LHD_MARKED' | 'DOKUMENTERT' | 'UKJENT';
+
+  /** Sann bare når produktets side er dokumentert fra kilden. */
+  sideBekreftet: boolean;
+
   dorLedd: DorLedd;
   ventilLedd: VentilLedd;
   /** 1, 2 eller 3 for nummererte bakre sideruter. */
@@ -74,39 +86,64 @@ export interface TypekodePosisjon {
   grunn: string;
 }
 
+/**
+ * Markedsstandard for katalogen.
+ *
+ * Dette er en arbeidsantakelse fra eier (norsk marked, venstrestyring), ikke et
+ * målt datagrunnlag. Den brukes til visning, sortering og forhåndsvalg — aldri
+ * som bevis for at et glass passer en bestemt bil.
+ */
+export const MARKEDSSTANDARD = { styring: 'LHD', land: 'NO' } as const;
+
+/** Bilens styretype. Alltid en egen opplysning, aldri en del av produktet. */
+export type Kjorestyring = 'LHD' | 'RHD' | 'UKJENT';
+
+/**
+ * Hvilken ROLLE et venstre/høyre-glass har på en bil med kjent styretype.
+ *
+ * Dette er ren informasjon til saksbehandler og kunde. Produktets side endres
+ * ikke, og ingen SKU speilvendes.
+ */
+export function rollePaBil(produktSide: GlassSide, kjorestyring: Kjorestyring): 'forer' | 'passasjer' | null {
+  if (!produktSide || produktSide === 'begge') return null;
+  if (kjorestyring === 'UKJENT') return null;
+  const forerErVenstre = kjorestyring === 'LHD';
+  if (produktSide === 'venstre') return forerErVenstre ? 'forer' : 'passasjer';
+  return forerErVenstre ? 'passasjer' : 'forer';
+}
+
 /** Alle kodene som finnes i registeret. Ukjente koder skal ikke tolkes. */
 const TYPEKODE_MONSTER = /^(F|B|BF|BP|D[FP][FB][V]?|S[FP]B[123])$/;
 
 /**
  * Oversetter en typekode til full posisjon.
  *
- * @param kjorestyring — 'venstre' (LHD, norsk standard) eller 'hoyre' (RHD).
- *   Sendes den ikke, utledes fysisk side ikke, og `fysiskSideAntatt` blir true
- *   bare når vi faller tilbake på venstrestyring. Fører/passasjer lagres alltid.
+ * Katalogen er norsk (LHD-marked). «Førerside» betyr derfor fysisk venstre side
+ * i kilden — men det er en MARKEDSANTAKELSE, ikke en dokumentert måling, og
+ * `sideBekreftet` er derfor `false`. Bilens egen styretype påvirker aldri
+ * produktets side; se `rollePaBil()` for hvilken rolle glasset får på bilen.
  */
-export function fraTypekode(
-  kode: string | null | undefined,
-  kjorestyring: 'venstre' | 'hoyre' | null = null,
-): TypekodePosisjon | null {
+export function fraTypekode(kode: string | null | undefined): TypekodePosisjon | null {
   if (!kode) return null;
   const k = kode.trim().toUpperCase();
   if (!TYPEKODE_MONSTER.test(k)) return null;
 
-  // Uten dokumentert styretype finnes ingen fysisk side. Vi lagrer aldri en
-  // antakelse som om den var et faktum — kunden må avklare styretypen først.
-  const kreverAvklaring = kjorestyring === null;
-  const forerErVenstre = kjorestyring === 'venstre';
+  // Produktets fysiske side følger katalogens markedskonvensjon (NO = LHD).
+  // Den er aldri «bekreftet» uten en dokumentert produktreferanse.
   const fysisk = (side: 'forer' | 'passasjer' | null): GlassSide => {
-    if (side === null || kreverAvklaring) return null;
-    return side === 'forer' ? (forerErVenstre ? 'venstre' : 'hoyre') : forerErVenstre ? 'hoyre' : 'venstre';
+    if (side === null) return null;
+    return side === 'forer' ? 'venstre' : 'hoyre';
   };
+  const grunnlag = (side: 'forer' | 'passasjer' | null): 'ANTATT_LHD_MARKED' | 'UKJENT' =>
+    side === null ? 'UKJENT' : 'ANTATT_LHD_MARKED';
 
   const base: TypekodePosisjon = {
     kode: k,
     type: 'ukjent',
     side: null,
-    fysiskSide: null,
-    fysiskSideKreverAvklaring: kreverAvklaring,
+    produktFysiskSide: null,
+    sideGrunnlag: 'UKJENT',
+    sideBekreftet: false,
     dorLedd: null,
     ventilLedd: null,
     sideruteNummer: null,
@@ -119,23 +156,23 @@ export function fraTypekode(
   if (k === 'B') return { ...base, type: 'bakrute', grunn: 'bakrute' };
   if (k === 'BF' || k === 'BP') {
     const side = k === 'BF' ? 'forer' : 'passasjer';
-    return { ...base, type: 'bakrute', side, fysiskSide: fysisk(side), deltBakrute: true, grunn: `delt bakrute, ${side}` };
+    return { ...base, type: 'bakrute', side, produktFysiskSide: fysisk(side), sideGrunnlag: grunnlag(side), deltBakrute: true, grunn: `delt bakrute, ${side}` };
   }
   if (/^D[FP][FB]$/.test(k)) {
     const side = k[1] === 'F' ? 'forer' : 'passasjer';
     const ledd: DorLedd = k[2] === 'F' ? 'fremre' : 'bakre';
-    return { ...base, type: 'dor', side, fysiskSide: fysisk(side), dorLedd: ledd, grunn: `dørrute ${ledd} ${side}` };
+    return { ...base, type: 'dor', side, produktFysiskSide: fysisk(side), sideGrunnlag: grunnlag(side), dorLedd: ledd, grunn: `dørrute ${ledd} ${side}` };
   }
   if (/^D[FP][FB]V$/.test(k)) {
     const side = k[1] === 'F' ? 'forer' : 'passasjer';
     const ledd: VentilLedd = k[2] === 'F' ? 'foran' : 'bakre';
-    return { ...base, type: 'ventil', side, fysiskSide: fysisk(side), ventilLedd: ledd, grunn: `ventilrute ${ledd} ${side}` };
+    return { ...base, type: 'ventil', side, produktFysiskSide: fysisk(side), sideGrunnlag: grunnlag(side), ventilLedd: ledd, grunn: `ventilrute ${ledd} ${side}` };
   }
   const sideRute = /^(S[FP])B([123])$/.exec(k);
   if (sideRute) {
     const side = sideRute[1] === 'SF' ? 'forer' : 'passasjer';
     const nummer = Number(sideRute[2]);
-    return { ...base, type: 'side', side, fysiskSide: fysisk(side), sideruteNummer: nummer, grunn: `siderute ${nummer} ${side}` };
+    return { ...base, type: 'side', side, produktFysiskSide: fysisk(side), sideGrunnlag: grunnlag(side), sideruteNummer: nummer, grunn: `siderute ${nummer} ${side}` };
   }
 
   return { ...base, gyldig: false, grunn: `ukjent typekode «${k}»` };
@@ -343,8 +380,8 @@ export function klassifiserGlass(
     } else {
       type = tp.type;
       kildeOverride = true;
-      if (tp.fysiskSide && side === null) side = tp.fysiskSide;
-      else if (tp.fysiskSide && side !== 'begge' && tp.fysiskSide !== side) {
+      if (tp.produktFysiskSide && side === null) side = tp.produktFysiskSide;
+      else if (tp.produktFysiskSide && side !== 'begge' && tp.produktFysiskSide !== side) {
         // Navn/eurokode sier én side, typekoden en annen.
         typekodeKonflikt = true;
       }

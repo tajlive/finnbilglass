@@ -53,8 +53,14 @@ function posisjonsfelter(typekode?: string, beskrivelse?: string, kilde?: string
       typekode_kilde: kilde ?? null,
       glassklasse: null,
       side_kilde: null,
+      kildens_marked: 'NO',
+      markedsstandard: 'LHD',
+      produkt_fysisk_side_verifisert: null,
+      fysisk_side_visning: null,
+      side_grunnlag: 'UKJENT',
+      side_bekreftet: false,
+      kjorestyring_bil: 'UKJENT',
       fysisk_side: null,
-      fysisk_side_antatt: false,
       dor_ledd: null,
       ventil_ledd: null,
       siderute_nummer: null,
@@ -71,8 +77,17 @@ function posisjonsfelter(typekode?: string, beskrivelse?: string, kilde?: string
     typekode_kilde: kilde ?? null,
     glassklasse: tp.type,
     side_kilde: tp.side,
-    fysisk_side: tp.fysiskSide,
-    fysisk_side_krever_avklaring: tp.fysiskSideKreverAvklaring,
+    kildens_marked: 'NO',
+    markedsstandard: 'LHD',
+    // Verifisert fysisk side finnes ikke før kilden dokumenterer produktet.
+    produkt_fysisk_side_verifisert: tp.sideBekreftet ? tp.produktFysiskSide : null,
+    // Visningsforslag fra norsk markedsstandard — eksplisitt merket som antakelse.
+    fysisk_side_visning: tp.produktFysiskSide,
+    side_grunnlag: tp.sideGrunnlag,
+    side_bekreftet: tp.sideBekreftet,
+    kjorestyring_bil: 'UKJENT',
+    fysisk_side: tp.sideBekreftet ? tp.produktFysiskSide : null,
+    fysisk_side_krever_avklaring: !tp.sideBekreftet,
     dor_ledd: tp.dorLedd,
     ventil_ledd: tp.ventilLedd,
     siderute_nummer: tp.sideruteNummer,
@@ -112,6 +127,11 @@ const SIDE_KODER: Record<string, string[]> = {
   forer: ['DFF', 'DFB', 'DFFV', 'DFBV', 'SFB1', 'SFB2', 'SFB3', 'BF'],
   passasjer: ['DPF', 'DPB', 'DPFV', 'DPBV', 'SPB1', 'SPB2', 'SPB3', 'BP'],
 };
+const SIDERUTE_KODER: Record<string, string[]> = {
+  '1': ['SFB1', 'SPB1'],
+  '2': ['SFB2', 'SPB2'],
+  '3': ['SFB3', 'SPB3'],
+};
 const DOR_LEDD_KODER: Record<string, string[]> = {
   fremre: ['DFF', 'DPF'],
   bakre: ['DFB', 'DPB'],
@@ -121,53 +141,70 @@ const VENTIL_LEDD_KODER: Record<string, string[]> = {
   bakre: ['DFBV', 'DPBV'],
 };
 
+type FilterResultat =
+  | { status: 'INGEN_FILTER'; koder: null; advarsel: null }
+  | { status: 'GYLDIG'; koder: string[]; advarsel: string | null }
+  | { status: 'TOM_TREFF'; koder: []; advarsel: string | null }
+  | { status: 'UGYLDIG'; feil: string };
+
 /**
- * Oversetter validerte filtre til en liste typekoder som kan brukes i SQL.
- * Ukjent filterverdi gir null (avvises), ikke en gjettet liste.
+ * Oversetter validerte filtre til en liste typekoder.
+ *
+ * Skiller eksplisitt mellom fire utfall. `null` betyr KUN «ingen filter» —
+ * aldri «filtre som ga tomt snitt». Det var feilen som kunne gi ufiltrerte treff.
  */
-function koderForFiltre(url: URL): { koder: string[] | null; feil: string | null; advarsel: string | null } {
-  const sett: Set<string> | null = new Set<string>();
-  let feil: string | null = null;
+function koderForFiltre(url: URL): FilterResultat {
+  const sett = new Set<string>();
+  let brukt = false;
   let advarsel: string | null = null;
-  const snevre = (liste: string[]) => {
-    if (!sett) return;
+
+  const leggTil = (liste: string[]) => {
+    if (!brukt) { liste.forEach((k) => sett.add(k)); brukt = true; return; }
     for (const k of [...sett]) if (!liste.includes(k)) sett.delete(k);
   };
 
   const klasse = (url.searchParams.get('glassklasse') || '').toLowerCase();
   if (klasse) {
-    if (!KLASSE_KODER[klasse]) return { koder: null, feil: `UKJENT_GLASSKLASSE`, advarsel: null };
-    if (sett) KLASSE_KODER[klasse].forEach((k) => sett.add(k));
+    if (!KLASSE_KODER[klasse]) return { status: 'UGYLDIG', feil: 'UKJENT_GLASSKLASSE' };
+    leggTil(KLASSE_KODER[klasse]);
   }
   const side = (url.searchParams.get('side_kilde') || '').toLowerCase();
   if (side) {
-    if (!SIDE_KODER[side]) return { koder: null, feil: 'UKJENT_SIDE', advarsel: null };
-    if (sett && sett.size === 0) SIDE_KODER[side].forEach((k) => sett.add(k)); else snevre(SIDE_KODER[side]);
+    if (!SIDE_KODER[side]) return { status: 'UGYLDIG', feil: 'UKJENT_SIDE' };
+    leggTil(SIDE_KODER[side]);
   }
   const dorLedd = (url.searchParams.get('dor_ledd') || '').toLowerCase();
   if (dorLedd) {
-    if (!DOR_LEDD_KODER[dorLedd]) return { koder: null, feil: 'UKJENT_DOR_LEDD', advarsel: null };
-    if (sett && sett.size === 0) DOR_LEDD_KODER[dorLedd].forEach((k) => sett.add(k)); else snevre(DOR_LEDD_KODER[dorLedd]);
+    if (!DOR_LEDD_KODER[dorLedd]) return { status: 'UGYLDIG', feil: 'UKJENT_DOR_LEDD' };
+    leggTil(DOR_LEDD_KODER[dorLedd]);
   }
   const ventilLedd = (url.searchParams.get('ventil_ledd') || '').toLowerCase();
   if (ventilLedd) {
-    if (!VENTIL_LEDD_KODER[ventilLedd]) return { koder: null, feil: 'UKJENT_VENTIL_LEDD', advarsel: null };
-    if (sett && sett.size === 0) VENTIL_LEDD_KODER[ventilLedd].forEach((k) => sett.add(k)); else snevre(VENTIL_LEDD_KODER[ventilLedd]);
+    if (!VENTIL_LEDD_KODER[ventilLedd]) return { status: 'UGYLDIG', feil: 'UKJENT_VENTIL_LEDD' };
+    leggTil(VENTIL_LEDD_KODER[ventilLedd]);
   }
-  // Fysisk side krever dokumentert styretype. Uten den fjerner vi ingen kandidater.
+  const nummer = (url.searchParams.get('siderute_nummer') || '').trim();
+  if (nummer) {
+    if (!['1', '2', '3'].includes(nummer)) return { status: 'UGYLDIG', feil: 'UKJENT_SIDERUTE_NUMMER' };
+    leggTil(SIDERUTE_KODER[nummer]);
+  }
+  // Fysisk side er en markedsantakelse (LHD). Filteret bruker derfor
+  // fører/passasjer-konvensjonen, som er den kilden faktisk oppgir.
   const fysisk = (url.searchParams.get('fysisk_side') || '').toLowerCase();
   if (fysisk) {
-    const styring = (url.searchParams.get('kjorestyring') || '').toLowerCase();
-    if (fysisk !== 'venstre' && fysisk !== 'hoyre') return { koder: null, feil: 'UKJENT_FYSISK_SIDE', advarsel: null };
-    if (styring !== 'venstre' && styring !== 'hoyre') {
+    if (fysisk !== 'venstre' && fysisk !== 'hoyre') return { status: 'UGYLDIG', feil: 'UKJENT_FYSISK_SIDE' };
+    const styring = (url.searchParams.get('kjorestyring') || '').toUpperCase();
+    if (styring !== 'LHD' && styring !== 'RHD') {
       advarsel = 'FYSISK_SIDE_KREVER_KJORESTYRING — filteret er ignorert, ingen kandidater er fjernet';
     } else {
-      const forerErVenstre = styring === 'venstre';
-      const maalSide = fysisk === (forerErVenstre ? 'venstre' : 'hoyre') ? 'forer' : 'passasjer';
-      if (sett && sett.size === 0) SIDE_KODER[maalSide].forEach((k) => sett.add(k)); else snevre(SIDE_KODER[maalSide]);
+      const forerErVenstre = styring === 'LHD';
+      leggTil(SIDE_KODER[fysisk === (forerErVenstre ? 'venstre' : 'hoyre') ? 'forer' : 'passasjer']);
     }
   }
-  return { koder: sett && sett.size > 0 ? [...sett] : null, feil, advarsel };
+
+  if (!brukt) return { status: 'INGEN_FILTER', koder: null, advarsel: null };
+  if (sett.size === 0) return { status: 'TOM_TREFF', koder: [], advarsel };
+  return { status: 'GYLDIG', koder: [...sett], advarsel };
 }
 
 /** Fritekstsøk i katalog, prisliste og varenummer. */
@@ -181,11 +218,14 @@ export async function handleKatalogSok(env: Env, url: URL): Promise<Response> {
   const treff: Rad[] = [];
 
   const filter = koderForFiltre(url);
-  if (filter.feil) return json({ ok: false, error: filter.feil }, 400);
-  if (filter.koder && filter.koder.length === 0) {
-    return json({ ok: true, antall: 0, utfall: 'MANUAL_REVIEW', treff: [], filter: { koder: [], advarsel: filter.advarsel } });
+  if (filter.status === 'UGYLDIG') return json({ ok: false, error: filter.feil }, 400);
+  if (filter.status === 'TOM_TREFF') {
+    // Gyldige filtre som ikke kan kombineres gir null treff — aldri ufiltrert fallback.
+    return json({ ok: true, antall: 0, utfall: 'MANUAL_REVIEW', treff: [], filter: { koder: [], status: filter.status, advarsel: filter.advarsel } });
   }
-  const kodeFilter = filter.koder ? ` AND t.typekode IN (${filter.koder.map((k) => `'${k}'`).join(',')})` : '';
+  const filterAktiv = filter.status === 'GYLDIG';
+  // Bare kjente koder fra kodeboken — ingen fritekst går inn i SQL.
+  const kodeFilter = filterAktiv ? ` AND t.typekode IN (${filter.koder.map((k) => `'${k}'`).join(',')})` : '';
 
   // 1) Prislisten — det vi faktisk kan selge.
   //    Uten typekodetabellen (eldre database) faller vi tilbake til søk uten join,
@@ -255,6 +295,9 @@ export async function handleKatalogSok(env: Env, url: URL): Promise<Response> {
         },
         oe: x.oem_numbers,
         source: x.source,
+        // Katalogen har ikke typekode. Plasseringen er en gjetning fra teksten,
+        // ikke dokumentert — og skal derfor falle ut av et strengt filter.
+        ...posisjonsfelter(undefined, undefined, undefined),
       });
     }
   } catch { /* ignorer */ }
@@ -275,9 +318,22 @@ export async function handleKatalogSok(env: Env, url: URL): Promise<Response> {
         beskrivelse: `Verifisert frontrute: ${x.make} ${x.model} ${x.year}`,
         konfidens: x.confidence,
         verifisert_av: x.verified_by,
+        ...posisjonsfelter(undefined, undefined, undefined),
       });
     }
   } catch { /* ignorer */ }
+
+  // Strengt filter gjelder HELE responsen, ikke bare prislisten. Treff fra
+  // kilder uten dokumentert plassering utelates og rapporteres eksplisitt —
+  // vi faller aldri tilbake til et ufiltrert søk.
+  let utelattUtenPosisjon = 0;
+  if (filterAktiv) {
+    const foer = treff.length;
+    const beholdt = treff.filter((t) => (t as Record<string, unknown>).plassering_dokumentert === true);
+    utelattUtenPosisjon = foer - beholdt.length;
+    treff.length = 0;
+    treff.push(...beholdt);
+  }
 
   const antall = treff.length;
   const harPris = treff.some((t) => typeof t.pris === 'number' && (t.pris as number) > 0);
@@ -294,7 +350,8 @@ export async function handleKatalogSok(env: Env, url: URL): Promise<Response> {
       : harPris ? null : 'Mangler pris eller egenskaper — kandidaten er ikke bekreftet.',
     // Katalogsøk er kandidatgenerering. Det kan aldri gi EXACT, og det sier det selv.
     fitment_status: 'PROVISIONAL',
-    filter: { koder: filter.koder, advarsel: filter.advarsel },
+    filter: { koder: filterAktiv ? filter.koder : null, status: filter.status, advarsel: filter.advarsel },
+    utelatt_uten_posisjon: utelattUtenPosisjon,
     treff,
   });
 }

@@ -18,11 +18,32 @@
 import type { BilInput } from './matcher';
 import { tierPris } from './matcher';
 import { matcherAar, parseAar } from './aar-parser';
+import { fraTypekode, klassifiserGlass, filtrerPaPosisjon, type TypekodePosisjon, type Posisjonsonske } from './glass-posisjon';
 import { serieKey, normaliserKatalogModell } from './serie-mapping';
 import { dekodeEurokode, type Dekodet } from './eurokode-dekoder';
 import { karanteneGrunn, prisKaranteneGrunn } from './glass-karantene';
 
 export type ResolverUtfall = 'PINPOINT' | 'VERIFY' | 'FALLBACK';
+
+/** Hvilke glasstyper resolveren skal se etter. */
+export type Sokemodus = 'FRONTRUTE_ONLY' | 'ALL_GLASS_CANDIDATES';
+
+/** Posisjonsfelter som følger kandidaten i ALL_GLASS_CANDIDATES-modus. */
+export interface KandidatPosisjon {
+  typekode: string | null;
+  glassklasse: string | null;
+  sideKilde: 'forer' | 'passasjer' | null;
+  /** Produktets fysiske side — katalogegenskap, ikke bilens. */
+  produktFysiskSide: 'venstre' | 'hoyre' | 'begge' | null;
+  sideGrunnlag: string;
+  sideBekreftet: boolean;
+  dorLedd: string | null;
+  ventilLedd: string | null;
+  sideruteNummer: number | null;
+  deltBakrute: boolean;
+  /** Sann når typekoden motsier navn/eurokode. Skal aldri bli EXACT. */
+  konflikt: boolean;
+}
 
 export interface ResolverKandidat {
   varenr: string;
@@ -30,6 +51,8 @@ export interface ResolverKandidat {
   pris: number | null;      // sluttpris (tier), samme regel som matcher
   listepris: number | null;
   eurokode: string | null;
+  /** Bare satt i ALL_GLASS_CANDIDATES-modus. */
+  posisjon?: KandidatPosisjon;
   attributter: {
     sensor: boolean | null;
     antenne: boolean | null;
@@ -186,7 +209,7 @@ export function erFrontrute(varenavn: string | null, varenr: string, dek: Dekode
  *  Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13);
  *  glass_catalog brukes KUN for kamera/adas (ikke kodet i eurokoden). Ikke-frontrute
  *  (bak/side/dør/takglass) og OEM-delnummer uten FRONTR-markør returnerer null. */
-async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | null> {
+async function prisKandidat(env: Env, kode: string, modus: Sokemodus = 'FRONTRUTE_ONLY'): Promise<ResolverKandidat | null> {
   const r = await env.FINNBILGLASS_DB.prepare(
     `SELECT varenr, varenavn, pris, eurokode, kommentar FROM glass_prisliste
      WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
@@ -202,7 +225,14 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
   if (prisKarantene) console.warn(`pris-karantene: ${r.varenr} — ${r.kommentar}`);
 
   const dek = dekodeEurokode(r.eurokode);
-  if (!erFrontrute(r.varenavn, r.varenr, dek)) return null; // bak/side/dør/takglass
+
+  // Posisjon fra typekode-registeret. Mangler tabellen (eldre database),
+  // er posisjonen ukjent — ikke «frontrute».
+  const tp = await hentTypekode(env, r.varenr);
+  const klassifisert = klassifiserGlass(r.varenavn, r.varenr, r.eurokode, tp?.kode ?? null);
+
+  if (modus === 'FRONTRUTE_ONLY' && !klassifisert.erFrontrute) return null; // bak/side/dør/takglass
+  if (modus === 'ALL_GLASS_CANDIDATES' && klassifisert.type === 'ukjent') return null; // ikke plasserbart
 
   const attributter: ResolverKandidat['attributter'] = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null, oppvarmet: null };
 
@@ -239,8 +269,36 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
     pris: prisKarantene ? null : tierPris(r.pris),
     listepris: prisKarantene ? null : r.pris,
     eurokode: r.eurokode,
+    posisjon: modus === 'ALL_GLASS_CANDIDATES' ? {
+      typekode: tp?.kode ?? null,
+      glassklasse: klassifisert.type,
+      sideKilde: tp?.side ?? null,
+      produktFysiskSide: tp?.produktFysiskSide ?? null,
+      sideGrunnlag: tp?.sideGrunnlag ?? 'UKJENT',
+      sideBekreftet: tp?.sideBekreftet ?? false,
+      dorLedd: klassifisert.dorLedd,
+      ventilLedd: klassifisert.ventilLedd,
+      sideruteNummer: tp?.sideruteNummer ?? null,
+      deltBakrute: tp?.deltBakrute ?? false,
+      konflikt: klassifisert.typekodeKonflikt,
+    } : undefined,
     attributter,
   };
+}
+
+/**
+ * Slår opp typekode for et varenummer.
+ * Mangler tabellen (produksjon før migrering), er svaret null — ikke en gjetning.
+ */
+async function hentTypekode(env: Env, varenr: string): Promise<TypekodePosisjon | null> {
+  try {
+    const r = await env.FINNBILGLASS_DB.prepare(
+      'SELECT typekode FROM glass_typekode WHERE varenr = UPPER(?) LIMIT 1',
+    ).bind(varenr).first<{ typekode: string }>();
+    return fraTypekode(r?.typekode ?? null);
+  } catch {
+    return null;
+  }
 }
 
 /** Spørsmål som FAKTISK skiller kandidatene: felt der minst én kandidat har true OG minst én har false.
@@ -645,4 +703,48 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   if (res) return res;
 
   return { utfall: 'FALLBACK', grunn: 'ingen resolver-data — tekstmatcher overtar', confidence: 0 };
+}
+
+/**
+ * Finner glasskandidater for alle posisjoner (dør, ventil, side, bakrute),
+ * valgfritt filtrert på ønsket plassering.
+ *
+ * Viktig: dette gir KANDIDATER, ikke fitment. En kandidat herfra er ikke bevist
+ * å passe bilen — kjøretøytilknytning må komme fra applikasjonsdata eller
+ * manuell kontroll. Funksjonen returnerer derfor aldri EXACT.
+ */
+export async function finnGlassKandidater(
+  env: Env,
+  sok: string,
+  onske?: Posisjonsonske | null,
+  maks = 25,
+): Promise<ResolverKandidat[]> {
+  const kode = (sok || '').trim().toUpperCase();
+  if (kode.length < 2) return [];
+  const like = `%${kode.replace(/[%_]/g, '')}%`;
+
+  let rader: Array<{ varenr: string; eurokode: string | null }> = [];
+  try {
+    const r = await env.FINNBILGLASS_DB.prepare(
+      `SELECT varenr, eurokode FROM glass_prisliste
+        WHERE rad_type = 'glass' AND (UPPER(varenr) = ?1 OR UPPER(eurokode) = ?1
+           OR UPPER(varenr) LIKE ?2 OR UPPER(eurokode) LIKE ?2)
+        ORDER BY varenr LIMIT 200`,
+    ).bind(kode, like).all<{ varenr: string; eurokode: string | null }>();
+    rader = r.results ?? [];
+  } catch {
+    return [];
+  }
+
+  const kandidater: ResolverKandidat[] = [];
+  for (const rad of rader) {
+    const k = await prisKandidat(env, rad.varenr, 'ALL_GLASS_CANDIDATES');
+    if (k) kandidater.push(k);
+  }
+
+  const filtrert = filtrerPaPosisjon(
+    kandidater.map((k) => ({ ...k, typekode: k.posisjon?.typekode ?? null })),
+    onske ?? null,
+  );
+  return filtrert.slice(0, maks);
 }

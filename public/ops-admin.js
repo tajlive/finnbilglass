@@ -334,6 +334,8 @@
     var url = '/api/ops/katalog/sok?q=' + encodeURIComponent(q);
     if (klasse) url += '&glassklasse=' + encodeURIComponent(klasse);
     if (side) url += '&side_kilde=' + encodeURIComponent(side);
+    var styring = (document.getElementById('katalog-styring') || {}).value || 'UKJENT';
+    if (styring !== 'UKJENT') url += '&kjorestyring=' + encodeURIComponent(styring);
     api(url)
       .then(function (d) {
         status.innerHTML = '<strong>' + d.antall + ' treff</strong> · utfall: <span class="pill ' +
@@ -344,9 +346,12 @@
           d.treff.map(function (t) {
             var id = t.varenr || t.eurokode || '';
             var detalj = [];
-            if (t.side_kilde) detalj.push(t.side_kilde === 'forer' ? 'førerside' : 'passasjerside');
-            if (t.fysisk_side) detalj.push(t.fysisk_side);
-            else if (t.fysisk_side_krever_avklaring) detalj.push('fysisk side må bekreftes');
+            if (t.side_kilde) detalj.push('kildeside: ' + (t.side_kilde === 'forer' ? 'fører' : 'passasjer'));
+            if (t.side_bekreftet && t.produkt_fysisk_side_verifisert) {
+              detalj.push('fysisk side: ' + t.produkt_fysisk_side_verifisert + ' (dokumentert)');
+            } else if (t.fysisk_side_visning) {
+              detalj.push('visning: ' + t.fysisk_side_visning + ' (antatt ' + (t.markedsstandard || 'LHD') + '-marked)');
+            }
             if (t.dor_ledd) detalj.push(t.dor_ledd + ' dør');
             if (t.ventil_ledd) detalj.push(t.ventil_ledd + ' ventil');
             if (t.siderute_nummer) detalj.push('siderute ' + t.siderute_nummer);

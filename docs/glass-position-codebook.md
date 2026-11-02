@@ -34,9 +34,30 @@ Kodene er *ikke* antatt — beskrivelsene under er hentet ordrett fra kildens eg
 - **Suffiks `V`:** ventil-/trekantrute i samme posisjon. `DFFV` = fremre ventilrute førerside, `DFF` = fremre dørrute førerside. Disse må aldri forveksles: de er forskjellige fysiske glass.
 - **Tall `1/2/3`:** posisjonsnummer bakover i bilen på sideruter.
 
-## Viktige forbehold
+## Tre opplysninger som må holdes fra hverandre
 
-1. **Fører/passasjer er ikke det samme som venstre/høyre.** Koden sier hvilken side av bilen glasset sitter på *sett fra bilens retning*. På venstrestyrte biler (Norge) er førerside = venstre side. På høyrestyrte biler er førerside = høyre side. Systemet skal derfor lagre **både** `side` (fører/passasjer) og `fysisk_side` (venstre/høyre) med kjøretøyets styretype som kontekst — aldri utlede det ene fra det andre uten dokumentert styretype.
+| Opplysning | Hva det er | Hvor det kommer fra |
+|---|---|---|
+| **Kildens side** | «fører» / «passasjer» — katalogens egen betegnelse | typekoden (auto-glass.no) |
+| **Produktets fysiske side** | venstre / høyre — egenskap ved selve glasset | katalogens markedskonvensjon, ikke bilen |
+| **Bilens styretype** | LHD / RHD / ukjent | kjøretøyopplysning, aldri produktet |
+
+**Kritisk regel:** et venstre glass blir ikke et høyre glass fordi bilen har rattet
+på høyre side. Det er samme fysiske produkt, men det havner på bilens
+*passasjerside* i stedet for førersiden. Systemet speilvender derfor aldri en SKU.
+
+Katalogen er norsk (LHD-marked), så «førerside» = fysisk venstre **som
+markedsantakelse**. Antakelsen merkes alltid:
+
+- `side_grunnlag: "ANTATT_LHD_MARKED"`
+- `side_bekreftet: false`
+- `produkt_fysisk_side_verifisert: null`
+
+`rollePaBil(produktSide, kjorestyring)` gir hvilken rolle glasset får på en bil
+med kjent styretype — ren visningsinformasjon, ingen endring av produktet.
+
+Antakelsen kan brukes til forhåndsvalg, etiketter, sortering og færre
+kontrollspørsmål. Den gir **aldri** EXACT.
 2. **Typekoden beskriver posisjon, ikke utstyr.** Kamera, regnsensor, HUD og oppvarming står ikke i koden. De må komme fra egne kilder eller kundesvar.
 3. **Typekoden identifiserer ikke kjøretøy.** Samme SKU kan ha typekode `F` og passe flere modeller; kjøretøytilknytning kommer fra applikasjonsdata.
 4. **Delt bakrute (`BF`/`BP`)** finnes bare på 15 rader. Behandle som egen kategori, ikke som vanlig bakrute.

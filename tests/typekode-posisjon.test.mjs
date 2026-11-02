@@ -10,7 +10,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fraTypekode, klassifiserGlass, filtrerPaPosisjon } from '../src/glass-posisjon.ts';
+import { fraTypekode, klassifiserGlass, filtrerPaPosisjon, rollePaBil } from '../src/glass-posisjon.ts';
 import { utfallFor } from '../src/routes/admin-katalog.ts';
 
 test('frontrute og bakrute', () => {
@@ -75,22 +75,30 @@ test('delt bakrute merkes som delt', () => {
   assert.equal(fraTypekode('B').deltBakrute, false, 'vanlig bakrute er ikke delt');
 });
 
-test('fører/passasjer er ikke det samme som venstre/høyre', () => {
-  // Venstrestyrt: fører = venstre
-  assert.equal(fraTypekode('DFF', 'venstre').fysiskSide, 'venstre');
-  // Høyrestyrt: fører = høyre — samme kode, motsatt fysisk side
-  assert.equal(fraTypekode('DFF', 'hoyre').fysiskSide, 'hoyre');
-  // Passasjer på høyrestyrt bil er fysisk venstre
-  assert.equal(fraTypekode('DPF', 'hoyre').fysiskSide, 'venstre');
-  // Kildenbetegnelsen endres aldri av styretypen
-  assert.equal(fraTypekode('DFF', 'hoyre').side, 'forer');
+test('produktets side er en katalogegenskap, ikke bilens ratt', () => {
+  // Katalogen er norsk (LHD-marked): «førerside» = fysisk venstre i kilden.
+  const dff = fraTypekode('DFF');
+  assert.equal(dff.side, 'forer');
+  assert.equal(dff.produktFysiskSide, 'venstre');
+  assert.equal(dff.sideGrunnlag, 'ANTATT_LHD_MARKED');
+  assert.equal(dff.sideBekreftet, false, 'markedsantakelse er ikke dokumentasjon');
+
+  const dpf = fraTypekode('DPF');
+  assert.equal(dpf.produktFysiskSide, 'hoyre');
 });
 
-test('ukjent styretype gir ingen fysisk side — aldri gjettet', () => {
-  const u = fraTypekode('DFF');
-  assert.equal(u.fysiskSide, null, 'uten styretype finnes ingen fysisk side');
-  assert.equal(u.fysiskSideKreverAvklaring, true);
-  assert.equal(u.side, 'forer', 'fører/passasjer er kjent selv om fysisk side er ukjent');
+test('RHD speilvender ikke produktet', () => {
+  // Samme SKU. Bilen har rattet på høyre side — men glasset er fortsatt et
+  // venstre glass. Det er rollen på bilen som endres, ikke produktet.
+  const dff = fraTypekode('DFF');
+  assert.equal(dff.produktFysiskSide, 'venstre', 'produktets side endres aldri av bilen');
+  assert.equal(rollePaBil(dff.produktFysiskSide, 'RHD'), 'passasjer');
+  assert.equal(rollePaBil(dff.produktFysiskSide, 'LHD'), 'forer');
+  assert.equal(rollePaBil(dff.produktFysiskSide, 'UKJENT'), null, 'ukjent styretype gir ingen rolle');
+
+  const dpf = fraTypekode('DPF');
+  assert.equal(dpf.produktFysiskSide, 'hoyre');
+  assert.equal(rollePaBil(dpf.produktFysiskSide, 'RHD'), 'forer');
 });
 
 test('ukjente koder tolkes ikke', () => {
@@ -174,4 +182,37 @@ test('posisjonsfilter fjerner bare beviselig feil plass', () => {
   assert.equal(filtrerPaPosisjon(kandidater, null).length, 5);
   // Tomt ønske filtrerer ikke
   assert.equal(filtrerPaPosisjon(kandidater, {}).length, 5);
+});
+
+test('testmatrise: alle kodeklasser gir riktig plassering', () => {
+  const tilfeller = [
+    ['F', 'frontrute', null, null, null],
+    ['B', 'bakrute', null, null, null],
+    ['DFF', 'dor', 'forer', 'fremre', null],
+    ['DFB', 'dor', 'forer', 'bakre', null],
+    ['DPF', 'dor', 'passasjer', 'fremre', null],
+    ['DPB', 'dor', 'passasjer', 'bakre', null],
+    ['DFFV', 'ventil', 'forer', null, 'foran'],
+    ['DPBV', 'ventil', 'passasjer', null, 'bakre'],
+    ['SFB1', 'side', 'forer', null, null],
+    ['SPB3', 'side', 'passasjer', null, null],
+  ];
+  for (const [kode, type, side, ledd, ventil] of tilfeller) {
+    const p = fraTypekode(kode);
+    assert.equal(p.type, type, `${kode} type`);
+    assert.equal(p.side, side, `${kode} side`);
+    assert.equal(p.dorLedd, ledd, `${kode} dørledd`);
+    assert.equal(p.ventilLedd, ventil, `${kode} ventilledd`);
+  }
+  assert.equal(fraTypekode('BF').deltBakrute, true);
+  assert.equal(fraTypekode('BP').side, 'passasjer');
+  assert.equal(fraTypekode('SFB2').sideruteNummer, 2);
+});
+
+test('LHD-antakelse gir aldri EXACT alene', () => {
+  const r = klassifiserGlass('VW GOLF DØRRUTE VS', '12345', '1234LG', 'DFF');
+  assert.equal(r.typekodeKonflikt, false);
+  assert.notEqual(r.erFrontrute, true);
+  // Uansett hvor sikker markedsantakelsen er, er den ikke fitment-bevis.
+  assert.equal(r.kilde === 'typekode', true);
 });

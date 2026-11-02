@@ -107,6 +107,11 @@ export function opsAdminUi(): Response {
             <option value="forer">Førerside</option>
             <option value="passasjer">Passasjerside</option>
           </select>
+          <select id="katalog-styring" aria-label="Styretype">
+            <option value="UKJENT">Styretype: ukjent</option>
+            <option value="LHD">Venstrestyrt (norsk standard)</option>
+            <option value="RHD">Høyrestyrt</option>
+          </select>
           <button class="btn teal" id="katalog-sok">Søk</button>
         </div>
         <div id="katalog-status" class="muted"></div>
