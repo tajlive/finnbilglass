@@ -18,6 +18,7 @@ import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_I
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
+import { opsAdminUi } from './routes/ops-admin-ui';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
@@ -938,7 +939,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
 
     if (method === 'GET' && path === '/ops') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      return operationsCenterUi();
+      return opsAdminUi();
     }
     if (method === 'POST' && path === '/api/ops/brevo-check') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
