@@ -5,7 +5,7 @@
  */
 import type { Env } from './types';
 import { matchFrontrute, tierPris, type BilInput } from './matcher';
-import { resolveFrontrute } from './vin-resolver';
+import { resolveFrontrute, finnGlassKandidater, type ResolverResultat, type Sokemodus, type Posisjonsonske } from './vin-resolver';
 import { resolverModus, anvendResolverPolicy, henvendelserTillatt } from './kill-switch';
 import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
@@ -848,6 +848,84 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         }
       }
       return json({ ok: true, bil, resolver: await anvendResolverPolicy(env, resolver) });
+    }
+
+    // V6.6.0-B ALL-GLASS — kjøretøybasert kandidatsøk for alle glasskategorier.
+    // Bruker finnGlassKandidater(ALL_GLASS_CANDIDATES); aldri EXACT (ingen GT for dør/side/bak).
+    // Frontrute bevares via separat resolveFrontrute (FRONTRUTE_ONLY).
+    if (method === 'POST' && path === '/api/glass/kandidater') {
+      let body: unknown; try { body = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const b = typeof body === 'object' && body !== null ? body as Record<string, unknown> : null;
+      const regnr = typeof b?.regnr === 'string' ? b.regnr.trim() : '';
+      const merke = typeof b?.merke === 'string' ? b.merke.trim() : '';
+      const modell = typeof b?.modell === 'string' ? b.modell.trim() : '';
+      const sok = typeof b?.sok === 'string' ? b.sok.trim().toUpperCase() : '';
+      const glassklasse = typeof b?.glassklasse === 'string' ? b.glassklasse.trim().toLowerCase() : null;
+      const dorLedd = typeof b?.dorLedd === 'string' ? b.dorLedd.trim().toLowerCase() : null;
+      const ventilLedd = typeof b?.ventilLedd === 'string' ? b.ventilLedd.trim().toLowerCase() : null;
+      const side = typeof b?.side === 'string' ? b.side.trim().toLowerCase() : null;
+      if (!regnr && !merke && !sok) return json({ ok: false, error: 'Regnr, merke eller søk påkrevd' }, 400);
+      const validKlasser = ['frontrute','bakrute','dor','side','ventil','tak'];
+      if (glassklasse && !validKlasser.includes(glassklasse)) return json({ ok: false, error: 'Ugyldig glassklasse' }, 400);
+      if (dorLedd && !['fremre','bakre'].includes(dorLedd)) return json({ ok: false, error: 'Ugyldig dørledd' }, 400);
+      if (ventilLedd && !['foran','bakre'].includes(ventilLedd)) return json({ ok: false, error: 'Ugyldig ventilledd' }, 400);
+      if (side && !['venstre','hoyre','begge'].includes(side)) return json({ ok: false, error: 'Ugyldig side' }, 400);
+
+      const onske: Posisjonsonske = {};
+      if (glassklasse) onske.glassklasse = glassklasse as Posisjonsonske['glassklasse'];
+      if (dorLedd) onske.dorLedd = dorLedd as Posisjonsonske['dorLedd'];
+      if (ventilLedd) onske.ventilLedd = ventilLedd as Posisjonsonske['ventilLedd'];
+      if (side) onske.sideKilde = side as Posisjonsonske['sideKilde'];
+
+      let bil = null;
+      let frontruteResult = null;
+      let kandidater: unknown[] = [];
+      let sokKilde = 'ingen';
+
+      // 1. SVV-oppslag ved regnr
+      if (regnr) {
+        try { bil = await svvLookup(regnr.toUpperCase().replace(/[\s\-–—.]+/g, ''), env.SVV_API_KEY); } catch (e) { console.error('SVV-feil:', e); }
+      }
+      // 2. Frontrute-resolver (uendret) — bare når bil funnet OG kategori er frontrute eller ikke spesifisert
+      if (bil && bil.merke && (!glassklasse || glassklasse === 'frontrute')) {
+        try {
+          frontruteResult = await resolveFrontrute(env, { merke: bil.merke, modell: bil.modell ?? undefined, aar: bil.aar ?? undefined, vin: bil.vin ?? undefined });
+          frontruteResult = await anvendResolverPolicy(env, frontruteResult);
+        } catch (e) { console.error('Resolver-feil:', e); }
+      }
+      // 3. ALL_GLASS_CANDIDATES: typekode + katalog (finnGlassKandidater)
+      const sokTekst = sok || (bil ? `${bil.merke} ${bil.modell ?? ''}`.trim() : '') || (merke ? `${merke} ${modell}`.trim() : '');
+      if (sokTekst.length >= 2) {
+        try {
+          const r = await finnGlassKandidater(env, sokTekst, onske, 25);
+          kandidater = r.map((k) => ({
+            varenr: k.varenr,
+            varenavn: k.varenavn,
+            pris: k.pris,
+            listepris: k.listepris,
+            eurokode: k.eurokode,
+            posisjon: k.posisjon ?? null,
+            attributter: k.attributter,
+          }));
+          sokKilde = r.length ? 'typekode+katalog' : 'ingen';
+        } catch (e) { console.error('finnGlassKandidater-feil:', e); }
+      }
+
+      const advarsel = (!kandidater.length && !frontruteResult)
+        ? 'Ingen kandidater funnet. Vennligst bekrefte bilens merke, modell og år, eller ta bilde av skiltnummeret.'
+        : (!kandidater.length ? 'Ingen kandidater for valgt glasskategori.' : null);
+
+      return json({
+        ok: true,
+        bil: bil ? { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null, vin: bil.vin ?? null } : null,
+        frontrute: frontruteResult,
+        kandidater,
+        sokKilde,
+        advarsel,
+        // Aldri EXACT: nivå 4 (GT) brukes aldri for dør/side/bak; nivå 1 (GT) kun for frontrute
+        fitmentAuthority: 'ingen — menneskelig bekreftelse kreves',
+        modus: 'ALL_GLASS_CANDIDATES',
+      });
     }
 
     if (method === 'POST' && path === '/api/les-skilt') {

@@ -19,6 +19,7 @@ import type { BilInput } from './matcher';
 import { tierPris } from './matcher';
 import { matcherAar, parseAar } from './aar-parser';
 import { fraTypekode, klassifiserGlass, filtrerPaPosisjon, type TypekodePosisjon, type Posisjonsonske } from './glass-posisjon';
+export { fraTypekode, klassifiserGlass, filtrerPaPosisjon, type TypekodePosisjon, type Posisjonsonske } from './glass-posisjon';
 import { serieKey, normaliserKatalogModell } from './serie-mapping';
 import { dekodeEurokode, type Dekodet } from './eurokode-dekoder';
 import { karanteneGrunn, prisKaranteneGrunn } from './glass-karantene';
