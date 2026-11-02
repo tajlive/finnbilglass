@@ -411,6 +411,16 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       setAuthStorage(new D1AuthStorage(env.FINNBILGLASS_LOCAL_AUTH));
     }
 
+    // ── HOSTNAME ISOLATION: Admin ops routes only on designated ops hostnames ──
+    const hostname = request.headers.get('host') || '';
+    // Exact hostname matching — substring check can give false positives
+    const isOpsHostname = hostname === 'ops-staging.finnbilglass.no' ||
+                          hostname === 'ops.finnbilglass.no';
+    const isAdminRoute = path.startsWith('/ops') || path.startsWith('/api/ops/');
+    if (isAdminRoute && !isOpsHostname) {
+      return json({ ok: false, error: 'Admin-ruten er ikke tilgjengelig fra dette domene' }, 403);
+    }
+
     if (method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
 
     if (method === 'GET' && path === '/health') {
@@ -965,6 +975,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
 
     if (method === 'GET' && path === '/ops') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Ikke autorisert' }, 401);
       return opsAdminUi();
     }
     if (method === 'POST' && path === '/api/ops/brevo-check') {
