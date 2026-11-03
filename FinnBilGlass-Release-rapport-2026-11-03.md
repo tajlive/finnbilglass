@@ -268,3 +268,76 @@ python3 ~/.hermes/cache/scratch/fbg-fase2/release-matrix.py
 # Sikkerhet
 gitleaks detect --config=.gitleaks.toml
 ```
+
+---
+
+## 8. Produksjonsdeploy 2026-11-03 (godkjent av eier)
+
+Eier godkjente utrulling av `release/v6.6.0-fase2` med disse grensene: kandidatvisning **AV**,
+ingen `0047` i produksjon, kun gjennomgåtte endringer fra PR #25, rollback `ae5bb623` tilgjengelig,
+og umiddelbar kontroll av frontrutesøk, tilbudsmottak og feillogger.
+
+### 8.1 Gjennomføring — governed CI, ikke lokal deploy
+```
+gh workflow run deploy.yml --ref release/v6.6.0-fase2     → run 41665832650
+  test-gate        ✓  (tsc + npm test)
+  security-check   ✓  (ingen hemmelighetsfiler; gitleaks med allowlist)
+  deploy           ✓  (environment: production, godkjent 15:38Z på eiers chat-godkjenning)
+  smoke-betatest   ✓  «ALT GRØNT — ingen funn»
+```
+| Felt | Verdi |
+|---|---|
+| Ny Worker-versjon | `d6fb5a3b-2882-4281-b978-5dee823f1dda` (2026-11-03T15:40:16Z) |
+| Forrige versjon | `ed4b58f3-f022-4181-887e-2a01d62529d6` — fortsatt i versjonslisten |
+| Rollback-mål | `ae5bb623-cfc9-4a5b-bce0-df8eec6db017` — fortsatt i versjonslisten |
+| Deployet commit | `715e11f` (branch head, 3 kode-commits + dokumentasjon) |
+| Migrering | **ingen** |
+
+### 8.2 Skjemakompatibilitet uten 0047 (eiers vilkår 1)
+`glass_typekode` og `v_glass_med_typekode` finnes **ikke** i produksjons-D1 (verifisert med
+`sqlite_master`-spørring etter deploy). Releasen fungerer likevel:
+- `/health` svarer `katalogRader: 29627` (katalog-DB intakt)
+- `/api/frontrute` gir 5 kandidater (resolverens `hentTypekode` er `try/catch`-guarded → `null`)
+- `/api/glass/kandidater` i pilotmodus spør ikke katalogen i det hele tatt
+- `/ops`-katalogen er uendret av releasen og beholder sin eksisterende fallback-gren
+
+### 8.3 Umiddelbar etterkontroll (eiers vilkår 4)
+| Kontroll | Forventet | Målt etter deploy |
+|---|---|---|
+| `/health` | 200 + 29 627 rader | 200, `katalogRader: 29627` ✅ |
+| Forside apex + www | 200 | 200 / 200 ✅ |
+| `/api/pilot-status` | 200 | 200, `inquiries_enabled: true`, `pilot: apen` ✅ |
+| `/min-side` uten sesjon | 302 | 302 ✅ |
+| `/ops` og `/api/ops/saker` | 302 (Access) | 302 / 302 ✅ |
+| **Kandidatvisning** | **AV** | `status: MANUAL_REVIEW`, `kandidater: 0`, `modus: MANUAL_QUOTE` ✅ |
+| Frontrutesøk | VERIFY, 5 kandidater | VERIFY, 5, priser 6 990/5 490/5 490, nøkler `attributter, pris, varenavn, varenr` ✅ |
+| Ingen interne felt i frontrute-svaret | ingen | `eurokode/listepris/innkjøpspris/matchReason/source/EXACT` = 0 treff ✅ |
+| Tilbudsmottak — validering | 400 på tom/ugyldig | 400 / 400 ✅ |
+| Nye henvendelsesrader fra probene | 0 | `beta_inquiries` = 36 rader, siste 2026-11-02T19:44Z → uendret ✅ |
+| Worker-unntak (observability) | 0 | 56 forespørsler 15:35–16:00Z, **0 unntak** (55 success, 1 clientDisconnected) ✅ |
+| CI-smoke mot prod | grønn | «ALT GRØNT — ingen funn»: P1-spørsmål == resolver, pris 6 990 kr, ingen duplisert merke, skjemavalidering, ukjent regnr → ærlig handoff ✅ |
+
+### 8.4 Rollback (verifisert tilgjengelig, ikke brukt)
+```bash
+npx wrangler rollback --name finnbilglass-frontrute --version-id ae5bb623-cfc9-4a5b-bce0-df8eec6db017
+```
+Versjonen ligger fortsatt i listen etter deploy. Ingen D1-endring å reversere; kandidatvisning er
+av i begge versjoner, så en rollback er ren kode-tilbakerulling.
+
+### 8.5 Hva som **ikke** ble gjort
+Ingen aktivering av kandidatkort, ingen `0047`, ingen skriving til kunde- eller ordredata.
+`ALL_GLASS_KANDIDATER_ENABLED` finnes ikke i produksjons-`[vars]` — verifisert i `wrangler.toml`
+og i det kjørende svaret (`modus: MANUAL_QUOTE`).
+
+---
+
+## 9. Sluttstatus
+
+| Element | Status |
+|---|---|
+| Release `release/v6.6.0-fase2` | **I PRODUKSJON** (versjon `d6fb5a3b`) |
+| Kandidatvisning for kunder | **AV** — produksjonsadferd uendret fra `03bb58cb` |
+| Migrering 0047 | **Ikke kjørt** (staging verifisert, produksjon ikke godkjent) |
+| Rollback | `ae5bb623` tilgjengelig og dokumentert |
+| Testgrunnlag | 497 tester / 490 PASS, 23/23 Chrome-reiser (staging), CI-smoke grønn (produksjon) |
+| Gjenstår | F6-historikken (eier-valg), aktivering av alle glasstyper (neste milepæl), 0047 i prod (egen sak) |
