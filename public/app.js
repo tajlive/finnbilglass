@@ -727,9 +727,9 @@
   function glassSelectionLabel(selection) {
     if (!selection) return '';
     if (selection.kind === 'windshield') return 'Frontrute';
-    if (selection.kind === 'door') return 'Dørrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',sliding:'Skyvedør',unknown:'Vet ikke hvilken dør'}[selection.door]);
-    if (selection.kind === 'side') return 'Siderute · ' + glassSideLabel(selection.side) + ' · ' + ({front_quarter:'Fremre trekantrute',rear_quarter:'Bakre trekantrute',cargo:'Lasterom',unknown:'Vet ikke plassering'}[selection.section]) + ' · ' + ({body:'Karosseri',door:'Dør',unknown:'Vet ikke'}[selection.mounting]);
-    if (selection.kind === 'rear') return 'Bakrute · ' + (selection.layout === 'single' ? 'Hel rute' : selection.layout === 'split' ? 'Delt rute · ' + glassSideLabel(selection.splitSide) : 'Vet ikke om ruten er delt');
+    if (selection.kind === 'door') return 'Dørrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',sliding:'Skyvedør',unknown:'Vet ikke hvilken dør'}[selection.door]) + kroppSuffix(selection);
+    if (selection.kind === 'side') return 'Siderute · ' + glassSideLabel(selection.side) + ' · ' + ({front_quarter:'Fremre trekantrute',rear_quarter:'Bakre trekantrute',cargo:'Lasterom',unknown:'Vet ikke plassering'}[selection.section]) + ' · ' + ({body:'Karosseri',door:'Dør',unknown:'Vet ikke'}[selection.mounting]) + kroppSuffix(selection);
+    if (selection.kind === 'rear') return 'Bakrute · ' + (selection.layout === 'single' ? 'Hel rute' : selection.layout === 'split' ? 'Delt rute · ' + glassSideLabel(selection.splitSide) : 'Vet ikke om ruten er delt') + kroppSuffix(selection);
     if (selection.kind === 'ventil') return 'Ventilrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',unknown:'Vet ikke plassering'}[selection.placement]);
     if (selection.kind === 'roof') return 'Panoramatak / takglass · ' + ({fixed:'Fast',opening:'Åpningsbart',unknown:'Vet ikke'}[selection.system]) + ' · ' + ({whole:'Hele ruten',front:'Fremre panel',middle:'Midtre panel',rear:'Bakre panel',unknown:'Vet ikke panel'}[selection.panel]);
     return 'Ukjent glasstype';

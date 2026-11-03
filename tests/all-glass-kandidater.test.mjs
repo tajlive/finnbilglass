@@ -306,7 +306,7 @@ test('F12: valgt side fjerner beviselig motsatt side — og tømmer aldri listen
 
 test('F13: nøyaktig modell rangeres foran nærliggende modell (Sportsvan / Transit Connect)', () => {
   const golf = buildClassDCandidates([
-    { varenr: 'SV1', varenavn: 'VW GOLF SPORTVAN 5D MPV 14-', eurokode: '5101LGSV2FD' },
+    { varenr: 'SV1', varenavn: 'VW GOLF SPORTSVAN 5D MPV 14-', eurokode: '5101LGSV2FD' },
     { varenr: 'G1', varenavn: 'VW GOLF 5D STV 13- DØRRUTE', eurokode: '5102LGSV2FD' },
   ]);
   assert.equal(matchClassDCandidates(golf, 'VW', 'GOLF', 2016, { glassklasse: 'door' })[0].varenr, 'G1');
@@ -322,7 +322,7 @@ test('F14: like produktbeskrivelser grupperes — kunden ser ikke samme glass tr
   const KATALOG2 = [
     { varenr: 'A1', varenavn: 'VW GOLF 5D STV 13- DØRRUTE', eurokode: '5301LGSV2FD', kommentar: null },
     { varenr: 'A2', varenavn: 'VW GOLF 5D STV 13-  DØRRUTE', eurokode: '5302LGSV2FD', kommentar: null }, // ekstra mellomrom
-    { varenr: 'B1', varenavn: 'VW GOLF SPORTVAN 5D MPV 14-', eurokode: '5303LGSV2FD', kommentar: null },
+    { varenr: 'B1', varenavn: 'VW GOLF SPORTSVAN 5D MPV 14-', eurokode: '5303LGSV2FD', kommentar: null },
   ];
   const env = { ENVIRONMENT: 'test', FINNBILGLASS_DB: falskDb(KATALOG2), ALL_GLASS_KANDIDATER_ENABLED: 'true' };
   const data = await (await kall({ merke: 'VW', modell: 'GOLF', aar: 2016, selection: { kind: 'door', side: 'left', door: 'front' } }, env)).json();
@@ -334,14 +334,14 @@ test('F14: like produktbeskrivelser grupperes — kunden ser ikke samme glass tr
 
 test('F15: egen navnemodell (Sportsvan/Connect/Shooting Brake) foreslås ikke for familiebilen', () => {
   const indeks = buildClassDCandidates([
-    { varenr: 'S1', varenavn: 'VW GOLF SPORTVAN 5D MPV 14-', eurokode: '5401LGSV2FD' },
+    { varenr: 'S1', varenavn: 'VW GOLF SPORTSVAN 5D MPV 14-', eurokode: '5401LGSV2FD' },
     { varenr: 'G1', varenavn: 'VW GOLF 5D STV 13- DØRRUTE', eurokode: '5402LGSV2FD' },
     { varenr: 'X1', varenavn: 'VW GOLF PLUS 5D MPV 05-', eurokode: '5403LGSV2FD' },
   ]);
   const treff = varenr(matchClassDCandidates(indeks, 'VW', 'GOLF', 2016, { glassklasse: 'door' }));
   assert.deepEqual(treff, ['G1'], 'Sportsvan/Plus er egne modeller og skal ikke foreslås for en Golf');
   // Ber kunden om Sportsvan, er det den som gjelder.
-  const sportsvan = varenr(matchClassDCandidates(indeks, 'VW', 'GOLF SPORTVAN', 2016, { glassklasse: 'door' }));
+  const sportsvan = varenr(matchClassDCandidates(indeks, 'VW', 'GOLF SPORTSVAN', 2016, { glassklasse: 'door' }));
   assert.ok(sportsvan.includes('S1'));
   assert.equal(sportsvan.includes('G1'), false, 'Golf-ruten skal ikke foreslås for Sportsvan');
 });

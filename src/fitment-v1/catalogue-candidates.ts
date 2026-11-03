@@ -401,7 +401,7 @@ export function kropperIRad(varenavn: string): Set<Kroppstype> {
  * Raden forkastes bare når kjøretøyets eget modellnavn ikke inneholder navnet.
  */
 export const NÆRMODELL: Record<string, readonly string[]> = {
-  GOLF: ['SPORTVAN', 'PLUS', 'CROSS'],
+  GOLF: ['SPORTSVAN', 'PLUS', 'CROSS'],
   CLA: ['SHOOTING'],
   TRANSIT: ['CONNECT', 'COURIER'],
 };
