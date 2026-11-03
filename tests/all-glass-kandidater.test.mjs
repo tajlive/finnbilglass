@@ -266,3 +266,13 @@ test('kandidatmodus: selection.door brukes (bakre dør skal ikke gi samme liste 
   // Kandidater uten dokumentert ledd beholdes i begge, men ledd-caset må behandles uten krasj.
   assert.equal(Array.isArray(bakre.kandidater), true);
 });
+
+test('flat glassklasse (eldre klient) filtrerer likt som selection — ignoreres ikke stille', async () => {
+  const res = await kall({ merke: 'VW', modell: 'TRANSPORTER', aar: 2005, glassklasse: 'ventil' }, KANDIDAT_ENV);
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.equal(data.glassklasse, 'ventil');
+  assert.deepEqual(data.kandidater.map((k) => k.varenr), ['26510GN']);
+  // Ukjent klasse skal fortsatt avvises (produksjonens alias-tabell).
+  assert.equal((await kall({ merke: 'VW', modell: 'TRANSPORTER', aar: 2005, glassklasse: 'unknown' }, KANDIDAT_ENV)).status, 400);
+});

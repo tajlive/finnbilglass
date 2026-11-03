@@ -392,6 +392,15 @@ export default {
   },
 };
 
+/** Flat glassklasse fra klient → kundevalg (selection.kind). Én sannhet. */
+const GLASSKLASSE_ALIAS: Record<string, string> = {
+  front: 'windshield', frontrute: 'windshield', windshield: 'windshield',
+  door: 'door', dor: 'door',
+  rear: 'rear', bakrute: 'rear',
+  roof: 'roof', tak: 'roof',
+  side: 'side', ventil: 'ventil',
+};
+
 /** Kundevalg (selection.kind) → glassklasse for kandidatgeneratoren. */
 const KIND_TIL_GLASSEKLASSE: Record<string, string | null> = {
   windshield: 'frontrute',
@@ -442,7 +451,12 @@ async function handleAllGlassKandidater(b: Record<string, unknown>, selection: G
   }
   const bilKilde = bil ? 'SVV' : kjoretoy ? 'klientopplysning' : null;
 
-  const klasse = selection ? KIND_TIL_GLASSEKLASSE[selection.kind] ?? null : null;
+  // selection er den rike formen. Flat glassklasse (eldre klient) skal ikke
+  // ignoreres stille — den gir samme filter, bare uten side/dør/ventil.
+  const effektivKind = selection
+    ? selection.kind
+    : (typeof b.glassklasse === 'string' ? GLASSKLASSE_ALIAS[b.glassklasse] : undefined);
+  const klasse = effektivKind ? KIND_TIL_GLASSEKLASSE[effektivKind] ?? null : null;
   const dorLedd = selection?.kind === 'door'
     ? (selection.door === 'front' ? 'fremre' : selection.door === 'rear' ? 'bakre' : null)
     : null;
@@ -992,7 +1006,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       const b = body && typeof body === 'object' && !Array.isArray(body) ? body as Record<string, unknown> : null;
       if (!b) return json({ ok: false, error: 'Ugyldig forespørsel' }, 400);
       if (b.selection !== undefined && !normalizeGlassSelection(b.selection)) return json({ ok: false, error: 'Ugyldig glassvalg' }, 400);
-      const aliases: Record<string, string> = { front:'windshield', frontrute:'windshield', windshield:'windshield', door:'door', dor:'door', rear:'rear', bakrute:'rear', roof:'roof', tak:'roof', side:'side', ventil:'ventil' };
+      const aliases = GLASSKLASSE_ALIAS;
       if (b.glassklasse !== undefined && (typeof b.glassklasse !== 'string' || !Object.hasOwn(aliases,b.glassklasse))) return json({ ok:false, error:'Ugyldig glassklasse' },400);
       const selection = b.selection === undefined ? null : normalizeGlassSelection(b.selection);
       if (selection && typeof b.glassklasse === 'string' && aliases[b.glassklasse] !== selection.kind) return json({ok:false,error:'Motstridende glassvalg'},400);
