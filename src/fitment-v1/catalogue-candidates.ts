@@ -131,21 +131,42 @@ export function buildClassDCandidates(rows: { varenr: string; eurokode?: string 
 }
 
 /** Finner CLASS_D-kandidater for en bil (make, model, year). Aldri fasit. */
-export function matchClassDCandidates(index: CatalogueCandidate[], make: string, model: string, year: number | null): CatalogueCandidate[] {
+export function matchClassDCandidates(index: CatalogueCandidate[], make: string, model: string, year: number | null, onske?: { glassklasse?: string | null; dorLedd?: string | null; ventilLedd?: string | null }): CatalogueCandidate[] {
   const mk = make.toUpperCase();
   const mo = model.toUpperCase();
   const fam = FAMILIER.find((f) => f.merke === mk && f.re.test(mo));
   if (!fam) return [];
-  // Kandidatkvalitet: ekskluder bak/side-ruter OG tilbehør (PY/GU/K-lister, klips-kit — kjent katalogfelle)
-  const erBakSide = (c: CatalogueCandidate) => /BAKRUTE|SIDERUTE|DØRRUTE|DORRUTE|BAKRUT|SIDERUT/.test(c.varenavn);
+  // Kandidatkvalitet: ekskluder tilbehør (PY/GU/K-lister, klips-kit — kjent katalogfelle)
   const erTilbehor = (c: CatalogueCandidate) => /(PYT|PYB|PYV|PYH|PYS|PYC|PYKIT|PY|GU|GUM)$/.test(c.varenr) || /^\d{3,5}K$/.test(c.varenr) || /PYNTELIST|GUMMILIST|KLIPS|PYNTELISTE/.test(c.varenavn);
-  const hits = index.filter((c) => c.matchReason.startsWith(fam.merke + ' ' + fam.familie) && !erBakSide(c) && !erTilbehor(c));
-  if (year == null) return hits.slice(0, 6);
-  return hits.filter((c) => {
+  const hits = index.filter((c) => c.matchReason.startsWith(fam.merke + ' ' + fam.familie) && !erTilbehor(c));
+  // P0 FIX: glassposisjonsfilter — tidligere var alle bak-/sideglass hard-ekskludert,
+  // så dør/side/bak/ventil/tak fikk aldri kandidater. Nå filtreres på glassklasse
+  // (varenavn) + dorLedd/ventilLedd, og frontrute beholdes alltid.
+  const glassKlasse = onske?.glassklasse ?? null;
+  const dorLedd = onske?.dorLedd ?? null;
+  const ventilLedd = onske?.ventilLedd ?? null;
+  const filtrerte = hits.filter((c) => {
+    const n = c.varenavn.toUpperCase();
+    if (glassKlasse === 'frontrute') return /FRONT|FRONTR|WINDSHIELD|VINDUS/.test(n);
+    if (glassKlasse === 'bakrute') return /BAK/.test(n);
+    if (glassKlasse === 'dor') return /DØRRUTE|DORRUTE|DØR|DOOR/.test(n);
+    if (glassKlasse === 'side') return /SIDERUTE|SIDERUT/.test(n);
+    if (glassKlasse === 'ventil') return /VENTIL|TREKANTR/.test(n);
+    if (glassKlasse === 'tak') return /TAK/.test(n);
+    return true; // ukjent glassklasse → behold alle
+  });
+  // DorLedd/ventilLedd er kun dokumentert i varenavn for dør/ventil
+  const leddFiltrert = glassKlasse === 'dor' && dorLedd
+    ? filtrerte.filter((c) => dorLedd === 'fremre' ? /FREMRE|FORAN/.test(c.varenavn.toUpperCase()) : /BAKRE|BAK/.test(c.varenavn.toUpperCase()))
+    : glassKlasse === 'ventil' && ventilLedd
+      ? filtrerte.filter((c) => ventilLedd === 'foran' ? /FORAN/.test(c.varenavn.toUpperCase()) : /BAKRE/.test(c.varenavn.toUpperCase()))
+      : filtrerte;
+  if (year == null) return leddFiltrert.slice(0, 6);
+  return leddFiltrert.filter((c) => {
     const y = year;
     // C9.5-fix: match intervall på HELE matchReason — slice(3) krevde generasjon og ga tom
     // array for «BMW 3-SERIE 1983–1990»/«NISSAN LEAF 2012–» (3 ord) → 0 kandidater for
-    // alle år-spesifikke biler uten generasjons-hint (moderne BMW 3, LEAF, Model Y).
+    // alle år-spesifikke biler WITHOUT generasjons-hint (moderne BMW 3, LEAF, Model Y).
     const r = /(\d{4})–(\d{4}|)$/.exec(c.matchReason);
     // Katalog-rad UTEN produksjonsintervall er ikke kandidat-evidence for en år-spesifikk bil
     if (!r) return false;

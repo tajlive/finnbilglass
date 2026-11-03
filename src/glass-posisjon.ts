@@ -449,7 +449,7 @@ export function erFrontruteRad(
  * Alle felt er valgfrie: det som ikke er oppgitt, filtrerer ikke.
  */
 export interface Posisjonsonske {
-  glassklasse?: 'frontrute' | 'bakrute' | 'dor' | 'ventil' | 'side' | null;
+  glassklasse?: 'frontrute' | 'bakrute' | 'dor' | 'ventil' | 'side' | 'tak' | null;
   sideKilde?: 'forer' | 'passasjer' | null;
   dorLedd?: 'fremre' | 'bakre' | null;
   ventilLedd?: 'foran' | 'bakre' | null;

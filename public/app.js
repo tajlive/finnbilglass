@@ -908,23 +908,49 @@
 
   function renderGlassResultat(request, data, generation) {
     if (generation !== searchGeneration) return;
-    
-    // C6.0-D: Hvis kjøretøybasert matching mangler → MANUAL_REVIEW (ingen vilkårlige produkt).
-    var message = data.message || 'Vi har registrert hvilken rute du trenger. Vi kontrollerer riktig glass, pris og levering før vi sender tilbud.';
-    if (data.advarsel) {
-        message = data.advarsel;
+    // Sikker mot null/undefined data fra API-et (P2: håndter feil uten JS-krasj)
+    if (!data || typeof data !== 'object') {
+      data = { ok: false, advarsel: 'MANUAL_REVIEW — noe gikk galt med søket.', kandidater: [] };
     }
+    var kandidater = Array.isArray(data.kandidater) ? data.kandidater : [];
+    var isManual = !!data.advarsel && data.advarsel.indexOf('MANUAL_REVIEW') !== -1;
 
-    $('screen-resultat').querySelector('h2').textContent = 'Glassfunn til din bil';
+    $('screen-resultat').querySelector('h2').textContent = isManual ? 'Vi kontrollerer ruten manuelt' : (kandidater.length ? 'Mulige glass til bilen' : 'Vi kontrollerer ruten manuelt');
     var info = $('resultat-status');
-    info.textContent = message;
-    info.className = 'note status';
+    info.textContent = data.advarsel || (isManual ? 'Vi har ikke nok informasjon til å peke på én rute. Vi kontrollerer riktig glass, pris og levering før vi sender tilbud.' : 'Vi kontrollerer ruten og riktig glass før vi sender tilbud.');
+    info.className = 'note status ' + (isManual ? 'manual' : (kandidater.length ? 'verify' : ''));
     info.classList.remove('hidden');
-    
     $('btn-inquiry').disabled = false;
     $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
     $('inquiry-glass-summary').classList.remove('hidden');
     $('inquiry-regnr').value = state.regnr || '';
+
+    // P2: vis kandidater når reelle treff finnes — med tydelig «må kontrolleres» + valg
+    if (kandidater.length) {
+      $('resultat-kort').textContent = '';
+      $('resultat-alt').textContent = '';
+      var kandidatHtml = '<div class="kandidat-list" role="list" aria-label="Mulige glasskandidater">';
+      kandidatHtml += '<p class="note verify">Må kontrolleres før tilbud — katalogen bekrefter ikke fysisk kompatibilitet automatisk.</p>';
+      for (var i = 0; i < Math.min(kandidater.length, 3); i++) {
+        var k = kandidater[i];
+        kandidatHtml += '<article class="kandidat-kort" role="listitem" data-varenr="' + (k.varenr || '') + '">' +
+          '<h3>' + (k.varenavn || 'Ukjent glass') + '</h3>' +
+          '<p class="kandidat-meta">Varenr: ' + (k.varenr || '—') + ' | Eurokode: ' + (k.eurokode || '—') + ' | Plassering: ' + (k.posisjon || '—') + '</p>' +
+          '<p class="kandidat-klassifisering">' + (k.klassifisering || 'CLASS_D_CATALOGUE_CANDIDATE') + '</p>' +
+          '<button type="button" class="btn-select-candidate" onclick="window.selectGlassCandidate(' + i + ', \'' + (k.varenr || '') + '\')">Velg dette glasset</button>' +
+          '</article>';
+      }
+      kandidatHtml += '<button type="button" class="btn-vet-ikke" onclick="window.selectGlassCandidate(-1, \'vet_ikke\')">Vet ikke / vil ikke velge nå</button>';
+      kandidatHtml += '</div>';
+      $('resultat-kort').innerHTML = kandidatHtml;
+    } else {
+      $('resultat-kort').textContent = '';
+      $('resultat-alt').textContent = '';
+    }
+
+    // P2/Fra CTO-ordre: alltid behold «Be om pristilbud» — uavhengig av status
+    $('btn-inquiry').disabled = false;
+    $('inquiry-form').classList.remove('hidden');
   }
 
   // ── Frontrutesøk mot /api/frontrute (P0 2026-10-31) ─────────────────────

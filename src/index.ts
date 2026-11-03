@@ -6,6 +6,7 @@
 import type { Env } from './types';
 import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute, finnGlassKandidater, type ResolverResultat, type Sokemodus, type Posisjonsonske } from './vin-resolver';
+import { klassifiserGlass, fraTypekode, filtrerPaPosisjon, type GlassType, type Posisjonsresultat } from './glass-posisjon';
 import { resolverModus, anvendResolverPolicy, henvendelserTillatt } from './kill-switch';
 import { svvLookup, svvLookupVin } from './svv';
 import { handleAssistant, assistantUi } from './conversation-v1/worker-handler.js';
@@ -867,18 +868,52 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       const side = typeof b?.side === 'string' ? b.side.trim().toLowerCase() : null;
       if (!regnr && !merke && !sok) return json({ ok: false, error: 'Regnr, merke eller søk påkrevd' }, 400);
       const validKlasser = ['frontrute','bakrute','dor','side','ventil','tak'];
-      // C6.0-C frotnend-kompatibilitet: frontend bruker 'door', endpoint bruker 'dor'
+      // C6.0-C frontend-kompatibilitet: frontend bruker 'door', endpoint bruker 'dor'
       const normalizedKlasse = glassklasse ? (glassklasse === 'door' ? 'dor' : glassklasse === 'rear' ? 'bakrute' : glassklasse === 'roof' ? 'tak' : glassklasse === 'front' ? 'frontrute' : glassklasse) : null;
-      if (normalizedKlasse && !validKlasser.includes(normalizedKlasse)) return json({ ok: false, error: 'Ugyldig glassklasse' }, 400);
-      if (dorLedd && !['fremre','bakre'].includes(dorLedd)) return json({ ok: false, error: 'Ugyldig dørledd' }, 400);
-      if (ventilLedd && !['foran','bakre'].includes(ventilLedd)) return json({ ok: false, error: 'Ugyldig ventilledd' }, 400);
-      if (side && !['venstre','hoyre','begge'].includes(side)) return json({ ok: false, error: 'Ugyldig side' }, 400);
+      // P1 FIX: normalisering fra request.selection (frontend) — eksplisitt mapping
+      const selection = typeof b?.selection === 'object' && b.selection !== null ? b.selection as Record<string, unknown> : null;
+      let selGlassklasse = normalizedKlasse;
+      let selDorLedd = dorLedd;
+      let selVentilLedd = ventilLedd;
+      let selSideKilde = side;
+      let selDeltBakrute: boolean | null = null;
+      let selSideruteNummer: number | null = null;
+      if (selection) {
+        // kind → glassklasse
+        const kind = typeof selection.kind === 'string' ? selection.kind.toLowerCase() : '';
+        if (!selGlassklasse && kind) {
+          selGlassklasse = kind === 'door' ? 'dor' : kind === 'rear' ? 'bakrute' : kind === 'roof' ? 'tak' : kind === 'side' ? 'side' : kind === 'ventil' ? 'ventil' : kind === 'windshield' ? 'frontrute' : null;
+        }
+        // side (left/right) → sideKilde må vente til bil (LHD/RHD) er kjent — se etter SVV-oppslag
+        // door (front/rear) → dorLedd
+        const selDoor = typeof selection.door === 'string' ? selection.door.toLowerCase() : '';
+        if (!selDorLedd && selDoor) selDorLedd = selDoor === 'front' ? 'fremre' : selDoor === 'rear' ? 'bakre' : null;
+        // ventil (foran/bakre) — ventiled lagres i ventilLedd
+        const selVentil = typeof selection.ventil === 'string' ? selection.ventil.toLowerCase() : '';
+        if (!selVentilLedd && selVentil) selVentilLedd = selVentil === 'foran' ? 'foran' : selVentil === 'bakre' ? 'bakre' : null;
+        // layout + splitSide (bakrute delt)
+        const selLayout = typeof selection.layout === 'string' ? selection.layout.toLowerCase() : '';
+        if (!selDeltBakrute && selLayout) selDeltBakrute = selLayout === 'split' ? true : selLayout === 'full' ? false : null;
+        const selSplitSide = typeof selection.splitSide === 'string' ? selection.splitSide.toLowerCase() : '';
+        // section (siderute posisjonsnummer 1-3)
+        const selSection = typeof selection.section === 'string' ? selection.section : null;
+        if (!selSideruteNummer && selSection) {
+          const n = parseInt(selSection, 10);
+          if (!isNaN(n)) selSideruteNummer = n;
+        }
+      }
+      if (selGlassklasse && !validKlasser.includes(selGlassklasse)) return json({ ok: false, error: 'Ugyldig glassklasse' }, 400);
+      if (selDorLedd && !['fremre','bakre'].includes(selDorLedd)) return json({ ok: false, error: 'Ugyldig dørledd' }, 400);
+      if (selVentilLedd && !['foran','bakre'].includes(selVentilLedd)) return json({ ok: false, error: 'Ugyldig ventilledd' }, 400);
+      if (selSideKilde && !['forer','passasjer'].includes(selSideKilde)) return json({ ok: false, error: 'Ugyldig side' }, 400);
 
       const onske: Posisjonsonske = {};
-      if (normalizedKlasse) onske.glassklasse = normalizedKlasse as Posisjonsonske['glassklasse'];
-      if (dorLedd) onske.dorLedd = dorLedd as Posisjonsonske['dorLedd'];
-      if (ventilLedd) onske.ventilLedd = ventilLedd as Posisjonsonske['ventilLedd'];
-      if (side) onske.sideKilde = side as Posisjonsonske['sideKilde'];
+      if (selGlassklasse) onske.glassklasse = selGlassklasse as Posisjonsonske['glassklasse'];
+      if (selDorLedd) onske.dorLedd = selDorLedd as Posisjonsonske['dorLedd'];
+      if (selVentilLedd) onske.ventilLedd = selVentilLedd as Posisjonsonske['ventilLedd'];
+      if (selSideKilde) onske.sideKilde = selSideKilde as Posisjonsonske['sideKilde'];
+      if (selDeltBakrute != null) onske.deltBakrute = selDeltBakrute;
+      if (selSideruteNummer != null) onske.sideruteNummer = selSideruteNummer;
 
       let bil = null;
       let frontruteResult = null;
@@ -888,6 +923,18 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       // 1. SVV-oppslag ved regnr
       if (regnr) {
         try { bil = await svvLookup(regnr.toUpperCase().replace(/[\s\-–—.]+/g, ''), env.SVV_API_KEY); } catch (e) { console.error('SVV-feil:', e); }
+      }
+      // 1b. P1 FIX: side (left/right) → sideKilde — kun ved EKSPLISITT styring (aldri antatt LHD)
+      if (selection && !selSideKilde) {
+        const selSide = typeof selection.side === 'string' ? selection.side.toLowerCase() : '';
+        const eksplisittStyring = typeof b?.styring === 'string' ? b.styring.trim().toUpperCase() : '';
+        const styring = eksplisittStyring === 'LHD' || eksplisittStyring === 'RHD' ? eksplisittStyring : null;
+        if (selSide && styring) {
+          if (styring === 'LHD') selSideKilde = selSide === 'left' ? 'forer' : 'passasjer';
+          else selSideKilde = selSide === 'right' ? 'forer' : 'passasjer';
+          if (onske) onske.sideKilde = selSideKilde as Posisjonsonske['sideKilde'];
+        }
+        // UKJENT styring → sideKilde forblir null (posisjon angis som ukjent)
       }
       // 2. Frontrute-resolver (uendret) — bare når bil funnet OG kategori er frontrute eller ikke spesifisert
       if (bil && bil.merke && (!glassklasse || glassklasse === 'frontrute')) {
@@ -907,10 +954,13 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           // C6.0-D (P0): CLASS_D kjøretøybasert filtrering når bil identifisert
           if (bil && (bil.merke || bil.aar)) {
             try {
-              const prisliste = await env.FINNBILGLASS_DB.prepare('SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste LIMIT 500').all<{varenr:string;varenavn:string|null;eurokode:string|null;kommentar:string|null}>();
+          // P0 FIX: avgrenset uthenting — filtrer på merke fra SVV, ikke hele tabellen
+          const querySql = (bil && bil.merke) ? `SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste WHERE varenavn LIKE $1 || '%' LIMIT 5000` : `SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste LIMIT 5000`;
+          const params = (bil && bil.merke) ? [`${bil.merke.toUpperCase().split(' ').join('%')}%`] : [];
+          const prisliste = await env.FINNBILGLASS_DB.prepare(querySql).bind(...params).all<{varenr:string;varenavn:string|null;eurokode:string|null;kommentar:string|null}>();
               const index = buildClassDCandidates((prisliste.results || []).map(r => ({ varenr: r.varenr, varenavn: r.varenavn, eurokode: r.eurokode ?? null, kommentar: r.kommentar ?? null })));
               const yr = bil.aar ?? null;
-              const classMatches = matchClassDCandidates(index, bil.merke ?? '', bil.modell ?? '', yr);
+              const classMatches = matchClassDCandidates(index, bil.merke ?? '', bil.modell ?? '', yr, { glassklasse: normalizedKlasse, dorLedd: dorLedd ?? null, ventilLedd: ventilLedd ?? null });
               // Filtrer på glassklasse/posisjon fra onske (C9.5-fix: intervall på hele matchReason)
               const keyword = onske.glassklasse ? (onske.glassklasse === 'dor' ? 'DØRRUTE' : onske.glassklasse === 'bakrute' ? 'BAKRUTE' : onske.glassklasse === 'side' ? 'SIDERUTE' : onske.glassklasse === 'ventil' ? 'VENTIL' : onske.glassklasse === 'tak' ? 'TAK' : onske.glassklasse === 'frontrute' ? 'FRONT' : '') : '';
               const filtered = classMatches.filter((c: CatalogueCandidate) => {
@@ -960,13 +1010,17 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           : (!kandidater.length ? 'Ingen kandidater funnet. Bekreft bilens merke/modell/år eller ta bilde av skiltnummeret.' : null);
       }
 
-      // E: aldri eksponere listepris / innkjøpspris fra frontrute-resultat
+      // E: aldri eksponere listepris / innkjøpspris / pris / ubeKreftetPris fra frontrute-resultat
       const safeFrontrute = frontruteResult ? (() => {
         const c = { ...frontruteResult };
         if (c.kandidater) c.kandidater = (c.kandidater as any[]).map((k: any) => {
           const r = { ...k };
           delete (r as any).listepris;
           delete (r as any).innkjøpspris;
+          delete (r as any).pris;
+          delete (r as any).ubeKreftetPris;
+          delete (r as any).source;
+          delete (r as any).matchReason;
           return r;
         });
         return c;
