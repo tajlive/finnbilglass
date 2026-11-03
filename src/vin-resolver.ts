@@ -372,10 +372,72 @@ export function gtSerieFor(make: string, gtModell: string, aar: number | null): 
 
 /** Matcher én GT-rad mot kjøretøyet (make+år er allerede filtrert i SQL).
  *  Eksakt modell-navn, ordbasert token-treff (aldri substring) eller serie-kode-match. */
+/**
+ * Modellnøkkel: bokstaver og siffer, uten skilletegn og aksenter.
+ *
+ * «RAV4», «RAV 4» og «RAV-4» er samme bil, men GT-matchingen er ordbasert og
+ * så dem som ulike (`RAV4` gir ett token, `RAV-4` gir `RAV` + `4`). Nøkkelen
+ * brukes KUN ved eksakt likhet etter normalisering — den kan derfor aldri slå
+ * sammen to modeller som faktisk heter noe forskjellig.
+ */
+export function modellNokkel(s: string): string {
+  return String(s ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+}
+
+/**
+ * Énbokstavs-tokens som skiller modeller: «MODEL 3» vs «MODEL Y», «A-CLASS» vs
+ * «B-CLASS». Ord-treffet ser bare på tokens med ≥2 tegn, så uten denne vakten
+ * ville «MODEL Y» matchet GT-raden «MODEL 3» på ordet MODEL alene.
+ * Returnerer true bare når begge navn har slike tegn og de er helt ulike.
+ */
+/**
+ * Navnemodeller som er egne biler, ikke varianter: Golf Sportsvan/Plus/Cross er
+ * ikke en Golf, Transit Connect/Courier er ikke en Transit, Passat CC er ikke en
+ * Passat. Uten denne vakten matchet «GOLF SPORTSVAN» GT-raden «GOLF» på ordet
+ * GOLF alene — samme feilklasse som familie-regexene i kataloggeneratoren.
+ */
+const NAVNEMODELLER = new Set(['SPORTSVAN', 'PLUS', 'CROSS', 'CONNECT', 'COURIER', 'SHOOTING', 'CC']);
+
+/** Ulike navnemodeller skal aldri møtes, uansett hvilken side ordet står på. */
+function navnemodellKonflikt(a: string, b: string): boolean {
+  const ord = (s: string) => new Set(
+    (s || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/).filter(Boolean),
+  );
+  const oa = ord(a);
+  const ob = ord(b);
+  const na = [...oa].filter((o) => NAVNEMODELLER.has(o));
+  const nb = [...ob].filter((o) => NAVNEMODELLER.has(o));
+  if (!na.length && !nb.length) return false;
+  return na.some((o) => !ob.has(o)) || nb.some((o) => !oa.has(o));
+}
+
+function enkelttegnKonflikt(a: string, b: string): boolean {
+  const tegn = (s: string) => new Set(
+    (s || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').split(/\s+/).filter((t) => t.length === 1),
+  );
+  const ta = tegn(a);
+  const tb = tegn(b);
+  if (!ta.size || !tb.size) return false;
+  for (const t of ta) if (tb.has(t)) return false;
+  return true;
+}
+
 export function gtRadMatch(radModel: string, make: string, model: string, aarList: number[]): boolean {
   const tokens = modellTokensAv(model, make);
   const serie = serieKey(make, model, aarList[0]);
   if (radModel.toUpperCase() === model) return true;
+  // Skilletegn skal ikke avgjøre: «RAV4» == «RAV 4» == «RAV-4».
+  const nokkelRad = modellNokkel(radModel);
+  if (nokkelRad && nokkelRad === modellNokkel(model)) return true;
+  // Ulike modellbokstaver (MODEL 3 vs MODEL Y) og ulike navnemodeller
+  // (GOLF vs GOLF SPORTSVAN) skal aldri falle gjennom til ord-treffet på de
+  // felles ordene.
+  if (enkelttegnKonflikt(radModel, model)) return false;
+  if (navnemodellKonflikt(radModel, model)) return false;
   if (tokens.length && ordTreff(radModel, tokens)) return true;
   if (serie) {
     const gtSerie = gtSerieFor(make, radModel, aarList[0]);
