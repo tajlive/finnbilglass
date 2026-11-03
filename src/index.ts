@@ -2,6 +2,7 @@ import { normalizeGlassSelection, type GlassSelection } from './glass-selection-
 import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
 import { dekodeEurokode } from './eurokode-dekoder';
 import { byggValgTre, FELT_SPORSMAL, GRUNNTYPER } from './glass-valg';
+import { sendMail, avsenderEpost } from './mail';
 /** Finnbilglass Worker — frontrute-matcher API + statisk frontend.
  *  POST /api/frontrute  {merke, modell, aar, profil} → glass
  *  GET  /health
@@ -241,9 +242,7 @@ function erTydeligTest(regnr: string | null, kontakt: string): number {
  * lenke til Operations Center. Navn, kontaktinfo og kjøretøy ligger kun der.
  */
 async function sendInquiryAlert(env: Env, inquiryId: number | null): Promise<{ ok: boolean; error?: string }> {
-  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
-  const to = env.SUPPORT_NOTIFY_EMAIL || from;
-  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
+  const to = env.SUPPORT_NOTIFY_EMAIL || avsenderEpost(env);
   const url = 'https://finnbilglass.no/ops';
   const tid = new Date().toLocaleString('nb-NO', { timeZone: 'Europe/Oslo' });
   const saksnr = inquiryId != null ? `#${inquiryId}` : '(ukjent nummer)';
@@ -253,26 +252,12 @@ async function sendInquiryAlert(env: Env, inquiryId: number | null): Promise<{ o
     `<p><a href="${url}">Åpne Operations Center</a></p>` +
     `<p style="color:#637286;font-size:12px">Av personvernhensyn inneholder denne e-posten ingen kundeopplysninger. ` +
     `Navn, kontaktinfo og kjøretøy står kun i Operations Center.</p>`;
-  try {
-    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sender: { email: from, name: 'Finnbilglass' },
-        to: [{ email: to }],
-        subject: `Ny pristilbudsforespørsel ${saksnr}`,
-        htmlContent: html,
-        textContent: `Ny pristilbudsforespørsel ${saksnr}. Tidspunkt: ${tid}. Status: Ny. Åpne ${url}. Av personvernhensyn inneholder denne e-posten ingen kundeopplysninger.`,
-      }),
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => '');
-      return { ok: false, error: `Brevo ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil ved varsling.' };
-  }
+  return sendMail(env, {
+    to,
+    subject: `Ny pristilbudsforespørsel ${saksnr}`,
+    html,
+    text: `Ny pristilbudsforespørsel ${saksnr}. Tidspunkt: ${tid}. Status: Ny. Åpne ${url}. Av personvernhensyn inneholder denne e-posten ingen kundeopplysninger.`,
+  });
 }
 
 /**
@@ -325,18 +310,16 @@ async function sendCustomerInquiryReceipt(
   inquiryId: number | null,
   regnr?: string | null,
   sammendrag?: { glass?: string; leveringssted?: string },
-): Promise<{ ok: boolean; error?: string; via?: 'resend' | 'brevo' }> {
+): Promise<{ ok: boolean; error?: string; via?: 'resend' }> {
   const innhold = lagKvittering(navn, inquiryId, regnr, sammendrag, supportEpost(env));
-  const svarTil = supportEpost(env);
-
-  // Resend først når nøkkelen finnes: transporterer uten Brevos List-Unsubscribe.
-  if (env.RESEND_API_KEY) {
-    const viaResend = await sendKvitteringViaResend(env, to, svarTil, innhold);
-    if (viaResend.ok) return { ok: true, via: 'resend' };
-    console.error('kvittering via Resend feilet:', viaResend.error);
-  }
-  const viaBrevo = await sendKvitteringViaBrevo(env, to, svarTil, navn, innhold);
-  return viaBrevo.ok ? { ok: true, via: 'brevo' } : viaBrevo;
+  const svar = await sendMail(env, {
+    to,
+    subject: innhold.emne,
+    html: innhold.html,
+    text: innhold.text,
+    replyTo: supportEpost(env),
+  });
+  return svar.ok ? { ok: true, via: 'resend' } : svar;
 }
 
 interface Kvitteringsinnhold { emne: string; text: string; html: string }
@@ -392,105 +375,23 @@ function lagKvittering(
   };
 }
 
-/** Resend — ren transaksjonspost uten List-Unsubscribe-header. */
-async function sendKvitteringViaResend(
-  env: Env,
-  to: string,
-  svarTil: string,
-  innhold: Kvitteringsinnhold,
-): Promise<{ ok: boolean; error?: string }> {
-  if (!env.RESEND_API_KEY) return { ok: false, error: 'RESEND_API_KEY mangler' };
-  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
-  try {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: `Finnbilglass <${from}>`,
-        to: [to],
-        reply_to: svarTil,
-        subject: innhold.emne,
-        html: innhold.html,
-        text: innhold.text,
-      }),
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => '');
-      return { ok: false, error: `Resend ${r.status}${txt ? ': ' + txt.slice(0, 160) : ''}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil (Resend).' };
-  }
-}
-
-/** Brevo — fallback så lenge Resend-domenet ikke er verifisert. */
-async function sendKvitteringViaBrevo(
-  env: Env,
-  to: string,
-  svarTil: string,
-  navn: string,
-  innhold: Kvitteringsinnhold,
-): Promise<{ ok: boolean; error?: string }> {
-  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
-  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
-  try {
-    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sender: { email: from, name: 'Finnbilglass' },
-        to: [{ email: to, name: navn || undefined }],
-        replyTo: { email: svarTil, name: 'Finnbilglass' },
-        headers: { 'List-Help': '<https://finnbilglass.no/om-oss>' },
-        subject: innhold.emne,
-        htmlContent: innhold.html,
-        textContent: innhold.text,
-      }),
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => '');
-      return { ok: false, error: `Brevo ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil ved kvittering.' };
-  }
-}
-
-/** Send svar til kunde på e-post via Brevo (tidl. Sendinblue) v3 SMTP. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
+/** Svar til kunde fra /ops. Samme avsender og svaradresse som kvitteringen. */
 async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: string | null, message: string): Promise<{ ok: boolean; error?: string }> {
-  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
-  // Kunden skal svare til samme adresse uansett hvilken melding hun svarer på.
   const svarTil = supportEpost(env);
   const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
-  const body = { navn: navn || '', regnr: regnr || '' };
-  const subject = `Svar fra FinnBilglass — din forespørsel${body.regnr ? ' (' + body.regnr + ')' : ''}`;
+  const subject = `Svar fra Finnbilglass — din forespørsel${regnr ? ' (' + regnr + ')' : ''}`;
   const html =
-    '<p>Hei' + (body.navn ? ' ' + escHtml(body.navn) : '') + ',</p>' +
+    '<p>Hei' + (navn ? ' ' + escHtml(navn) : '') + ',</p>' +
     '<p>' + escHtml(message).replace(/\n/g, '<br>') + '</p>' +
-    '<p>— FinnBilglass</p>' +
+    '<p>— Finnbilglass</p>' +
     '<p style="color:#637286;font-size:12px">Svar på e-post til ' + escHtml(svarTil) + '. Vi svarer gjerne på spørsmål om glasset eller leveransen.</p>';
-  try {
-    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'api-key': env.BREVO_API_KEY || '', 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sender: { email: from, name: 'Finnbilglass' },
-        to: [{ email: to, name: body.navn || undefined }],
-        replyTo: { email: svarTil, name: 'Finnbilglass' },
-        subject,
-        htmlContent: html,
-      }),
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => '');
-      return { ok: false, error: `Brevo ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil ved sending.' };
-  }
+  return sendMail(env, {
+    to,
+    subject,
+    html,
+    text: `Hei${navn ? ' ' + navn : ''},\n\n${message}\n\n— Finnbilglass\nSvar på e-post til ${svarTil}.`,
+    replyTo: svarTil,
+  });
 }
 
 function supportEvidenceUiLegacy(): Response {
@@ -1239,7 +1140,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
               glass: glassSammendrag || undefined,
               leveringssted: leveringssted || undefined,
             }).then((r) => {
-              // Leverandøren logges slik at «sendt» kan spores til Resend eller Brevo.
+              // Logges slik at «sendt» kan spores til leverandøren (kun Resend).
               if (r.ok) console.log('inquiry-kvittering sendt for sak', id, 'via', r.via);
               else console.error('inquiry-kvittering feilet:', r.error);
             });
@@ -1561,73 +1462,6 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Ikke autorisert' }, 401);
       return opsAdminUi();
     }
-    if (method === 'POST' && path === '/api/ops/brevo-check') {
-      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
-      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'BREVO_API_KEY mangler' }, 503);
-      const kropp = (await request.json().catch(() => ({}))) as { handling?: string; domene?: string };
-      const domene = kropp.domene || 'finnbilglass.no';
-      if (kropp.handling === 'hent-records') {
-        const r = await fetch(`https://api.brevo.com/v3/senders/domains/${encodeURIComponent(domene)}`, {
-          headers: { 'api-key': env.BREVO_API_KEY, accept: 'application/json' },
-        });
-        const svar = await r.json().catch(() => null);
-        return json({ ok: r.ok, status: r.status, svar });
-      }
-      if (kropp.handling !== 'autentiser-domene') return json({ ok: false, error: 'Ukjent handling' }, 400);
-      const r = await fetch(`https://api.brevo.com/v3/senders/domains/${encodeURIComponent(domene)}/authenticate`, {
-        method: 'PUT',
-        headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json', accept: 'application/json' },
-      });
-      const svar = await r.json().catch(() => null);
-      return json({ ok: r.ok, status: r.status, svar });
-    }
-
-    if (method === 'GET' && path === '/api/ops/brevo-check') {
-      if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
-      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
-      if (!env.BREVO_API_KEY) return json({ ok: false, error: 'BREVO_API_KEY mangler' }, 503);
-      const brevo = async (p: string) => {
-        const r = await fetch(`https://api.brevo.com/v3${p}`, { headers: { 'api-key': env.BREVO_API_KEY as string, accept: 'application/json' } });
-        let b: unknown = null;
-        try { b = await r.json(); } catch { b = null; }
-        return { status: r.status, body: b };
-      };
-      const epostFilter = url.searchParams.get('epost') || env.SUPPORT_NOTIFY_EMAIL || env.SUPPORT_FROM_EMAIL || 'tomarnejensen@gmail.com';
-      const [konto, avsendere, eposter] = await Promise.all([
-        brevo('/account'),
-        brevo('/senders'),
-        brevo(`/smtp/emails?email=${encodeURIComponent(epostFilter)}&limit=20&sort=desc`),
-      ]);
-      const domener = url.searchParams.get('domener') ? await brevo('/senders/domains') : null;
-      const liste = ((eposter.body as { transactionalEmails?: Array<Record<string, unknown>> } | null)?.transactionalEmails) || [];
-      let detaljer: unknown = null;
-      const forsteId = (liste[0]?.uuid as string | undefined) || (liste[0]?.messageId as string | undefined);
-      if (forsteId) detaljer = (await brevo(`/smtp/emails/${forsteId}`)).body;
-      return json({
-        ok: true,
-        filter: epostFilter,
-        domener,
-        raa: liste.slice(0, 4),
-        detaljerForste: detaljer,
-        konto: konto.body,
-        avsendere: avsendere.body,
-        epostStatus: eposter.status,
-        epostRaa: JSON.stringify(eposter.body).slice(0, 300),
-        siste: liste.map((m) => ({
-          meldingId: m.messageId,
-          til: m.to,
-          fra: m.sender,
-          emne: m.subject,
-          status: m.status,
-          dato: m.date,
-          avvist: m.blocked,
-          grunn: m.errorReason ?? m.reason ?? null,
-          hendelser: m.events ?? null,
-        })),
-      });
-    }
-
     // Praktisk videresending: gammel/engelsk sti → faktisk innloggingsside.
     if (method === 'GET' && (path === '/logg-inn' || path === '/login')) {
       return Response.redirect(url.origin + '/innlogging', 302);
@@ -1788,10 +1622,10 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     const inquiryReplyMatch = /^\/api\/ops\/inquiries\/(\d+)\/reply$/.exec(path);
     if (method === 'POST' && inquiryReplyMatch) {
       // Svar direkte til kunden på e-post (kanal #4). Append-only-logg som notater.
-      // Avhengig av BREVO_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
+      // Avhengig av RESEND_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
             if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
-            if (!env.BREVO_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
+            if (!env.RESEND_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
             let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
             const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
             if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);

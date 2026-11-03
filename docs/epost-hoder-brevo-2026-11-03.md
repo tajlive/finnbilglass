@@ -1,4 +1,9 @@
-# «Meld deg av» på mottakskvitteringen — hva som kan fikses, og hvordan
+# «Meld deg av» på mottakskvitteringen — historikk (løst)
+
+> **Oppdatering 2026-11-04:** Brevo-kontoen er slettet. All e-post går nå gjennom Resend
+> (`src/mail.ts`): kvittering, engangskoder, pristilbud, manuelle svar fra /ops og interne varsler.
+> `BREVO_API_KEY`, `/api/ops/brevo-check` og Brevo-fallbacken er fjernet. Dokumentet under er
+> historikken som forklarer hvorfor Resend ble valgt.
 
 **Dato:** 2026-11-03 · **Status:** Resend er aktiv i produksjon; nøkkelrotasjon gjenstår
 

@@ -38,47 +38,44 @@ test('newly saved inquiry schedules an escaped customer receipt for email contac
  const db={prepare(sql:string){let args:unknown[]=[];return {sql,get args(){return args;},bind(...values:unknown[]){args=values;return this;},first:async()=>null,all:async()=>({results:[]}),run:async()=>({meta:{changes:1}})};},async batch(){return [{meta:{last_row_id:314}},{meta:{changes:1}}];}};
  const background: Promise<unknown>[] = [];
  try {
-  const response=await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST',navn:'<Test & kunde>',kontakt:'kunde@example.test',melding:'Test only'})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,BREVO_API_KEY:'synthetic-key',SUPPORT_NOTIFY_EMAIL:'support-inbox@example.test'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
+  const response=await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST',navn:'<Test & kunde>',kontakt:'kunde@example.test',melding:'Test only'})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,RESEND_API_KEY:'re_test',SUPPORT_NOTIFY_EMAIL:'support-inbox@example.test'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
   assert.equal(response.status,201);
   await Promise.all(background);
-  const receipt = sent.find((mail) => mail.to?.[0]?.email === 'kunde@example.test');
+  const receipt = sent.find((mail) => (mail.to || []).includes('kunde@example.test'));
   assert.ok(receipt, 'customer receipt should be sent to the supplied email');
-  assert.deepEqual(receipt.to, [{ email:'kunde@example.test', name:'<Test & kunde>' }]);
+  assert.equal(receipt.from, 'Finnbilglass <support@finnbilglass.no>');
   assert.match(receipt.subject, /#314/);
-  assert.deepEqual(receipt.replyTo, { email:'support-inbox@example.test', name:'Finnbilglass' });
-  assert.deepEqual(receipt.headers, { 'List-Help':'<https://finnbilglass.no/om-oss>' });
-  assert.match(receipt.htmlContent, /&lt;Test &amp; kunde&gt;/);
-  assert.match(receipt.htmlContent, /kjøretøyet TEST/);
-  assert.match(receipt.htmlContent, /Vi leverer glasset\. Montering avtaler du selv med et verksted\./);
-  assert.match(receipt.textContent, /ikke en ordrebekreftelse/);
+  assert.equal(receipt.reply_to, 'support-inbox@example.test');
+  assert.match(receipt.html, /&lt;Test &amp; kunde&gt;/);
+  assert.match(receipt.html, /kjøretøyet TEST/);
+  assert.match(receipt.html, /Vi leverer glasset\. Montering avtaler du selv med et verksted\./);
+  assert.match(receipt.text, /ikke en ordrebekreftelse/);
+  assert.ok(!sent.some((m) => m.headers || m.htmlContent), 'ingen Brevo-format igjen');
  } finally { globalThis.fetch = originalFetch; }
 });
 
-test('receipt prefers Resend and falls back to Brevo until the Resend domain is verified', async () => {
+test('receipt goes only through Resend - a rejected send is logged, never retried via Brevo', async () => {
  const calls: {url:string; body:any}[] = [];
  const originalFetch = globalThis.fetch;
+ const feil: string[] = [];
+ const origError = console.error;
+ console.error = (...args: any[]) => { feil.push(args.join(' ')); };
  globalThis.fetch = (async (input:any, init?:any) => {
   const url = String(input);
   calls.push({ url, body: init?.body ? JSON.parse(init.body) : null });
-  if (url.includes('api.resend.com')) return new Response('{"message":"The finnbilglass.no domain is not verified"}', { status: 403 });
+  if (url.includes('api.resend.com')) return new Response('{"message":"domain is not verified"}', { status: 403 });
   return new Response('', { status: 201 });
  }) as any;
  const db={prepare(_sql:string){let args:unknown[]=[];return {sql:_sql,get args(){return args;},bind(...values:unknown[]){args=values;return this;},first:async()=>null,all:async()=>({results:[]}),run:async()=>({meta:{changes:1}})};},async batch(){return [{meta:{last_row_id:314}},{meta:{changes:1}}];}};
  const background: Promise<unknown>[] = [];
  try {
-  const response=await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST',navn:'Resend Test',kontakt:'kunde@example.test',melding:'Test'})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,BREVO_API_KEY:'brevo-key',RESEND_API_KEY:'re_test',SUPPORT_NOTIFY_EMAIL:'svar@finnbilglass.no'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
+  const response=await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST',navn:'Resend Test',kontakt:'kunde@example.test',melding:'Test'})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,RESEND_API_KEY:'re_test',SUPPORT_NOTIFY_EMAIL:'svar@finnbilglass.no'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
   assert.equal(response.status,201);
   await Promise.all(background);
-  const resend = calls.find((c) => c.url.includes('api.resend.com'));
-  // Supportvarselet går også via Brevo — finn kvitteringen (den til kunden).
-  const brevo = calls.find((c) => c.url.includes('api.brevo.com') && JSON.stringify(c.body?.to || []).includes('kunde@example.test'));
-  assert.ok(resend, 'Resend skal prøves først når nøkkelen finnes');
-  assert.equal(resend!.body.from, 'Finnbilglass <support@finnbilglass.no>');
-  assert.equal(resend!.body.reply_to, 'svar@finnbilglass.no');
-  assert.match(resend!.body.subject, /#314/);
-  assert.ok(brevo, 'skal falle tilbake til Brevo når Resend avviser (uverifisert domene)');
-  assert.equal(brevo!.body.replyTo.email, 'svar@finnbilglass.no');
- } finally { globalThis.fetch = originalFetch; }
+  assert.ok(calls.some((c) => c.url.includes('api.resend.com')), 'Resend brukes');
+  assert.ok(!calls.some((c) => c.url.includes('api.brevo.com')), 'Brevo skal ikke brukes lenger');
+  assert.ok(feil.some((f) => /kvittering/i.test(f)), 'feil skal logges');
+ } finally { globalThis.fetch = originalFetch; console.error = origError; }
 });
 
 test('receipt summarises what the customer submitted and uses one reply address', async () => {
@@ -88,10 +85,10 @@ test('receipt summarises what the customer submitted and uses one reply address'
  const db={prepare(sql:string){let args:unknown[]=[];return {sql,get args(){return args;},bind(...v:unknown[]){args=v;return this;},first:async()=>null,all:async()=>({results:[]}),run:async()=>({meta:{changes:1}})};},async batch(){return [{meta:{last_row_id:501}},{meta:{changes:1}}];}};
  const background: Promise<unknown>[] = [];
  try {
-  const response = await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST12345',navn:'Kari Nordmann',kontakt:'kunde@example.test',leveringssted:'Trondheim',glassRequest:{selection:{kind:'door',side:'left',door:'front'}}})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,BREVO_API_KEY:'k',RESEND_API_KEY:'k',SUPPORT_EPOST:'svar@finnbilglass.no'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
+  const response = await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST12345',navn:'Kari Nordmann',kontakt:'kunde@example.test',leveringssted:'Trondheim',glassRequest:{selection:{kind:'door',side:'left',door:'front'}}})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,RESEND_API_KEY:'k',SUPPORT_EPOST:'svar@finnbilglass.no'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
   assert.equal(response.status,201);
   await Promise.all(background);
-  // Resend bruker to: [adresse], Brevo to: [{email}]. Godta begge.
+  // Resend bruker to: [adresse].
   const adresser = (m: any) => (m.to || []).map((t: any) => (typeof t === 'string' ? t : t.email));
   const receipt = sent.find((m) => adresser(m).includes('kunde@example.test'));
   assert.ok(receipt, 'kvittering skal sendes');

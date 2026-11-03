@@ -10,6 +10,7 @@
  *  - Ingen automatisk checkout eller betaling.
  */
 import type { Env } from '../types';
+import { sendMail } from '../mail';
 import { canTransitionInquiry, isInquiryStatus } from '../inquiry-workflow';
 import { fraTypekode, type TypekodePosisjon } from '../glass-posisjon';
 
@@ -568,8 +569,6 @@ async function sendTilbudEpost(
   env: Env, til: string, navn: string, regnr: string | null,
   q: { versjon: number; pris: number; prisType: string; varenr?: string; beskrivelse?: string; leveringstid?: string; tillegg?: string; gyldigTil?: string },
 ): Promise<{ ok: boolean; error?: string }> {
-  const fra = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
-  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
   const esc = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
 
   const linjer = [
@@ -588,26 +587,13 @@ async function sendTilbudEpost(
     '<p>— Finnbilglass</p>',
   ].filter(Boolean).join('');
 
-  try {
-    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sender: { email: fra, name: 'Finnbilglass' },
-        to: [{ email: til, name: navn || undefined }],
-        subject: `Pristilbud${regnr ? ' — ' + regnr : ''} (v${q.versjon})`,
-        htmlContent: linjer,
-        textContent: `Hei ${navn || ''}. Tilbud: ${q.varenr || 'glass'} ${q.pris} kr (${q.prisType}). — Finnbilglass`,
-      }),
-    });
-    if (!r.ok) {
-      const t = await r.text().catch(() => '');
-      return { ok: false, error: `Brevo ${r.status}${t ? ': ' + t.slice(0, 120) : ''}` };
-    }
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, error: (e as Error).message };
-  }
+  return sendMail(env, {
+    to: til,
+    subject: `Pristilbud${regnr ? ' — ' + regnr : ''} (v${q.versjon})`,
+    html: linjer,
+    text: `Hei ${navn || ''}. Tilbud: ${q.varenr || 'glass'} ${q.pris} kr (${q.prisType}). — Finnbilglass`,
+    replyTo: env.SUPPORT_EPOST || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no',
+  });
 }
 
 /** E-posthistorikk for en sak: svar, tilbud og notater — uten duplikater. */
