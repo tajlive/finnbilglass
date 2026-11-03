@@ -275,6 +275,36 @@ async function sendInquiryAlert(env: Env, inquiryId: number | null): Promise<{ o
   }
 }
 
+/** Kvittering til kunden når en e-postadresse er oppgitt som kontaktadresse. */
+async function sendCustomerInquiryReceipt(env: Env, to: string, navn: string, inquiryId: number | null): Promise<{ ok: boolean; error?: string }> {
+  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
+  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+  const saksnr = inquiryId != null ? `#${inquiryId}` : 'under registrering';
+  const greeting = navn ? `Hei ${navn},` : 'Hei,';
+  const text = `${greeting}\n\nVi har mottatt forespørselen din${inquiryId != null ? ` (saksnummer ${saksnr})` : ''}. Vi kontrollerer bil og glass manuelt før vi sender deg pris og informasjon om levering.\n\nDette er en mottakskvittering, ikke en ordrebekreftelse. Ingen bestilling er gjennomført.\n\nHilsen FinnBilGlass\n${from}`;
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { email: from, name: 'FinnBilGlass' },
+        to: [{ email: to, name: navn || undefined }],
+        subject: `Vi har mottatt forespørselen din${inquiryId != null ? ` (${saksnr})` : ''}`,
+        htmlContent: `<p>${escHtml(greeting)}</p><p>Vi har mottatt forespørselen din${inquiryId != null ? ` (saksnummer <b>${saksnr}</b>)` : ''}. Vi kontrollerer bil og glass manuelt før vi sender deg pris og informasjon om levering.</p><p>Dette er en mottakskvittering, ikke en ordrebekreftelse. Ingen bestilling er gjennomført.</p><p>Hilsen<br>FinnBilGlass</p><p style="color:#637286;font-size:12px">Svar på denne e-posten hvis du har spørsmål.</p>`,
+        textContent: text,
+      }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      return { ok: false, error: `Brevo ${r.status}${txt ? ': ' + txt.slice(0, 120) : ''}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil ved kvittering.' };
+  }
+}
+
 /** Send svar til kunde på e-post via Brevo (tidl. Sendinblue) v3 SMTP. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
 async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: string | null, message: string): Promise<{ ok: boolean; error?: string }> {
   const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
@@ -1041,6 +1071,15 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
             else console.error('inquiry-varsel feilet:', r.error);
           });
           try { ctx?.waitUntil(varsel); } catch { void varsel; }
+          // Kvittering sendes bare til en valid e-postadresse, aldri til telefon.
+          // Den er best-effort slik at e-postfeil ikke mister en lagret forespørsel.
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt)) {
+            const kvittering = sendCustomerInquiryReceipt(env, kontakt, navn, id).then((r) => {
+              if (r.ok) console.log('inquiry-kvittering sendt for sak', id);
+              else console.error('inquiry-kvittering feilet:', r.error);
+            });
+            try { ctx?.waitUntil(kvittering); } catch { void kvittering; }
+          }
         }
         return json({ ok: true, inquiryId: id ?? null }, 201);
       } catch (e) {

@@ -27,3 +27,25 @@ test('idempotency detects changed glass, equipment answers and second phone',asy
  assert.equal((await send({...body,glassRequest:{...body.glassRequest,answers:{sensor:'nei'}}})).status,409);
  assert.equal(saves,1);
 });
+
+test('newly saved inquiry schedules an escaped customer receipt for email contact only', async () => {
+ const sent: any[] = [];
+ const originalFetch = globalThis.fetch;
+ globalThis.fetch = (async (_input: any, init?: any) => {
+  sent.push(JSON.parse(init.body));
+  return new Response('', { status: 201 });
+ }) as any;
+ const db={prepare(sql:string){let args:unknown[]=[];return {sql,get args(){return args;},bind(...values:unknown[]){args=values;return this;},first:async()=>null,all:async()=>({results:[]}),run:async()=>({meta:{changes:1}})};},async batch(){return [{meta:{last_row_id:314}},{meta:{changes:1}}];}};
+ const background: Promise<unknown>[] = [];
+ try {
+  const response=await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST',navn:'<Test & kunde>',kontakt:'kunde@example.test',melding:'Test only'})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,BREVO_API_KEY:'synthetic-key'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
+  assert.equal(response.status,201);
+  await Promise.all(background);
+  const receipt = sent.find((mail) => mail.to?.[0]?.email === 'kunde@example.test');
+  assert.ok(receipt, 'customer receipt should be sent to the supplied email');
+  assert.deepEqual(receipt.to, [{ email:'kunde@example.test', name:'<Test & kunde>' }]);
+  assert.match(receipt.subject, /#314/);
+  assert.match(receipt.htmlContent, /&lt;Test &amp; kunde&gt;/);
+  assert.match(receipt.textContent, /ikke en ordrebekreftelse/);
+ } finally { globalThis.fetch = originalFetch; }
+});

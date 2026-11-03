@@ -166,6 +166,13 @@ async function reis(context, bil, regnr, t, viewport, oker) {
       if (!/hjelper deg videre/i.test(rad.h2)) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: uventet hjelpetittel «${rad.h2}»`);
       if (!(await page.isVisible('#inquiry-form'))) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: hjelpetilstanden åpner ikke forespørselen`);
       if (!(await page.inputValue('#inquiry-regnr'))) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: kjennemerket er ikke beholdt`);
+      // Hjelpeinngangen er en lokal manuell forespørsel, ikke et glassøk.
+      // Den skal derfor ikke følge MANUAL_REVIEW-resultatkontrakten nedenfor.
+      if (apiSvar.some((s) => /\/api\/(glass\/kandidater|frontrute)/.test(s.url))) {
+        noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: hjelpetilstanden startet et glassøk`);
+      }
+      resultater.push(rad);
+      return;
     }
 
     // Frontrute har egen visning (/api/frontrute) — den telles ikke som kandidatrader her.
