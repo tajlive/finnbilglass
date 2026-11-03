@@ -22,7 +22,7 @@
 | `e45e5fe` | all-glass kandidater bak flagg + eurokode ut av offentlig svar |
 | `bea12ed` | F6: fjern pen.dev fileToken fra sporad designfil + gitleaks-regel |
 | `b62cca1` | flat glassklasse skal filtrere likt som selection + release-E2E |
-| `d037f9c` | denne rapporten |
+| `da24536` | denne rapporten |
 
 Base: `03bb58cb` — produksjonscommit, nå også publisert som `fix/v660-d3-readiness` (den fantes
 **ikke** på GitHub før; produksjonskoden var altså ikke hentbar fra repoet).
