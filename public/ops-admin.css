@@ -1,0 +1,183 @@
+/* Operations Center 2026 — admin-grensesnitt.
+   Egen fil (ikke del av kundens styles.css) slik at kundesiden er urørt. */
+
+:root {
+  --ink: #10243a;
+  --ink-2: #1c3550;
+  --muted: #637286;
+  --line: #dbe4ee;
+  --panel: #ffffff;
+  --bg: #f4f7fb;
+  --teal: #0f766e;
+  --teal-soft: #e6f4f1;
+  --amber: #f59e0b;
+  --amber-soft: #fff7ed;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --ok: #166534;
+  --ok-soft: #dcfce7;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(16, 36, 58, .06);
+}
+
+* { box-sizing: border-box; }
+
+body.admin {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* ── Skall ─────────────────────────────────────────────── */
+.admin-shell { display: grid; grid-template-columns: 236px 1fr; min-height: 100vh; }
+
+.sidebar {
+  background: var(--ink);
+  color: #dbe7f3;
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sidebar .brand { display: flex; align-items: center; gap: 8px; padding: 4px 8px 18px; }
+.sidebar .brand strong { font-size: 17px; color: #fff; letter-spacing: -.2px; }
+.sidebar .brand span { color: var(--amber); }
+.sidebar .brand em { font-style: normal; font-size: 11px; color: #7f9cba; text-transform: uppercase; letter-spacing: .08em; }
+
+.nav-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; text-align: left; cursor: pointer;
+  background: transparent; border: 0; border-radius: 8px;
+  color: #c8d8e8; font: inherit; font-weight: 600; padding: 10px 12px;
+}
+.nav-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+.nav-item[aria-current="page"] { background: var(--teal); color: #fff; }
+.nav-item .badge {
+  background: var(--amber); color: #3b2500; font-size: 11px; font-weight: 800;
+  border-radius: 999px; padding: 1px 7px; min-width: 20px; text-align: center;
+}
+.sidebar-foot { margin-top: auto; font-size: 12px; color: #7f9cba; padding: 12px 8px 0; }
+
+.main { padding: 22px 26px 40px; min-width: 0; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.topbar h1 { margin: 0; font-size: 24px; letter-spacing: -.3px; }
+.topbar .sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+.token-bar { display: flex; gap: 8px; align-items: center; }
+.token-bar input { width: 240px; }
+
+input, select, textarea, button { font: inherit; }
+input, select, textarea {
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px;
+  background: #fff; color: var(--ink);
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--teal-soft); border-color: var(--teal); }
+
+button.btn {
+  background: var(--ink); color: #fff; border: 0; border-radius: 8px;
+  padding: 9px 14px; font-weight: 700; cursor: pointer;
+}
+button.btn:hover { background: var(--ink-2); }
+button.btn.teal { background: var(--teal); }
+button.btn.teal:hover { background: #0c5f59; }
+button.btn.ghost { background: #e8eef5; color: var(--ink); }
+button.btn.ghost:hover { background: #dde6f0; }
+button.btn:disabled { opacity: .45; cursor: not-allowed; }
+.ident { font-size: 13px; color: var(--muted); background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; white-space: nowrap; }
+
+/* ── Kort og KPI ───────────────────────────────────────── */
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px;
+}
+.card h2 { margin: 0 0 4px; font-size: 16px; }
+.card .hint { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.kpi .label { color: var(--muted); font-size: 13px; font-weight: 600; }
+.kpi .value { font-size: 30px; font-weight: 800; margin-top: 6px; letter-spacing: -.5px; }
+.kpi .meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.kpi.alert .value { color: var(--danger); }
+.kpi.good .value { color: var(--ok); }
+
+.columns { display: grid; grid-template-columns: 1fr 320px; gap: 16px; align-items: start; }
+/* Uten min-width:0 nekter grid-barn å krympe, og tabeller dytter siden i bredden. */
+.columns > *, .detail-grid > *, .admin-shell > *, .main { min-width: 0; }
+.card { min-width: 0; }
+
+/* ── Tabell ────────────────────────────────────────────── */
+table.list { width: 100%; border-collapse: collapse; }
+table.list th {
+  text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line);
+}
+table.list td { padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+table.list tr.clickable { cursor: pointer; }
+table.list tr.clickable:hover { background: #f7fafd; }
+table.list tr:last-child td { border-bottom: 0; }
+
+.pill {
+  display: inline-block; padding: 3px 9px; border-radius: 999px;
+  background: #e8eef5; font-size: 12px; font-weight: 700; white-space: nowrap;
+}
+.pill.NEW { background: var(--danger-soft); color: #991b1b; }
+.pill.CONTACTED { background: #dbeafe; color: #1e40af; }
+.pill.NEEDS_INFO { background: var(--amber-soft); color: #9a3412; }
+.pill.QUOTED, .pill.OFFERED { background: #ede9fe; color: #5b21b6; }
+.pill.CONFIRMED, .pill.COMPLETED { background: var(--ok-soft); color: var(--ok); }
+.pill.test { background: #f1f5f9; color: #475569; }
+
+.muted { color: var(--muted); }
+.empty { padding: 26px; text-align: center; color: var(--muted); }
+
+/* ── Detaljpanel ───────────────────────────────────────── */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+.timeline { border-left: 2px solid var(--line); margin: 10px 0 0; padding-left: 14px; }
+.timeline li { list-style: none; margin: 0 0 12px; font-size: 13px; }
+.timeline time { display: block; color: var(--muted); font-size: 12px; }
+.thumb-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.thumb-row img { width: 120px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.field textarea { width: 100%; min-height: 96px; }
+
+.alert-box {
+  border-left: 4px solid var(--amber); background: var(--amber-soft);
+  padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px;
+}
+.error-box {
+  border-left: 4px solid var(--danger); background: var(--danger-soft);
+  padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px;
+}
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── Responsivt ────────────────────────────────────────── */
+@media (max-width: 1080px) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 10px; gap: 6px; }
+  .sidebar .brand { padding: 0 10px 0 4px; }
+  .sidebar-foot { display: none; }
+  .nav-item { width: auto; }
+  .columns, .detail-grid { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 620px) {
+  .main { padding: 14px; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .token-bar { width: 100%; }
+  .token-bar input { flex: 1; width: auto; }
+  table.list th:nth-child(3), table.list td:nth-child(3) { display: none; }
+  /* Tabellene scroller inne i kortet i stedet for å dytte hele siden i bredden. */
+  #siste-tabell, #innboks-tabell, #drift-detalj { overflow-x: auto; }
+  table.list { min-width: 460px; }
+  .topbar h1 { font-size: 20px; }
+}

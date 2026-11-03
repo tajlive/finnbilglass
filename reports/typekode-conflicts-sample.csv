@@ -1,0 +1,158 @@
+varenr;eurokode;typekode;klasse;grunn
+10030BZ;;DFFV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10030CL;2716FCLV2FV;DFFV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10031CL;2716FCLV2FD;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10042GN;5327FGNR5FD;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10043GN;5327FGNR5RD;DFB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10043YP;5327FYPR5RD;DFB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10044GN;5327FGNR5RQ;SPB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10044GN2;5327LGNR5RQA;SPB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10044YP;5327FYPR5RQ;SPB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10058CL;;DFF;TYPE_CONFLICT;typekode DFF (dørrute fremre forer) motsier navn/eurokode (ventil) — må verifiseres
+10059CL;5422FCLV2FV;DFFV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+10060CL;5422LCLL2FD;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+1526PY;7012ASRR;F;NON_GLASS_PRODUCT;list/klips/pakning
+1541C;27610LFWXP-CLN;F;EUROCODE_CONFLICT;navn sier frontrute, eurokode sier sidefamilie — må verifiseres
+1747BZB;5636BZBL;F;TYPE_CONFLICT;typekode F (frontrute) motsier navn/eurokode (bakrute) — må verifiseres
+1831PY;5644ASMCT;F;NON_GLASS_PRODUCT;list/klips/pakning
+20001GN;8532LGNE5RQ;SFB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20002GN;8532RGNE5RQ;SPB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20006BL;;DPF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20007BL;5959LBLV5RDW;DFB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20008BL;5959RBLV5RDW;SPB3;TYPE_CONFLICT;typekode SPB3 (siderute 3 passasjer) motsier navn/eurokode (dor) — må verifiseres
+20009BL;;SFB2;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20010BL;5959RBLV5RQ;SPB2;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20013BL;8241LBLC2FD;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20014BL;8241RBLC2FD;DPF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20015BL;8241LBLC2RQ;SFB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20016BL;8241RBLC2RQ;SPB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20027BZ;2425LBZS4FD;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20027CL;2425LCLS4FD;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20027GN;2425LGNS4FD;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20028BZ;2425RBZS4FD;DPF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20028CL;2425RCLS4FD;DPF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20028GN;2425RGNS4FD;DPF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20029BZ;2425LBZS4FD;DFB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20029CL;2425LCLS4RD;DFB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20029GN;2426LGNS4RD;DFB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20030BZ;2425RBZS4FD;DPB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20030CL;;DPB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20030GN;2425RGNS4RD;DPB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20031BZ;2425LBZS4RV;DFBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20031CL;2425LCLS4RV;DFBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20031GN;2425LGNS4RV;DFBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20032BZ;2425RBZS4RV;DPBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20032CL;;DPBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20032GN;2425RGNS4RV;DPBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20033BL;3920LBLH3FDW;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20034BL;3920RBLH3FDW;DPF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20035BL;3920LBLH3RQO;SFB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20036BL;3920RBLH3RQO;SPB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20039BL;3925LBLS4FDW;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20040BL;3925RBLS4FDW;DPF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20041BL;3925LBLS4RDW;DFB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20042BL;3925RGNS4RDW;DPB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20043BL;3925LGNS4RV;DFBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20044BL;3925RGNS4RV;DPBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20051BL;;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20052BL;;DPF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20053BL;3920LBLH3FDW;DFB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20054BL;;DPB;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20055BL;;DFBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20056BL;;DPBV;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20057BL;;SFB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20058BL;;SPB1;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20065BL;;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20074CL;;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+20103GN;2425LGNT2FD;DFF;SIDE_UNCERTAIN_STEERING;styretype ikke dokumentert
+2030BB;2030BB;F;TYPE_CONFLICT;typekode F (frontrute) motsier navn/eurokode (bakrute) — må verifiseres
+2030BL;2030BL;F;TYPE_CONFLICT;typekode F (frontrute) motsier navn/eurokode (bakrute) — må verifiseres
+20512CL;3731L+RCLV2MQ;DFB;TYPE_CONFLICT;typekode DFB (dørrute bakre forer) motsier navn/eurokode (side) — må verifiseres
+20513GN;3731LGNV2RQ;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+21304C;8268ACLV;B;EUROCODE_CONFLICT;navn sier bakrute, eurokode sier frontrute — må verifiseres
+21501BL;5966LBLR5RQ;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+21580CL;8537BCLVR;B;TYPE_CONFLICT;typekode B (bakrute) motsier navn/eurokode (side) — må verifiseres
+22363GN;7020LGNS4RDW;SFB1;TYPE_CONFLICT;typekode SFB1 (siderute 1 forer) motsier navn/eurokode (dor) — må verifiseres
+22364GN;7020RGNS4RDW;SPB1;TYPE_CONFLICT;typekode SPB1 (siderute 1 passasjer) motsier navn/eurokode (dor) — må verifiseres
+22479CL;7806LCLE5RQ;DFF;TYPE_CONFLICT;typekode DFF (dørrute fremre forer) motsier navn/eurokode (side) — må verifiseres
+22480CL;;DPF;TYPE_CONFLICT;typekode DPF (dørrute fremre passasjer) motsier navn/eurokode (side) — må verifiseres
+23046GN;8295RGSV5RD;SPB2;TYPE_CONFLICT;typekode SPB2 (siderute 2 passasjer) motsier navn/eurokode (dor) — må verifiseres
+23048GN;8295RGSV5RDS;SPB3;TYPE_CONFLICT;typekode SPB3 (siderute 3 passasjer) motsier navn/eurokode (dor) — må verifiseres
+23049GN;8295LGSV5RQ1J;DPBV;TYPE_CONFLICT;typekode DPBV (ventilrute bakre passasjer) motsier navn/eurokode (side) — må verifiseres
+23501GN;2724LGNV2MQO;DFB;TYPE_CONFLICT;typekode DFB (dørrute bakre forer) motsier navn/eurokode (side) — må verifiseres
+23502GN;2724RGNV2MQO;DPB;TYPE_CONFLICT;typekode DPB (dørrute bakre passasjer) motsier navn/eurokode (side) — må verifiseres
+23931GN;3003LGNH3RQO;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+23932GN;96234663.0;DPFV;TYPE_CONFLICT;typekode DPFV (ventilrute foran passasjer) motsier navn/eurokode (side) — må verifiseres
+24139PY;3966BSMC;B;NON_GLASS_PRODUCT;list/klips/pakning
+24257GN;;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+24259GN;4116LGNV4RDT;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+24260GN;4116RGNV4RDT;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+24265PY;4116BSMV;B;NON_GLASS_PRODUCT;list/klips/pakning
+24542CSL;5344RCCS4RDKW;DFF;FRONT_REAR_CONFLICT;navn: bakre, typekode: fremre
+24727GN;8310LGNH5RD;SFB1;TYPE_CONFLICT;typekode SFB1 (siderute 1 forer) motsier navn/eurokode (dor) — må verifiseres
+24728GN;8310RGNH5RD;SPB1;TYPE_CONFLICT;typekode SPB1 (siderute 1 passasjer) motsier navn/eurokode (dor) — må verifiseres
+2488ASGRT;2488ASGRT;F;NON_GLASS_PRODUCT;list/klips/pakning
+2492ASGRT;2492ASGRT;F;NON_GLASS_PRODUCT;list/klips/pakning
+25032PY;8829RSMERQ;SPB1;NON_GLASS_PRODUCT;list/klips/pakning
+25122GN;3739RGNV3MQ;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+25122GP;3739RGPV3MQ;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+2520PY;5355ASMT;F;NON_GLASS_PRODUCT;list/klips/pakning
+25269GN;6290LGSH5RQZ;DFBV;TYPE_CONFLICT;typekode DFBV (ventilrute bakre forer) motsier navn/eurokode (side) — må verifiseres
+25270GN;6290RGSH5RQZ;DFBV;TYPE_CONFLICT;typekode DFBV (ventilrute bakre forer) motsier navn/eurokode (side) — må verifiseres
+25361GN;2037LGSH3RQZ;DFF;TYPE_CONFLICT;typekode DFF (dørrute fremre forer) motsier navn/eurokode (side) — må verifiseres
+25362GN;2037RGSH3RQZ;DPF;TYPE_CONFLICT;typekode DPF (dørrute fremre passasjer) motsier navn/eurokode (side) — må verifiseres
+25651CSL;2443LCCS4RDKW;DFF;FRONT_REAR_CONFLICT;navn: bakre, typekode: fremre
+25652CSL;2443RCCS4;DFF;FRONT_REAR_CONFLICT;navn: bakre, typekode: fremre
+25703GN;2724LGNV4RDOW;DFB;TYPE_CONFLICT;typekode DFB (dørrute bakre forer) motsier navn/eurokode (side) — må verifiseres
+25704GN;2724RGNV4RDOW;DPB;TYPE_CONFLICT;typekode DPB (dørrute bakre passasjer) motsier navn/eurokode (side) — må verifiseres
+2587PY;5356ASMTT;F;NON_GLASS_PRODUCT;list/klips/pakning
+25882GD;6542GYPE5PRKW;B;TYPE_CONFLICT;typekode B (bakrute) motsier navn/eurokode (tak) — må verifiseres
+26311GN;3562LGSH3RQW;DPF;TYPE_CONFLICT;typekode DPF (dørrute fremre passasjer) motsier navn/eurokode (side) — må verifiseres
+26495GN;8579LGSV4RD;SFB2;TYPE_CONFLICT;typekode SFB2 (siderute 2 forer) motsier navn/eurokode (dor) — må verifiseres
+26496GN;8579RGSV4RD;SPB2;TYPE_CONFLICT;typekode SPB2 (siderute 2 passasjer) motsier navn/eurokode (dor) — må verifiseres
+26535PY;2445BSMS1F;B;NON_GLASS_PRODUCT;list/klips/pakning
+26826GN;8581RGSV4RDW;SFB2;TYPE_CONFLICT;typekode SFB2 (siderute 2 forer) motsier navn/eurokode (dor) — må verifiseres
+26826YP;8581RYPV4RDW;SFB3;TYPE_CONFLICT;typekode SFB3 (siderute 3 forer) motsier navn/eurokode (dor) — må verifiseres
+26941GN;6303BGST;DPF;TYPE_CONFLICT;typekode DPF (dørrute fremre passasjer) motsier navn/eurokode (bakrute) — må verifiseres
+26971GN;7263LGSV5FD;DPFV;TYPE_CONFLICT;typekode DPFV (ventilrute foran passasjer) motsier navn/eurokode (dor) — må verifiseres
+2709BLM;5363BSMVZ;F;TYPE_CONFLICT;typekode F (frontrute) motsier navn/eurokode (bakrute) — må verifiseres
+27543GD;7262LGPH3RQ;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (side) — må verifiseres
+27544GD;7262RGPH3RQ;DFBV;TYPE_CONFLICT;typekode DFBV (ventilrute bakre forer) motsier navn/eurokode (side) — må verifiseres
+27747GD;8579LGPV4RDF;SFB2;TYPE_CONFLICT;typekode SFB2 (siderute 2 forer) motsier navn/eurokode (dor) — må verifiseres
+28105YP;5428ATDR3-YPN;DFB;TYPE_CONFLICT;typekode DFB (dørrute bakre forer) motsier navn/eurokode (frontrute) — må verifiseres
+28106YP;5428ATDR4-YPN;DPB;TYPE_CONFLICT;typekode DPB (dørrute bakre passasjer) motsier navn/eurokode (frontrute) — må verifiseres
+28233GP;8401TF;B;TYPE_CONFLICT;typekode B (bakrute) motsier navn/eurokode (tak) — må verifiseres
+28469GP;7274LGPV4RQ;SFB2;TYPE_CONFLICT;typekode SFB2 (siderute 2 forer) motsier navn/eurokode (dor) — må verifiseres
+28470GN;7274RGSV4MQ;SPB2;TYPE_CONFLICT;typekode SPB2 (siderute 2 passasjer) motsier navn/eurokode (dor) — må verifiseres
+28470GP;7274RGPV4MQ;SPB2;TYPE_CONFLICT;typekode SPB2 (siderute 2 passasjer) motsier navn/eurokode (dor) — må verifiseres
+28472GN;7274RGSV5RDO;SFB2;TYPE_CONFLICT;typekode SFB2 (siderute 2 forer) motsier navn/eurokode (dor) — må verifiseres
+28819GN;8603LGSH3RQZ;B;TYPE_CONFLICT;typekode B (bakrute) motsier navn/eurokode (side) — må verifiseres
+29249GN;6325LGSM5FD;DFFV;TYPE_CONFLICT;typekode DFFV (ventilrute foran forer) motsier navn/eurokode (dor) — må verifiseres
+29567GN;4147BGNHA;F;TYPE_CONFLICT;typekode F (frontrute) motsier navn/eurokode (bakrute) — må verifiseres
+2981PY;3026ASMS;F;NON_GLASS_PRODUCT;list/klips/pakning
+2985PY;4437ASMR;F;NON_GLASS_PRODUCT;list/klips/pakning
+2987PY;2461ASMHT;F;NON_GLASS_PRODUCT;list/klips/pakning
+2997PY;4435AKMMS;F;NON_GLASS_PRODUCT;list/klips/pakning
+30133GNL;7044LGAR5RDKW;DFBV;TYPE_CONFLICT;typekode DFBV (ventilrute bakre forer) motsier navn/eurokode (dor) — må verifiseres
+30133YPL;7044LYPR5RDKW;DFBV;TYPE_CONFLICT;typekode DFBV (ventilrute bakre forer) motsier navn/eurokode (dor) — må verifiseres
+30134YPL;7044RYSR5RDKW1M;DPBV;TYPE_CONFLICT;typekode DPBV (ventilrute bakre passasjer) motsier navn/eurokode (dor) — må verifiseres
+30833GN;2482LGSR5RVWZ;DFB;TYPE_CONFLICT;typekode DFB (dørrute bakre forer) motsier navn/eurokode (ventil) — må verifiseres
+30833YP;2482LYPR5RVWZ;DFB;TYPE_CONFLICT;typekode DFB (dørrute bakre forer) motsier navn/eurokode (ventil) — må verifiseres
+3230PY;4443ASMM;F;NON_GLASS_PRODUCT;list/klips/pakning
+3355PYKIT;2482ASMRL+2482AS;F;NON_GLASS_PRODUCT;list/klips/pakning
+4167AKKR;4167AKKR;F;NON_GLASS_PRODUCT;list/klips/pakning
+540GU;5314ASRS;F;NON_GLASS_PRODUCT;list/klips/pakning
+7944ASMR;7944ASMR;F;NON_GLASS_PRODUCT;list/klips/pakning
+8641ASGRT;8641ASGRT;F;NON_GLASS_PRODUCT;list/klips/pakning
+DD10957YP;AG13RYPR5RD;DPF;FRONT_REAR_CONFLICT;navn: bakre, typekode: fremre
+DD10958YP;AG13LYPR5RD;DFF;FRONT_REAR_CONFLICT;navn: bakre, typekode: fremre
+FW2392PY;;F;NON_GLASS_PRODUCT;list/klips/pakning
+FW2724PY;;F;NON_GLASS_PRODUCT;list/klips/pakning
+W1659PY;;F;NON_GLASS_PRODUCT;list/klips/pakning
+W2536PY;;F;NON_GLASS_PRODUCT;list/klips/pakning
+W3311GB;57330LFW1-GBN;F;EUROCODE_CONFLICT;navn sier frontrute, eurokode sier sidefamilie — må verifiseres
+W3312GB;57330LFW2-GBN;F;EUROCODE_CONFLICT;navn sier frontrute, eurokode sier sidefamilie — må verifiseres
+W512GB;52530LFW-GBN;F;EUROCODE_CONFLICT;navn sier frontrute, eurokode sier sidefamilie — må verifiseres
+W545GU;;F;NON_GLASS_PRODUCT;list/klips/pakning
+W628GU;;F;NON_GLASS_PRODUCT;list/klips/pakning
+W631GU;AB57ASRS;F;NON_GLASS_PRODUCT;list/klips/pakning

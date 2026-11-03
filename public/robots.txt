@@ -1,5 +1,11 @@
 User-agent: *
 Allow: /
+# Interne endepunkter og kundedata skal aldri indekseres: regnr/VIN-oppslag,
+# interne sider og API-svar med kundeopplysninger.
+Disallow: /api/
+Disallow: /ops
+Disallow: /min-side
+Disallow: /logg-inn
 
 User-agent: GPTBot
 Allow: /

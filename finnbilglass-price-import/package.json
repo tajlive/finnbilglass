@@ -1,0 +1,24 @@
+{
+  "name": "finnbilglass-price-import",
+  "version": "1.0.13",
+  "private": true,
+  "type": "module",
+  "description": "Read-only authenticated Autoglass scraper with pinned basic-ftp patch, npm audit gate and locked builds",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "check": "node --check src/main.js && node --check src/extract.js && node --check src/pricing.js && node --check src/stock.js && node --check src/typecode.js && node --check src/side-review.js && node --check src/crawl-plan.js && node --check src/audit-gate.js && node --check src/verify-lockfile.js",
+    "test": "node --test",
+    "security:inspect": "node src/audit-gate.js audit-reports/final.json",
+    "security:lock": "node src/verify-lockfile.js"
+  },
+  "dependencies": {
+    "apify": "^3.7.0",
+    "playwright": "^1.56.0"
+  },
+  "overrides": {
+    "basic-ftp": "6.2.3"
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "$schema": "https://apify.com/schemas/v1/input.ide.json",
+  "title": "FinnBilGlass – Autoglass-priser og lager",
+  "description": "Privat, skrivebeskyttet import. Passordet er kryptert. Start i PROBE-modus.",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "username": {
+      "title": "Autoglass brukernavn",
+      "type": "string",
+      "editor": "textfield",
+      "isSecret": true,
+      "description": "Forhandlerbrukernavn. Krypteres i Apify."
+    },
+    "password": {
+      "title": "Autoglass passord",
+      "type": "string",
+      "editor": "textfield",
+      "isSecret": true,
+      "description": "Forhandlerpassord. Krypteres i Apify."
+    },
+    "mode": {
+      "title": "Kjøremodus",
+      "type": "string",
+      "editor": "select",
+      "enum": [
+        "probe",
+        "incremental",
+        "full"
+      ],
+      "enumTitles": [
+        "Prøve (begrenset)",
+        "Nattlig – nye/endrede",
+        "Ukentlig – full avstemming"
+      ],
+      "default": "probe",
+      "description": "Kjøremodus"
+    },
+    "catalogUrls": {
+      "title": "Startadresser for varekatalog",
+      "type": "array",
+      "editor": "stringList",
+      "description": "Autoglass-kategorier som kontoen din har tilgang til. Ta med alle toppkategorier ved fullimport.",
+      "default": [
+        "https://auto-glass.no/varer/nettbutikk/autoglass/"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "maxPages": {
+      "title": "Maks sider per kjøring",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30000,
+      "default": 8,
+      "description": "Maks sider per kjøring"
+    },
+    "maxProducts": {
+      "title": "Maks produkter per kjøring",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100000,
+      "default": 50,
+      "description": "Maks produkter per kjøring"
+    },
+    "includeProductPages": {
+      "title": "Besøk også produktsider",
+      "type": "boolean",
+      "default": true,
+      "description": "Besøk også produktsider"
+    },
+    "saveState": {
+      "title": "Oppdater privat katalogtilstand",
+      "type": "boolean",
+      "description": "Aktiver først etter kontrollert prøve. Bare incremental/full. En ufullstendig fullskanning kan aldri markere manglende produkter.",
+      "default": false
+    },
+    "minProductsForFull": {
+      "title": "Minst antall varer for godkjent full avstemming",
+      "type": "integer",
+      "minimum": 1,
+      "default": 100,
+      "description": "Minst antall varer for godkjent full avstemming"
+    },
+    "throttleMs": {
+      "title": "Pause mellom sider (millisekunder)",
+      "type": "integer",
+      "minimum": 400,
+      "maximum": 30000,
+      "default": 1100,
+      "description": "Pause mellom sider (millisekunder)"
+    },
+    "typekodeOnly": {
+      "title": "Typekode-only modus (uten pris/lager)",
+      "type": "boolean",
+      "default": false,
+      "description": "Når aktivert: kun Typekode, SKU og produkt-URL samles inn. Pris-, lager- og rabattfelter utelates. Ingen D1-skriving."
+    },
+    "stockSelector": {
+      "title": "Valgfri CSS-velger for lagerindikator (etter verifisering)",
+      "type": "string",
+      "editor": "textfield",
+      "description": "La feltet være tomt første gang. Kan oppdateres etter faktisk visning.",
+      "default": ""
+    },
+    "allowReconciliation": {
+      "title": "Avstemming: marker mulig manglende varer (kun ved verifisert fullkatalog)",
+      "type": "boolean",
+      "description": "Av som standard. Markerer bare MISSING_UNCONFIRMED; aldri automatisk utgått eller utsolgt.",
+      "default": false
+    }
+  },
+  "required": [
+    "username",
+    "password"
+  ]
+}

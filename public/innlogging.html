@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logg inn – FinnBilGlass</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="/innlogging.css?v=20261102">
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">
+        <span>finn</span><span>bilglass</span>
+      </div>
+      <span class="beta-badge">BETA</span>
+      <h1 class="auth-title">Logg inn</h1>
+      <p class="auth-subtitle">Vi sender en engangskode til e-postadressen din. Koden gjelder én gang og i 10 minutter.</p>
+    </div>
+
+    <div id="sosial-blokk" style="margin-bottom:18px;">
+      <link rel="stylesheet" href="/innlogging.css?v=20261102">
+      <a class="sosial-knapp" data-provider="google" href="/api/auth/oauth/google/start" rel="nofollow" style="display:none">
+        <span class="sosial-ikon" aria-hidden="true">G</span> Fortsett med Google
+      </a>
+      <a class="sosial-knapp" data-provider="microsoft" href="/api/auth/oauth/microsoft/start" rel="nofollow" style="display:none">
+        <span class="sosial-ikon" aria-hidden="true">M</span> Fortsett med Microsoft
+      </a>
+      <a class="sosial-knapp" data-provider="facebook" href="/api/auth/oauth/facebook/start" rel="nofollow" style="display:none">
+        <span class="sosial-ikon" aria-hidden="true">f</span> Fortsett med Facebook
+      </a>
+      <p class="error-msg" id="sosial-feil"></p>
+      <div class="sosial-info" id="kobling-info" style="display:none;"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px;color:#94A3B8;font-size:13px;">
+        <span style="flex:1;height:1px;background:#E2E8F0;"></span>eller med e-post<span style="flex:1;height:1px;background:#E2E8F0;"></span>
+      </div>
+    </div>
+
+    <div id="email-step">
+      <div class="form-group">
+        <label class="form-label" for="email">E-postadresse</label>
+        <input type="email" id="email" class="form-input" placeholder="navn@epost.no">
+        <div class="error-msg" id="email-error">Oppgi en gyldig e-postadresse.</div>
+      </div>
+      <button class="btn-primary" id="send-otp-btn">Send engangskode</button>
+      <button class="btn-secondary" id="guest-btn">Fortsett som gjest</button>
+      <div class="resend-text" id="resend-text" style="display:none;">
+        Kode sendt. Mottar du ikke koden? <a href="#" class="resend-link" id="resend-link">Send på nytt</a>
+      </div>
+    </div>
+
+    <div id="otp-step" style="display:none;">
+      <div class="form-group">
+        <label class="form-label" for="otp">Engangskode</label>
+        <div class="otp-inputs">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+        </div>
+        <div class="error-msg" id="otp-error">Koden er ugyldig eller utløpt.</div>
+      </div>
+      <button class="btn-primary" id="verify-otp-btn" disabled>Verifiser og gå inn</button>
+      <button class="btn-secondary" id="back-btn">Tilbake</button>
+      <div class="resend-text">
+        Koden gjelder i 10 minutter. <a href="#" class="resend-link" id="resend-link-2">Send på nytt</a>
+      </div>
+    </div>
+
+    <div class="guest-note">
+      Ikke konto? Du kan søke etter glass og sende forespørsel som gjest uten å logge inn. Din forespørsel kan knyttes til en konto senere.
+    </div>
+  </div>
+</div>
+
+<script src="/innlogging.js?v=20261102" defer></script>
+</body>
+</html>

@@ -88,6 +88,13 @@
       "sha256": "dd31ebb12a5ee49ff05596bd7e5232902b564201641b3b19ac5710c7ed9adf5a",
       "status": "ANVENDT",
       "bevis": "Tabellene glass_search_snapshots og api_rate_limits finnes, og ledgeren har raden."
+    },
+    {
+      "fil": "0039_auth_tables.sql",
+      "sha256": "efabc5bf08eb5589f39d7460aebc0caeb743b7fbc4294e91e0ed3a7f56ae1da0",
+      "mappe": "migrations/pending",
+      "status": "PENDING",
+      "bevis": "Auth-tabeller (auth_users, auth_sessions, auth_otp_codes, auth_rate_limits, admin_audit_log) for lokal D1-lagring. Ikke anvendt i produksjon. Ligger i migrations/pending/ slik at wrangler ikke kjører den automatisk — kun `wrangler d1 execute --local` ved eksplisitt godkjenning."
     }
   ]
 }

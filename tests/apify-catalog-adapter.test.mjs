@@ -2,7 +2,8 @@
  * Apify-katalog-adapter: pris- og identitetspolicy.
  *
  * Reglene som testes er de som lettest blir brutt av en "hjelpsom" refaktorering:
- *  1. En EUR-pris skal ALDRI havne i `pris` (som er NOK-feltet).
+ *  1. Glavista-pris hentes ikke (Tom 2026-10-31): EUR-tall skal aldri lagres —
+ *     hverken i `pris` eller i pris_eur. Bare NOK-listepris fra andre kilder.
  *  2. `vin_hash` skal være tom for katalogprodukter — aldri en fabrikkert "VIN".
  *  3. Dedupe på (probe_id, vin_hash, eurocode, ktype) — siste rad vinner.
  *  4. JSON-kolonner skal alltid være gyldig JSON, også når kilden er tom/søppel.
@@ -38,12 +39,12 @@ function item(overrides = {}) {
     };
 }
 
-test('EUR-pris havner i pris_eur, aldri i pris (NOK)', () => {
+test('Glavista-EUR lagres ikke i noe prisfelt', () => {
     const p = adapter.normalizeProduct(item());
-    assert.equal(p.pris, null, 'pris skal være NULL når kilden er EUR');
-    assert.equal(p.pris_eur, 486.25);
-    assert.equal(p.pris_valuta, 'EUR');
-    assert.equal(p.pris_kilde, 'glavista_suggested_retail');
+    assert.equal(p.pris, null, 'pris skal være NULL — EUR er ikke NOK');
+    assert.equal(p.pris_eur, null, 'EUR-beløpet skal ikke lagres');
+    assert.equal(p.pris_valuta, null);
+    assert.equal(p.pris_kilde, null);
 });
 
 test('NOK-pris havner i pris og ikke i pris_eur', () => {

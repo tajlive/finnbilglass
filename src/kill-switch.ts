@@ -7,7 +7,7 @@
  */
 import type { ResolverUtfall } from './vin-resolver';
 
-interface Env { FINNBILGLASS_DB: D1Database }
+interface Env { FINNBILGLASS_DB: D1Database; inquiries_enabled?: string }
 
 /**
  * Cache-TTL for flagg. Worst case tid fra et flagg endres i D1 til ALLE
@@ -92,6 +92,10 @@ export async function anvendResolverPolicy<T extends { utfall: ResolverUtfall; g
  * flagget ikke mister salg ved en feilkonfigurasjon.
  */
 export async function henvendelserTillatt(env: Env): Promise<boolean> {
+  // Eksplisitt env-override vinner over D1 (staging: "true", kan også stenge med "0").
+  if (env.inquiries_enabled === 'true') return true;
+  if (env.inquiries_enabled === 'false' || env.inquiries_enabled === '0') return false;
+  // Ellers: D1-flagget (manglende flagg = tillatt, fail-open som før).
   return erAktiv(env, 'inquiries_enabled');
 }
 
