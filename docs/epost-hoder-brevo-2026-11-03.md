@@ -5,6 +5,12 @@
 > `BREVO_API_KEY`, `/api/ops/brevo-check` og Brevo-fallbacken er fjernet. Dokumentet under er
 > historikken som forklarer hvorfor Resend ble valgt.
 
+> **Gjeldende status 2026-11-04:** Brevo-kontoen er slettet og all e-post går via Resend
+> (`src/mail.ts`). `SUPPORT_EPOST` = `support@finnbilglass.no` er satt i staging og produksjon, og
+> produksjonskvittering (sak #40) er verifisert med `Reply-To: support@finnbilglass.no` og uten
+> `List-Unsubscribe`. Resend-webhooks er **ikke** satt opp, og nøkkelen som ble delt i chat er
+> **ikke** rotert. Alt nedenfor er historikk — ikke dagens konfigurasjon.
+
 **Dato:** 2026-11-03 · **Status:** Resend er aktiv i produksjon; nøkkelrotasjon gjenstår
 
 ## Fakta
