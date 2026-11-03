@@ -349,7 +349,43 @@ export interface ClassDOenske {
   glassklasse?: string | null;
   dorLedd?: string | null;
   ventilLedd?: string | null;
-  sideKilde?: string | null;
+  /**
+   * Produktets FYSISKE side, utledet av kundens venstre/høyre.
+   *
+   * Norsk marked er venstrestyrt (MARKEDSSTANDARD), så «venstre sett i
+   * kjøreretningen» = førersiden = fysisk venstre glass. Det er en
+   * markedsantakelse, ikke en måling — derfor filtreres bare det som er
+   * beviselig motsatt side, og rader med ukjent side beholdes.
+   */
+  produktSide?: 'venstre' | 'hoyre' | null;
+}
+
+/**
+ * Navn som er egne modeller, ikke varianter av familiebilen.
+ *
+ * Katalogen legger dem i samme familie fordi de deler merke og plattform, men
+ * de har egne karosserier og dermed eget glass: Golf Sportsvan er ikke en Golf,
+ * Transit Connect er ikke en Transit, CLA Shooting Brake er ikke CLA-coupéen.
+ * Raden forkastes bare når kjøretøyets eget modellnavn ikke inneholder navnet.
+ */
+export const NÆRMODELL: Record<string, readonly string[]> = {
+  GOLF: ['SPORTVAN', 'PLUS', 'CROSS'],
+  CLA: ['SHOOTING'],
+  TRANSIT: ['CONNECT', 'COURIER'],
+};
+
+/**
+ * Er dette en annen modell enn kjøretøyet? Symmetrisk: en Golf skal ikke få
+ * Sportsvan-glass, og en Sportsvan skal ikke få Golf-glass. er lik en
+ * navnemodell, må raden være samme navnemodell.
+ */
+function erAnnenModell(varenavn: string, familie: string, modellOrd: Set<string>): boolean {
+  const konflikt = NÆRMODELL[familie];
+  if (!konflikt) return false;
+  const ord = new Set(String(varenavn).toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter(Boolean));
+  const bilens = konflikt.filter((token) => modellOrd.has(token));
+  if (bilens.length) return !bilens.some((token) => ord.has(token));
+  return konflikt.some((token) => ord.has(token));
 }
 
 /** Klasse → hvilke plasseringstyper som er gyldige svar på ønsket. */
@@ -493,7 +529,13 @@ export function matchClassDCandidates(
   const fam = FAMILIER.find((f) => f.merke === mk && f.re.test(mo));
   if (!fam) return [];
 
-  let hits = index.filter((c) => c.merke === fam.merke && c.familie === fam.familie && !erTilbehor(c));
+  const modellOrd = new Set([mk, ...mo.split(/[^A-ZÆØÅ0-9]+/)].filter(Boolean));
+  let hits = index.filter(
+    (c) => c.merke === fam.merke
+      && c.familie === fam.familie
+      && !erTilbehor(c)
+      && !erAnnenModell(c.varenavn, fam.familie, modellOrd),
+  );
 
   const klasse = normaliserKlasse(onske?.glassklasse ?? null);
   if (klasse) {
@@ -517,11 +559,72 @@ export function matchClassDCandidates(
     });
   }
 
-  // Dokumentert plassering først, deretter nyeste generasjon. Stabil rekkefølge
-  // ellers, slik at like gode kandidater ikke bytter plass mellom to kall.
-  const vekt = (c: CatalogueCandidate) => (c.posisjon.type === 'ukjent' ? 1 : 0);
-  return hits
+  // ── Side ────────────────────────────────────────────────────────────────
+  // Kunden har oppgitt venstre eller høyre: da skal ikke motsatt sides glass
+  // foreslås. Bare beviselig feil side fjernes; rader uten dokumentert side
+  // beholdes, og hvis filtreringen tømmer listen beholdes alt (en tom liste
+  // er verre enn en merket usikker kandidat).
+  const side = onske?.produktSide ?? null;
+  if (side) {
+    const riktigSide = hits.filter((c) => c.posisjon.side === null || c.posisjon.side === 'begge' || c.posisjon.side === side);
+    if (riktigSide.length) hits = riktigSide;
+  }
+
+  // ── Relevans og duplikater ──────────────────────────────────────────────
+  // Katalogen har flere rader per varenr (ulik tekst, samme produkt) og rader
+  // for nærliggende modeller («TRANSIT CONNECT» for en TRANSIT). Uten dette
+  // får kunden samme produkt to ganger, eller en Sportsvan-rute til en Golf.
+  const bilOrd = new Set([mk, ...mo.split(/[^A-ZÆØÅ0-9]+/)].filter(Boolean));
+  const vekt = (c: CatalogueCandidate) => {
+    const ukjentPosisjon = c.posisjon.type === 'ukjent' ? 1 : 0;
+    const ekstraModellord = ekstraModellordI(c.varenavn, bilOrd);
+    return ukjentPosisjon * 100 + ekstraModellord * 10;
+  };
+  const sortert = hits
     .map((c, i) => ({ c, i }))
     .sort((a, b) => vekt(a.c) - vekt(b.c) || (b.c.aarFra ?? 0) - (a.c.aarFra ?? 0) || a.i - b.i)
     .map((x) => x.c);
+
+  // Dedupe på varenr: samme produkt skal stå én gang. Første forekomst etter
+  // sortering er den mest relevante raden.
+  const sett = new Set<string>();
+  const unike: CatalogueCandidate[] = [];
+  for (const c of sortert) {
+    const nokkel = c.varenr.toUpperCase();
+    if (sett.has(nokkel)) continue;
+    sett.add(nokkel);
+    unike.push(c);
+  }
+  return unike;
+}
+
+/**
+ * Ord som beskriver karosseri/posisjon og derfor ikke sier «dette er en annen
+ * bil». Alt annet i varenavnet som ikke står i bilens eget modellnavn, regnes
+ * som et ekstra modellord — jo flere, jo lenger ned i listen.
+ */
+const GENERISKE_ORD = new Set([
+  'D', 'DOOR', 'DOORS', 'DOORGLASS', 'CC', 'STV', 'STVOGN', 'ST', 'VOGN', 'STASJONSWAGON', 'STATION', 'WAGON',
+  'SED', 'SEDAN', 'HBK', 'HATCH', 'HATCHBACK', 'CPE', 'COUPE', 'CAB', 'CABRIOLET', 'KOMBI', 'MPV', 'SUV',
+  'CROSSOVER', 'ESTATE', 'AVANT', 'TOURING', 'SPORTBACK', 'VAN', 'MINIBUSS', 'BUSS', 'TRUCK',
+  'PICK', 'UP', 'PICKUP', 'KASSE', 'DOBBEL', 'LOW', 'MED', 'MEDIUM', 'HIGH', 'ALLE',
+  '2D', '3D', '4D', '5D', '2-DOOR', '3-DOOR', '4-DOOR', '5-DOOR',
+  'FRONT', 'FRONTRUTE', 'FRONTRUTA', 'BAKRUTE', 'BAKRUTA', 'DØRRUTE', 'DORRUTE', 'DÖRRUTE',
+  'SIDERUTE', 'SIDERUTER', 'SIDORUTE', 'VENTILRUTE', 'TAKGLASS', 'TAKRUTE', 'SKYVEDØR', 'SKYVEDOR',
+  'VS', 'HS', 'V', 'H', 'OG', 'AND',
+]);
+
+function ekstraModellordI(varenavn: string, bilOrd: Set<string>): number {
+  const ord = String(varenavn).toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter(Boolean);
+  let antall = 0;
+  const sett = new Set<string>();
+  for (const o of ord) {
+    if (GENERISKE_ORD.has(o)) continue;
+    if (bilOrd.has(o)) continue;
+    if (/^\d{2,4}$/.test(o)) continue; // årstall
+    if (sett.has(o)) continue;         // samme ord to ganger teller én gang
+    sett.add(o);
+    antall++;
+  }
+  return antall;
 }

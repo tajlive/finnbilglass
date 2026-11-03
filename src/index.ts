@@ -463,6 +463,11 @@ async function handleAllGlassKandidater(b: Record<string, unknown>, selection: G
   const ventilLedd = selection?.kind === 'ventil'
     ? (selection.placement === 'front' ? 'foran' : selection.placement === 'rear' ? 'bakre' : null)
     : null;
+  // Norsk marked = venstrestyrt: «venstre sett i kjøreretningen» er fysisk
+  // venstre glass. Markedsantakelse, dokumentert i MARKEDSSTANDARD — brukes
+  // bare til å fjerne beviselig motsatt side, aldri til å påstå riktig side.
+  const produktSide = selection?.side === 'left' ? 'venstre'
+    : selection?.side === 'right' ? 'hoyre' : null;
 
   let kandidater: { varenr: string; varenavn: string; posisjon: string; attributter: string[] }[] = [];
   let sokKilde = 'ingen';
@@ -483,12 +488,27 @@ async function handleAllGlassKandidater(b: Record<string, unknown>, selection: G
         glassklasse: klasse,
         dorLedd,
         ventilLedd,
+        produktSide,
       });
-      kandidater = treff.slice(0, 25).map((c: CatalogueCandidate) => ({
+      // Grupper like produktbeskrivelser. Katalogen har flere varenr med samme
+      // tekst (ulik innkjøpsvariant); for kunden er de samme glass. Uten
+      // gruppering fyller de tre plassene i kundeflaten med identiske kort.
+      // Én rad per beskrivelse + antall varianter er ærlig og lesbart.
+      const grupper = new Map<string, { c: CatalogueCandidate; antall: number }>();
+      for (const c of treff) {
+        // Normaliser mellomrom: «T5 03-  BAKRUTE» og «T5 03- BAKRUTE» er samme
+        // produkt i to katalogoppføringer, ellers fyller de to kort.
+        const nokkel = `${c.varenavn.replace(/\s+/g, ' ').trim().toUpperCase()}|${posisjonsTekst(c)}`;
+        const finnes = grupper.get(nokkel);
+        if (finnes) finnes.antall += 1;
+        else grupper.set(nokkel, { c, antall: 1 });
+      }
+      kandidater = [...grupper.values()].slice(0, 25).map(({ c, antall }) => ({
         varenr: c.varenr,
         varenavn: c.varenavn,
         posisjon: posisjonsTekst(c),
         attributter: c.features,
+        varianter: antall,
       }));
       sokKilde = kandidater.length ? 'CLASS_D_katalog' : 'ingen';
     } catch (e) {
