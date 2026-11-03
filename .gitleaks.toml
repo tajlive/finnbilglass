@@ -64,6 +64,15 @@ envVars = [
   "MCP_.*_API_KEY",
 ]
 
+[[rules]]
+# pen.dev lagrer en filidentifikator («fileToken») i .pen-designfiler.
+# Den er ikke en bearer-credential, men den identifiserer dokumentet i eierens
+# workspace og skal ikke ligge i et offentlig repo. Fang den før commit.
+id = "pen-file-token"
+description = "pen.dev fileToken i .pen-designfil"
+regex = '''"fileToken"\s*:\s*"[0-9a-fA-F-]{36}"'''
+tags = ["design", "identifier"]
+
 [extend]
 # Use the default gitleaks rules as base
 useDefault = true

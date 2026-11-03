@@ -726,6 +726,7 @@
     if (selection.kind === 'side') return 'Siderute · ' + glassSideLabel(selection.side) + ' · ' + ({front_quarter:'Fremre trekantrute',rear_quarter:'Bakre trekantrute',cargo:'Lasterom',unknown:'Vet ikke plassering'}[selection.section]) + ' · ' + ({body:'Karosseri',door:'Dør',unknown:'Vet ikke'}[selection.mounting]);
     if (selection.kind === 'rear') return 'Bakrute · ' + (selection.layout === 'single' ? 'Hel rute' : selection.layout === 'split' ? 'Delt rute · ' + glassSideLabel(selection.splitSide) : 'Vet ikke om ruten er delt');
     if (selection.kind === 'roof') return 'Panoramatak / takglass · ' + ({fixed:'Fast',opening:'Åpningsbart',unknown:'Vet ikke'}[selection.system]) + ' · ' + ({whole:'Hele ruten',front:'Fremre panel',middle:'Midtre panel',rear:'Bakre panel',unknown:'Vet ikke panel'}[selection.panel]);
+    if (selection.kind === 'ventil') return 'Ventilrute / trekantrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',unknown:'Vet ikke hvor'}[selection.ventil]);
     return 'Ukjent glasstype';
   }
 
@@ -740,6 +741,10 @@
       ['mounting','Hvor er ruten festet?',[['body','Karosseri'],['door','Dør'],['unknown','Vet ikke']]]
     ],
     rear: [['layout','Er bakruten hel eller delt?',[['single','Hel'],['split','Delt'],['unknown','Vet ikke']]]],
+    ventil: [
+      ['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],
+      ['ventil','Hvor sitter ventilruten?',[['front','Foran sidevinduet'],['rear','Bak sidevinduet'],['unknown','Vet ikke']]]
+    ],
     roof: [
       ['system','Er takglasset fast eller åpningsbart?',[['fixed','Fast'],['opening','Åpningsbart'],['unknown','Vet ikke']]],
       ['panel','Hvilket panel gjelder det?',[['whole','Hele ruten'],['front','Fremre panel'],['middle','Midtre panel'],['rear','Bakre panel'],['unknown','Vet ikke']]]
@@ -803,6 +808,7 @@
       if (layout === 'split') selection.splitSide = value('splitSide');
     }
     if (kind === 'roof') selection = { kind: kind, system: value('system'), panel: value('panel') };
+    if (kind === 'ventil') selection = { kind: kind, side: value('side'), ventil: value('ventil') };
     var missing = Object.keys(selection || {}).filter(function (key) { return key !== 'kind' && !selection[key]; });
     if (missing.length) {
       $('glass-placement-error').textContent = 'Velg et svar for hvert felt, eller velg «Vet ikke».';
@@ -890,7 +896,14 @@
         regnr: state.regnr,
         vin: state.vin,
         glassklasse: request.selection.kind,
-        posisjon: request.selection.posisjon || null
+        // Kjøretøyopplysningene sendes med slik at backend kan bruke dem når
+        // SVV-oppslaget feiler (F5). Uten regnr er bilen ikke registerverifisert.
+        merke: state.merke || null,
+        modell: state.modell || null,
+        aar: state.aar || null,
+        // Hele selection sendes: side, dør, seksjon, montering og ventil er
+        // svarene kunden faktisk ga. Uten dem er de tapt informasjon (P1).
+        selection: request.selection
       })
     })
     .then(function (r) { return r.ok ? r.json() : null; })
@@ -929,15 +942,23 @@
     if (kandidater.length) {
       $('resultat-kort').textContent = '';
       $('resultat-alt').textContent = '';
+      var esc = function (v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+      };
       var kandidatHtml = '<div class="kandidat-list" role="list" aria-label="Mulige glasskandidater">';
       kandidatHtml += '<p class="note verify">Må kontrolleres før tilbud — katalogen bekrefter ikke fysisk kompatibilitet automatisk.</p>';
       for (var i = 0; i < Math.min(kandidater.length, 3); i++) {
         var k = kandidater[i];
-        kandidatHtml += '<article class="kandidat-kort" role="listitem" data-varenr="' + (k.varenr || '') + '">' +
-          '<h3>' + (k.varenavn || 'Ukjent glass') + '</h3>' +
-          '<p class="kandidat-meta">Varenr: ' + (k.varenr || '—') + ' | Eurokode: ' + (k.eurokode || '—') + ' | Plassering: ' + (k.posisjon || '—') + '</p>' +
-          '<p class="kandidat-klassifisering">' + (k.klassifisering || 'CLASS_D_CATALOGUE_CANDIDATE') + '</p>' +
-          '<button type="button" class="btn-select-candidate" onclick="window.selectGlassCandidate(' + i + ', \'' + (k.varenr || '') + '\')">Velg dette glasset</button>' +
+        // Intern klassifisering (CLASS_D_CATALOGUE_CANDIDATE) skal aldri vises til
+        // kunden — den er diagnostikk, ikke informasjon. Plasseringen derimot er
+        // kundens eget språk og kommer ferdig formulert fra serveren.
+        kandidatHtml += '<article class="kandidat-kort" role="listitem" data-varenr="' + esc(k.varenr) + '">' +
+          '<h3>' + esc(k.varenavn || 'Ukjent glass') + '</h3>' +
+          '<p class="kandidat-meta">Varenr: ' + esc(k.varenr || '—') + ' | Eurokode: ' + esc(k.eurokode || '—') + ' | Plassering: ' + esc(k.posisjon || '—') + '</p>' +
+          '<p class="kandidat-klassifisering">Krever kontroll før bestilling</p>' +
+          '<button type="button" class="btn-select-candidate" onclick="window.selectGlassCandidate(' + i + ', \'' + esc(k.varenr) + '\')">Velg dette glasset</button>' +
           '</article>';
       }
       kandidatHtml += '<button type="button" class="btn-vet-ikke" onclick="window.selectGlassCandidate(-1, \'vet_ikke\')">Vet ikke / vil ikke velge nå</button>';
@@ -1244,7 +1265,7 @@
 
       state.currentGlassKind = kind;
       if (kind === 'unknown') { $('glass-placement').classList.add('hidden'); sokGlass({ kind: 'unknown' }); return; }
-      $('glass-placement-title').textContent = kind === 'door' ? 'Hvilken dørrute?' : kind === 'side' ? 'Hvilken siderute?' : kind === 'rear' ? 'Hvilken bakrute?' : 'Hvilket takglass?';
+      $('glass-placement-title').textContent = kind === 'door' ? 'Hvilken dørrute?' : kind === 'side' ? 'Hvilken siderute?' : kind === 'rear' ? 'Hvilken bakrute?' : kind === 'ventil' ? 'Hvilken ventilrute?' : 'Hvilket takglass?';
       renderGlassFields(kind);
       $('glass-placement').classList.remove('hidden');
       $('glass-placement-title').focus();
@@ -1257,7 +1278,7 @@
   $('btn-glass-search').addEventListener('click', function () {
     var kind = state.currentGlassKind;
 
-    if (!['door', 'side', 'rear', 'roof'].includes(kind)) return;
+    if (!['door', 'side', 'rear', 'roof', 'ventil'].includes(kind)) return;
 
     var selection = selectionFromFields(kind);
     if (!selection) return;
