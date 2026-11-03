@@ -1,6 +1,6 @@
 # «Meld deg av» på mottakskvitteringen — hva som kan fikses, og hvordan
 
-**Dato:** 2026-11-03 · **Status:** vår side er verifisert i staging; fjerning av «Meld deg av» krever endring hos Brevo
+**Dato:** 2026-11-03 · **Status:** Resend er aktiv i produksjon; nøkkelrotasjon gjenstår
 
 ## Fakta
 
@@ -64,7 +64,7 @@ Brevo kan ikke fjerne headeren, så kvitteringen sendes nå via **Resend** — s
 `List-Unsubscribe` på transaksjonspost. Brevo er beholdt som fallback, slik at kunden alltid får
 kvittering selv om Resend avviser (f.eks. før domenet er verifisert).
 
-**DNS lagt inn i Cloudflare (additivt, rører ikke dagens SPF/MX):**
+**DNS lagt inn i Cloudflare (egen `send`-subdomene, rører ikke nettstedets SPF/MX):**
 
 | Type | Navn | Verdi |
 |---|---|---|
@@ -73,9 +73,8 @@ kvittering selv om Resend avviser (f.eks. før domenet er verifisert).
 | TXT | `send` | `v=spf1 include:amazonses.com ~all` |
 | CNAME | `rsend` | `send.forge.rmta.net` |
 
-**Status:** MX, `send`-SPF og `rsend` er verifisert av Resend. DKIM-posten ligger riktig i DNS
-(byte-identisk med Resends verdi), men Resend rapporterte `pending` ved første sjekk — verifisering
-poller til den slår over.
+**Status:** Alle fire poster er synlige i offentlig DNS. Resend rapporterte domenet som `verified`
+etter DKIM-kontrollen.
 
 **Transport i koden** (`sendCustomerInquiryReceipt`):
 
@@ -83,5 +82,25 @@ poller til den slår over.
 2. Feiler Resend (f.eks. uverifisert domene) → fallback til Brevo med samme innhold og Reply-To.
 3. Begge feiler → feilen logges, men henvendelsen er allerede lagret (best-effort).
 
-**Gjenstår før produksjon:** sette `RESEND_API_KEY` på produksjons-Workeren og deploye (krever GO),
-samt rotere nøkkelen som er delt i chat.
+**Produksjon:** `RESEND_API_KEY` er satt på Worker-en. Cloudflare-versjon `fad70fce` er live;
+helsekontroll og `/api/glass/valg` svarer 200. Kontrollert produksjonstest opprettet sak #38; den
+foregående kjørerapporten registrerte kvitteringen som sendt via Resend.
+
+**Kvitteringsbevis:** den kontrollerte Resend-testen leverte til Gmail-innboksen, uten
+`List-Unsubscribe`, med `Reply-To: svar@finnbilglass.no` og Resend-DKIM. Staging-testen før
+leverandørbyttet viste derimot at Brevo la til `List-Unsubscribe`, selv om `List-Help` også var med.
+
+## Anbefalinger for Resend
+
+1. Roter API-nøkkelen som ble delt i chatten. Behandle den som kompromittert.
+2. Lag en egen nøkkel med `sending_access`, avgrenset til `finnbilglass.no`, og lagre den i
+   Bitwarden Secrets Manager som `RESEND_API_KEY`. Resend støtter begrensede rettigheter og
+   domenebegrensning ([offisiell dokumentasjon](https://resend.com/changelog/new-api-key-permissions)).
+3. Oppdater Cloudflare Worker secrets i både staging og produksjon med den nye verdien, send en
+   kontrollert test, og tilbakekall deretter den gamle nøkkelen.
+4. Behold Brevo-fallbacken mens rotasjonen gjennomføres. Når Resend sender normalt, kvitteringen
+   går ut uten avmeldingsheader; hvis Resend feiler og fallbacken aktiveres, kan Brevo fortsatt
+   legge på `List-Unsubscribe`.
+
+Nøkkelverdien skal aldri legges i Git, issue, PR-beskrivelse eller chat. Bitwarden CLI var ikke
+autentisert ved siste forsøk, så rotasjon må bruke en sikker, autentisert hemmelighetskilde.

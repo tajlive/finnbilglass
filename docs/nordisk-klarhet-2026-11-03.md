@@ -1,7 +1,7 @@
 # Nordisk klarhet — gjennomgang før produksjonssetting
 
-**Dato:** 2026-11-03 · **Branch:** `feat/nordisk-klarhet-20261103` (ikke merget, ikke prod-deployet)
-**Miljø verifisert:** lokal (ekte produksjonskatalog kopiert inn) + staging (`finnbilglass-frontrute-staging`, versjon `e1dbdbd2`)
+**Dato:** 2026-11-03 · **Branch:** `feat/nordisk-klarhet-20261103` (PR #27 åpen, klar for review)
+**Miljø verifisert:** staging og produksjon. Produksjon kjører Cloudflare-versjon `fad70fce` fra commit `1d80c8b`.
 
 ---
 
@@ -49,7 +49,7 @@ Lys, rolig bakgrunn (#f5f8f6), mørk tekst (#12211c), grønn hovedfarge (#0e6b4f
 | Lokal Chrome-verifisering (`scripts/verify-nordisk-klarhet.mjs`, 390 px + 1280 px) | **alle kontroller PASS**: ingen horisontal overflyt, ingen trykkflate <44 px, tastatur-Enter velger, oppsummering før kontaktfelt, bekreftelse vises |
 | Chrome-test alle seks glasstyper → ekte inquiry-handler (`npm run test:quote-browser`) | PASS |
 | **Kundekvittering ende-til-ende (staging → Gmail)** | **PASS 2026-11-03 23:04** — sak #28 mottatt i innboksen, avsender `FinnBilGlass <support@finnbilglass.no>`, emne «Vi har mottatt forespørselen din (#28)» |
-| **Staging-E2E** (`scripts/e2e-release-chrome.mjs` mot staging, 2 biler × 2 viewports) | **33 brukerreiser · 0 FEIL · 0 advarsler** |
+| **Staging-E2E** (`scripts/e2e-release-chrome.mjs` mot staging, 2 biler × 2 viewports) | **36 brukerreiser · 0 FEIL · 0 advarsler** |
 | Staging-probe `POST /api/glass/valg` med SU18018 | 200, SVV-oppslag, 39 kandidater, datastyrte typer |
 
 Staging-tallene E2E-en faktisk målte:
@@ -67,18 +67,18 @@ Skjermbilder: `~/.hermes/cache/scratch/fbg-nordisk-klarhet/` (mobil + desktop: f
 
 ## 3. Kjente begrensninger og gjenstående datagap
 
-0. **E-postleveranse:** DKIM er satt opp (`brevo1`/`brevo2._domainkey` → CNAME Brevo) og DMARC står på `p=quarantine`, men **SPF mangler Brevo** (`v=spf1 +ip4:185.126.36.19 +include:_spf.spamprotection.no ~all`). Legg til Brevos SPF-include før bred lansering. `support@finnbilglass.no` har ingen postkasse (MX = loke.domene.no), så svar på kvitteringen forsvinner — sett reply-to/`SUPPORT_FROM_EMAIL` til en adresse som leses.
+0. **E-postleveranse:** Kvitteringer sendes via Resend med domenet `finnbilglass.no` verifisert. DNS-postene er satt på `send`-subdomenet. `Reply-To` går til `SUPPORT_NOTIFY_EMAIL`; avsenderadressen `support@finnbilglass.no` har ikke egen postkasse. Se [Resend- og headernotatet](epost-hoder-brevo-2026-11-03.md). API-nøkkelen som ble delt i chatten må roteres.
 1. **Pris** for dør/side/bak/ventil/tak vises som «Pris på forespørsel» — katalograder for disse klassene har ingen dokumentert kundepris i svaret. Frontrute viser pris som før.
 2. **Karosseri** spørres bare når katalogen faktisk skiller; kroppsvariant (coupé/stasjonsvogn) er fortsatt største gjenværende feilkilde der dataene ikke skiller.
 3. **Rattplassering** er ikke dokumentert i noen kilde vi har i dag → alltid «venstre/høyre side». Fører/passasjer aktiveres automatisk når slik data finnes.
 4. **«Vet ikke»-siden** gir begge sider videre til kontroll (ingen filtrering) — bevisst.
 5. **Caddy** har bare frontrute i katalogen; øvrige ruter gir hjelpetilstand. Det er et kataloggap, ikke en UI-feil, men det bør lukkes med data før bred lansering.
-6. **Ingen produksjonssetting, ingen migrasjon, ingen merge** er utført. Prod kjører uendret versjon.
+6. **Produksjon:** versjon `fad70fce` er live. `/health` og `/api/glass/valg` er kontrollert med HTTP 200. PR #27 er oppdatert til commit `1d80c8b`, men ikke flettet.
 
 ---
 
-## 4. Før produksjonssetting (forslag)
+## 4. Etter produksjonssetting
 
-1. Tom godkjenner synlig endring (ny grønn profil, «Finn bilen», nye resultatkort) ut fra skjermbildene.
-2. Beslutning om `ALL_GLASS_KANDIDATER_ENABLED` i prod: av = dagens manuelle flyt med samme rutetyper; på = datastyrte valg og kandidatkort.
-3. Deretter vanlig governed deploy (`[deploy]`-markør eller dispatch + godkjenning), med smoke-test og rollback-mål klar.
+1. Fullfør rotasjon til en egen Resend `sending_access`-nøkkel avgrenset til `finnbilglass.no`, og oppdater Cloudflare secrets i staging og produksjon.
+2. Verifiser en kontrollert staging-kvittering og at Resend er transportør; Brevo-fallback kan fortsatt legge på `List-Unsubscribe` dersom den må brukes.
+3. Få PR #27 gjennom review og merge, slik at den deployede løsningen er sporbar i Git.
