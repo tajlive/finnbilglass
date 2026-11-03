@@ -288,13 +288,30 @@ async function sendCustomerInquiryReceipt(
   navn: string,
   inquiryId: number | null,
   regnr?: string | null,
-): Promise<{ ok: boolean; error?: string }> {
-  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
-  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
-  const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+): Promise<{ ok: boolean; error?: string; via?: 'resend' | 'brevo' }> {
+  const innhold = lagKvittering(navn, inquiryId, regnr);
+  const svarTil = env.SUPPORT_NOTIFY_EMAIL || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
 
+  // Resend først når nøkkelen finnes: transporterer uten Brevos List-Unsubscribe.
+  if (env.RESEND_API_KEY) {
+    const viaResend = await sendKvitteringViaResend(env, to, svarTil, innhold);
+    if (viaResend.ok) return { ok: true, via: 'resend' };
+    console.error('kvittering via Resend feilet:', viaResend.error);
+  }
+  const viaBrevo = await sendKvitteringViaBrevo(env, to, svarTil, navn, innhold);
+  return viaBrevo.ok ? { ok: true, via: 'brevo' } : viaBrevo;
+}
+
+interface Kvitteringsinnhold { emne: string; text: string; html: string }
+
+/**
+ * Kvitteringens innhold. Kort og konkret: hva vi har mottatt, hva som skjer nå,
+ * at det er uforpliktende, og hvem som monterer (vi leverer, kunden avtaler
+ * verksted). Aldri svartid, aldri prisløfte.
+ */
+function lagKvittering(navn: string, inquiryId: number | null, regnr?: string | null): Kvitteringsinnhold {
+  const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
   const saksnr = inquiryId != null ? `#${inquiryId}` : '';
-  // Fullt navn beholdes: en kvittering er kundens dokumentasjon på saken.
   const hilsen = navn ? `Hei ${navn},` : 'Hei,';
   const bil = regnr ? ` for kjøretøyet ${regnr}` : '';
   const emne = saksnr
@@ -302,22 +319,66 @@ async function sendCustomerInquiryReceipt(
     : 'Vi har mottatt forespørselen din';
   const innledning = `Takk for forespørselen. Vi har registrert den${saksnr ? ' som sak ' + saksnr : ''}${bil}.`;
   const videre = 'Vi kontrollerer at glasset passer bilen, og finner pris og levering. Du får svaret på e-post.';
-  // Setningen er bevisst eksplisitt: ingen bestilling er opprettet.
   const forbehold = 'Dette er en mottakskvittering, ikke en ordrebekreftelse — ingen bestilling er gjennomført. Du bestemmer først når du har fått tilbudet.';
   const montering = 'Vi leverer glasset. Montering avtaler du selv med et verksted.';
   const kontakt = 'support@finnbilglass.no · 40 40 82 41';
+  return {
+    emne,
+    text: [hilsen, '', innledning, '', videre, '', forbehold, '', montering, '', 'Hilsen', 'Finnbilglass', kontakt].join('\n'),
+    html: [
+      `<p>${escHtml(hilsen)}</p>`,
+      `<p>${escHtml(innledning)}</p>`,
+      `<p>${escHtml(videre)}</p>`,
+      `<p>${escHtml(forbehold)}</p>`,
+      `<p>${escHtml(montering)}</p>`,
+      '<p>Hilsen<br>Finnbilglass</p>',
+      `<p style="color:#637286;font-size:13px">${escHtml(kontakt)}</p>`,
+    ].join(''),
+  };
+}
 
-  const text = [hilsen, '', innledning, '', videre, '', forbehold, '', montering, '', 'Hilsen', 'Finnbilglass', kontakt].join('\n');
-  const html = [
-    `<p>${escHtml(hilsen)}</p>`,
-    `<p>${escHtml(innledning)}</p>`,
-    `<p>${escHtml(videre)}</p>`,
-    `<p>${escHtml(forbehold)}</p>`,
-    `<p>${escHtml(montering)}</p>`,
-    '<p>Hilsen<br>Finnbilglass</p>',
-    `<p style="color:#637286;font-size:13px">${escHtml(kontakt)}</p>`,
-  ].join('');
+/** Resend — ren transaksjonspost uten List-Unsubscribe-header. */
+async function sendKvitteringViaResend(
+  env: Env,
+  to: string,
+  svarTil: string,
+  innhold: Kvitteringsinnhold,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!env.RESEND_API_KEY) return { ok: false, error: 'RESEND_API_KEY mangler' };
+  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: `Finnbilglass <${from}>`,
+        to: [to],
+        reply_to: svarTil,
+        subject: innhold.emne,
+        html: innhold.html,
+        text: innhold.text,
+      }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => '');
+      return { ok: false, error: `Resend ${r.status}${txt ? ': ' + txt.slice(0, 160) : ''}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Ukjent feil (Resend).' };
+  }
+}
 
+/** Brevo — fallback så lenge Resend-domenet ikke er verifisert. */
+async function sendKvitteringViaBrevo(
+  env: Env,
+  to: string,
+  svarTil: string,
+  navn: string,
+  innhold: Kvitteringsinnhold,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
+  const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
   try {
     const r = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
@@ -325,16 +386,11 @@ async function sendCustomerInquiryReceipt(
       body: JSON.stringify({
         sender: { email: from, name: 'Finnbilglass' },
         to: [{ email: to, name: navn || undefined }],
-        // Svar skal havne hos noen som faktisk leser dem — support@ har ingen
-        // postkasse (MX = Domeneshop, ingen konto). Brevo legger dessuten på
-        // List-Unsubscribe på all transaksjonspost; List-Help gir mottakeren en
-        // reell hjelpe-URL i tillegg (kan ikke fjernes før Brevo bytter header
-        // for oss, se docs/epost-hoder-brevo-2026-11-03.md).
-        replyTo: { email: env.SUPPORT_NOTIFY_EMAIL || from, name: 'Finnbilglass' },
+        replyTo: { email: svarTil, name: 'Finnbilglass' },
         headers: { 'List-Help': '<https://finnbilglass.no/om-oss>' },
-        subject: emne,
-        htmlContent: html,
-        textContent: text,
+        subject: innhold.emne,
+        htmlContent: innhold.html,
+        textContent: innhold.text,
       }),
     });
     if (!r.ok) {

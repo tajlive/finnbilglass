@@ -23,6 +23,7 @@ export interface Env {
   EVIDENCE_STATUS_CHANGE_ENABLED?: string;
   /** Utgående e-post-svar til kunder (Brevo v3 SMTP). Uten nøkkel er /reply 503 «ikke konfigurert». */
   BREVO_API_KEY?: string;
+  RESEND_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
   SUPPORT_NOTIFY_EMAIL?: string;
   /** Google Identity Services (kundeinnlogging). client_id er offentlig; secret brukes ikke i denne flyten. */

@@ -53,3 +53,30 @@ test('newly saved inquiry schedules an escaped customer receipt for email contac
   assert.match(receipt.textContent, /ikke en ordrebekreftelse/);
  } finally { globalThis.fetch = originalFetch; }
 });
+
+test('receipt prefers Resend and falls back to Brevo until the Resend domain is verified', async () => {
+ const calls: {url:string; body:any}[] = [];
+ const originalFetch = globalThis.fetch;
+ globalThis.fetch = (async (input:any, init?:any) => {
+  const url = String(input);
+  calls.push({ url, body: init?.body ? JSON.parse(init.body) : null });
+  if (url.includes('api.resend.com')) return new Response('{"message":"The finnbilglass.no domain is not verified"}', { status: 403 });
+  return new Response('', { status: 201 });
+ }) as any;
+ const db={prepare(_sql:string){let args:unknown[]=[];return {sql:_sql,get args(){return args;},bind(...values:unknown[]){args=values;return this;},first:async()=>null,all:async()=>({results:[]}),run:async()=>({meta:{changes:1}})};},async batch(){return [{meta:{last_row_id:314}},{meta:{changes:1}}];}};
+ const background: Promise<unknown>[] = [];
+ try {
+  const response=await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST',navn:'Resend Test',kontakt:'kunde@example.test',melding:'Test'})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,BREVO_API_KEY:'brevo-key',RESEND_API_KEY:'re_test',SUPPORT_NOTIFY_EMAIL:'svar@finnbilglass.no'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
+  assert.equal(response.status,201);
+  await Promise.all(background);
+  const resend = calls.find((c) => c.url.includes('api.resend.com'));
+  // Supportvarselet går også via Brevo — finn kvitteringen (den til kunden).
+  const brevo = calls.find((c) => c.url.includes('api.brevo.com') && JSON.stringify(c.body?.to || []).includes('kunde@example.test'));
+  assert.ok(resend, 'Resend skal prøves først når nøkkelen finnes');
+  assert.equal(resend!.body.from, 'Finnbilglass <support@finnbilglass.no>');
+  assert.equal(resend!.body.reply_to, 'svar@finnbilglass.no');
+  assert.match(resend!.body.subject, /#314/);
+  assert.ok(brevo, 'skal falle tilbake til Brevo når Resend avviser (uverifisert domene)');
+  assert.equal(brevo!.body.replyTo.email, 'svar@finnbilglass.no');
+ } finally { globalThis.fetch = originalFetch; }
+});
