@@ -48,6 +48,7 @@ Lys, rolig bakgrunn (#f5f8f6), mørk tekst (#12211c), grønn hovedfarge (#0e6b4f
 | Valgtre mot **ekte produksjonskatalog** (`scripts/verify-valgtre.mjs`, 6 biler) | ingen invariantbrudd |
 | Lokal Chrome-verifisering (`scripts/verify-nordisk-klarhet.mjs`, 390 px + 1280 px) | **alle kontroller PASS**: ingen horisontal overflyt, ingen trykkflate <44 px, tastatur-Enter velger, oppsummering før kontaktfelt, bekreftelse vises |
 | Chrome-test alle seks glasstyper → ekte inquiry-handler (`npm run test:quote-browser`) | PASS |
+| **Kundekvittering ende-til-ende (staging → Gmail)** | **PASS 2026-11-03 23:04** — sak #28 mottatt i innboksen, avsender `FinnBilGlass <support@finnbilglass.no>`, emne «Vi har mottatt forespørselen din (#28)» |
 | **Staging-E2E** (`scripts/e2e-release-chrome.mjs` mot staging, 2 biler × 2 viewports) | **33 brukerreiser · 0 FEIL · 0 advarsler** |
 | Staging-probe `POST /api/glass/valg` med SU18018 | 200, SVV-oppslag, 39 kandidater, datastyrte typer |
 
@@ -66,6 +67,7 @@ Skjermbilder: `~/.hermes/cache/scratch/fbg-nordisk-klarhet/` (mobil + desktop: f
 
 ## 3. Kjente begrensninger og gjenstående datagap
 
+0. **E-postleveranse:** DKIM er satt opp (`brevo1`/`brevo2._domainkey` → CNAME Brevo) og DMARC står på `p=quarantine`, men **SPF mangler Brevo** (`v=spf1 +ip4:185.126.36.19 +include:_spf.spamprotection.no ~all`). Legg til Brevos SPF-include før bred lansering. `support@finnbilglass.no` har ingen postkasse (MX = loke.domene.no), så svar på kvitteringen forsvinner — sett reply-to/`SUPPORT_FROM_EMAIL` til en adresse som leses.
 1. **Pris** for dør/side/bak/ventil/tak vises som «Pris på forespørsel» — katalograder for disse klassene har ingen dokumentert kundepris i svaret. Frontrute viser pris som før.
 2. **Karosseri** spørres bare når katalogen faktisk skiller; kroppsvariant (coupé/stasjonsvogn) er fortsatt største gjenværende feilkilde der dataene ikke skiller.
 3. **Rattplassering** er ikke dokumentert i noen kilde vi har i dag → alltid «venstre/høyre side». Fører/passasjer aktiveres automatisk når slik data finnes.
