@@ -83,5 +83,33 @@ Skjermbilder: `~/.hermes/cache/scratch/fbg-nordisk-klarhet/` (mobil + desktop: f
 1. **Resend-webhooks** for `delivered`/`delayed`/`bounced`/`suppressed` er ikke satt opp. Uten dem oppdages avviste kvitteringer bare i Worker-loggen. Krever endepunkt + webhook-hemmelighet.
 2. **Nøkkelrotasjon:** Resend-nøkkelen som ble delt i chat 2026-11-03 er per 2026-11-04 **ikke** rotert. Anbefales erstattet av en `sending_access`-nøkkel avgrenset til `finnbilglass.no`, lagt i BWS og satt som Worker-secret i staging og produksjon.
 3. **PR #27** bør gjennom review og merges, slik at koden som kjører i prod er sporbar i Git (i dag ligger den bare på en lokal gren).
-4. **`support@finnbilglass.no`** er satt som svaradresse overalt. Adressen må ha en faktisk postkasse eller videresending, ellers forsvinner kundesvar.
+4. **`support@finnbilglass.no`** er satt som svaradresse overalt, men mottak er **ikke bekreftet** (målt 2026-11-04, se under).
 5. **Databasesporet `brevo_melding_id`** blir stående: feltet ligger i en allerede kjørt struktur og brukes ikke av aktiv kode. Å fjerne det ville krevd en migrasjon uten funksjonell gevinst.
+
+---
+
+## 5. Postkasse-kontroll for `support@finnbilglass.no` (2026-11-04)
+
+| Måling | Resultat |
+|---|---|
+| Resend-utsending til `support@finnbilglass.no` | `last_event: delivered` etter 50 s |
+| **Kontroll:** samme utsending til en oppdiktet adresse (`finnesikke-9f3k2x@…`) | også `delivered` |
+| Autoritativ MX (`dig @haley/@zac.ns.cloudflare.com`) | `0 loke.domene.no` |
+| `mail.finnbilglass.no` | CNAME `loke.domene.no` → `185.126.36.19` (Domeneshop) |
+| Cloudflare Email Routing | ikke aktiv — MX peker ikke til `route1-3.mx.cloudflare.net`; API-tokenet mangler `Email Routing`-rettighet (auth error) |
+| SMTP RCPT-test mot `loke.domene.no:25` | ingen forbindelse fra denne maskinen (port 25 ut) |
+
+**Konklusjon:** leveringsstatus beviser ingenting her. Mottakende gateway (`loke.domene.no`) godtar
+**alle** adresser på domenet, så «delivered» gjelder også en adresse som ikke finnes. Om post til
+`support@` ender i en lesbar postkasse eller videresending kan bare bekreftes av en som ser
+postkassen, eller ved å gjøre ruten deterministisk.
+
+**Anbefalt løsning (Toms foretrukne mønster):** gjenopprett Cloudflare Email Routing for
+`finnbilglass.no` — MX til `route1-3.mx.cloudflare.net`, `PUT /email/routing/rules/catch_all` →
+`tomarnejensen@gmail.com`. Dette ble satt opp og ende-til-ende-verifisert 2026-08-17 (RCPT 250 +
+Resend `delivered`), men MX peker i dag til Domeneshop igjen. Krever `Zone → DNS → Edit` på
+API-tokenet (eller manuell innlegging av MX-postene).
+
+**Teknisk presisering:** personvernerklæringen sier at `support@` videresendes til
+`post@finnbilglass.no`. Den påstanden er ikke verifisert i denne kontrollen og bør stå til den er
+bekreftet eller erstattet av CF Email Routing.
