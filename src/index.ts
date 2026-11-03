@@ -275,23 +275,58 @@ async function sendInquiryAlert(env: Env, inquiryId: number | null): Promise<{ o
   }
 }
 
-/** Kvittering til kunden når en e-postadresse er oppgitt som kontaktadresse. */
-async function sendCustomerInquiryReceipt(env: Env, to: string, navn: string, inquiryId: number | null): Promise<{ ok: boolean; error?: string }> {
+/**
+ * Kvittering til kunden når en e-postadresse er oppgitt som kontaktadresse.
+ *
+ * Kort og konkret: hva vi har mottatt, hva som skjer nå, at det er uforpliktende,
+ * og hvem som monterer (vi leverer, kunden avtaler verksted). Aldri svartid,
+ * aldri prisløfte, aldri «ordrebekreftelse».
+ */
+async function sendCustomerInquiryReceipt(
+  env: Env,
+  to: string,
+  navn: string,
+  inquiryId: number | null,
+  regnr?: string | null,
+): Promise<{ ok: boolean; error?: string }> {
   if (!env.BREVO_API_KEY) return { ok: false, error: 'BREVO_API_KEY mangler' };
   const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
   const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
-  const saksnr = inquiryId != null ? `#${inquiryId}` : 'under registrering';
-  const greeting = navn ? `Hei ${navn},` : 'Hei,';
-  const text = `${greeting}\n\nVi har mottatt forespørselen din${inquiryId != null ? ` (saksnummer ${saksnr})` : ''}. Vi kontrollerer bil og glass manuelt før vi sender deg pris og informasjon om levering.\n\nDette er en mottakskvittering, ikke en ordrebekreftelse. Ingen bestilling er gjennomført.\n\nHilsen FinnBilGlass\n${from}`;
+
+  const saksnr = inquiryId != null ? `#${inquiryId}` : '';
+  // Fullt navn beholdes: en kvittering er kundens dokumentasjon på saken.
+  const hilsen = navn ? `Hei ${navn},` : 'Hei,';
+  const bil = regnr ? ` for kjøretøyet ${regnr}` : '';
+  const emne = saksnr
+    ? `Vi har mottatt forespørselen din (sak ${saksnr})`
+    : 'Vi har mottatt forespørselen din';
+  const innledning = `Takk for forespørselen. Vi har registrert den${saksnr ? ' som sak ' + saksnr : ''}${bil}.`;
+  const videre = 'Vi kontrollerer at glasset passer bilen, og finner pris og levering. Du får svaret på e-post.';
+  // Setningen er bevisst eksplisitt: ingen bestilling er opprettet.
+  const forbehold = 'Dette er en mottakskvittering, ikke en ordrebekreftelse — ingen bestilling er gjennomført. Du bestemmer først når du har fått tilbudet.';
+  const montering = 'Vi leverer glasset. Montering avtaler du selv med et verksted.';
+  const kontakt = 'support@finnbilglass.no · 40 40 82 41';
+
+  const text = [hilsen, '', innledning, '', videre, '', forbehold, '', montering, '', 'Hilsen', 'Finnbilglass', kontakt].join('\n');
+  const html = [
+    `<p>${escHtml(hilsen)}</p>`,
+    `<p>${escHtml(innledning)}</p>`,
+    `<p>${escHtml(videre)}</p>`,
+    `<p>${escHtml(forbehold)}</p>`,
+    `<p>${escHtml(montering)}</p>`,
+    '<p>Hilsen<br>Finnbilglass</p>',
+    `<p style="color:#637286;font-size:13px">${escHtml(kontakt)}</p>`,
+  ].join('');
+
   try {
     const r = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sender: { email: from, name: 'FinnBilGlass' },
+        sender: { email: from, name: 'Finnbilglass' },
         to: [{ email: to, name: navn || undefined }],
-        subject: `Vi har mottatt forespørselen din${inquiryId != null ? ` (${saksnr})` : ''}`,
-        htmlContent: `<p>${escHtml(greeting)}</p><p>Vi har mottatt forespørselen din${inquiryId != null ? ` (saksnummer <b>${saksnr}</b>)` : ''}. Vi kontrollerer bil og glass manuelt før vi sender deg pris og informasjon om levering.</p><p>Dette er en mottakskvittering, ikke en ordrebekreftelse. Ingen bestilling er gjennomført.</p><p>Hilsen<br>FinnBilGlass</p><p style="color:#637286;font-size:12px">Svar på denne e-posten hvis du har spørsmål.</p>`,
+        subject: emne,
+        htmlContent: html,
         textContent: text,
       }),
     });
@@ -1074,7 +1109,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           // Kvittering sendes bare til en valid e-postadresse, aldri til telefon.
           // Den er best-effort slik at e-postfeil ikke mister en lagret forespørsel.
           if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt)) {
-            const kvittering = sendCustomerInquiryReceipt(env, kontakt, navn, id).then((r) => {
+            const kvittering = sendCustomerInquiryReceipt(env, kontakt, navn, id, regnr).then((r) => {
               if (r.ok) console.log('inquiry-kvittering sendt for sak', id);
               else console.error('inquiry-kvittering feilet:', r.error);
             });
