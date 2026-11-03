@@ -719,29 +719,43 @@
 
 
   function glassSideLabel(value) { return value === 'left' ? 'Venstre' : value === 'right' ? 'Høyre' : 'Vet ikke hvilken side'; }
+  function kroppSuffix(selection) {
+    var navn = { sedan:'Sedan', estate:'Stasjonsvogn', hatchback:'5-dørs', coupe:'Coupé', cabriolet:'Cabriolet', van:'Varebil', suv:'SUV' };
+    if (!selection || !selection.body) return '';
+    return ' · ' + (navn[selection.body] || 'Vet ikke karosseri');
+  }
   function glassSelectionLabel(selection) {
     if (!selection) return '';
     if (selection.kind === 'windshield') return 'Frontrute';
-    if (selection.kind === 'door') return 'Dørrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',sliding:'Skyvedør',unknown:'Vet ikke hvilken dør'}[selection.door]);
-    if (selection.kind === 'side') return 'Siderute · ' + glassSideLabel(selection.side) + ' · ' + ({front_quarter:'Fremre trekantrute',rear_quarter:'Bakre trekantrute',cargo:'Lasterom',unknown:'Vet ikke plassering'}[selection.section]) + ' · ' + ({body:'Karosseri',door:'Dør',unknown:'Vet ikke'}[selection.mounting]);
-    if (selection.kind === 'rear') return 'Bakrute · ' + (selection.layout === 'single' ? 'Hel rute' : selection.layout === 'split' ? 'Delt rute · ' + glassSideLabel(selection.splitSide) : 'Vet ikke om ruten er delt');
+    if (selection.kind === 'door') return 'Dørrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',sliding:'Skyvedør',unknown:'Vet ikke hvilken dør'}[selection.door]) + kroppSuffix(selection);
+    if (selection.kind === 'side') return 'Siderute · ' + glassSideLabel(selection.side) + ' · ' + ({front_quarter:'Fremre trekantrute',rear_quarter:'Bakre trekantrute',cargo:'Lasterom',unknown:'Vet ikke plassering'}[selection.section]) + ' · ' + ({body:'Karosseri',door:'Dør',unknown:'Vet ikke'}[selection.mounting]) + kroppSuffix(selection);
+    if (selection.kind === 'rear') return 'Bakrute · ' + (selection.layout === 'single' ? 'Hel rute' : selection.layout === 'split' ? 'Delt rute · ' + glassSideLabel(selection.splitSide) : 'Vet ikke om ruten er delt') + kroppSuffix(selection);
     if (selection.kind === 'ventil') return 'Ventilrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',unknown:'Vet ikke plassering'}[selection.placement]);
     if (selection.kind === 'roof') return 'Panoramatak / takglass · ' + ({fixed:'Fast',opening:'Åpningsbart',unknown:'Vet ikke'}[selection.system]) + ' · ' + ({whole:'Hele ruten',front:'Fremre panel',middle:'Midtre panel',rear:'Bakre panel',unknown:'Vet ikke panel'}[selection.panel]);
     return 'Ukjent glasstype';
   }
 
+  // Karosseri spørres bare der det påvirker glasset (dør/side/bak/ventil).
+  // «Vet ikke» er alltid et likeverdig svar — da filtrerer vi ikke.
+  var KROPP_FELT = ['body','Hvilken karosseritype er bilen?',[
+    ['sedan','Sedan'],['estate','Stasjonsvogn'],['hatchback','5-dørs / hatchback'],
+    ['coupe','Coupé'],['cabriolet','Cabriolet'],['van','Varebil / minibuss'],['suv','SUV / crossover'],
+    ['unknown','Vet ikke']]];
+
   var GLASS_FIELDS = {
-    ventil: [['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],['placement','Hvor sitter ventilruten?',[['front','Foran'],['rear','Bak'],['unknown','Vet ikke']]]],
+    ventil: [KROPP_FELT,['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],['placement','Hvor sitter ventilruten?',[['front','Foran'],['rear','Bak'],['unknown','Vet ikke']]]],
     door: [
+      KROPP_FELT,
       ['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],
       ['door','Hvilken dør?',[['front','Foran'],['rear','Bak'],['sliding','Skyvedør'],['unknown','Vet ikke']]]
     ],
     side: [
+      KROPP_FELT,
       ['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],
       ['section','Hvor sitter sideruten?',[['front_quarter','Fremre trekantrute'],['rear_quarter','Bakre trekantrute'],['cargo','Lasterom'],['unknown','Vet ikke']]],
       ['mounting','Hvor er ruten festet?',[['body','Karosseri'],['door','Dør'],['unknown','Vet ikke']]]
     ],
-    rear: [['layout','Er bakruten hel eller delt?',[['single','Hel'],['split','Delt'],['unknown','Vet ikke']]]],
+    rear: [KROPP_FELT, ['layout','Er bakruten hel eller delt?',[['single','Hel'],['split','Delt'],['unknown','Vet ikke']]]],
     roof: [
       ['system','Er takglasset fast eller åpningsbart?',[['fixed','Fast'],['opening','Åpningsbart'],['unknown','Vet ikke']]],
       ['panel','Hvilket panel gjelder det?',[['whole','Hele ruten'],['front','Fremre panel'],['middle','Midtre panel'],['rear','Bakre panel'],['unknown','Vet ikke']]]
@@ -797,14 +811,14 @@
     var fields = $('glass-placement-fields');
     var value = function (key) { var el = fields.querySelector('[name="' + key + '"]'); return el ? el.value : ''; };
     var selection;
-    if (kind === 'door') selection = { kind: kind, side: value('side'), door: value('door') };
-    if (kind === 'side') selection = { kind: kind, side: value('side'), section: value('section'), mounting: value('mounting') };
+    if (kind === 'door') selection = { kind: kind, side: value('side'), door: value('door'), body: value('body') };
+    if (kind === 'side') selection = { kind: kind, side: value('side'), section: value('section'), mounting: value('mounting'), body: value('body') };
     if (kind === 'rear') {
       var layout = value('layout');
-      selection = { kind: kind, layout: layout };
+      selection = { kind: kind, layout: layout, body: value('body') };
       if (layout === 'split') selection.splitSide = value('splitSide');
     }
-    if (kind === 'ventil') selection = {kind:kind,side:value('side'),placement:value('placement')};
+    if (kind === 'ventil') selection = {kind:kind,side:value('side'),placement:value('placement'),body:value('body')};
     if (kind === 'roof') selection = { kind: kind, system: value('system'), panel: value('panel') };
     var missing = Object.keys(selection || {}).filter(function (key) { return key !== 'kind' && !selection[key]; });
     if (missing.length) {
@@ -915,11 +929,63 @@
     if (!data || typeof data !== 'object') {
       data = { ok: false, advarsel: 'MANUAL_REVIEW — noe gikk galt med søket.', kandidater: [] };
     }
-    $('screen-resultat').querySelector('h2').textContent = 'Vi kontrollerer ruten manuelt';
-    $('resultat-status').textContent = 'Vi må kontrollere riktig glass før vi kan gi deg pris og levering.';
-    $('resultat-status').className = 'note status manual';
+    var kandidater = Array.isArray(data.kandidater) ? data.kandidater : [];
+    var h2 = $('screen-resultat').querySelector('h2');
+    var status = $('resultat-status');
+
     $('resultat-kort').textContent = '';
     $('resultat-alt').textContent = '';
+
+    if (kandidater.length) {
+      // Kandidater vises bare når serveren faktisk har dem (ALL_GLASS_KANDIDATER_ENABLED).
+      // Katalogen bekrefter ikke fysisk kompatibilitet: hvert kort merkes «må kontrolleres»,
+      // og eurokode/leverandørdata vises aldri (public-contract.ts).
+      h2.textContent = 'Mulige glass til bilen';
+      status.textContent = data.message || 'Vi har funnet mulige glass. Riktig variant avhenger av bilens utstyr.';
+      status.className = 'note status verify';
+      var esc = function (v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+      };
+      var liste = document.createElement('div');
+      liste.className = 'detlinjer';
+      for (var i = 0; i < Math.min(kandidater.length, 3); i++) {
+        var k = kandidater[i];
+        var rad = document.createElement('div');
+        rad.setAttribute('data-varenr', k.varenr || '');
+        var navn = document.createElement('b');
+        navn.textContent = k.varenr || '—';
+        rad.appendChild(navn);
+        rad.appendChild(document.createTextNode(' ' + (k.varenavn || 'Glass') + (k.posisjon ? ' · ' + k.posisjon : '')));
+        // Kjente forskjeller skal vises. Er de ikke dokumentert, sier vi det —
+        // et kort som skjuler at det finnes flere varianter gir falsk trygghet.
+        var eg = document.createElement('div');
+        eg.className = 'note kandidat-egenskaper';
+        eg.textContent = (k.egenskaper && k.egenskaper.length)
+          ? k.egenskaper.join(' · ')
+          : 'Egenskaper er ikke dokumentert i katalogen';
+        rad.appendChild(eg);
+        if (k.varianter > 1) {
+          var v = document.createElement('div');
+          v.className = 'note kandidat-varianter';
+          v.textContent = k.varianter + ' varianter med samme dokumenterte egenskaper — vi avklarer hvilken som er riktig.';
+          rad.appendChild(v);
+        }
+        liste.appendChild(rad);
+      }
+      $('resultat-kort').appendChild(liste);
+      var merknad = document.createElement('p');
+      merknad.className = 'note';
+      merknad.textContent = 'Krever kontroll før bestilling — katalogen bekrefter ikke at glasset passer bilen.';
+      $('resultat-kort').appendChild(merknad);
+    } else {
+      h2.textContent = 'Vi kontrollerer ruten manuelt';
+      status.textContent = data.message || 'Vi må kontrollere riktig glass før vi kan gi deg pris og levering.';
+      status.className = 'note status manual';
+    }
+    status.classList.remove('hidden');
+
     $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
     $('inquiry-glass-summary').classList.remove('hidden');
     $('inquiry-regnr').value = state.regnr || '';

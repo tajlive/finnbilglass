@@ -11,6 +11,12 @@ export interface Env {
   /** STAGING: konversasjonell assistent (fitment-v1/conversation-v1). Prod default: AV. */
   ASSISTANT_ENABLED?: string;
   MULTI_GLASS_ENABLED?: string;
+  /**
+   * ALL_GLASS-kandidater i /api/glass/kandidater (dør/side/ventil/bak/tak).
+   * Default AV: quote-piloten svarer MANUAL_REVIEW uten katalogtreff.
+   * Kun eksplisitt "true" slår på — aldri implisitt, aldri i produksjon uten eier-OK.
+   */
+  ALL_GLASS_KANDIDATER_ENABLED?: string;
   /** Feature-flags for evidence-flyten (default false i production inntil staging-verifisert). */
   EVIDENCE_UPLOAD_ENABLED?: string;
   EVIDENCE_REVIEW_ENABLED?: string;
