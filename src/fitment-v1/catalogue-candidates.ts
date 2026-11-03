@@ -358,6 +358,38 @@ export interface ClassDOenske {
    * beviselig motsatt side, og rader med ukjent side beholdes.
    */
   produktSide?: 'venstre' | 'hoyre' | null;
+  /** Kundens karosseritype. Filtrerer bare når raden selv oppgir karosseri. */
+  kropp?: Kroppstype | null;
+}
+
+/** Kundens karosseritype, slik den spørres i kundeflyten. */
+export type Kroppstype = 'sedan' | 'estate' | 'hatchback' | 'coupe' | 'cabriolet' | 'van' | 'suv';
+
+/**
+ * Karosseriord i katalogen per kundetype.
+ *
+ * Katalogen skriver karosseriet som korte trekk mellom modell og årstall
+ * («GOLF 5D STV 13-», «PASSAT 4D SED+5D STV»). En rad kan oppgi flere
+ * karosserier fordi samme glass passer flere utgaver — da matcher den alle.
+ */
+const KROPP_ORD: Record<Kroppstype, readonly string[]> = {
+  sedan: ['SED', 'SEDAN'],
+  estate: ['STV', 'STVOGN', 'STASJON', 'STASJONSWAGON', 'STATION', 'WAGON', 'KOMBI', 'ESTATE', 'AVANT', 'TOURING', 'SPORTBACK'],
+  hatchback: ['HBK', 'HATCH', 'HATCHBACK'],
+  coupe: ['CPE', 'COUPE'],
+  cabriolet: ['CAB', 'CABR', 'CABRIOLET'],
+  van: ['VAN', 'MPV', 'MINIBUSS'],
+  suv: ['SUV', 'CROSSOVER'],
+};
+
+/** Hvilke karosserier raden selv oppgir (tomt = ukjent). */
+export function kropperIRad(varenavn: string): Set<Kroppstype> {
+  const ord = new Set(String(varenavn).toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter(Boolean));
+  const ut = new Set<Kroppstype>();
+  for (const [kropp, tokens] of Object.entries(KROPP_ORD) as [Kroppstype, readonly string[]][]) {
+    if (tokens.some((t) => ord.has(t))) ut.add(kropp);
+  }
+  return ut;
 }
 
 /**
@@ -568,6 +600,20 @@ export function matchClassDCandidates(
   if (side) {
     const riktigSide = hits.filter((c) => c.posisjon.side === null || c.posisjon.side === 'begge' || c.posisjon.side === side);
     if (riktigSide.length) hits = riktigSide;
+  }
+
+  // ── Karosseri ───────────────────────────────────────────────────────────
+  // Kunden har svart sedan/stasjonsvogn/coupé/cabriolet. Katalograder som
+  // uttrykkelig oppgir et annet karosseri kan ikke være riktig glass. Rader
+  // uten karosseri er ukjente og beholdes; filtreringen tømmer aldri listen.
+  if (onske?.kropp) {
+    const onsket = onske.kropp;
+    const riktigKropp = hits.filter((c) => {
+      const radens = kropperIRad(c.varenavn);
+      if (!radens.size) return true;            // katalogen sier ikke hva det er
+      return radens.has(onsket);
+    });
+    if (riktigKropp.length) hits = riktigKropp;
   }
 
   // ── Relevans og duplikater ──────────────────────────────────────────────

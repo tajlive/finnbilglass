@@ -1,5 +1,6 @@
 import { normalizeGlassSelection, type GlassSelection } from './glass-selection-contract';
 import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
+import { dekodeEurokode } from './eurokode-dekoder';
 /** Finnbilglass Worker — frontrute-matcher API + statisk frontend.
  *  POST /api/frontrute  {merke, modell, aar, profil} → glass
  *  GET  /health
@@ -401,6 +402,36 @@ const GLASSKLASSE_ALIAS: Record<string, string> = {
   side: 'side', ventil: 'ventil',
 };
 
+/**
+ * Kundevendte egenskaper fra eurokoden. Koden er leverandørdata og vises aldri;
+ * det er bare de dekodede egenskapene kunden ser, som forklarer hvorfor to
+ * varianter er ulike.
+ */
+const EGENSKAP_NORSK: Record<string, string> = {
+  coated: 'sol-/varmedempende belegg',
+  solar: 'solbeskyttende',
+  antenne: 'antenne i glasset',
+  elektrisk: 'elektrisk oppvarming',
+  sensor: 'regnsensor',
+  oppvarmet: 'varmetråder',
+};
+const FARGE_NORSK: Record<string, string> = {
+  'gronn-gul (GY)': 'grønngul tone',
+  'gronn (GN)': 'grønn tone',
+  'gronn-gronn (GG)': 'mørk grønn tone',
+  'bla (BL)': 'blå tone',
+  'bronse (BZ)': 'bronse tone',
+  'klar (CL)': 'klar tone',
+};
+
+function egenskaperFor(c: CatalogueCandidate): string[] {
+  const dek = dekodeEurokode(c.eurokode);
+  const ut: string[] = [];
+  if (dek.fargetone) ut.push(FARGE_NORSK[dek.fargetone] ?? dek.fargetone);
+  for (const e of dek.egenskaper) ut.push(EGENSKAP_NORSK[e] ?? e);
+  return [...new Set(ut)];
+}
+
 /** Kundevalg (selection.kind) → glassklasse for kandidatgeneratoren. */
 const KIND_TIL_GLASSEKLASSE: Record<string, string | null> = {
   windshield: 'frontrute',
@@ -468,8 +499,12 @@ async function handleAllGlassKandidater(b: Record<string, unknown>, selection: G
   // bare til å fjerne beviselig motsatt side, aldri til å påstå riktig side.
   const produktSide = selection?.side === 'left' ? 'venstre'
     : selection?.side === 'right' ? 'hoyre' : null;
+  // «unknown» betyr «vet ikke» → filtrer ikke på karosseri.
+  const kropp = selection?.body && selection.body !== 'unknown'
+    ? (selection.body as 'sedan' | 'estate' | 'hatchback' | 'coupe' | 'cabriolet' | 'van' | 'suv')
+    : null;
 
-  let kandidater: { varenr: string; varenavn: string; posisjon: string; attributter: string[] }[] = [];
+  let kandidater: { varenr: string; varenavn: string; posisjon: string; egenskaper: string[]; varianter: number }[] = [];
   let sokKilde = 'ingen';
   if (kjoretoy && kjoretoy.merke) {
     try {
@@ -489,25 +524,30 @@ async function handleAllGlassKandidater(b: Record<string, unknown>, selection: G
         dorLedd,
         ventilLedd,
         produktSide,
+        kropp,
       });
-      // Grupper like produktbeskrivelser. Katalogen har flere varenr med samme
-      // tekst (ulik innkjøpsvariant); for kunden er de samme glass. Uten
-      // gruppering fyller de tre plassene i kundeflaten med identiske kort.
-      // Én rad per beskrivelse + antall varianter er ærlig og lesbart.
-      const grupper = new Map<string, { c: CatalogueCandidate; antall: number }>();
+      // Grupper rader som er samme glass for kunden: samme beskrivelse, samme
+      // posisjon OG samme dokumenterte egenskaper. Katalogen har flere varenr med
+      // identisk tekst (ulik innkjøpsvariant); uten gruppering fyller de flere
+      // kort. Varianter som faktisk skiller seg (farge, utstyr) blir egne kort —
+      // da ser kunden forskjellen i stedet for å tro at alt er likt.
+      const grupper = new Map<string, { c: CatalogueCandidate; antall: number; egenskaper: string[] }>();
       for (const c of treff) {
-        // Normaliser mellomrom: «T5 03-  BAKRUTE» og «T5 03- BAKRUTE» er samme
-        // produkt i to katalogoppføringer, ellers fyller de to kort.
-        const nokkel = `${c.varenavn.replace(/\s+/g, ' ').trim().toUpperCase()}|${posisjonsTekst(c)}`;
+        const egenskaper = egenskaperFor(c);
+        const nokkel = [
+          c.varenavn.replace(/\s+/g, ' ').trim().toUpperCase(),
+          posisjonsTekst(c),
+          egenskaper.join('|'),
+        ].join('#');
         const finnes = grupper.get(nokkel);
         if (finnes) finnes.antall += 1;
-        else grupper.set(nokkel, { c, antall: 1 });
+        else grupper.set(nokkel, { c, antall: 1, egenskaper });
       }
-      kandidater = [...grupper.values()].slice(0, 25).map(({ c, antall }) => ({
+      kandidater = [...grupper.values()].slice(0, 25).map(({ c, antall, egenskaper }) => ({
         varenr: c.varenr,
         varenavn: c.varenavn,
         posisjon: posisjonsTekst(c),
-        attributter: c.features,
+        egenskaper,
         varianter: antall,
       }));
       sokKilde = kandidater.length ? 'CLASS_D_katalog' : 'ingen';

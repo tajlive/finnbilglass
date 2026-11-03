@@ -35,10 +35,11 @@ const noter = (niva, tekst) => funn.push({ niva, tekst });
 // selection-formatet er produksjonens (glass-selection-contract.ts): ventil bruker «placement».
 const TYPER = [
   { type: 'front', navn: 'Frontrute', felt: null, forventKandidater: 'frontrute' },
-  { type: 'door', navn: 'Dørrute', felt: { side: 'left', door: 'front' }, forventKandidater: true },
-  { type: 'side', navn: 'Siderute', felt: { side: 'right', section: 'rear_quarter', mounting: 'body' }, forventKandidater: true },
-  { type: 'ventil', navn: 'Ventilrute', felt: { side: 'left', placement: 'front' }, forventKandidater: null },
-  { type: 'rear', navn: 'Bakrute', felt: { layout: 'single' }, forventKandidater: true },
+  { type: 'door', navn: 'Dørrute', felt: { body: 'estate', side: 'left', door: 'front' }, forventKandidater: true },
+  { type: 'door', navn: 'Dørrute (ukjent karosseri)', felt: { body: 'unknown', side: 'left', door: 'front' }, forventKandidater: true },
+  { type: 'side', navn: 'Siderute', felt: { body: 'estate', side: 'right', section: 'rear_quarter', mounting: 'body' }, forventKandidater: true },
+  { type: 'ventil', navn: 'Ventilrute', felt: { body: 'estate', side: 'left', placement: 'front' }, forventKandidater: null },
+  { type: 'rear', navn: 'Bakrute', felt: { body: 'estate', layout: 'single' }, forventKandidater: true },
   { type: 'roof', navn: 'Takglass', felt: { system: 'fixed', panel: 'whole' }, forventKandidater: null },
   { type: 'unknown', navn: 'Vet ikke', felt: null, forventKandidater: true },
 ];
@@ -93,7 +94,7 @@ async function reis(context, bil, regnr, t, viewport, oker) {
     rad.h2 = (await page.textContent('#screen-resultat h2') || '').trim();
     rad.tekst = (await page.textContent('#resultat-status') || '').trim();
     rad.kandidater = await page.locator('#resultat-kort .detlinjer div[data-varenr]').count();
-    rad.skjermbilde = `${UT}/${viewport.navn}-${bil}-${t.type}.png`;
+    rad.skjermbilde = `${UT}/${viewport.navn}-${bil}-${t.type}${t.navn.includes('ukjent') ? '-ukjent' : ''}.png`;
     await page.screenshot({ path: rad.skjermbilde, fullPage: true });
 
     // ── Innholdskontroller (ikke bare HTTP 200) ──────────────────────────────

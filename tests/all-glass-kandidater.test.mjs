@@ -30,6 +30,7 @@ import {
 } from '../src/fitment-v1/catalogue-candidates.ts';
 import { buildDefaultGenerationRegistry } from '../src/fitment-v1/generation-registry.ts';
 import worker from '../src/index.ts';
+import { normalizeGlassSelection } from '../src/glass-selection-contract.ts';
 
 const KATALOG = [
   // CLA-frontrute UTEN ordet «front» i navnet (ekte kataloggrader ser slik ut)
@@ -223,7 +224,7 @@ test('kandidatmodus: offentlig svar er hviteliste — ingen eurokode, pris eller
   const FORBUDT = ['eurokode', 'klassifisering', 'matchReason', 'source', 'pris', 'listepris', 'innkjøpspris', 'ubeKreftetPris', 'vin', 'merke', 'familie', 'generasjon'];
   for (const k of data.kandidater) {
     for (const felt of FORBUDT) assert.equal(felt in k, false, `${felt} lekker i offentlig kandidat`);
-    assert.deepEqual(Object.keys(k).sort(), ['attributter', 'posisjon', 'varenavn', 'varenr', 'varianter']);
+    assert.deepEqual(Object.keys(k).sort(), ['egenskaper', 'posisjon', 'varenavn', 'varenr', 'varianter']);
     assert.equal(typeof k.posisjon, 'string');
   }
   assert.equal(JSON.stringify(data).includes('EXACT'), false);
@@ -343,4 +344,34 @@ test('F15: egen navnemodell (Sportsvan/Connect/Shooting Brake) foreslås ikke fo
   const sportsvan = varenr(matchClassDCandidates(indeks, 'VW', 'GOLF SPORTVAN', 2016, { glassklasse: 'door' }));
   assert.ok(sportsvan.includes('S1'));
   assert.equal(sportsvan.includes('G1'), false, 'Golf-ruten skal ikke foreslås for Sportsvan');
+});
+
+test('F16: karosseri filtrerer bare når katalogen oppgir et annet karosseri', () => {
+  const indeks = buildClassDCandidates([
+    { varenr: 'SED1', varenavn: 'VW PASSAT 4D SED 15-  DØRRUTE', eurokode: '5501LGSV2FD' },
+    { varenr: 'STV1', varenavn: 'VW PASSAT 5D STV 15-  DØRRUTE', eurokode: '5502LGSV2FD' },
+    { varenr: 'UKJ1', varenavn: 'VW PASSAT 15-  DØRRUTE', eurokode: '5503LGSV2FD' },
+  ]);
+  const sedan = varenr(matchClassDCandidates(indeks, 'VW', 'PASSAT', 2016, { glassklasse: 'door', kropp: 'sedan' }));
+  assert.deepEqual(sedan.sort(), ['SED1', 'UKJ1'], 'stasjonsvogn-ruten skal ut, ukjent karosseri skal bli');
+  const stv = varenr(matchClassDCandidates(indeks, 'VW', 'PASSAT', 2016, { glassklasse: 'door', kropp: 'estate' }));
+  assert.deepEqual(stv.sort(), ['STV1', 'UKJ1']);
+  // «Vet ikke» = ingen filtrering
+  assert.equal(matchClassDCandidates(indeks, 'VW', 'PASSAT', 2016, { glassklasse: 'door', kropp: null }).length, 3);
+});
+
+test('F17: karosseri som ikke finnes i katalogen tømmer ikke listen', () => {
+  const indeks = buildClassDCandidates([
+    { varenr: 'SED1', varenavn: 'VW PASSAT 4D SED 15-  DØRRUTE', eurokode: '5601LGSV2FD' },
+  ]);
+  assert.equal(matchClassDCandidates(indeks, 'VW', 'PASSAT', 2016, { glassklasse: 'door', kropp: 'cabriolet' }).length, 1);
+});
+
+test('F18: kundens karosserivalg følger med til operatørens sak', async () => {
+  // Samme kontrakt som /api/inquiry bruker: selection lagres ordrett i saken.
+  const req = { schemaVersion: 1, selection: { kind: 'door', side: 'left', door: 'front', body: 'estate' }, answers: {} };
+  const normalisert = normalizeGlassSelection(req.selection);
+  assert.deepEqual(normalisert, req.selection, 'body skal overleve validering');
+  assert.equal(normalizeGlassSelection({ kind: 'door', side: 'left', door: 'front' })?.body, undefined, 'body er valgfritt');
+  assert.equal(normalizeGlassSelection({ kind: 'door', side: 'left', door: 'front', body: 'romskip' }), null, 'ugyldig karosseri avvises');
 });
