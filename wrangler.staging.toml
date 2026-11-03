@@ -20,6 +20,14 @@ binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-staging-catalog"
 database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
 
+# Henvendelser, auth og rate-limit ligger i egen staging-D1 (getInquiryDb).
+# Uten denne bindingen kaster staging STAGING_MISSING_D1_BINDING → 500 på
+# /api/inquiry, og hele tilbudsflyten kan ikke testes i staging.
+[[d1_databases]]
+binding = "FINNBILGLASS_STAGING_AUTH"
+database_name = "finnbilglass-staging-auth"
+database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
+
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
 bucket_name = "finnbilglass-opplaering-staging"
@@ -33,6 +41,9 @@ EVIDENCE_STATUS_CHANGE_ENABLED = "false"
 # ALL_GLASS-kandidater (dør/side/ventil/bak/tak): PÅ i staging for E2E.
 # Produksjon har ingen slik linje → quote-pilot (MANUAL_REVIEW).
 ALL_GLASS_KANDIDATER_ENABLED = "true"
+# Tilbudsmottak må være åpent i staging for å kunne teste hele kundereisen
+# (samme flagg som prod bruker; prod styres av sin egen [vars]).
+inquiries_enabled = "true"
 
 # ── Observability: Workers Logs-lagring AV, invocation_logs PÅ (konsistens med prod) ──
 [observability.logs]
