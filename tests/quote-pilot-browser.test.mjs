@@ -22,7 +22,14 @@ test('Chrome: six glass selections reach real local inquiry handler',async()=>{
   await page.goto(`http://127.0.0.1:${server.address().port}`);
   await page.locator('#input-regnr').fill('AB12345');await page.locator('#form-regnr button').click();
   await page.locator(`.glassopt[data-type="${kind}"]`).click();
-  if(kind!=='front'){for(const field of await page.locator('#glass-placement-fields select').all()){if(await field.isVisible())await field.selectOption('unknown');}await page.locator('#btn-glass-search').click();}
+  // Ny flyt: plasseringsvalgene er trykknapper bygget fra bilens data. Uten
+  // katalogdata (denne testen kjører uten ALL_GLASS_KANDIDATER_ENABLED) går
+  // valget rett til resultatet, men loopen dekker også datastyrte steg.
+  for(let steg=0;steg<4;steg++){
+    const knapper=page.locator('#glass-placement:not(.hidden) .valg-knapp');
+    if(!(await knapper.count()))break;
+    await knapper.first().click();await page.locator('#screen-resultat:not(.hidden)').waitFor({timeout:5000}).catch(()=>{});
+  }
   await page.locator('#btn-inquiry').waitFor({state:'visible'});await page.locator('#btn-inquiry').click();
   await page.locator('#inquiry-navn').fill('Synthetic Test');await page.locator('#inquiry-kontakt').fill('12345678');await page.locator('#btn-inquiry-send').click();
   await page.locator('#inquiry-bekreftet').waitFor({state:'visible'});

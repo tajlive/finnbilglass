@@ -33,20 +33,34 @@ const resultater = [];
 const noter = (niva, tekst) => funn.push({ niva, tekst });
 
 // selection-formatet er produksjonens (glass-selection-contract.ts): ventil bruker «placement».
+// Plasseringsvalgene bygges fra bilens data. `onske` er hvilke svar E2E-en
+// foretrekker når steget faktisk tilbys; ellers velges første alternativ.
 const TYPER = [
-  { type: 'front', navn: 'Frontrute', felt: null, forventKandidater: 'frontrute' },
-  { type: 'door', navn: 'Dørrute', felt: { body: 'estate', side: 'left', door: 'front' }, forventKandidater: true },
-  { type: 'door', navn: 'Dørrute (ukjent karosseri)', felt: { body: 'unknown', side: 'left', door: 'front' }, forventKandidater: true },
-  { type: 'side', navn: 'Siderute', felt: { body: 'estate', side: 'right', section: 'rear_quarter', mounting: 'body' }, forventKandidater: true },
-  { type: 'ventil', navn: 'Ventilrute', felt: { body: 'estate', side: 'left', placement: 'front' }, forventKandidater: null },
-  { type: 'rear', navn: 'Bakrute', felt: { body: 'estate', layout: 'single' }, forventKandidater: true },
-  { type: 'roof', navn: 'Takglass', felt: { system: 'fixed', panel: 'whole' }, forventKandidater: null },
-  { type: 'unknown', navn: 'Vet ikke', felt: null, forventKandidater: true },
+  { type: 'front', navn: 'Frontrute', onske: [], forventKandidater: 'frontrute' },
+  { type: 'door', navn: 'Dørrute', onske: ['front', 'left', 'estate'], forventKandidater: true },
+  { type: 'side', navn: 'Siderute', onske: ['right', 'estate'], forventKandidater: true },
+  { type: 'ventil', navn: 'Ventilrute', onske: ['front', 'left', 'estate'], forventKandidater: null },
+  { type: 'rear', navn: 'Bakrute', onske: ['estate'], forventKandidater: true },
+  { type: 'roof', navn: 'Takglass', onske: [], forventKandidater: null },
+  { type: 'unknown', navn: 'Trenger hjelp', onske: [], forventKandidater: true },
 ];
 
 async function apneStartside(page) {
   await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForSelector('#input-regnr', { timeout: 20000 });
+}
+
+// Går gjennom de datastyrte stegene. Hvert steg er én trykkflate per gyldig
+// alternativ — ingen rullegardin, ingen kombinasjon uten katalogstøtte.
+async function velgPlassering(page, onske) {
+  for (let i = 0; i < 4; i++) {
+    const steg = page.locator('#glass-placement:not(.hidden) .valg-knapp');
+    if (!(await steg.count())) return;
+    const verdier = await steg.evaluateAll((els) => els.map((e) => e.getAttribute('data-verdi')));
+    const valg = verdier.find((v) => onske.includes(v)) || verdier[0];
+    await page.click(`#glass-placement-fields .valg-knapp[data-verdi="${valg}"]`);
+    await page.waitForTimeout(150);
+  }
 }
 
 async function sokBil(page, regnr) {
@@ -76,13 +90,12 @@ async function reis(context, bil, regnr, t, viewport, oker) {
     rad.bilnavn = await sokBil(page, regnr);
 
     const svarVent = page.waitForResponse((r) => /\/api\/(glass\/kandidater|frontrute)/.test(r.url()), { timeout: 30000 }).catch(() => null);
-    await page.click(`.glassopt[data-type="${t.type}"]`, { force: true });
-    if (t.felt) {
-      await page.waitForSelector('#glass-placement:not(.hidden)', { timeout: 10000 });
-      for (const [navn, verdi] of Object.entries(t.felt)) {
-        await page.selectOption(`#glass-placement-fields select[name="${navn}"]`, verdi);
-      }
-      await page.click('#btn-glass-search');
+    if (t.type === 'unknown') {
+      // «Jeg finner ikke ruten min» er en egen inngang, ikke et katalogsøk.
+      await page.click('#btn-glass-hjelp');
+    } else {
+      await page.click(`.glassopt[data-type="${t.type}"]`, { force: true });
+      await velgPlassering(page, t.onske || []);
     }
     await page.waitForSelector('#screen-resultat:not(.hidden)', { timeout: 20000 });
     const svar = await svarVent;
@@ -93,7 +106,7 @@ async function reis(context, bil, regnr, t, viewport, oker) {
 
     rad.h2 = (await page.textContent('#screen-resultat h2') || '').trim();
     rad.tekst = (await page.textContent('#resultat-status') || '').trim();
-    rad.kandidater = await page.locator('#resultat-kort .detlinjer div[data-varenr]').count();
+    rad.kandidater = await page.locator('#resultat-kort .kandidat-kort[data-varenr]').count();
     rad.skjermbilde = `${UT}/${viewport.navn}-${bil}-${t.type}${t.navn.includes('ukjent') ? '-ukjent' : ''}.png`;
     await page.screenshot({ path: rad.skjermbilde, fullPage: true });
 

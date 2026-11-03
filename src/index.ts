@@ -1,6 +1,7 @@
 import { normalizeGlassSelection, type GlassSelection } from './glass-selection-contract';
 import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
 import { dekodeEurokode } from './eurokode-dekoder';
+import { byggValgTre, FELT_SPORSMAL, GRUNNTYPER } from './glass-valg';
 /** Finnbilglass Worker — frontrute-matcher API + statisk frontend.
  *  POST /api/frontrute  {merke, modell, aar, profil} → glass
  *  GET  /health
@@ -443,6 +444,149 @@ const KIND_TIL_GLASSEKLASSE: Record<string, string | null> = {
   unknown: null,
 };
 
+interface Kjoretoy {
+  merke: string;
+  modell: string | null;
+  aar: number | null;
+}
+
+interface Kjoretoygrunnlag {
+  bil: Awaited<ReturnType<typeof svvLookup>> | null;
+  kjoretoy: Kjoretoy | null;
+  bilKilde: 'SVV' | 'klientopplysning' | null;
+}
+
+/**
+ * Én kilde for «hvilken bil er dette»: SVV når vi har kjennemerke, ellers
+ * klientens egne opplysninger. Begge kandidatrutene (kandidater og valgtre)
+ * må bruke samme grunnlag, ellers kan de svare om ulike biler.
+ */
+async function losKjoretoy(
+  env: Env,
+  regnr: string,
+  merkeInn: string,
+  modellInn: string,
+  aar: number | null,
+): Promise<Kjoretoygrunnlag> {
+  let bil: Awaited<ReturnType<typeof svvLookup>> | null = null;
+  if (regnr) {
+    try {
+      bil = await svvLookup(regnr.toUpperCase().replace(/[\s\-–—.]+/g, ''), env.SVV_API_KEY);
+    } catch (e) {
+      console.error('SVV-feil:', e);
+    }
+  }
+  let kjoretoy: Kjoretoy | null = null;
+  if (bil && bil.merke) {
+    kjoretoy = { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null };
+  } else if (merkeInn) {
+    kjoretoy = { merke: normMerke(merkeInn), modell: modellInn || null, aar };
+  }
+  return { bil, kjoretoy, bilKilde: bil ? 'SVV' : kjoretoy ? 'klientopplysning' : null };
+}
+
+/**
+ * Alle CLASS_D-kandidater for bilen — uten resultatbegrensning.
+ *
+ * Valgtreet må bygges fra HELE settet: kapper vi til tre produkter først, ser
+ * kunden bare de plasseringene som tilfeldigvis havnet øverst.
+ */
+async function hentAlleKandidater(
+  env: Env,
+  kjoretoy: Kjoretoy,
+  onske?: Parameters<typeof matchClassDCandidates>[4],
+): Promise<CatalogueCandidate[]> {
+  // Jokertegn fjernes: merkenavnet er ikke et søkemønster, og «%» ville
+  // scannet hele katalogen.
+  const sokMerke = normMerke(kjoretoy.merke).toUpperCase().trim()
+    .replace(/[%_]/g, '').replace(/\s+/g, '%').slice(0, 40);
+  const prisliste = await env.FINNBILGLASS_DB
+    .prepare('SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste WHERE varenavn LIKE $1 || \'%\' LIMIT 5000')
+    .bind(sokMerke)
+    .all<{ varenr: string; varenavn: string | null; eurokode: string | null; kommentar: string | null }>();
+  const index = buildClassDCandidates((prisliste.results || []).map((r) => ({
+    varenr: r.varenr, varenavn: r.varenavn, eurokode: r.eurokode ?? null, kommentar: r.kommentar ?? null,
+  })));
+  return matchClassDCandidates(index, kjoretoy.merke, kjoretoy.modell ?? '', kjoretoy.aar ?? null, onske);
+}
+
+/**
+ * POST /api/glass/valg — hvilke ruter og plasseringer bilen faktisk har
+ * dokumentert i katalogen.
+ *
+ * Svarer med et valgtre, ikke en produktliste. Kunden velger seg nedover treet,
+ * og frontend kan bare tilby kombinasjoner som finnes. Ingenting her er EXACT:
+ * treet sier hva som er dokumentert tilgjengelig, ikke hva som passer bilen.
+ */
+async function handleGlassValgtre(b: Record<string, unknown>, env: Env): Promise<Response> {
+  const regnr = typeof b.regnr === 'string' ? b.regnr.trim() : '';
+  const merkeInn = typeof b.merke === 'string' ? b.merke.trim() : '';
+  const modellInn = typeof b.modell === 'string' ? b.modell.trim() : '';
+  const aarRaa = b.aar;
+  const aar = typeof aarRaa === 'number' && Number.isFinite(aarRaa) ? Math.trunc(aarRaa)
+    : typeof aarRaa === 'string' && /^\d{4}$/.test(aarRaa.trim()) ? parseInt(aarRaa.trim(), 10) : null;
+
+  const { bil, kjoretoy, bilKilde } = await losKjoretoy(env, regnr, merkeInn, modellInn, aar);
+  const bilSvar = bil ? { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null } : null;
+
+  // Pilotstopp: uten kandidatmodus skal kunden ikke få kataloginnsikt, bare
+  // samme manuelle vei som /api/glass/kandidater gir.
+  if (env.ALL_GLASS_KANDIDATER_ENABLED !== 'true') {
+    return json({
+      ok: true,
+      modus: 'MANUAL_QUOTE',
+      bil: bilSvar,
+      bilKilde,
+      dekning: 'INGEN',
+      rattplassering: 'UKJENT',
+      sidehjelp: '',
+      // Uten kandidatmodus finnes ingen kataloginnsikt å bygge treet fra. Da
+      // viser vi de samme rutetypene som før og lar hver forespørsel gå til
+      // manuell kontroll — vi fjerner ikke valg kunden hadde i dag.
+      typer: GRUNNTYPER.map((t) => ({ ...t, antall: 0, automatisk: {}, barn: [] })),
+      antallKandidater: 0,
+      ukjentPlassering: 0,
+      melding: 'Vi kontrollerer hvilken rute bilen bruker før vi kan bekrefte riktig glass. Velg ruten det gjelder, så undersøker vi videre.',
+    });
+  }
+
+  if (!kjoretoy || !kjoretoy.merke) {
+    return json({
+      ok: true,
+      modus: 'ALL_GLASS_VALG',
+      bil: bilSvar,
+      bilKilde,
+      dekning: 'INGEN',
+      rattplassering: 'UKJENT',
+      sidehjelp: '',
+      typer: [],
+      antallKandidater: 0,
+      ukjentPlassering: 0,
+      melding: 'Vi fant ikke bilen i registeret. Send oss en forespørsel med det du vet om bilen, så hjelper vi deg.',
+    });
+  }
+
+  let kandidater: CatalogueCandidate[] = [];
+  try {
+    kandidater = await hentAlleKandidater(env, kjoretoy);
+  } catch (e) {
+    console.error('Valgtre-feil:', e);
+    return json({ ok: false, error: 'Kunne ikke hente glassvalg akkurat nå.' }, 500);
+  }
+
+  const tre = byggValgTre({ kandidater });
+  return json({
+    ok: true,
+    modus: 'ALL_GLASS_VALG',
+    bil: bilSvar ?? { merke: kjoretoy.merke, modell: kjoretoy.modell, aar: kjoretoy.aar },
+    bilKilde,
+    ...tre,
+    // Katalogen bekrefter aldri fysisk kompatibilitet. Aldri EXACT.
+    fitmentAuthority: 'ingen — menneskelig bekreftelse kreves',
+    sporsmaal: FELT_SPORSMAL,
+  });
+}
+
 /**
  * ALL_GLASS-kandidater — katalogkandidater for alle glasstyper, bak
  * `ALL_GLASS_KANDIDATER_ENABLED`. Katalogen foreslår, mennesket bestemmer:
@@ -464,23 +608,9 @@ async function handleAllGlassKandidater(b: Record<string, unknown>, selection: G
   const aar = typeof aarRaa === 'number' && Number.isFinite(aarRaa) ? Math.trunc(aarRaa)
     : typeof aarRaa === 'string' && /^\d{4}$/.test(aarRaa.trim()) ? parseInt(aarRaa.trim(), 10) : null;
 
-  let bil = null;
-  if (regnr) {
-    try {
-      bil = await svvLookup(regnr.toUpperCase().replace(/[\s\-–—.]+/g, ''), env.SVV_API_KEY);
-    } catch (e) {
-      console.error('SVV-feil:', e);
-    }
-  }
-
   // Kjøretøygrunnlag: SVV er registerverifisert, klientopplysning er det ikke.
-  let kjoretoy: { merke: string; modell: string | null; aar: number | null } | null = null;
-  if (bil && bil.merke) {
-    kjoretoy = { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null };
-  } else if (merkeInn) {
-    kjoretoy = { merke: normMerke(merkeInn), modell: modellInn || null, aar };
-  }
-  const bilKilde = bil ? 'SVV' : kjoretoy ? 'klientopplysning' : null;
+  // Samme oppslag som valgtreet bruker, så de to rutene aldri svarer om ulike biler.
+  const { bil, kjoretoy, bilKilde } = await losKjoretoy(env, regnr, merkeInn, modellInn, aar);
 
   // selection er den rike formen. Flat glassklasse (eldre klient) skal ikke
   // ignoreres stille — den gir samme filter, bare uten side/dør/ventil.
@@ -508,18 +638,7 @@ async function handleAllGlassKandidater(b: Record<string, unknown>, selection: G
   let sokKilde = 'ingen';
   if (kjoretoy && kjoretoy.merke) {
     try {
-      // Merke-begrenset uthenting. Jokertegn fjernes: merkenavnet er ikke et
-      // søkemønster, og «%» ville scannet hele katalogen.
-      const sokMerke = normMerke(kjoretoy.merke).toUpperCase().trim()
-        .replace(/[%_]/g, '').replace(/\s+/g, '%').slice(0, 40);
-      const prisliste = await env.FINNBILGLASS_DB
-        .prepare('SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste WHERE varenavn LIKE $1 || \'%\' LIMIT 5000')
-        .bind(sokMerke)
-        .all<{ varenr: string; varenavn: string | null; eurokode: string | null; kommentar: string | null }>();
-      const index = buildClassDCandidates((prisliste.results || []).map((r) => ({
-        varenr: r.varenr, varenavn: r.varenavn, eurokode: r.eurokode ?? null, kommentar: r.kommentar ?? null,
-      })));
-      const treff = matchClassDCandidates(index, kjoretoy.merke, kjoretoy.modell ?? '', kjoretoy.aar ?? null, {
+      const treff = await hentAlleKandidater(env, kjoretoy, {
         glassklasse: klasse,
         dorLedd,
         ventilLedd,
@@ -1055,6 +1174,24 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         }
       }
       return json({ ok: true, bil, resolver: await anvendResolverPolicy(env, resolver) });
+    }
+
+    // Valgtre: hvilke ruter og plasseringer bilen har dokumentert i katalogen.
+    // Bygges fra HELE kandidatsettet (uten resultatbegrensning), slik at kunden
+    // bare får valg som faktisk finnes. Svarer aldri EXACT.
+    if (method === 'POST' && path === '/api/glass/valg') {
+      let body: unknown; try { body = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
+      const b = body && typeof body === 'object' && !Array.isArray(body) ? body as Record<string, unknown> : null;
+      if (!b) return json({ ok: false, error: 'Ugyldig forespørsel' }, 400);
+      if (![b.regnr, b.merke].some(v => typeof v === 'string' && v.trim())) return json({ ok: false, error: 'Regnr eller merke påkrevd' }, 400);
+      const aarRaa = b.aar;
+      const aarInn = typeof aarRaa === 'number' && Number.isFinite(aarRaa) ? Math.trunc(aarRaa)
+        : typeof aarRaa === 'string' && /^\d{4}$/.test(aarRaa.trim()) ? parseInt(aarRaa.trim(), 10) : null;
+      if (aarInn != null && (aarInn < 1940 || aarInn > new Date().getFullYear() + 1)) return json({ ok: false, error: 'Ugyldig årsmodell' }, 400);
+      if (typeof b.merke === 'string' && b.merke.trim() && !(typeof b.modell === 'string' && b.modell.trim())) {
+        return json({ ok: false, error: 'Modell påkrevd når merke oppgis uten regnr' }, 400);
+      }
+      return await handleGlassValgtre(b, env);
     }
 
     // Kandidatruten har to moduser:
