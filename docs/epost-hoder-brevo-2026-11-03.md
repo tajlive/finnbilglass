@@ -57,3 +57,31 @@ Emne: **Switch transactional emails to List-Help header instead of List-Unsubscr
 node scripts/epost-hoder-test.mjs            # staging
 # Forventet etter at Brevo har bekreftet endringen: List-Unsubscribe: finnes ikke · List-Help: FINNES
 ```
+
+## Løsning: Resend (2026-11-03)
+
+Brevo kan ikke fjerne headeren, så kvitteringen sendes nå via **Resend** — som ikke legger på
+`List-Unsubscribe` på transaksjonspost. Brevo er beholdt som fallback, slik at kunden alltid får
+kvittering selv om Resend avviser (f.eks. før domenet er verifisert).
+
+**DNS lagt inn i Cloudflare (additivt, rører ikke dagens SPF/MX):**
+
+| Type | Navn | Verdi |
+|---|---|---|
+| TXT | `resend._domainkey` | DKIM `p=MIGf…` (Resend) |
+| MX (prio 10) | `send` | `feedback-smtp.eu-west-1.amazonses.com` |
+| TXT | `send` | `v=spf1 include:amazonses.com ~all` |
+| CNAME | `rsend` | `send.forge.rmta.net` |
+
+**Status:** MX, `send`-SPF og `rsend` er verifisert av Resend. DKIM-posten ligger riktig i DNS
+(byte-identisk med Resends verdi), men Resend rapporterte `pending` ved første sjekk — verifisering
+poller til den slår over.
+
+**Transport i koden** (`sendCustomerInquiryReceipt`):
+
+1. `RESEND_API_KEY` finnes → `POST https://api.resend.com/emails` (Reply-To = `SUPPORT_NOTIFY_EMAIL`).
+2. Feiler Resend (f.eks. uverifisert domene) → fallback til Brevo med samme innhold og Reply-To.
+3. Begge feiler → feilen logges, men henvendelsen er allerede lagret (best-effort).
+
+**Gjenstår før produksjon:** sette `RESEND_API_KEY` på produksjons-Workeren og deploye (krever GO),
+samt rotere nøkkelen som er delt i chat.
