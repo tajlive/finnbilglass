@@ -42,7 +42,7 @@ const TYPER = [
   { type: 'ventil', navn: 'Ventilrute', onske: ['front', 'left', 'estate'], forventKandidater: null },
   { type: 'rear', navn: 'Bakrute', onske: ['estate'], forventKandidater: true },
   { type: 'roof', navn: 'Takglass', onske: [], forventKandidater: null },
-  { type: 'unknown', navn: 'Trenger hjelp', onske: [], forventKandidater: true },
+  { type: 'unknown', navn: 'Trenger hjelp', onske: [], forventKandidater: null },
 ];
 
 async function apneStartside(page) {
@@ -61,6 +61,22 @@ async function velgPlassering(page, onske) {
     await page.click(`#glass-placement-fields .valg-knapp[data-verdi="${valg}"]`);
     await page.waitForTimeout(150);
   }
+}
+
+// Bilens dokumenterte valgtre. E2E-en bruker det til å skille riktig oppførsel
+// («typen er ikke dokumentert for bilen») fra feil («knappen mangler»).
+const treCache = new Map();
+async function valgTreFor(regnr) {
+  if (treCache.has(regnr)) return treCache.get(regnr);
+  const svar = await fetch(`${BASE}/api/glass/valg`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ regnr }),
+  });
+  const data = await svar.json();
+  const map = new Map((data.typer || []).map((t) => [t.kind, t]));
+  treCache.set(regnr, map);
+  return map;
 }
 
 async function sokBil(page, regnr) {
@@ -88,18 +104,45 @@ async function reis(context, bil, regnr, t, viewport, oker) {
   try {
     await apneStartside(page);
     rad.bilnavn = await sokBil(page, regnr);
+    // Rutetypene bygges fra /api/glass/valg — vent til valgflaten er ferdig,
+    // ellers måler vi lastetilstanden i stedet for resultatet.
+    await page.waitForSelector('#glassvalg .glassopt, #btn-glass-hjelp:not(.hidden)', { timeout: 20000 })
+      .catch(() => noter('FEIL', `${bil}/${viewport.navn}: valgflaten ble aldri ferdig`));
 
-    const svarVent = page.waitForResponse((r) => /\/api\/(glass\/kandidater|frontrute)/.test(r.url()), { timeout: 30000 }).catch(() => null);
+    const tre = await valgTreFor(regnr);
+    const kind = t.type === 'front' ? 'windshield' : t.type;
+
+    // Kunden skal bare få valg som har katalogstøtte. At en type mangler for
+    // denne bilen er derfor riktig — men da skal hjelpeinngangen finnes, og
+    // knappen skal ikke vises.
+    if (t.type !== 'unknown' && !tre.has(kind)) {
+      if (!(await page.isVisible('#btn-glass-hjelp'))) {
+        noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: hverken typevalg eller hjelpeinngang`);
+      }
+      if (await page.locator(`.glassopt[data-type="${t.type}"]`).count()) {
+        noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: typeknappen vises uten katalogdata`);
+      }
+      rad.status = 'IKKE TILBUDT';
+      rad.tekst = 'Ingen dokumenterte rader for denne bilen (verifisert mot /api/glass/valg)';
+      rad.skjermbilde = `${UT}/${viewport.navn}-${bil}-${t.type}-ikke-tilbudt.png`;
+      await page.screenshot({ path: rad.skjermbilde, fullPage: true });
+      resultater.push(rad);
+      return;
+    }
+
+    const svarVent = t.type === 'unknown' ? null
+      : page.waitForResponse((r) => /\/api\/(glass\/kandidater|frontrute)/.test(r.url()), { timeout: 30000 }).catch(() => null);
     if (t.type === 'unknown') {
-      // «Jeg finner ikke ruten min» er en egen inngang, ikke et katalogsøk.
+      // «Jeg finner ikke ruten min» er en egen inngang, ikke et katalogsøk:
+      // den skal gi hjelpetilstand uten å kalle API-et.
       await page.click('#btn-glass-hjelp');
     } else {
       await page.click(`.glassopt[data-type="${t.type}"]`, { force: true });
       await velgPlassering(page, t.onske || []);
     }
     await page.waitForSelector('#screen-resultat:not(.hidden)', { timeout: 20000 });
-    const svar = await svarVent;
-    if (!svar) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: frontend kalte ikke API-et`);
+    const svar = svarVent ? await svarVent : null;
+    if (t.type !== 'unknown' && !svar) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: frontend kalte ikke API-et`);
     // Resultatet er ferdig rendret når tilbudsknappen er aktiv.
     await page.waitForFunction(() => { const b = document.querySelector('#btn-inquiry'); return b && !b.disabled; }, { timeout: 25000 })
       .catch(() => noter('ADVARSEL', `${bil}/${t.navn}/${viewport.navn}: tilbudsknappen ble aldri aktiv`));
@@ -118,6 +161,13 @@ async function reis(context, bil, regnr, t, viewport, oker) {
     // Eurokode er leverandørdata: 4 siffer + posisjonsbokstav + suffiks (f.eks. 8579AGSGYAVZ1B).
     if (/\b\d{4}[ABLR][A-Z0-9]{3,}\b/.test(hele)) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: eurokode-lignende streng i kundeflaten`);
 
+    // Hjelpeinngangen: tydelig vei videre, og forespørselen klar uten ny bilinnskriving.
+    if (t.type === 'unknown') {
+      if (!/hjelper deg videre/i.test(rad.h2)) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: uventet hjelpetittel «${rad.h2}»`);
+      if (!(await page.isVisible('#inquiry-form'))) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: hjelpetilstanden åpner ikke forespørselen`);
+      if (!(await page.inputValue('#inquiry-regnr'))) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: kjennemerket er ikke beholdt`);
+    }
+
     // Frontrute har egen visning (/api/frontrute) — den telles ikke som kandidatrader her.
     if (t.type === 'front') {
       if (!/frontrute/i.test(rad.h2)) noter('FEIL', `${bil}/front/${viewport.navn}: uventet h2 «${rad.h2}»`);
@@ -133,7 +183,7 @@ async function reis(context, bil, regnr, t, viewport, oker) {
       const kort = (await page.textContent('#resultat-kort') || '');
       if (!/krever kontroll/i.test(kort)) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: mangler «krever kontroll»-merking`);
     }
-    if (rad.kandidater === 0 && t.type !== 'front') {
+    if (rad.kandidater === 0 && t.type !== 'front' && t.type !== 'unknown') {
       if (!/kontrollerer ruten manuelt/i.test(rad.h2)) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: null treff ga h2="${rad.h2}" (skal være MANUAL_REVIEW)`);
       if (!rad.tekst) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: MANUAL_REVIEW uten kundetekst`);
       if (/ingen glass finnes/i.test(hele)) noter('FEIL', `${bil}/${t.navn}/${viewport.navn}: kunden får «ingen glass finnes»`);
