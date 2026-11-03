@@ -10,6 +10,8 @@
 // staging med den adressen og skriver ut de relevante hodene.
 const API = 'https://api.mail.tm';
 const BASE = process.argv[2] || 'https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev';
+// Merk denne saken som en test i staging /ops, uten å slå opp en ekte bil.
+const REGNR = 'ZZ00000';
 
 import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -32,8 +34,10 @@ const token = j(curl(['-X', 'POST', `${API}/token`, '-H', 'content-type: applica
 const auth = ['-H', `Authorization: Bearer ${token}`];
 
 const svar = curl(['-X', 'POST', `${BASE}/api/inquiry`, '-H', 'content-type: application/json',
-  '-d', JSON.stringify({ regnr: 'SU18018', navn: 'Hodetest Nordisk klarhet', kontakt: adresse, melding: 'Test av e-posthoder' })]);
-console.log('henvendelse:', svar.slice(0, 100));
+  '-d', JSON.stringify({ regnr: REGNR, navn: 'Hodetest Nordisk klarhet', kontakt: adresse, melding: 'Test av e-posthoder' })]);
+const innsending = j(svar);
+if (!innsending?.ok) { console.log('HENVENDELSE BLE IKKE REGISTRERT:', svar.slice(0, 200)); process.exit(4); }
+console.log('testhenvendelse:', innsending.inquiryId, '| registreringsnummer:', REGNR);
 
 let melding = null;
 for (let i = 0; i < 24 && !melding; i++) {

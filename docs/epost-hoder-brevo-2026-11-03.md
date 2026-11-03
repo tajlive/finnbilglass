@@ -1,18 +1,29 @@
 # «Meld deg av» på mottakskvitteringen — hva som kan fikses, og hvordan
 
-**Dato:** 2026-11-03 · **Status:** ikke fikset i kode — krever Brevo-support (eller leverandørbytte)
+**Dato:** 2026-11-03 · **Status:** vår side er verifisert i staging; fjerning av «Meld deg av» krever endring hos Brevo
 
 ## Fakta
 
 | Kilde | Funn |
 |---|---|
-| Brevo FAQ «About list-unsubscribe and list-help headers» | «Yes, Brevo **automatically includes a list-unsubscribe header** in your email campaigns and transactional emails.» |
-| Samme FAQ | List-Help i stedet for List-Unsubscribe er mulig for **mottakerutløst transaksjonspost** (aktivering, ordrebekreftelse, passordreset) uten promotering — men **bare ved å kontakte Brevo support**. |
-| Brevo API | Ingen parameter for å slå av headeren. `POST /v3/smtp/email` tar `headers`, men Brevo legger sin egen `List-Unsubscribe` i tillegg. |
+| [Brevo FAQ om List-Unsubscribe og List-Help](https://help.brevo.com/hc/en-us/articles/19100260472850-FAQs-About-list-unsubscribe-and-list-help-headers-in-emails) | Brevo sier at de automatisk legger til `List-Unsubscribe` på kampanjer og transaksjonelle e-poster. |
+| Samme FAQ | Erstatning med `List-Help` er bare tilgjengelig på Enterprise, for mottakerutløst transaksjonspost uten reklame, og må bestilles fra Brevo Support. |
+| [Brevo API for transaksjonell e-post](https://developers.brevo.com/reference/send-transac-email) | `headers` støtter egendefinerte ikke-standard headere; API-et dokumenterer ingen bryter for å fjerne Brevos `List-Unsubscribe`. |
 | Brevo-community (2023→) | «each transactional mail has a List-Unsubscribe header added automatically. We have no documented way to control this behavior». Brevo svarte at de «studerer» fleksibilitet — ingen bryter kommet. |
 | Gmail hos mottaker | Viser «Meld deg av» på kvitteringen vår = headeren er der i praksis. |
 
 **Konsekvens:** en mottakskvittering kan ikke bli kvitt «Meld deg av» fra vår kode. Den eneste veggen vi kontrollerer er (a) Brevo-support, eller (b) annen leverandør.
+
+## Ende-til-ende kontroll i staging
+
+3. november 2026 sendte `scripts/epost-hoder-test.mjs` en tydelig testmerket henvendelse til staging. Den opprettet sak **#32** og hentet rå e-postkilde fra midlertidig testpostkasse.
+
+- `List-Unsubscribe`: **FINNES** — Brevo legger den fortsatt til, så «Meld deg av» kan fortsatt vises i Gmail.
+- `List-Help`: **FINNES** — vår egendefinerte hjelpeheader kom med.
+- `Reply-To`: **tomarnejensen@gmail.com** — kvitteringssvar går til den konfigurerte overvåkede adressen, ikke til den ubemannede `support@`-postkassen.
+- Kvitteringen ble levert med emne og innhold som forventet.
+
+Dette skiller faktisk e-postlevering og MIME-headerbevis fra et API-kall med HTTP 201. Den testhenvendelsen er merket som test (`ZZ00000`) i staging.
 
 ## Det som ER gjort i koden (vår side)
 
@@ -40,13 +51,9 @@ Emne: **Switch transactional emails to List-Help header instead of List-Unsubscr
 > Best regards,
 > Tom Arne Jensen, Finnbilglass
 
-## Alternativ: annen leverandør
-
-Resend/SES/Postmark legger ikke på List-Unsubscribe på ren transaksjonspost. Det krever gyldig API-nøkkel og verifisert avsenderdomene (DNS-poster). Per 2026-11-03 er begge Resend-nøklene vi har tilgang til **ugyldige** (`API key is invalid`), så et bytte kan ikke gjøres før en ny nøkkel finnes.
-
 ## Verifisering etter endringen
 
 ```bash
 node scripts/epost-hoder-test.mjs            # staging
-# Forventet etter Brevo-endring:  List-Unsubscribe: finnes ikke · List-Help: FINNES
+# Forventet etter at Brevo har bekreftet endringen: List-Unsubscribe: finnes ikke · List-Help: FINNES
 ```
