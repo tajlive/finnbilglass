@@ -325,6 +325,13 @@ async function sendCustomerInquiryReceipt(
       body: JSON.stringify({
         sender: { email: from, name: 'Finnbilglass' },
         to: [{ email: to, name: navn || undefined }],
+        // Svar skal havne hos noen som faktisk leser dem — support@ har ingen
+        // postkasse (MX = Domeneshop, ingen konto). Brevo legger dessuten på
+        // List-Unsubscribe på all transaksjonspost; List-Help gir mottakeren en
+        // reell hjelpe-URL i tillegg (kan ikke fjernes før Brevo bytter header
+        // for oss, se docs/epost-hoder-brevo-2026-11-03.md).
+        replyTo: { email: env.SUPPORT_NOTIFY_EMAIL || from, name: 'Finnbilglass' },
+        headers: { 'List-Help': '<https://finnbilglass.no/om-oss>' },
         subject: emne,
         htmlContent: html,
         textContent: text,
