@@ -71,7 +71,7 @@ test('5. språkregel: aktiv kundereise bruker «vi»', () => {
   assert.match(html, /Vi fant ikke et trygt treff i katalogen\. Send oss en forespørsel/);
   assert.match(html, /Vi dobbeltsjekker alle glassvalg og priser før bestilling\./);
   assert.match(js, /Vi har funnet en mulig kandidat ut fra bildataene dine\. Vi dobbeltsjekker valget manuelt før vi sender tilbud\./);
-  assert.match(js, /Takk! Vi har mottatt forespørselen/);
+  assert.match(js, /Takk, vi har mottatt forespørselen din/);
   assert.match(personvern, /Vi bruker skiltnummer til å hente bilopplysninger/);
 });
 

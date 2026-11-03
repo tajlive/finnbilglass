@@ -282,15 +282,52 @@ async function sendInquiryAlert(env: Env, inquiryId: number | null): Promise<{ o
  * og hvem som monterer (vi leverer, kunden avtaler verksted). Aldri svartid,
  * aldri prisløfte, aldri «ordrebekreftelse».
  */
+/** Én svaradresse for kunden: Reply-To, bunntekst og manuelle svar fra /ops. */
+function supportEpost(env: Env): string {
+  return env.SUPPORT_EPOST || env.SUPPORT_NOTIFY_EMAIL || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+}
+
+const GLASS_KIND_NAVN: Record<string, string> = {
+  windshield: 'Frontrute', door: 'Dørrute', side: 'Siderute', rear: 'Bakrute', ventil: 'Ventilrute', roof: 'Takglass',
+};
+
+/**
+ * Kort, norsk beskrivelse av det kunden valgte. Brukes i kvitteringen slik at
+ * kunden kan oppdage en feil uten å måtte huske hva hun trykket på.
+ */
+function beskrivGlassvalg(sel: GlassSelection | null): string {
+  if (!sel || typeof sel.kind !== 'string') return '';
+  const deler: string[] = [GLASS_KIND_NAVN[sel.kind] || 'Glass'];
+  if (sel.kind === 'door') {
+    if (sel.door === 'front') deler.push('fremre dør');
+    else if (sel.door === 'rear') deler.push('bakre dør');
+    else if (sel.door === 'sliding') deler.push('skyvedør');
+  }
+  if (sel.kind === 'ventil') {
+    if (sel.placement === 'front') deler.push('foran');
+    else if (sel.placement === 'rear') deler.push('bak');
+  }
+  if (sel.kind === 'side') {
+    if (sel.section === 'front_quarter') deler.push('fremre trekantrute');
+    else if (sel.section === 'rear_quarter') deler.push('bakre trekantrute');
+    else if (sel.section === 'cargo') deler.push('lasterom');
+  }
+  if (sel.kind === 'rear' && sel.layout === 'split') deler.push('delt rute');
+  if (sel.side === 'left') deler.push('venstre side');
+  else if (sel.side === 'right') deler.push('høyre side');
+  return deler.join(' · ');
+}
+
 async function sendCustomerInquiryReceipt(
   env: Env,
   to: string,
   navn: string,
   inquiryId: number | null,
   regnr?: string | null,
+  sammendrag?: { glass?: string; leveringssted?: string },
 ): Promise<{ ok: boolean; error?: string; via?: 'resend' | 'brevo' }> {
-  const innhold = lagKvittering(navn, inquiryId, regnr);
-  const svarTil = env.SUPPORT_NOTIFY_EMAIL || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  const innhold = lagKvittering(navn, inquiryId, regnr, sammendrag, supportEpost(env));
+  const svarTil = supportEpost(env);
 
   // Resend først når nøkkelen finnes: transporterer uten Brevos List-Unsubscribe.
   if (env.RESEND_API_KEY) {
@@ -309,7 +346,13 @@ interface Kvitteringsinnhold { emne: string; text: string; html: string }
  * at det er uforpliktende, og hvem som monterer (vi leverer, kunden avtaler
  * verksted). Aldri svartid, aldri prisløfte.
  */
-function lagKvittering(navn: string, inquiryId: number | null, regnr?: string | null): Kvitteringsinnhold {
+function lagKvittering(
+  navn: string,
+  inquiryId: number | null,
+  regnr: string | null | undefined,
+  sammendrag: { glass?: string; leveringssted?: string } | undefined,
+  kontaktEpost: string,
+): Kvitteringsinnhold {
   const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
   const saksnr = inquiryId != null ? `#${inquiryId}` : '';
   const hilsen = navn ? `Hei ${navn},` : 'Hei,';
@@ -321,13 +364,25 @@ function lagKvittering(navn: string, inquiryId: number | null, regnr?: string | 
   const videre = 'Vi kontrollerer at glasset passer bilen, og finner pris og levering. Du får svaret på e-post.';
   const forbehold = 'Dette er en mottakskvittering, ikke en ordrebekreftelse — ingen bestilling er gjennomført. Du bestemmer først når du har fått tilbudet.';
   const montering = 'Vi leverer glasset. Montering avtaler du selv med et verksted.';
-  const kontakt = 'support@finnbilglass.no · 40 40 82 41';
+  const kontakt = `${kontaktEpost} · 40 40 82 41`;
+
+  // Bare opplysninger kunden faktisk sendte inn. Aldri kandidatglass som
+  // «bekreftet riktig» — kontrollen er ikke gjort ennå.
+  const linjer: string[] = [];
+  if (regnr) linjer.push(`Bil: ${regnr}`);
+  if (sammendrag?.glass) linjer.push(`Glass/plassering: ${sammendrag.glass}`);
+  if (sammendrag?.leveringssted) linjer.push(`Ønsket leveringssted: ${sammendrag.leveringssted}`);
+  const mottatt = linjer.length ? ['Dette har vi mottatt', ...linjer].join('\n') : '';
+
   return {
     emne,
-    text: [hilsen, '', innledning, '', videre, '', forbehold, '', montering, '', 'Hilsen', 'Finnbilglass', kontakt].join('\n'),
+    text: [hilsen, '', innledning, '', mottatt, mottatt ? '' : null, videre, '', forbehold, '', montering, '', 'Hilsen', 'Finnbilglass', kontakt].filter((x) => x !== null).join('\n'),
     html: [
       `<p>${escHtml(hilsen)}</p>`,
       `<p>${escHtml(innledning)}</p>`,
+      ...(linjer.length
+        ? [`<p><b>Dette har vi mottatt</b><br>${linjer.map(escHtml).join('<br>')}</p>`]
+        : []),
       `<p>${escHtml(videre)}</p>`,
       `<p>${escHtml(forbehold)}</p>`,
       `<p>${escHtml(montering)}</p>`,
@@ -406,6 +461,8 @@ async function sendKvitteringViaBrevo(
 /** Send svar til kunde på e-post via Brevo (tidl. Sendinblue) v3 SMTP. Fra: SUPPORT_FROM_EMAIL (default support@finnbilglass.no). */
 async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: string | null, message: string): Promise<{ ok: boolean; error?: string }> {
   const from = env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no';
+  // Kunden skal svare til samme adresse uansett hvilken melding hun svarer på.
+  const svarTil = supportEpost(env);
   const escHtml = (s: string) => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
   const body = { navn: navn || '', regnr: regnr || '' };
   const subject = `Svar fra FinnBilglass — din forespørsel${body.regnr ? ' (' + body.regnr + ')' : ''}`;
@@ -413,14 +470,15 @@ async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: 
     '<p>Hei' + (body.navn ? ' ' + escHtml(body.navn) : '') + ',</p>' +
     '<p>' + escHtml(message).replace(/\n/g, '<br>') + '</p>' +
     '<p>— FinnBilglass</p>' +
-    '<p style="color:#637286;font-size:12px">Svar på e-post til ' + escHtml(from) + '. Vi svarer gjerne på spørsmål om glasset eller leveransen.</p>';
+    '<p style="color:#637286;font-size:12px">Svar på e-post til ' + escHtml(svarTil) + '. Vi svarer gjerne på spørsmål om glasset eller leveransen.</p>';
   try {
     const r = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: { 'api-key': env.BREVO_API_KEY || '', 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sender: { email: from, name: 'FinnBilglass' },
+        sender: { email: from, name: 'Finnbilglass' },
         to: [{ email: to, name: body.navn || undefined }],
+        replyTo: { email: svarTil, name: 'Finnbilglass' },
         subject,
         htmlContent: html,
       }),
@@ -1037,10 +1095,15 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       const navn = typeof b.navn === 'string' ? b.navn.trim() : '';
       const kontakt = typeof b.kontakt === 'string' ? b.kontakt.trim() : '';
       let melding = typeof b.melding === 'string' ? b.melding.trim().slice(0, 500) : '';
+      // Eget felt: vises i kvitteringen og i operatørens notat, uten å ligge i friteksten.
+      const leveringssted = typeof b.leveringssted === 'string' ? b.leveringssted.trim().slice(0, 80) : '';
+      if (leveringssted) melding = (melding ? melding + '\n' : '') + 'Ønsket leveringssted: ' + leveringssted;
+      let glassSammendrag = '';
       if (b.glassRequest !== undefined) {
         const request = b.glassRequest as Record<string, unknown> | null;
         const selection = request && normalizeGlassSelection(request.selection);
         if (!selection) return json({ok:false,error:'Ugyldig glassvalg'},400);
+        glassSammendrag = beskrivGlassvalg(selection);
         // Persist the validated selection in the existing operator-visible note.
         // No schema migration is needed for the quote pilot.
         melding = 'Glassvalg: ' + JSON.stringify(selection) + '\n' + melding;
@@ -1172,8 +1235,12 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           // Kvittering sendes bare til en valid e-postadresse, aldri til telefon.
           // Den er best-effort slik at e-postfeil ikke mister en lagret forespørsel.
           if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(kontakt)) {
-            const kvittering = sendCustomerInquiryReceipt(env, kontakt, navn, id, regnr).then((r) => {
-              if (r.ok) console.log('inquiry-kvittering sendt for sak', id);
+            const kvittering = sendCustomerInquiryReceipt(env, kontakt, navn, id, regnr, {
+              glass: glassSammendrag || undefined,
+              leveringssted: leveringssted || undefined,
+            }).then((r) => {
+              // Leverandøren logges slik at «sendt» kan spores til Resend eller Brevo.
+              if (r.ok) console.log('inquiry-kvittering sendt for sak', id, 'via', r.via);
               else console.error('inquiry-kvittering feilet:', r.error);
             });
             try { ctx?.waitUntil(kvittering); } catch { void kvittering; }

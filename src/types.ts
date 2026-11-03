@@ -25,6 +25,8 @@ export interface Env {
   BREVO_API_KEY?: string;
   RESEND_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
+  /** Adressen kunden kan svare på: Reply-To, bunntekst og manuelle svar. */
+  SUPPORT_EPOST?: string;
   SUPPORT_NOTIFY_EMAIL?: string;
   /** Google Identity Services (kundeinnlogging). client_id er offentlig; secret brukes ikke i denne flyten. */
   GOOGLE_OAUTH_CLIENT_ID?: string;

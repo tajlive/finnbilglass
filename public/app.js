@@ -2164,7 +2164,6 @@
     var leveringsstedEl = $('inquiry-leveringssted');
     var leveringssted = leveringsstedEl ? leveringsstedEl.value.trim() : '';
     melding = 'Kontaktmåte: ' + kontaktEtikett
-      + (leveringssted ? '\nØnsket leveringssted: ' + leveringssted : '')
       + (valgteGlass ? '\nØnsket glass: ' + (valgteGlass.varenr || '') + ' ' + (valgteGlass.varenavn || '') : '')
       + (utstyrSvar.length ? '\nKundens utstyrssvar: ' + utstyrSvar.join(', ') : '')
       + (melding ? '\n' + melding : '');
@@ -2190,7 +2189,7 @@
       method: 'POST',
       headers: inquiryHeaders(),
       body: JSON.stringify({
-        regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId,
+        regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId, leveringssted: leveringssted || undefined,
         contactPreference: kontaktpreferanse,
         ...(kontaktpreferanse === 'begge' ? { contactPhone: kontaktTelefon } : {}),
         ...(state.glassRequest ? { glassRequest: state.glassRequest, clientRequestId: clientRequestId } : {})
@@ -2212,7 +2211,8 @@
         var svarKanal = kontaktpreferanse === 'epost' ? 'på e-post'
           : kontaktpreferanse === 'begge' ? 'på telefon og e-post'
           : 'på telefon';
-        bTekst.textContent = 'Takk! Vi har mottatt forespørselen' + (id != null ? ' (saksnummer ' + id + ')' : '') + '.' + routeSummary + glassSummary + ' Vi kontrollerer glass, pris og levering og svarer deg ' + svarKanal + ' før du bestemmer deg. Svarer vi ikke med en gang, ringer vi opp igjen — eller du kan ringe 40 40 82 41. Finnbilglass leverer glass, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte.';
+        bTekst.textContent = 'Takk, vi har mottatt forespørselen din' + (id != null ? ' (sak #' + id + ')' : '') + '.' + routeSummary + glassSummary
+          + ' Vi kontrollerer bilen og glasset før vi sender deg et tilbud. Vi følger opp gjennom kontaktmåten du valgte (' + svarKanal + '). Ingen bestilling er gjennomført. Finnbilglass leverer glasset; du avtaler eventuell montering direkte med verkstedet.';
         b.className = 'svar-bekreftelse';
         b.classList.remove('hidden');
       })

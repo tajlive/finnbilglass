@@ -80,3 +80,27 @@ test('receipt prefers Resend and falls back to Brevo until the Resend domain is 
   assert.equal(brevo!.body.replyTo.email, 'svar@finnbilglass.no');
  } finally { globalThis.fetch = originalFetch; }
 });
+
+test('receipt summarises what the customer submitted and uses one reply address', async () => {
+ const sent: any[] = [];
+ const originalFetch = globalThis.fetch;
+ globalThis.fetch = (async (_i:any, init?:any) => { sent.push(JSON.parse(init.body)); return new Response('', { status: 201 }); }) as any;
+ const db={prepare(sql:string){let args:unknown[]=[];return {sql,get args(){return args;},bind(...v:unknown[]){args=v;return this;},first:async()=>null,all:async()=>({results:[]}),run:async()=>({meta:{changes:1}})};},async batch(){return [{meta:{last_row_id:501}},{meta:{changes:1}}];}};
+ const background: Promise<unknown>[] = [];
+ try {
+  const response = await worker.fetch(new Request('https://test.invalid/api/inquiry',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({regnr:'TEST12345',navn:'Kari Nordmann',kontakt:'kunde@example.test',leveringssted:'Trondheim',glassRequest:{selection:{kind:'door',side:'left',door:'front'}}})}),{ENVIRONMENT:'production',inquiries_enabled:'true',FINNBILGLASS_DB:db,BREVO_API_KEY:'k',RESEND_API_KEY:'k',SUPPORT_EPOST:'svar@finnbilglass.no'} as any,{waitUntil:(p:Promise<unknown>)=>background.push(p)} as any);
+  assert.equal(response.status,201);
+  await Promise.all(background);
+  // Resend bruker to: [adresse], Brevo to: [{email}]. Godta begge.
+  const adresser = (m: any) => (m.to || []).map((t: any) => (typeof t === 'string' ? t : t.email));
+  const receipt = sent.find((m) => adresser(m).includes('kunde@example.test'));
+  assert.ok(receipt, 'kvittering skal sendes');
+  assert.equal(receipt.reply_to, 'svar@finnbilglass.no');
+  assert.match(receipt.text, /Dette har vi mottatt/);
+  assert.match(receipt.text, /Bil: TEST12345/);
+  assert.match(receipt.text, /Glass\/plassering: Dørrute · fremre dør · venstre side/);
+  assert.match(receipt.text, /Ønsket leveringssted: Trondheim/);
+  assert.match(receipt.text, /svar@finnbilglass\.no/);
+  assert.doesNotMatch(receipt.text, /ordrebekreftelse\s*\./);
+ } finally { globalThis.fetch = originalFetch; }
+});
