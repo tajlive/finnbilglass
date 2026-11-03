@@ -25,7 +25,7 @@ import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
 import { discoverFrontRute } from './discovery';
-import { matchClassDCandidates, buildClassDCandidates, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
+import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
 import { defaultRelations } from './accessory-v1/catalogue.js';
 import { konsoliderSaker, type InquiryRow, type EvidenceCaseRow } from './ops-consolidation';
@@ -866,10 +866,31 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       const dorLedd = typeof b?.dorLedd === 'string' ? b.dorLedd.trim().toLowerCase() : null;
       const ventilLedd = typeof b?.ventilLedd === 'string' ? b.ventilLedd.trim().toLowerCase() : null;
       const side = typeof b?.side === 'string' ? b.side.trim().toLowerCase() : null;
+      const aarRaa = b?.aar;
+      const aar = typeof aarRaa === 'number' && Number.isFinite(aarRaa) ? Math.trunc(aarRaa)
+        : typeof aarRaa === 'string' && /^\d{4}$/.test(aarRaa.trim()) ? parseInt(aarRaa.trim(), 10) : null;
       if (!regnr && !merke && !sok) return json({ ok: false, error: 'Regnr, merke eller søk påkrevd' }, 400);
+      // F5: merke/modell/aar skal brukes eller avvises — ikke godtas som død input.
+      if (!regnr && merke && !modell && !sok) return json({ ok: false, error: 'Modell påkrevd når merke oppgis uten regnr' }, 400);
+      if (aar != null && (aar < 1940 || aar > new Date().getFullYear() + 1)) return json({ ok: false, error: 'Ugyldig årsmodell' }, 400);
       const validKlasser = ['frontrute','bakrute','dor','side','ventil','tak'];
-      // C6.0-C frontend-kompatibilitet: frontend bruker 'door', endpoint bruker 'dor'
-      const normalizedKlasse = glassklasse ? (glassklasse === 'door' ? 'dor' : glassklasse === 'rear' ? 'bakrute' : glassklasse === 'roof' ? 'tak' : glassklasse === 'front' ? 'frontrute' : glassklasse) : null;
+      // Frontend sender kind-navn (windshield/door/side/rear/roof) og «unknown» for
+      // «Vet ikke». «unknown» betyr «ingen posisjon oppgitt» — det er ikke en ugyldig
+      // klasse, og skal gi kandidater med manuell kontroll, ikke HTTP 400.
+      const KLASSE_ALIAS: Record<string, string | null> = {
+        front: 'frontrute', windshield: 'frontrute', frontrute: 'frontrute',
+        rear: 'bakrute', back: 'bakrute', bakrute: 'bakrute',
+        door: 'dor', dor: 'dor', dør: 'dor',
+        side: 'side', siderute: 'side',
+        ventil: 'ventil', quarter: 'ventil',
+        roof: 'tak', tak: 'tak',
+        unknown: null, ukjent: null, vet_ikke: null,
+      };
+      const normaliserKlasse = (k: string | null): string | null => {
+        if (!k) return null;
+        return k in KLASSE_ALIAS ? KLASSE_ALIAS[k] : k;
+      };
+      const normalizedKlasse = normaliserKlasse(glassklasse);
       // P1 FIX: normalisering fra request.selection (frontend) — eksplisitt mapping
       const selection = typeof b?.selection === 'object' && b.selection !== null ? b.selection as Record<string, unknown> : null;
       let selGlassklasse = normalizedKlasse;
@@ -882,7 +903,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         // kind → glassklasse
         const kind = typeof selection.kind === 'string' ? selection.kind.toLowerCase() : '';
         if (!selGlassklasse && kind) {
-          selGlassklasse = kind === 'door' ? 'dor' : kind === 'rear' ? 'bakrute' : kind === 'roof' ? 'tak' : kind === 'side' ? 'side' : kind === 'ventil' ? 'ventil' : kind === 'windshield' ? 'frontrute' : null;
+          selGlassklasse = normaliserKlasse(kind);
         }
         // side (left/right) → sideKilde må vente til bil (LHD/RHD) er kjent — se etter SVV-oppslag
         // door (front/rear) → dorLedd
@@ -919,6 +940,9 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       let frontruteResult = null;
       let kandidater: unknown[] = [];
       let sokKilde = 'ingen';
+      // Kjøretøygrunnlag for katalogsøket. SVV-oppslag gir sterkest grunnlag;
+      // merke/modell/aar fra klienten er et svakere grunnlag og merkes som det.
+      let kjoretoy: { merke: string; modell: string | null; aar: number | null } | null = null;
 
       // 1. SVV-oppslag ved regnr
       if (regnr) {
@@ -936,76 +960,80 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         }
         // UKJENT styring → sideKilde forblir null (posisjon angis som ukjent)
       }
+      // Kjøretøygrunnlag: SVV-verifisert hvis regnr ga treff, ellers klientopplysning.
+      if (bil && bil.merke) {
+        kjoretoy = { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null };
+      } else if (merke) {
+        kjoretoy = { merke: normMerke(merke), modell: modell || null, aar };
+      }
+      const bilKilde = bil ? 'SVV' : kjoretoy ? 'klientopplysning' : null;
+
       // 2. Frontrute-resolver (uendret) — bare når bil funnet OG kategori er frontrute eller ikke spesifisert
-      if (bil && bil.merke && (!glassklasse || glassklasse === 'frontrute')) {
+      if (bil && bil.merke && (!selGlassklasse || selGlassklasse === 'frontrute')) {
         try {
           frontruteResult = await resolveFrontrute(env, { merke: bil.merke, modell: bil.modell ?? undefined, aar: bil.aar ?? undefined, vin: bil.vin ?? undefined });
           frontruteResult = await anvendResolverPolicy(env, frontruteResult);
         } catch (e) { console.error('Resolver-feil:', e); }
       }
-      // 3. ALL_GLASS_CANDIDATES: CLASS_D-katalogmatching (modell/år) → kandidater.
+      // 3. ALL_GLASS_CANDIDATES: CLASS_D-katalogmatching (modell/år + posisjon) → kandidater.
       // Aldri EXACT. Aldri vilkårlig produkt hvis kjøretøy ikke matcher.
-      // Bruker finnbilglass DB + klasse-filter (glassklasse, dorLedd, etc.) — se glass-posisjon.ts
+      // Posisjon, familie og årsintervall avgjøres i catalogue-candidates.ts.
       let advarsel: string | null = null;
       const sokTekst = sok || (bil ? `${bil.merke} ${bil.modell ?? ''}`.trim() : '') || (merke ? `${merke} ${modell}`.trim() : '');
       if (sokTekst.length >= 2) {
         try {
           let matches: unknown[] = [];
-          // C6.0-D (P0): CLASS_D kjøretøybasert filtrering når bil identifisert
-          if (bil && (bil.merke || bil.aar)) {
+          // C6.0-D (P0): CLASS_D kjøretøybasert filtrering når kjøretøy identifisert
+          if (kjoretoy && kjoretoy.merke) {
             try {
-          // P0 FIX: avgrenset uthenting — filtrer på merke fra SVV, ikke hele tabellen
-          const querySql = (bil && bil.merke) ? `SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste WHERE varenavn LIKE $1 || '%' LIMIT 5000` : `SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste LIMIT 5000`;
-          const params = (bil && bil.merke) ? [`${bil.merke.toUpperCase().split(' ').join('%')}%`] : [];
-          const prisliste = await env.FINNBILGLASS_DB.prepare(querySql).bind(...params).all<{varenr:string;varenavn:string|null;eurokode:string|null;kommentar:string|null}>();
+              // P0: avgrenset uthenting — filtrer på merke, ikke hele tabellen.
+              // '%' mellom ordene gjør at «MERCEDES-BENZ» og «LAND ROVER» treffer.
+              // Jokertegn fra klienten fjernes: «%» som merke ville ellers scannet
+              // hele tabellen, og merkenavnet er ikke et søkemønster.
+              const sokMerke = normMerke(kjoretoy.merke).toUpperCase().trim()
+                .replace(/[%_]/g, '').replace(/\s+/g, '%').slice(0, 40);
+              const querySql = `SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste WHERE varenavn LIKE $1 || '%' LIMIT 5000`;
+              const prisliste = await env.FINNBILGLASS_DB.prepare(querySql).bind(sokMerke).all<{varenr:string;varenavn:string|null;eurokode:string|null;kommentar:string|null}>();
               const index = buildClassDCandidates((prisliste.results || []).map(r => ({ varenr: r.varenr, varenavn: r.varenavn, eurokode: r.eurokode ?? null, kommentar: r.kommentar ?? null })));
-              const yr = bil.aar ?? null;
-              const classMatches = matchClassDCandidates(index, bil.merke ?? '', bil.modell ?? '', yr, { glassklasse: normalizedKlasse, dorLedd: dorLedd ?? null, ventilLedd: ventilLedd ?? null });
-              // Filtrer på glassklasse/posisjon fra onske (C9.5-fix: intervall på hele matchReason)
-              const keyword = onske.glassklasse ? (onske.glassklasse === 'dor' ? 'DØRRUTE' : onske.glassklasse === 'bakrute' ? 'BAKRUTE' : onske.glassklasse === 'side' ? 'SIDERUTE' : onske.glassklasse === 'ventil' ? 'VENTIL' : onske.glassklasse === 'tak' ? 'TAK' : onske.glassklasse === 'frontrute' ? 'FRONT' : '') : '';
-              const filtered = classMatches.filter((c: CatalogueCandidate) => {
-                if (onske.glassklasse && keyword && !c.varenavn.toUpperCase().includes(keyword)) return false;
-                return true;
+              const classMatches = matchClassDCandidates(index, kjoretoy.merke, kjoretoy.modell ?? '', kjoretoy.aar ?? null, {
+                glassklasse: selGlassklasse,
+                dorLedd: selDorLedd,
+                ventilLedd: selVentilLedd,
               });
-              // Bare CLASS_D_CATALOGUE_CANDIDATE (aldri EXACT)
-              matches = filtered.slice(0, 25).map((c: CatalogueCandidate) => ({
-                varenr: c.varenr, varenavn: c.varenavn, eurokode: c.eurokode, posisjon: null,
-                attributter: c.features, matchReason: c.matchReason, klassifisering: c.klassifisering, source: c.source,
-                pris: null, listepris: null, innkjøpspris: null,
+              // Offentlig projeksjon: hviteliste, ikke svarteliste. Intern
+              // klassifisering, matchReason og kilde skal aldri ut til kunden.
+              matches = classMatches.slice(0, 25).map((c: CatalogueCandidate) => ({
+                varenr: c.varenr,
+                varenavn: c.varenavn,
+                eurokode: c.eurokode || null,
+                posisjon: posisjonsTekst(c),
+                attributter: c.features,
               }));
               sokKilde = matches.length ? 'CLASS_D_katalog' : 'ingen';
             } catch (e) { console.error('CLASS_D-feil:', e); }
           } else {
             matches = await finnGlassKandidater(env, sokTekst, onske, 25);
+            sokKilde = matches.length ? 'typekode+katalog' : 'ingen';
           }
-          // C6.0-C D: hvis kjøretøybasert matching mangler (0 matches + bil funnet) → MANUAL_REVIEW
-          if (bil && !matches.length) {
+          // C6.0-C D: hvis kjøretøybasert matching mangler (0 matches + kjøretøy funnet) → MANUAL_REVIEW
+          if (kjoretoy && !matches.length) {
             advarsel = 'MANUAL_REVIEW — ingen katalogmatch for identifisert kjøretøy. Ikke vis vilkårlige produkter.';
             kandidater = [];
           } else {
-            kandidater = matches.map((k: any) => {
-            const r: any = {
-              varenr: k.varenr,
-              varenavn: k.varenavn,
+            // P3: aldri eksponere pris / listepris / innkjøpspris / intern diagnostikk / VIN.
+            kandidater = matches.map((k: any) => ({
+              varenr: k.varenr ?? null,
+              varenavn: k.varenavn ?? null,
               eurokode: k.eurokode ?? null,
               posisjon: k.posisjon ?? null,
               attributter: k.attributter ?? null,
-              klassifisering: 'CLASS_D_CATALOGUE_CANDIDATE',
-              matchReason: k.matchReason ?? null,
-              source: 'GT_AUTO_PRISLISTE',
-            };
-            // P3: aldri eksponere pris / listepris / innkjøpspris / VIN i offentlig API
-            delete r.pris; delete r.listepris; delete r.innkjøpspris; delete r.ubeKreftetPris;
-            // VIN skal aldri gå til offentlig klient
-            return r;
-          });
+            }));
           }
-          sokKilde = kandidater.length ? 'typekode+katalog' : 'ingen';
         } catch (e) { console.error('finnGlassKandidater-feil:', e); }
       }
 
       if (!advarsel) {
-        advarsel = (!kandidater.length && !frontruteResult && bil)
+        advarsel = (!kandidater.length && !frontruteResult && kjoretoy)
           ? 'MANUAL_REVIEW — ingen katalogmatch for identifisert kjøretøy. Ingen vilkårlige produkter vises.'
           : (!kandidater.length ? 'Ingen kandidater funnet. Bekreft bilens merke/modell/år eller ta bilde av skiltnummeret.' : null);
       }
@@ -1029,8 +1057,13 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       return json({
         ok: true,
         bil: bil ? { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null } : null,
+        // «SVV» = kjøretøyet er identifisert i offentlig register. «klientopplysning»
+        // = merke/modell/aar fra klienten, uten registerkontroll.
+        bilKilde,
+        glassklasse: selGlassklasse,
         frontrute: safeFrontrute,
         kandidater,
+        totalAntall: kandidater.length,
         sokKilde,
         advarsel,
         // Aldri EXACT: nivå 4 (GT) brukes aldri for dør/side/bak; nivå 1 (GT) kun for frontrute
