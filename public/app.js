@@ -697,7 +697,7 @@
     if (state.vin) {
       var v = document.createElement('div');
       v.className = 'detlinje';
-      v.textContent = 'VIN-nummer: ' + state.vin;
+      v.textContent = 'Bildata hentet fra Statens vegvesen';
       det.appendChild(v);
     }
     if (state.import) {
@@ -725,11 +725,13 @@
     if (selection.kind === 'door') return 'Dørrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',sliding:'Skyvedør',unknown:'Vet ikke hvilken dør'}[selection.door]);
     if (selection.kind === 'side') return 'Siderute · ' + glassSideLabel(selection.side) + ' · ' + ({front_quarter:'Fremre trekantrute',rear_quarter:'Bakre trekantrute',cargo:'Lasterom',unknown:'Vet ikke plassering'}[selection.section]) + ' · ' + ({body:'Karosseri',door:'Dør',unknown:'Vet ikke'}[selection.mounting]);
     if (selection.kind === 'rear') return 'Bakrute · ' + (selection.layout === 'single' ? 'Hel rute' : selection.layout === 'split' ? 'Delt rute · ' + glassSideLabel(selection.splitSide) : 'Vet ikke om ruten er delt');
+    if (selection.kind === 'ventil') return 'Ventilrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',unknown:'Vet ikke plassering'}[selection.placement]);
     if (selection.kind === 'roof') return 'Panoramatak / takglass · ' + ({fixed:'Fast',opening:'Åpningsbart',unknown:'Vet ikke'}[selection.system]) + ' · ' + ({whole:'Hele ruten',front:'Fremre panel',middle:'Midtre panel',rear:'Bakre panel',unknown:'Vet ikke panel'}[selection.panel]);
     return 'Ukjent glasstype';
   }
 
   var GLASS_FIELDS = {
+    ventil: [['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],['placement','Hvor sitter ventilruten?',[['front','Foran'],['rear','Bak'],['unknown','Vet ikke']]]],
     door: [
       ['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],
       ['door','Hvilken dør?',[['front','Foran'],['rear','Bak'],['sliding','Skyvedør'],['unknown','Vet ikke']]]
@@ -802,6 +804,7 @@
       selection = { kind: kind, layout: layout };
       if (layout === 'split') selection.splitSide = value('splitSide');
     }
+    if (kind === 'ventil') selection = {kind:kind,side:value('side'),placement:value('placement')};
     if (kind === 'roof') selection = { kind: kind, system: value('system'), panel: value('panel') };
     var missing = Object.keys(selection || {}).filter(function (key) { return key !== 'kind' && !selection[key]; });
     if (missing.length) {
@@ -888,9 +891,9 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         regnr: state.regnr,
-        vin: state.vin,
-        glassklasse: request.selection.kind,
-        posisjon: request.selection.posisjon || null
+        schemaVersion: request.schemaVersion,
+        selection: request.selection,
+        answers: request.answers || {}
       })
     })
     .then(function (r) { return r.ok ? r.json() : null; })
@@ -912,43 +915,14 @@
     if (!data || typeof data !== 'object') {
       data = { ok: false, advarsel: 'MANUAL_REVIEW — noe gikk galt med søket.', kandidater: [] };
     }
-    var kandidater = Array.isArray(data.kandidater) ? data.kandidater : [];
-    var isManual = !!data.advarsel && data.advarsel.indexOf('MANUAL_REVIEW') !== -1;
-
-    $('screen-resultat').querySelector('h2').textContent = isManual ? 'Vi kontrollerer ruten manuelt' : (kandidater.length ? 'Mulige glass til bilen' : 'Vi kontrollerer ruten manuelt');
-    var info = $('resultat-status');
-    info.textContent = data.advarsel || (isManual ? 'Vi har ikke nok informasjon til å peke på én rute. Vi kontrollerer riktig glass, pris og levering før vi sender tilbud.' : 'Vi kontrollerer ruten og riktig glass før vi sender tilbud.');
-    info.className = 'note status ' + (isManual ? 'manual' : (kandidater.length ? 'verify' : ''));
-    info.classList.remove('hidden');
-    $('btn-inquiry').disabled = false;
+    $('screen-resultat').querySelector('h2').textContent = 'Vi kontrollerer ruten manuelt';
+    $('resultat-status').textContent = 'Vi må kontrollere riktig glass før vi kan gi deg pris og levering.';
+    $('resultat-status').className = 'note status manual';
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
     $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
     $('inquiry-glass-summary').classList.remove('hidden');
     $('inquiry-regnr').value = state.regnr || '';
-
-    // P2: vis kandidater når reelle treff finnes — med tydelig «må kontrolleres» + valg
-    if (kandidater.length) {
-      $('resultat-kort').textContent = '';
-      $('resultat-alt').textContent = '';
-      var kandidatHtml = '<div class="kandidat-list" role="list" aria-label="Mulige glasskandidater">';
-      kandidatHtml += '<p class="note verify">Må kontrolleres før tilbud — katalogen bekrefter ikke fysisk kompatibilitet automatisk.</p>';
-      for (var i = 0; i < Math.min(kandidater.length, 3); i++) {
-        var k = kandidater[i];
-        kandidatHtml += '<article class="kandidat-kort" role="listitem" data-varenr="' + (k.varenr || '') + '">' +
-          '<h3>' + (k.varenavn || 'Ukjent glass') + '</h3>' +
-          '<p class="kandidat-meta">Varenr: ' + (k.varenr || '—') + ' | Eurokode: ' + (k.eurokode || '—') + ' | Plassering: ' + (k.posisjon || '—') + '</p>' +
-          '<p class="kandidat-klassifisering">' + (k.klassifisering || 'CLASS_D_CATALOGUE_CANDIDATE') + '</p>' +
-          '<button type="button" class="btn-select-candidate" onclick="window.selectGlassCandidate(' + i + ', \'' + (k.varenr || '') + '\')">Velg dette glasset</button>' +
-          '</article>';
-      }
-      kandidatHtml += '<button type="button" class="btn-vet-ikke" onclick="window.selectGlassCandidate(-1, \'vet_ikke\')">Vet ikke / vil ikke velge nå</button>';
-      kandidatHtml += '</div>';
-      $('resultat-kort').innerHTML = kandidatHtml;
-    } else {
-      $('resultat-kort').textContent = '';
-      $('resultat-alt').textContent = '';
-    }
-
-    // P2/Fra CTO-ordre: alltid behold «Be om pristilbud» — uavhengig av status
     $('btn-inquiry').disabled = false;
     $('inquiry-form').classList.remove('hidden');
   }
@@ -1244,7 +1218,7 @@
 
       state.currentGlassKind = kind;
       if (kind === 'unknown') { $('glass-placement').classList.add('hidden'); sokGlass({ kind: 'unknown' }); return; }
-      $('glass-placement-title').textContent = kind === 'door' ? 'Hvilken dørrute?' : kind === 'side' ? 'Hvilken siderute?' : kind === 'rear' ? 'Hvilken bakrute?' : 'Hvilket takglass?';
+      $('glass-placement-title').textContent = kind === 'door' ? 'Hvilken dørrute?' : kind === 'side' ? 'Hvilken siderute?' : kind === 'rear' ? 'Hvilken bakrute?' : kind === 'ventil' ? 'Hvilken ventilrute?' : 'Hvilket takglass?';
       renderGlassFields(kind);
       $('glass-placement').classList.remove('hidden');
       $('glass-placement-title').focus();
@@ -1257,7 +1231,7 @@
   $('btn-glass-search').addEventListener('click', function () {
     var kind = state.currentGlassKind;
 
-    if (!['door', 'side', 'rear', 'roof'].includes(kind)) return;
+    if (!['door', 'side', 'rear', 'ventil', 'roof'].includes(kind)) return;
 
     var selection = selectionFromFields(kind);
     if (!selection) return;

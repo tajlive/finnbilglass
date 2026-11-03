@@ -49,7 +49,7 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'VW', re: /PASSAT/, familie: 'PASSAT' },
   { merke: 'VW', re: /POLO/, familie: 'POLO' },
   { merke: 'VW', re: /TRANSPORTER|TRANSPORT|MULTIVAN|CARAVELLE|T5|T6/, familie: 'TRANSPORTER' },
-  { merke: 'MERCEDES', re: /CLA/, familie: 'CLA' },
+  { merke: 'MERCEDES', re: /\bCLA\b/, familie: 'CLA' },
   { merke: 'MERCEDES', re: /SPRINTER/, familie: 'SPRINTER' },
   { merke: 'MERCEDES', re: /VITO|V-CLASS/, familie: 'VITO' },
   { merke: 'MERCEDES', re: /A-CLASS|A KLASSE/, familie: 'A-CLASS' },

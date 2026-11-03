@@ -82,6 +82,10 @@ database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
 
 # Bindings som ikke arves automatisk må gjentas per miljø, ellers nekter
 # wrangler å kjøre (gjelder blant annet AI).
+[[env.staging.r2_buckets]]
+binding = "OPPLAERING_BUCKET"
+bucket_name = "finnbilglass-opplaering-staging"
+
 [env.staging.ai]
 binding = "AI"
 
