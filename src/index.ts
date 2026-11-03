@@ -1,4 +1,5 @@
-import { normalizeGlassSelection } from './glass-selection-contract';
+import { normalizeGlassSelection, type GlassSelection } from './glass-selection-contract';
+import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
 /** Finnbilglass Worker — frontrute-matcher API + statisk frontend.
  *  POST /api/frontrute  {merke, modell, aar, profil} → glass
  *  GET  /health
@@ -390,6 +391,115 @@ export default {
     return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
   },
 };
+
+/** Kundevalg (selection.kind) → glassklasse for kandidatgeneratoren. */
+const KIND_TIL_GLASSEKLASSE: Record<string, string | null> = {
+  windshield: 'frontrute',
+  door: 'dor',
+  side: 'side',
+  rear: 'bakrute',
+  ventil: 'ventil',
+  roof: 'tak',
+  unknown: null,
+};
+
+/**
+ * ALL_GLASS-kandidater — katalogkandidater for alle glasstyper, bak
+ * `ALL_GLASS_KANDIDATER_ENABLED`. Katalogen foreslår, mennesket bestemmer:
+ * svaret er ALDRI EXACT, og hver kandidat er merket som «må kontrolleres».
+ *
+ * Offentlig svar er en HVITELISTE (se public-contract.ts): varenr, varenavn,
+ * posisjon og attributter. Eurokode, pris, intern klassifisering, matchReason og
+ * kilde går ALDRI ut — eurokode er leverandørens identifikator, ikke kundens.
+ *
+ * Tom kandidatliste er en gyldig konklusjon: MANUAL_REVIEW med tilbudsforespørsel.
+ * Kunden skal aldri se «ingen glass finnes» når svaret egentlig er «vi må sjekke».
+ */
+async function handleAllGlassKandidater(b: Record<string, unknown>, selection: GlassSelection | null, env: Env): Promise<Response> {
+  const regnr = typeof b.regnr === 'string' ? b.regnr.trim() : '';
+  const merkeInn = typeof b.merke === 'string' ? b.merke.trim() : '';
+  const modellInn = typeof b.modell === 'string' ? b.modell.trim() : '';
+  const sok = typeof b.sok === 'string' ? b.sok.trim().toUpperCase() : '';
+  const aarRaa = b.aar;
+  const aar = typeof aarRaa === 'number' && Number.isFinite(aarRaa) ? Math.trunc(aarRaa)
+    : typeof aarRaa === 'string' && /^\d{4}$/.test(aarRaa.trim()) ? parseInt(aarRaa.trim(), 10) : null;
+
+  let bil = null;
+  if (regnr) {
+    try {
+      bil = await svvLookup(regnr.toUpperCase().replace(/[\s\-–—.]+/g, ''), env.SVV_API_KEY);
+    } catch (e) {
+      console.error('SVV-feil:', e);
+    }
+  }
+
+  // Kjøretøygrunnlag: SVV er registerverifisert, klientopplysning er det ikke.
+  let kjoretoy: { merke: string; modell: string | null; aar: number | null } | null = null;
+  if (bil && bil.merke) {
+    kjoretoy = { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null };
+  } else if (merkeInn) {
+    kjoretoy = { merke: normMerke(merkeInn), modell: modellInn || null, aar };
+  }
+  const bilKilde = bil ? 'SVV' : kjoretoy ? 'klientopplysning' : null;
+
+  const klasse = selection ? KIND_TIL_GLASSEKLASSE[selection.kind] ?? null : null;
+  const dorLedd = selection?.kind === 'door'
+    ? (selection.door === 'front' ? 'fremre' : selection.door === 'rear' ? 'bakre' : null)
+    : null;
+  const ventilLedd = selection?.kind === 'ventil'
+    ? (selection.placement === 'front' ? 'foran' : selection.placement === 'rear' ? 'bakre' : null)
+    : null;
+
+  let kandidater: { varenr: string; varenavn: string; posisjon: string; attributter: string[] }[] = [];
+  let sokKilde = 'ingen';
+  if (kjoretoy && kjoretoy.merke) {
+    try {
+      // Merke-begrenset uthenting. Jokertegn fjernes: merkenavnet er ikke et
+      // søkemønster, og «%» ville scannet hele katalogen.
+      const sokMerke = normMerke(kjoretoy.merke).toUpperCase().trim()
+        .replace(/[%_]/g, '').replace(/\s+/g, '%').slice(0, 40);
+      const prisliste = await env.FINNBILGLASS_DB
+        .prepare('SELECT varenr, varenavn, eurokode, kommentar FROM glass_prisliste WHERE varenavn LIKE $1 || \'%\' LIMIT 5000')
+        .bind(sokMerke)
+        .all<{ varenr: string; varenavn: string | null; eurokode: string | null; kommentar: string | null }>();
+      const index = buildClassDCandidates((prisliste.results || []).map((r) => ({
+        varenr: r.varenr, varenavn: r.varenavn, eurokode: r.eurokode ?? null, kommentar: r.kommentar ?? null,
+      })));
+      const treff = matchClassDCandidates(index, kjoretoy.merke, kjoretoy.modell ?? '', kjoretoy.aar ?? null, {
+        glassklasse: klasse,
+        dorLedd,
+        ventilLedd,
+      });
+      kandidater = treff.slice(0, 25).map((c: CatalogueCandidate) => ({
+        varenr: c.varenr,
+        varenavn: c.varenavn,
+        posisjon: posisjonsTekst(c),
+        attributter: c.features,
+      }));
+      sokKilde = kandidater.length ? 'CLASS_D_katalog' : 'ingen';
+    } catch (e) {
+      console.error('CLASS_D-feil:', e);
+    }
+  }
+
+  const harKandidater = kandidater.length > 0;
+  return json({
+    ok: true,
+    status: harKandidater ? 'CANDIDATES' : 'MANUAL_REVIEW',
+    bil: bil ? { merke: bil.merke, modell: bil.modell ?? null, aar: bil.aar ?? null } : null,
+    bilKilde,
+    glassklasse: klasse,
+    kandidater,
+    totalAntall: kandidater.length,
+    sokKilde,
+    message: harKandidater
+      ? 'Vi har funnet mulige glass. Riktig variant avhenger av bilens utstyr — vi kontrollerer valget før du får pris og levering.'
+      : 'Vi må kontrollere hvilken rute bilen bruker før vi kan bekrefte riktig glass. Send oss en forespørsel, så finner vi det ut.',
+    // Katalogen bekrefter aldri fysisk kompatibilitet. Aldri EXACT.
+    fitmentAuthority: 'ingen — menneskelig bekreftelse kreves',
+    modus: 'ALL_GLASS_CANDIDATES',
+  });
+}
 
 async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -873,7 +983,10 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       return json({ ok: true, bil, resolver: await anvendResolverPolicy(env, resolver) });
     }
 
-    // Manual quote pilot: no catalogue fitment claims in this route.
+    // Kandidatruten har to moduser:
+    //   1. Quote pilot (standard): katalogtreff kan ikke bevise fitment → MANUAL_REVIEW.
+    //   2. ALL_GLASS_KANDIDATER_ENABLED=true: katalogen gir KANDIDATER (aldri EXACT),
+    //      kunden får produktkort + manuell kontroll. Slås på per miljø, aldri implisitt.
     if (method === 'POST' && path === '/api/glass/kandidater') {
       let body: unknown; try { body = await request.json(); } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const b = body && typeof body === 'object' && !Array.isArray(body) ? body as Record<string, unknown> : null;
@@ -884,6 +997,20 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       const selection = b.selection === undefined ? null : normalizeGlassSelection(b.selection);
       if (selection && typeof b.glassklasse === 'string' && aliases[b.glassklasse] !== selection.kind) return json({ok:false,error:'Motstridende glassvalg'},400);
       if (![b.regnr,b.merke,b.sok].some(v => typeof v === 'string' && v.trim())) return json({ok:false,error:'Regnr, merke eller søk påkrevd'},400);
+      // Kjøretøyopplysningene valideres i BEGGE moduser: en ufullstendig eller
+      // umulig opplysning er en klientfeil, ikke noe som skal skjules av piloten.
+      const aarRaa = b.aar;
+      const aarInn = typeof aarRaa === 'number' && Number.isFinite(aarRaa) ? Math.trunc(aarRaa)
+        : typeof aarRaa === 'string' && /^\d{4}$/.test(aarRaa.trim()) ? parseInt(aarRaa.trim(), 10) : null;
+      if (aarInn != null && (aarInn < 1940 || aarInn > new Date().getFullYear() + 1)) return json({ok:false,error:'Ugyldig årsmodell'},400);
+      const harRegnr = typeof b.regnr === 'string' && !!b.regnr.trim();
+      const harMerke = typeof b.merke === 'string' && !!b.merke.trim();
+      const harModell = typeof b.modell === 'string' && !!b.modell.trim();
+      const harSok = typeof b.sok === 'string' && !!b.sok.trim();
+      if (!harRegnr && harMerke && !harModell && !harSok) return json({ok:false,error:'Modell påkrevd når merke oppgis uten regnr'},400);
+      if (env.ALL_GLASS_KANDIDATER_ENABLED === 'true') {
+        return await handleAllGlassKandidater(b, selection, env);
+      }
       // Quote pilot: catalogue matching cannot establish vehicle fitment.
       // The windshield UI continues to use the separate /api/frontrute resolver.
       return json({ok:true,status:'MANUAL_REVIEW',kandidater:[],bil:null,frontrute:null,

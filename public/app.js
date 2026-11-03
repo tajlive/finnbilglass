@@ -915,11 +915,47 @@
     if (!data || typeof data !== 'object') {
       data = { ok: false, advarsel: 'MANUAL_REVIEW — noe gikk galt med søket.', kandidater: [] };
     }
-    $('screen-resultat').querySelector('h2').textContent = 'Vi kontrollerer ruten manuelt';
-    $('resultat-status').textContent = 'Vi må kontrollere riktig glass før vi kan gi deg pris og levering.';
-    $('resultat-status').className = 'note status manual';
+    var kandidater = Array.isArray(data.kandidater) ? data.kandidater : [];
+    var h2 = $('screen-resultat').querySelector('h2');
+    var status = $('resultat-status');
+
     $('resultat-kort').textContent = '';
     $('resultat-alt').textContent = '';
+
+    if (kandidater.length) {
+      // Kandidater vises bare når serveren faktisk har dem (ALL_GLASS_KANDIDATER_ENABLED).
+      // Katalogen bekrefter ikke fysisk kompatibilitet: hvert kort merkes «må kontrolleres»,
+      // og eurokode/leverandørdata vises aldri (public-contract.ts).
+      h2.textContent = 'Mulige glass til bilen';
+      status.textContent = data.message || 'Vi har funnet mulige glass. Riktig variant avhenger av bilens utstyr.';
+      status.className = 'note status verify';
+      var esc = function (v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+          return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+      };
+      var liste = document.createElement('div');
+      liste.className = 'detlinjer';
+      for (var i = 0; i < Math.min(kandidater.length, 3); i++) {
+        var k = kandidater[i];
+        var rad = document.createElement('div');
+        rad.setAttribute('data-varenr', k.varenr || '');
+        rad.innerHTML = '<b>' + esc(k.varenr || '—') + '</b> ' + esc(k.varenavn || 'Glass') +
+          (k.posisjon ? ' · ' + esc(k.posisjon) : '');
+        liste.appendChild(rad);
+      }
+      $('resultat-kort').appendChild(liste);
+      var merknad = document.createElement('p');
+      merknad.className = 'note';
+      merknad.textContent = 'Krever kontroll før bestilling — katalogen bekrefter ikke at glasset passer bilen.';
+      $('resultat-kort').appendChild(merknad);
+    } else {
+      h2.textContent = 'Vi kontrollerer ruten manuelt';
+      status.textContent = data.message || 'Vi må kontrollere riktig glass før vi kan gi deg pris og levering.';
+      status.className = 'note status manual';
+    }
+    status.classList.remove('hidden');
+
     $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
     $('inquiry-glass-summary').classList.remove('hidden');
     $('inquiry-regnr').value = state.regnr || '';

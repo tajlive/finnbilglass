@@ -61,6 +61,7 @@ workers_dev = true
 routes = []
 [env.staging.vars]
 ENVIRONMENT = "staging"
+ALL_GLASS_KANDIDATER_ENABLED = "true"
 OAUTH_ENABLED_PROVIDERS = "google"
 ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
 ACCESS_AUD = "8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb"

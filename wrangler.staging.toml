@@ -30,6 +30,9 @@ ENVIRONMENT = "staging"
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
 EVIDENCE_STATUS_CHANGE_ENABLED = "false"
+# ALL_GLASS-kandidater (dør/side/ventil/bak/tak): PÅ i staging for E2E.
+# Produksjon har ingen slik linje → quote-pilot (MANUAL_REVIEW).
+ALL_GLASS_KANDIDATER_ENABLED = "true"
 
 # ── Observability: Workers Logs-lagring AV, invocation_logs PÅ (konsistens med prod) ──
 [observability.logs]

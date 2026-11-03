@@ -319,6 +319,19 @@ function dorLeddFraNavn(navn: string): DorLedd {
 }
 
 /**
+ * Dekorlist, klips, pakning og klips-kit — aldri et glass produktet kan selges som.
+ *
+ * Regelen er bevisst smal: «MÅ HA <varenr>», «NB 6X KLIPS I PAKKEN» og
+ * «SENSORPAD» står på ekte frontruter, så bare varenr-mønsteret og egne
+ * list-ord teller.
+ */
+export function erListeRad(varenavn: string | null | undefined, varenr: string | null | undefined): boolean {
+  const navn = (varenavn ?? '').toUpperCase();
+  const vr = (varenr ?? '').toUpperCase();
+  return harOrd(navn, LIST_ORD) || /(?:PY|GU)[A-Z]{0,4}$/.test(vr) || /^\d{3,5}K$/.test(vr);
+}
+
+/**
  * Klassifiser én katalograd.
  *
  * `erFrontrute` er bevisst konservativ: bare når typen er frontrute (fra navn
@@ -404,7 +417,7 @@ export function klassifiserGlass(
   // Uten typekode forblir dorLedd null, og posisjonen må avklares med kunden.
 
   // Ikke-glass: dekorlist, klips, pakning og klips-kit.
-  const erListe = harOrd(navn, LIST_ORD) || /(?:PY|GU)[A-Z]{0,4}$/.test(vr) || /^\d{3,5}K$/.test(vr);
+  const erListe = erListeRad(navn, vr);
   const erFrontrute = type === 'frontrute' && !erListe && !typekonflikt && !typekodeKonflikt;
 
   let grunn: string;
