@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv } from '../src/vin-resolver.ts';
+import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt } from '../src/vin-resolver.ts';
 
 // Faktiske katalograder (brand='VW', frontrute, modell med «ID»).
 const KATALOG = [
@@ -24,8 +24,10 @@ const KATALOG = [
   'ID.7 (EL)',
 ];
 
+// Speiler L2 (lagPilkington): ord-treff + navnemodell-vakt.
 const matcher = (katalogModell, kjoretoyModell) =>
-  ordTreffKandidat(katalogModell, modellTokensAv(kjoretoyModell, 'VW'));
+  ordTreffKandidat(katalogModell, modellTokensAv(kjoretoyModell, 'VW'))
+  && !variantKonflikt(katalogModell, kjoretoyModell);
 
 test('familieTokens bevarer sifferet i modellfamilier', () => {
   assert.deepEqual(familieTokens('ID.4'), ['ID4']);
@@ -94,10 +96,21 @@ test('RAV4-familien er uendret av familie-tokenet', () => {
   assert.equal(matcher('RAV-4', 'RAV 4'), true);
 });
 
-test('RAV4 Plug-in Hybrid får ikke en ren RAV 4-rad (variant skal ikke gjettes)', () => {
-  // Familie-tokenet (RAV4) gjør at varianten ellers treffer «RAV 4» på ett token.
-  assert.equal(gtRadMatch('RAV 4', 'TOYOTA', 'RAV4 Plug-in Hybrid', [2024]), false);
-  assert.equal(gtRadMatch('RAV-4', 'TOYOTA', 'RAV4 Plug-in Hybrid', [2024]), false);
-  // Ren RAV4 skal fortsatt matche begge stavemåter.
-  assert.equal(gtRadMatch('RAV-4', 'TOYOTA', 'RAV4', [2024]), true);
+test('«+» normaliseres til PLUS — Prius+ skal ikke gi falsk variantkonflikt', () => {
+  // Katalogen skriver «PRIUS+», SVV skriver «PRIUS PLUS». Målt 2026-11-04:
+  // uten denne normaliseringen mistet Prius+ alle kandidater.
+  assert.equal(matcher('PRIUS+', 'PRIUS PLUS'), true);
+  assert.equal(matcher('PRIUS PLUS', 'PRIUS+'), true);
+  // Ekte navnemodell-konflikt består.
+  assert.equal(matcher('GOLF', 'GOLF SPORTSVAN'), false);
+});
+
+test('drivlinjevariant arver ikke en annen modells rad (ensidig vakt)', () => {
+  // SVV skriver «V60 PLUG IN HYBRID» og «RAV4 PHV». PR #26s kontrakt er at en
+  // variant ikke skal arve grunnmodellens glass før fitment er dokumentert.
+  // Vakten er ensidig: den ser bare på ord kjøretøyet oppgir og raden mangler.
+  assert.equal(gtRadMatch('V60', 'VOLVO', 'V60 PLUG IN HYBRID', [2013]), false);
+  assert.equal(gtRadMatch('RAV-4', 'TOYOTA', 'RAV4 PHV', [2024]), false);
+  // Raden kan beskrive drivlinjen uten at det blokkerer en ren modell.
+  assert.equal(gtRadMatch('NIRO (HYBRID) 2016-2022', 'KIA', 'Niro', [2022]), true);
 });

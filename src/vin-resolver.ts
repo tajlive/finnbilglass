@@ -471,22 +471,43 @@ export function modellNokkel(s: string): string {
  * Returnerer true bare når begge navn har slike tegn og de er helt ulike.
  */
 /**
- * Ord som gjør en bil til en ANNEN bil, ikke en variant av samme glass.
+ * Ord som gjør en bil til en ANNEN bil, ikke en variant av samme glass:
+ * Golf Sportsvan/Plus/Cross er ikke en Golf, Transit Connect/Courier er ikke en
+ * Transit, Passat CC er ikke en Passat. Uten denne vakten matchet
+ * «GOLF SPORTSVAN» GT-raden «GOLF» på ordet GOLF alene.
  *
- * NAVNEMODELLER (symmetrisk vakt): Golf Sportsvan/Plus/Cross er ikke en Golf,
- * Transit Connect/Courier er ikke en Transit, Passat CC er ikke en Passat.
- * Uten denne vakten matchet «GOLF SPORTSVAN» GT-raden «GOLF» på ordet GOLF alene.
+ * Merk: «+» regnes som ordet PLUS. Katalogen skriver «PRIUS+» mens SVV skriver
+ * «PRIUS PLUS» — uten denne normaliseringen ble det en falsk variantkonflikt og
+ * Prius+ mistet alle kandidater (målt 2026-11-04).
  *
- * DRIVLINJE_ORD (ensidig vakt): en variant kjøretøyet oppgir, som katalograden
- * ikke har, gjør at raden ikke kan brukes. «RAV4 Plug-in Hybrid» skal ikke arve
- * «RAV 4», men «Kia Niro» skal fortsatt treffe GT-raden «NIRO (HYBRID) 2016-2022»
- * — der er drivlinjeordet en beskrivelse av hele modellinjen, ikke en variant.
+ * Drivlinjeord (PLUG/PLUGIN/HYBRID/PHEV) er bevisst IKKE med: SVV skriver
+ * «V60 PLUG IN HYBRID», og en slik vakt fjernet en gyldig PINPOINT for V60 uten
+ * å fjerne noen reell feilkilde (målt 2026-11-04). Om en plug-in har samme
+ * frontrute er et fitment-spørsmål for Tom, ikke noe matchereren avgjør.
  */
 const NAVNEMODELLER = new Set(['SPORTSVAN', 'PLUS', 'CROSS', 'CONNECT', 'COURIER', 'SHOOTING', 'CC']);
+
+/**
+ * Drivlinjevarianter: en variant KJØRETØYET oppgir, som raden ikke har, gir ikke
+ * treff. Ensidig med vilje — GT-raden «NIRO (HYBRID) 2016-2022» beskriver hele
+ * modellinjen og skal fortsatt treffe en «Kia Niro».
+ */
 const DRIVLINJE_ORD = new Set(['PLUG', 'PLUGIN', 'HYBRID', 'LADEHYBRID', 'PHEV', 'PHV', 'MILD', 'MHEV']);
 
+export function drivlinjeKonflikt(kjoretoy: string, rad: string): boolean {
+  const kj = ordSett(kjoretoy);
+  const r = ordSett(rad);
+  return [...kj].some((o) => DRIVLINJE_ORD.has(o) && !r.has(o));
+}
+
 function ordSett(s: string): Set<string> {
-  return new Set((s || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/).filter(Boolean));
+  return new Set(
+    (s || '').toUpperCase()
+      // «PRIUS+» (plus på slutten av ordet) = «PRIUS PLUS». Men «SED+STV» er to
+      // ord, ikke en PLUS-variant — derfor bare når + ikke følges av en bokstav.
+      .replace(/\+(?![A-Z0-9])/g, ' PLUS ')
+      .replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/).filter(Boolean),
+  );
 }
 
 /** Ulike navnemodeller skal aldri møtes, uansett hvilken side ordet står på. */
@@ -497,13 +518,6 @@ export function variantKonflikt(a: string, b: string): boolean {
   const nb = [...ob].filter((o) => NAVNEMODELLER.has(o));
   if (!na.length && !nb.length) return false;
   return na.some((o) => !ob.has(o)) || nb.some((o) => !oa.has(o));
-}
-
-/** Drivlinje-variant kjøretøyet oppgir, som katalograden ikke har. */
-export function drivlinjeKonflikt(kjoretoy: string, katalogRad: string): boolean {
-  const kj = ordSett(kjoretoy);
-  const rad = ordSett(katalogRad);
-  return [...kj].some((o) => DRIVLINJE_ORD.has(o) && !rad.has(o));
 }
 
 const navnemodellKonflikt = variantKonflikt;
