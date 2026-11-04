@@ -108,7 +108,7 @@
       tekst: 'Estimert pris ' + nok + ' kr',
       usikker: true,
       visPris: true,
-      detalj: 'Estimert glasspris inkl. mva (veiledende pris med 75 % rabatt + mva). Endelig pris bekreftes manuelt i tilbudet. Frakt og eventuell montering kommer i tillegg.'
+      detalj: 'Estimert glasspris inkl. mva. Endelig pris bekreftes manuelt i tilbudet. Frakt og eventuell montering kommer i tillegg.'
     };
   }
 
