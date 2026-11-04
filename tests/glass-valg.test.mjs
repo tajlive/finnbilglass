@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { byggValgTre, byggSelection } from '../src/glass-valg.ts';
+import { buildClassDCandidates, matchClassDCandidates } from '../src/fitment-v1/catalogue-candidates.ts';
 import { normalizeGlassSelection } from '../src/glass-selection-contract.ts';
 
 /** Minimal CatalogueCandidate. Posisjon er det eneste treet leser. */
@@ -297,4 +298,18 @@ test('regresjon: kildekonflikt gir ubeviselig felt — autofylles aldri', () => 
   });
   const dor = tre.typer.find((t) => t.kind === 'door');
   assert.equal(dor.automatisk.side, undefined, 'konflikt skal ikke gi autofylt side');
+});
+
+test('regresjon: BUNNLIST er tilbehør og blir aldri glasskandidat', () => {
+  // Funnet i bred kontroll 2026-11-04: «TOYOTA RAV 4 2019- BUNNLIST»
+  // (8432ASMR) ble tilbudt som frontrute fordi LIST ikke var et tilbehørsord.
+  const kandidater = matchClassDCandidates(
+    buildClassDCandidates([
+      { varenr: '8432ASMR', varenavn: 'TOYOTA RAV 4 2019-   BUNNLIST', eurokode: '8432ASMR', kommentar: null },
+      { varenr: '8432AGAC', varenavn: 'TOYOTA RAV 4 22- FR AKU LDW', eurokode: '8432AGACMV1L', kommentar: null },
+    ]),
+    'TOYOTA', 'RAV4', 2024,
+  );
+  assert.equal(kandidater.length, 1, 'bare frontruten skal stå igjen');
+  assert.equal(kandidater[0].varenr, '8432AGAC');
 });

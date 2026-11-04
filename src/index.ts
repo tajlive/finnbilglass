@@ -1104,7 +1104,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           kontrollNotat = dom.status === 'bekreftet' ? ['svar samsvarer med registrerte produktegenskaper (ikke fysisk passform)'] : dom.uavklart;
           // Ukjent informasjon kan gå videre til manuell kontroll, men skal
           // aldri lagres som bekreftet passform.
-          if (dom.status === 'ukjent' && tilhorighet === 'bekreftet') tilhorighet = 'bekreftet_bil_ukjent_plassering';
+          if (dom.status === 'ukjent' && tilhorighet === 'bekreftet') tilhorighet = 'bekreftet_bil_ukjent_kontroll';
         }
         const estimat = rad ? estimertKundeprisInklMva(rad.pris) : null;
         const enhet = rad ? salgsenhet(rad.varenavn, rad.varenr) : null;

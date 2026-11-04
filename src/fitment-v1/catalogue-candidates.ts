@@ -527,7 +527,10 @@ function effektivtIntervall(c: CatalogueCandidate): EffektivIntervall {
 
 /** Er raden en tilbehørs-/listesrad som aldri skal presenteres som glass? */
 function erTilbehor(c: CatalogueCandidate): boolean {
-  return erListeRad(c.varenavn, c.varenr) || /PYNTELIST|GUMMILIST|KLIPS|PAKNING/.test(c.varenavn);
+  // Én felles regel med produkttype(): alt som er en list/klips/pakning er
+  // tilbehør, ikke glass. «BUNNLIST» (8432ASMR) slapp tidligere gjennom og ble
+  // tilbudt som glasskandidat for RAV4.
+  return erListeRad(c.varenavn, c.varenr) || /PYNTELIST|PYNTLIST|GUMMILIST|KLIPS|PAKNING|LIST\b/.test(c.varenavn);
 }
 
 /** Kundevendt plasseringstekst. Intern klassifisering skal aldri vises. */
