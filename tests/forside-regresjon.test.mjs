@@ -141,5 +141,5 @@ test('forside: alle lokale assets som refereres finnes på disk', () => {
 });
 
 function ignorer(r) {
-  return /^\/(api\/|logg-inn|login|innlogging|min-side|ops$|bilglass-uten-forsikring$|om-oss$|personvern$|betaling$)/.test(r);
+  return /^\/(api\/|logg-inn|login|innlogging|min-side|ops$|bilglass-uten-forsikring$|om-oss$|personvern$|personopplysninger$|betaling$)/.test(r);
 }

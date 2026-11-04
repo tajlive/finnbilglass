@@ -2138,10 +2138,13 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       }
     }
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
+    // Gammel adresse: 301 til den nye, saa vi ikke har to like sider.
+    if (method === 'GET' && path === '/personvern') {
+      return Response.redirect(new URL('/personopplysninger', url.origin).toString(), 301);
+    }
     const STATISKE_SIDER: Record<string, string> = {
       '/bilglass-uten-forsikring': '/bilglass-uten-forsikring.html',
       '/personopplysninger': '/personopplysninger.html',
-      '/personvern': '/personopplysninger.html',
       '/om-oss': '/om-oss.html',
     };
     if (method === 'GET' && STATISKE_SIDER[path]) {
