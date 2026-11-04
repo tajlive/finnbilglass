@@ -936,6 +936,8 @@
     state.currentGlassKind = type.kind;
     state.glassRequest = null;
     state.clientRequestId = null;
+    // Tilbake skal være tilgjengelig også i frontrute-flyten, ikke bare i treet.
+    $('btn-glass-back').classList.remove('hidden');
     loggHendelse('velg_rutetype', { kind: type.kind, antall: type.antall });
     visValg();
   }
@@ -1035,10 +1037,36 @@
   }
 
   function valgTilbake() {
-    if (!valgBak.length) return;
-    valgSti = valgSti.slice(0, valgBak.pop());
-    $('glass-placement-error').classList.add('hidden');
-    visValg();
+    if (valgBak.length) {
+      valgSti = valgSti.slice(0, valgBak.pop());
+      $('glass-placement-error').classList.add('hidden');
+      visValg();
+      return;
+    }
+    // Frontrute-flyten går via resolveren og har ingen valgsti. «Tilbake» skal
+    // da føre til rutevalget igjen. Svaret og en eventuell valgt variant
+    // nullstilles, slik at et gammelt valg aldri blir hengende på en ny rute.
+    if (!state.currentGlassKind) return;
+    searchGeneration++;
+    state.currentGlassKind = null;
+    state.glassRequest = null;
+    state.clientRequestId = null;
+    valgteGlass = null;
+    valgType = null;
+    valgSti = [];
+    valgBak = [];
+    $('glass-placement').classList.add('hidden');
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
+    // Svaret hører til ruten vi forlot og er ugyldig etter «Tilbake».
+    frontruteSvar = {};
+    if ($('resultat-sporsmaal')) { $('resultat-sporsmaal').textContent = ''; $('resultat-sporsmaal').classList.add('hidden'); }
+    if ($('resultat-oppsummering')) $('resultat-oppsummering').textContent = '';
+    $('btn-inquiry').disabled = true;
+    $('inquiry-form').classList.add('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    $('btn-glass-back').classList.add('hidden');
+    renderGlassTyper();
   }
 
   // Slår sammen automatiske valg, hoppede steg og kundens svar til ett
