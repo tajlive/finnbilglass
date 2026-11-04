@@ -356,7 +356,7 @@ function lagKvittering(
   const videre = 'Vi kontrollerer at glasset passer bilen, og bekrefter pris og frakt. Du får svaret på e-post.';
   const forbehold = 'Dette er en mottakskvittering, ikke en ordrebekreftelse — ingen bestilling er gjennomført. Du bestemmer først når du har fått tilbudet.';
   const montering = 'Vi leverer glasset. Montering avtaler du selv med et verksted.';
-  const kontakt = `${kontaktEpost} · 40 40 82 41`;
+  const kontakt = kontaktEpost;
 
   // Bare opplysninger kunden faktisk sendte inn. Aldri kandidatglass som
   // «bekreftet riktig» — kontrollen er ikke gjort ennå.

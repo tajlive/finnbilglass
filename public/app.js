@@ -731,7 +731,7 @@
   // Kjennemerke funnet ikke i SVV → ærlig melding + handoff til kontakt (ingen VIN/manuell — Tom 2026-08-17).
   function visKontaktHandoff(msg) {
     var el = $('start-feil');
-    el.innerHTML = msg + ' <a href="mailto:support@finnbilglass.no" class="link">Send oss en e-post</a> eller ring <a href="tel:+4740408241" class="link">40 40 82 41</a> — så hjelper vi deg.';
+    el.innerHTML = msg + ' <a href="mailto:support@finnbilglass.no" class="link">Send oss en e-post</a> — så hjelper vi deg.';
     el.classList.remove('hidden');
   }
 
@@ -1451,7 +1451,7 @@
         var V2 = window.FBGView;
         $('screen-resultat').querySelector('h2').textContent = 'Vi fikk ikke hentet frontruten akkurat nå';
         var feil = $('resultat-status');
-        feil.textContent = 'Prøv igjen om litt, eller ring oss på 40 40 82 41. Vi kontrollerer gjerne bilen manuelt.';
+        feil.textContent = 'Prøv igjen om litt, eller send oss en e-post. Vi kontrollerer gjerne bilen manuelt.';
         feil.className = 'note status';
         feil.classList.remove('hidden');
         $('btn-inquiry').disabled = false;
@@ -2264,7 +2264,7 @@
     hoved.type = valg === 'telefon' ? 'tel' : 'email';
     hoved.autocomplete = valg === 'telefon' ? 'tel' : 'email';
     hoved.inputMode = valg === 'telefon' ? 'tel' : 'email';
-    hoved.placeholder = valg === 'telefon' ? 'F.eks. 40 40 82 41' : 'F.eks. navn@epost.no';
+    hoved.placeholder = valg === 'telefon' ? 'F.eks. 900 00 000' : 'F.eks. navn@epost.no';
   }
   $('inquiry-kontaktpreferanse').addEventListener('change', oppdaterKontaktfelt);
 
@@ -2293,7 +2293,7 @@
   // og 429 ved abuse-rate-limit. 409 betyr at samme Idempotency-Key pågår eller
   // er brukt med annet innhold. Vis kundetekst i stedet for rå API-feil.
   function fortolkInquiryFeil(status, melding) {
-    if (status === 503) return 'Vi tar ikke imot nye forespørsler akkurat nå. Prøv igjen senere, eller ring oss på 40 40 82 41.';
+    if (status === 503) return 'Vi tar ikke imot nye forespørsler akkurat nå. Prøv igjen senere, eller send oss en e-post.';
     if (status === 429) return 'For mange forespørsler fra denne nettleseren. Prøv igjen om noen minutter.';
     if (status === 409) return 'Forespørselen behandles allerede. Vent litt og prøv igjen.';
     return melding || 'Kunne ikke sende forespørselen. Prøv igjen.';
