@@ -144,6 +144,33 @@ test('dokumentert rattplassering gir fører/passasjer', () => {
   assert.deepEqual(dorType.barn.map((n) => n.tittel), ['Førerside', 'Passasjerside']);
 });
 
+test('«begge sider» dokumenterer begge sider: sidevalget tilbyr venstre OG høyre', () => {
+  const tre = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'B', side: 'begge', dorLedd: 'fremre' }),
+      kand({ varenr: 'V', side: 'venstre', dorLedd: 'fremre' }),
+    ],
+  });
+  const dor = tre.typer.find((t) => t.kind === 'door');
+  // Dør er felles (fremre) → ikke et spørsmål. Siden spørres fordi «begge»
+  // dokumenterer høyre i tillegg til venstre.
+  assert.deepEqual(dor.barn.map((n) => n.tittel), ['Venstre side', 'Høyre side']);
+  const hoyre = dor.barn.find((n) => n.verdi === 'right');
+  assert.equal(hoyre.antall, 1, 'bare «begge»-kandidaten støtter høyre');
+});
+
+test('SED+STV bevares som konkret mengde: begge karosserier tilbys', () => {
+  const tre = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'A', varenavn: 'VOLVO V70 4D SED+5D STV 08-', type: 'bakrute' }),
+      kand({ varenr: 'B', varenavn: 'VOLVO V70 4D SED 09-', type: 'bakrute' }),
+    ],
+  });
+  const rear = tre.typer.find((t) => t.kind === 'rear');
+  // «SED+STV» dokumenterer både sedan og stasjonsvogn — ikke «ukjent for begge».
+  assert.deepEqual(rear.barn.map((n) => n.tittel).sort(), ['Sedan', 'Stasjonsvogn']);
+});
+
 test('byggSelection er gyldig i kontrakten for alle rutetyper', () => {
   for (const kind of ['windshield', 'door', 'side', 'rear', 'ventil', 'roof']) {
     const selection = byggSelection(kind, {});

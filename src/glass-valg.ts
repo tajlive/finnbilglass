@@ -20,7 +20,8 @@
  * Katalogen bekrefter aldri fysisk kompatibilitet. Treet sier hva som er
  * dokumentert tilgjengelig — ikke hva som er riktig glass på bilen.
  */
-import { kropperIRad, type CatalogueCandidate } from './fitment-v1/catalogue-candidates.js';
+import type { CatalogueCandidate } from './fitment-v1/catalogue-candidates.js';
+import { feltVerdier } from './glass-kandidat-vurdering.js';
 
 export type ValgFelt =
   | 'door' | 'side' | 'placement' | 'layout' | 'section' | 'mounting' | 'system' | 'panel' | 'body';
@@ -136,26 +137,6 @@ function sideTittel(verdi: string, styring: Kjorestyring): string {
   return verdi === 'left' ? 'Venstre side' : 'Høyre side';
 }
 
-/** Feltets verdi for én kandidat. `null` = katalogen sier ingenting (kompatibel med alle svar). */
-function feltVerdi(c: CatalogueCandidate, felt: ValgFelt): string | null {
-  const p = c.posisjon;
-  if (felt === 'door') return p.dorLedd === 'fremre' ? 'front' : p.dorLedd === 'bakre' ? 'rear' : null;
-  if (felt === 'placement') return p.ventilLedd === 'foran' ? 'front' : p.ventilLedd === 'bakre' ? 'rear' : null;
-  if (felt === 'side') {
-    if (p.side === 'venstre') return 'left';
-    if (p.side === 'hoyre') return 'right';
-    return null; // 'begge' og null er begge «passer uansett side»
-  }
-  if (felt === 'body') {
-    const kropper = kropperIRad(c.varenavn);
-    // To karosserier på samme rad («SED+STV») betyr «passer begge» — ikke et valg.
-    if (kropper.size !== 1) return null;
-    return [...kropper][0] ?? null;
-  }
-  // layout/section/mounting/system/panel finnes ikke i katalogdataene i dag.
-  return null;
-}
-
 function nodeTittel(felt: ValgFelt, verdi: string, styring: Kjorestyring): string {
   if (felt === 'side') return sideTittel(verdi, styring);
   if (felt === 'door') return verdi === 'front' ? 'Fremre dørrute' : 'Bakre dørrute';
@@ -164,18 +145,24 @@ function nodeTittel(felt: ValgFelt, verdi: string, styring: Kjorestyring): strin
   return verdi;
 }
 
-/** Felt der alle kandidatene i settet er enige, og verdien faktisk finnes. */
+/**
+ * Felt der alle kandidatene i settet er enige om ÉN dokumentert verdi.
+ * En kandidat uten kjent verdi (eller «begge sider»/flere karosserier) gjør
+ * feltet uavklart — da autofylles det aldri, for en kjent verdi pluss ukjente
+ * er ikke enighet.
+ */
 function enigeFelt(kandidater: CatalogueCandidate[], feltrekke: ValgFelt[]): Record<string, string> {
   const ut: Record<string, string> = {};
   for (const felt of feltrekke) {
-    const verdier = new Set<string>();
-    let ukjent = false;
+    let fane: string | null = null;
+    let enig = true;
     for (const c of kandidater) {
-      const v = feltVerdi(c, felt);
-      if (v == null) ukjent = true;
-      else verdier.add(v);
+      const { verdier } = feltVerdier(c, felt);
+      if (!verdier || verdier.length !== 1) { enig = false; break; }
+      if (fane === null) fane = verdier[0];
+      else if (fane !== verdier[0]) { enig = false; break; }
     }
-    if (verdier.size === 1 && !ukjent) ut[felt] = [...verdier][0];
+    if (enig && fane !== null) ut[felt] = fane;
   }
   return ut;
 }
@@ -190,8 +177,8 @@ function byggNivaa(
   const felt = feltrekke[indeks];
   const verdier: string[] = [];
   for (const c of kandidater) {
-    const v = feltVerdi(c, felt);
-    if (v != null && !verdier.includes(v)) verdier.push(v);
+    const { verdier: vs } = feltVerdier(c, felt);
+    if (vs) for (const v of vs) if (!verdier.includes(v)) verdier.push(v);
   }
   // Ett eller ingen kjente svar: steget kan hoppes over. Verdien følger med
   // som «automatisk» på nivået over, slik at oppsummeringen blir riktig.
@@ -203,10 +190,12 @@ function byggNivaa(
   });
 
   return sortert.map((verdi) => {
-    // Kandidater uten kjent verdi støtter alle svar og blir med i hver gren.
+    // En kandidat uten kjent verdi støtter alle svar; en med «begge sider» eller
+    // flere karosserier støtter hver av sine dokumenterte verdier. Begge blir med
+    // i hver gren de dokumentert støtter — ikke i grener de motstrider.
     const delmengde = kandidater.filter((c) => {
-      const v = feltVerdi(c, felt);
-      return v == null || v === verdi;
+      const { verdier: vs } = feltVerdier(c, felt);
+      return vs == null || vs.length === 0 || vs.includes(verdi);
     });
     return {
       felt,
