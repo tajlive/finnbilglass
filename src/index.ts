@@ -2142,6 +2142,11 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     if (method === 'GET' && path === '/personvern') {
       return Response.redirect(new URL('/personopplysninger', url.origin).toString(), 301);
     }
+    // Modellsider (utkast): /bilglass/<slug> → public/bilglass/<slug>.html
+    if (method === 'GET' && /^\/bilglass\/[a-z0-9-]{2,40}$/.test(path)) {
+      const fil = await env.ASSETS.fetch(new Request(url.origin + path + '.html'));
+      if (fil.ok) return fil;
+    }
     const STATISKE_SIDER: Record<string, string> = {
       '/bilglass-uten-forsikring': '/bilglass-uten-forsikring.html',
       '/personopplysninger': '/personopplysninger.html',
