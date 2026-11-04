@@ -1101,7 +1101,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
             answers: utstyrSvar,
           });
           if (dom.status === 'avvist') return json({ ok: false, error: dom.melding }, 400);
-          kontrollNotat = dom.status === 'bekreftet' ? ['bekreftet mot kundens svar'] : dom.uavklart;
+          kontrollNotat = dom.status === 'bekreftet' ? ['svar samsvarer med registrerte produktegenskaper (ikke fysisk passform)'] : dom.uavklart;
           // Ukjent informasjon kan gå videre til manuell kontroll, men skal
           // aldri lagres som bekreftet passform.
           if (dom.status === 'ukjent' && tilhorighet === 'bekreftet') tilhorighet = 'bekreftet_bil_ukjent_plassering';

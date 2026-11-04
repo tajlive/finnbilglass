@@ -39,8 +39,14 @@ test('salgsenhet: fravær av par-ord er ikke dokumentasjon på enkeltglass', () 
   assert.match(ut.grunnlag, /ingen kildeopplysning/);
 });
 
-test('salgsenhet: uttrykkelig par/sett av GLASS gir par', () => {
+test('salgsenhet: uttrykkelig PAR av glass gir par (to glass)', () => {
   assert.equal(salgsenhet('FORD S-MAX 06- SIDERUTE PAR', '9999GN').enhet, 'par');
+});
+
+test('salgsenhet: SETT gir sett, ikke par — antall glass er ikke dokumentert', () => {
+  const ut = salgsenhet('FORD S-MAX 06- SIDERUTE SETT', '9999GN');
+  assert.equal(ut.enhet, 'sett');
+  assert.match(ut.grunnlag, /antall glass ikke dokumentert/);
 });
 
 test('salgsenhet: tilbehørssett er ikke et glasspar', () => {

@@ -1,14 +1,16 @@
 {
   "oppsummering": {
     "manifest": "data/finn-100.jsonl",
+    "manifestSha256": "d407e6dc53b656686e9da32fa867e8ac5b9dca6f956d6f244444b1a2fb3de809",
+    "datagrunnlagSha256": "eda1188f084b30d551b070bcd2156aac7ab287ba88c834940f9c98f59f49dd90",
+    "gammelKode": "scripts/_old/glass-valg-OLD.ts (git blob dfbc86b:src/glass-valg.ts = d8d70cfcd0ed03a48163358ff767b76d5d773ec8)",
+    "nyKode": "src/glass-valg.ts",
     "biler": 110,
-    "feil": 0,
-    "bilerUendret": 110,
-    "bilerEndret": 0,
-    "stegFor": 95,
-    "stegEtter": 95,
-    "lovFor": 252,
-    "lovEtter": 252
+    "bilerMedKandidater": 21,
+    "bilerUendret": 101,
+    "bilerEndret": 9,
+    "stierGammel": 310,
+    "stierNy": 310
   },
   "rader": [
     {
@@ -19,36 +21,12 @@
         "aar": 2006
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -58,36 +36,12 @@
         "aar": 2024
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -97,36 +51,12 @@
         "aar": 2000
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -136,72 +66,18 @@
         "aar": 2015
       },
       "kandidater": 24,
-      "for": {
-        "typer": 4,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 6,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 4,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 6,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 4,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 16,
+      "stierNy": 16,
+      "felles": 14,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=cabriolet:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=cabriolet:n=3:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=cabriolet:n=2:auto={\"side\":\"left\",\"body\":\"cabriolet\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=cabriolet:n=2:auto={\"side\":\"right\",\"body\":\"cabriolet\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -211,72 +87,20 @@
         "aar": 2008
       },
       "kandidater": 42,
-      "for": {
-        "typer": 4,
-        "steg": 7,
-        "lov": 13,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 32,
-            "steg": 2,
-            "lov": 7
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 3,
-            "lov": 3
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 7,
-        "lov": 13,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 32,
-            "steg": 2,
-            "lov": 7
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 3,
-            "lov": 3
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 18,
+      "stierNy": 18,
+      "felles": 15,
+      "bareGammel": [
+        "type:side:n=32:auto={}/side=left:n=17:auto={\"side\":\"left\"}/body=cabriolet:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=32:auto={}/side=left:n=17:auto={\"side\":\"left\"}/body=coupe:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=32:auto={}/side=right:n=15:auto={\"side\":\"right\"}/body=coupe:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=32:auto={}/side=left:n=17:auto={\"side\":\"left\"}/body=cabriolet:n=2:auto={\"side\":\"left\"}",
+        "type:side:n=32:auto={}/side=left:n=17:auto={\"side\":\"left\"}/body=coupe:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=32:auto={}/side=right:n=15:auto={\"side\":\"right\"}/body=coupe:n=4:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -286,36 +110,12 @@
         "aar": 2021
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -325,36 +125,12 @@
         "aar": 2022
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -364,72 +140,12 @@
         "aar": 2021
       },
       "kandidater": 18,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 7,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 4,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 3,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 7,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 4,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 3,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -439,36 +155,12 @@
         "aar": 2020
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -478,36 +170,12 @@
         "aar": 2008
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -517,36 +185,12 @@
         "aar": 2018
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -556,36 +200,12 @@
         "aar": 2025
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -595,36 +215,12 @@
         "aar": 2021
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -634,36 +230,12 @@
         "aar": 2017
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -673,36 +245,12 @@
         "aar": 2017
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -712,36 +260,12 @@
         "aar": 2018
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -751,36 +275,12 @@
         "aar": 2022
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -790,36 +290,12 @@
         "aar": 2022
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -829,36 +305,12 @@
         "aar": 1983
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -868,36 +320,12 @@
         "aar": 2025
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -907,36 +335,12 @@
         "aar": 2014
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -946,36 +350,12 @@
         "aar": 2026
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -985,36 +365,12 @@
         "aar": 2011
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1024,36 +380,12 @@
         "aar": 2018
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1063,36 +395,12 @@
         "aar": 2022
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1102,36 +410,12 @@
         "aar": 2022
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1141,36 +425,12 @@
         "aar": 2026
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1180,72 +440,12 @@
         "aar": 2015
       },
       "kandidater": 29,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 8,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 10,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 8,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 10,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1255,36 +455,12 @@
         "aar": 2008
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1294,36 +470,12 @@
         "aar": 2013
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1333,72 +485,12 @@
         "aar": 2016
       },
       "kandidater": 29,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 8,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 10,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 8,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "side",
-            "kandidater": 10,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1408,36 +500,12 @@
         "aar": 2011
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1447,36 +515,12 @@
         "aar": 2013
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1486,72 +530,12 @@
         "aar": 2024
       },
       "kandidater": 10,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1561,36 +545,12 @@
         "aar": 1999
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1600,36 +560,12 @@
         "aar": 2018
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1639,36 +575,12 @@
         "aar": 2012
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1678,36 +590,12 @@
         "aar": 2011
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1717,36 +605,12 @@
         "aar": 2014
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1756,36 +620,12 @@
         "aar": 2025
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1795,36 +635,12 @@
         "aar": 2009
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1834,36 +650,12 @@
         "aar": 2010
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1873,36 +665,12 @@
         "aar": 2005
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1912,36 +680,12 @@
         "aar": 2021
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1951,36 +695,12 @@
         "aar": 2011
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -1990,36 +710,12 @@
         "aar": 2022
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2029,36 +725,12 @@
         "aar": 2023
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2068,36 +740,12 @@
         "aar": 2014
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2107,36 +755,12 @@
         "aar": 2012
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2146,36 +770,12 @@
         "aar": 2017
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2185,36 +785,12 @@
         "aar": 2023
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2224,36 +800,12 @@
         "aar": 2023
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2263,36 +815,12 @@
         "aar": 2024
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2302,36 +830,12 @@
         "aar": 2018
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2341,36 +845,12 @@
         "aar": 2023
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2380,36 +860,12 @@
         "aar": 2009
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2419,36 +875,12 @@
         "aar": 2020
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2458,36 +890,12 @@
         "aar": 2023
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2497,36 +905,12 @@
         "aar": 2013
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2536,36 +920,12 @@
         "aar": 2020
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2575,36 +935,12 @@
         "aar": 2009
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2614,36 +950,12 @@
         "aar": 2012
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2653,36 +965,12 @@
         "aar": 2010
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2692,36 +980,12 @@
         "aar": 2012
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2731,36 +995,12 @@
         "aar": 2018
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2770,36 +1010,12 @@
         "aar": 2023
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2809,36 +1025,12 @@
         "aar": 2015
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2848,36 +1040,12 @@
         "aar": 2017
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2887,36 +1055,12 @@
         "aar": 2017
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2926,36 +1070,12 @@
         "aar": 2018
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -2965,36 +1085,12 @@
         "aar": 2026
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3004,36 +1100,12 @@
         "aar": 2016
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3043,36 +1115,12 @@
         "aar": 2021
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3082,36 +1130,12 @@
         "aar": 2009
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3121,36 +1145,12 @@
         "aar": 2013
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3160,36 +1160,12 @@
         "aar": 2009
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3199,36 +1175,12 @@
         "aar": 2025
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3238,36 +1190,12 @@
         "aar": 2017
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3277,36 +1205,12 @@
         "aar": 2025
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3316,36 +1220,12 @@
         "aar": 2020
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3355,36 +1235,12 @@
         "aar": 2025
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3394,36 +1250,12 @@
         "aar": 2006
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3433,36 +1265,12 @@
         "aar": 2024
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3472,36 +1280,12 @@
         "aar": 2007
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3511,36 +1295,12 @@
         "aar": 1999
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3550,60 +1310,18 @@
         "aar": 2023
       },
       "kandidater": 27,
-      "for": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "etter": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -3613,36 +1331,12 @@
         "aar": 2021
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3652,72 +1346,12 @@
         "aar": 2024
       },
       "kandidater": 10,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3727,36 +1361,12 @@
         "aar": 2013
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3766,72 +1376,12 @@
         "aar": 2024
       },
       "kandidater": 10,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3841,36 +1391,12 @@
         "aar": 2024
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3880,36 +1406,12 @@
         "aar": 2005
       },
       "kandidater": 2,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 1,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 1,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3919,36 +1421,12 @@
         "aar": 2007
       },
       "kandidater": 1,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3958,36 +1436,12 @@
         "aar": 2010
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -3997,36 +1451,12 @@
         "aar": 2025
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4036,60 +1466,18 @@
         "aar": 2023
       },
       "kandidater": 27,
-      "for": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "etter": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -4099,36 +1487,12 @@
         "aar": 2008
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4138,60 +1502,18 @@
         "aar": 2024
       },
       "kandidater": 27,
-      "for": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "etter": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -4201,72 +1523,12 @@
         "aar": 2024
       },
       "kandidater": 10,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4276,36 +1538,12 @@
         "aar": 2009
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4315,72 +1553,12 @@
         "aar": 2023
       },
       "kandidater": 10,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4390,36 +1568,12 @@
         "aar": 2021
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4429,72 +1583,12 @@
         "aar": 2024
       },
       "kandidater": 10,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4504,72 +1598,12 @@
         "aar": 2024
       },
       "kandidater": 10,
-      "for": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "etter": {
-        "typer": 4,
-        "steg": 4,
-        "lov": 6,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 4,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "door",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          },
-          {
-            "kind": "rear",
-            "kandidater": 2,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "ventil",
-            "kandidater": 2,
-            "steg": 2,
-            "lov": 2
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4579,60 +1613,18 @@
         "aar": 2024
       },
       "kandidater": 27,
-      "for": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "etter": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -4642,60 +1634,18 @@
         "aar": 2024
       },
       "kandidater": 27,
-      "for": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "etter": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -4705,60 +1655,18 @@
         "aar": 2024
       },
       "kandidater": 27,
-      "for": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "etter": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -4768,60 +1676,18 @@
         "aar": 2024
       },
       "kandidater": 27,
-      "for": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "etter": {
-        "typer": 3,
-        "steg": 6,
-        "lov": 11,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 6,
-            "steg": 0,
-            "lov": 1
-          },
-          {
-            "kind": "side",
-            "kandidater": 14,
-            "steg": 2,
-            "lov": 6
-          },
-          {
-            "kind": "rear",
-            "kandidater": 7,
-            "steg": 4,
-            "lov": 4
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
     },
     {
       "bil": {
@@ -4831,36 +1697,12 @@
         "aar": 2025
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     },
     {
       "bil": {
@@ -4870,36 +1712,12 @@
         "aar": 2009
       },
       "kandidater": 0,
-      "for": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "etter": {
-        "typer": 1,
-        "steg": 0,
-        "lov": 1,
-        "perType": [
-          {
-            "kind": "windshield",
-            "kandidater": 0,
-            "steg": 0,
-            "lov": 1
-          }
-        ]
-      },
-      "endring": {
-        "steg": 0,
-        "lov": 0
-      }
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
     }
   ]
 }

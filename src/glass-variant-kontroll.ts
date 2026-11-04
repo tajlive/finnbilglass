@@ -18,7 +18,7 @@ import { kropperIRad } from './fitment-v1/catalogue-candidates.js';
 import { posisjonFeltVerdier, vurderFelt } from './glass-kandidat-vurdering.js';
 
 export type Produkttype = 'glass' | 'list' | 'tilbehor' | 'ukjent';
-export type Salgsenhet = 'enkel' | 'par' | 'ukjent';
+export type Salgsenhet = 'par' | 'sett' | 'ukjent';
 
 /**
  * Produkttype fra navn og varenr — ikke fra `rad_type`, som er upålitelig:
@@ -44,11 +44,17 @@ export function salgsenhet(
 ): { enhet: Salgsenhet; grunnlag: string } {
   const navn = String(varenavn ?? '').toUpperCase();
   const erGlass = produkttype(varenavn, varenr ?? null) === 'glass';
-  const parOrd = /(?<![A-ZÆØÅ])(?:PAR|SETT|2-PAK|TO-PAK)(?![A-ZÆØÅ])/.test(navn);
+  // «PAR»/«2-PAK» dokumenterer to glass. «SETT» dokumenterer et sett, men ikke
+  // hvor mange glass det inneholder — derfor en egen verdi.
+  const parOrd = /(?<![A-ZÆØÅ])(?:PAR|2-PAK|TO-PAK)(?![A-ZÆØÅ])/.test(navn);
+  const settOrd = /(?<![A-ZÆØÅ])SETT(?![A-ZÆØÅ])/.test(navn);
   if (parOrd && erGlass) {
-    return { enhet: 'par', grunnlag: 'varenavn sier par/sett og produktet er glass' };
+    return { enhet: 'par', grunnlag: 'varenavn sier par/to glass og produktet er glass' };
   }
-  if (parOrd && !erGlass) {
+  if (settOrd && erGlass) {
+    return { enhet: 'sett', grunnlag: 'varenavn sier sett — antall glass ikke dokumentert' };
+  }
+  if ((parOrd || settOrd) && !erGlass) {
     return { enhet: 'ukjent', grunnlag: 'par/sett-ord, men produktet er ikke glass — ikke et glasspar' };
   }
   if (/V\s*\+\s*H|VS\s*[\/+]\s*HS|VENSTRE\s*[\/+]\s*HØYRE/.test(navn)) {

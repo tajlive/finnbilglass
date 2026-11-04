@@ -7,7 +7,7 @@ import { byggValgTre, byggSelection } from '../src/glass-valg.ts';
 import { normalizeGlassSelection } from '../src/glass-selection-contract.ts';
 
 /** Minimal CatalogueCandidate. Posisjon er det eneste treet leser. */
-function kand({ varenr = 'X1', varenavn = 'TEST', type = 'dor', side = null, dorLedd = null, ventilLedd = null } = {}) {
+function kand({ varenr = 'X1', varenavn = 'TEST', type = 'dor', side = null, dorLedd = null, ventilLedd = null, konflikt = false } = {}) {
   return {
     eurokode: varenr,
     varenr,
@@ -21,7 +21,7 @@ function kand({ varenr = 'X1', varenavn = 'TEST', type = 'dor', side = null, dor
     aarFra: 2000,
     aarTil: null,
     generasjon: null,
-    posisjon: { type, side, dorLedd, ventilLedd, konflikt: false },
+    posisjon: { type, side, dorLedd, ventilLedd, konflikt },
   };
 }
 
@@ -250,4 +250,51 @@ test('byggSelection tar med svarene kunden faktisk ga', () => {
   assert.equal(selection.door, 'front');
   assert.equal(selection.side, 'left');
   assert.equal(selection.body, 'estate');
+});
+
+// ── Regresjonstilfeller ────────────────────────────────────────────────
+// Konstruerte kandidater som låser bestemte regler. De er IKKE uavhengige
+// fasitbiler og skal ikke telles som dokumentert passform.
+
+test('regresjon: «begge sider» (VS+HS) gir sidevalg selv når bare én kandidat har det', () => {
+  const tre = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'VSHS', side: 'begge', dorLedd: 'fremre' }),
+      kand({ varenr: 'V', side: 'venstre', dorLedd: 'fremre' }),
+      kand({ varenr: 'H', side: 'hoyre', dorLedd: 'bakre' }),
+    ],
+  });
+  const dor = tre.typer.find((t) => t.kind === 'door');
+  const fremre = dor.barn.find((n) => n.verdi === 'front');
+  assert.deepEqual(fremre.barn.map((n) => n.verdi).sort(), ['left', 'right']);
+});
+
+test('regresjon: SED+STV dokumenterer begge karosserier, ukjent dokumenterer ingen', () => {
+  const tre = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'A', varenavn: 'VW PASSAT 4D SED+5D STV 88-93', type: 'bakrute' }),
+      kand({ varenr: 'B', varenavn: 'VW PASSAT 4D 88-93', type: 'bakrute' }),
+    ],
+  });
+  const rear = tre.typer.find((t) => t.kind === 'rear');
+  assert.deepEqual(rear.barn.map((n) => n.verdi).sort(), ['estate', 'sedan']);
+});
+
+test('regresjon: ukjent plassering tilbys aldri som valg', () => {
+  const tre = byggValgTre({
+    kandidater: [kand({ varenr: 'U', type: 'ukjent' }), kand({ varenr: 'D', side: 'venstre', dorLedd: 'fremre' })],
+  });
+  assert.equal(tre.ukjentPlassering, 1);
+  assert.deepEqual(tre.typer.map((t) => t.kind).sort(), ['door', 'windshield']);
+});
+
+test('regresjon: kildekonflikt gir ubeviselig felt — autofylles aldri', () => {
+  const tre = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'K', side: 'venstre', dorLedd: 'fremre', konflikt: true }),
+      kand({ varenr: 'V', side: 'venstre', dorLedd: 'fremre' }),
+    ],
+  });
+  const dor = tre.typer.find((t) => t.kind === 'door');
+  assert.equal(dor.automatisk.side, undefined, 'konflikt skal ikke gi autofylt side');
 });
