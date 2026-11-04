@@ -117,4 +117,64 @@ To biler har merkenavnet duplisert i modellstrengen fra finn.no: `MITSUBISHI MIT
 | Full suite i worktreen (committed HEAD + PR #26) | **48 suiter, 524 tester, 517 pass, 0 fail, 7 skipped** (524 = 519 på HEAD + 5 nye RAV4-tester; de 7 skippete er GT-fixture-testene, som ikke ligger i worktreen) |
 | Endrede filer | `src/vin-resolver.ts`, `tests/rav4-modellnormalisering.test.mjs`, `package.json` |
 
-Selve branchen `copy/kvittering-20261103` er **ikke** endret — dette er en prøve som gir deg faktum før du bestemmer.
+Prøven viste at sammenføyningen er ren. Den er senere gjennomført for alvor i arbeidsbranchen — se §9.
+
+---
+
+## 9. Etter sammenslåingen (2026-11-04)
+
+PR #26 er nå merget inn i arbeidsbranchen etter vanlig gjennomgang (diff lest, 3 filer: `src/vin-resolver.ts`, `tests/rav4-modellnormalisering.test.mjs`, `package.json`), og staging er deployet på nytt.
+
+| Felt | Verdi |
+|---|---|
+| Merge-commit | `7c20d1ad` (foreldre: `ded654d` + `ec61ca16`) |
+| Konflikt | kun `qa`-linjen i `package.json` — begge testene beholdt |
+| QA etter merge | **531 tester, 531 pass, 0 fail, 0 skipped** (526 + 5 RAV4-tester) |
+| Staging-deploy | version `016521d3-fbcc-4371-994a-b698e6be6f5d`, `/health` 200, katalogRader 29 627 |
+| Piloter | `pilot-regresjon-20261104-etter` (51) + `pilot-tilfeldig-20261104-etter` (50), samme seed og samme biler som før |
+
+### 9.1 Samlet effekt
+
+| Måling | Før | Etter |
+|---|---|---|
+| Kall / tekniske feil | 101 / **0** | 101 / **0** |
+| Biler med kandidater | 77 | **77** |
+| Uten dekning | 24 | **24** |
+| PINPOINT | 14 | **11** |
+| VERIFY | 63 | **66** |
+| FALLBACK | 24 | 24 |
+| Fasit (2 biler) | 2/2 SAMSVAR | **2/2 SAMSVAR** |
+| Samsvar med dokumentert forventning (selvtest-50) | 50/50 | **50/50** |
+| Gjennomsnittlig latens | 346 ms (regresjon) / 496 ms (tilfeldig) | 347 ms / 511 ms |
+
+**12 av 101 utfall endret — 4 i regresjonssettet, 8 i det tilfeldige utvalget.** Ingen nye tekniske feil. Dekningen er uendret; det er *hvilke* svar kunden får som endres.
+
+### 9.2 De 12 endringene
+
+| Bil | Før | Etter | Vurdering |
+|---|---|---|---|
+| Toyota RAV4 2005 | FALLBACK / 0 | **VERIFY / 2** | **Fikset** — dette var hele poenget med PR #26 |
+| Tesla Model Y 2023 | VERIFY / 4 | **PINPOINT / 1** (`8103AGCC`) | **Fikset feilkilde** — før kunne Model Y matche GT-raden «MODEL 3»; nå treffer den egen rad |
+| VW Golf Plus 2011 | VERIFY / 6 | **FALLBACK / 0** | **Riktig blitt strengere** — GT har ingen «GOLF PLUS»-rad; før ble det tilbudt Golf-ruter til en annen bil |
+| VW Golf Sportsvan 2014 | VERIFY / 6 | VERIFY / 3 | Strengere: Sportsvan er egen modell |
+| Toyota Prius+ 2013 | VERIFY / 5 | VERIFY / 3 | Strengere: feil årganger falt bort |
+| VW ID.4 GTX 2023 | PINPOINT / 1 | VERIFY / 3 | PINPOINT → VERIFY: tre varianter vises nå (8652AGAC, 8658AGAC, 8658ACKC) |
+| VW ID.4 2023 (×2) | PINPOINT / 1 | VERIFY / 3 | som over |
+| VW ID.5 2023 (×2) | PINPOINT / 1 | VERIFY / 3 | som over |
+| Mazda CX-3 2018 | VERIFY / 2 | VERIFY / 4 | Flere varianter fra L2 |
+| Mazda CX-5 2014 | VERIFY / 3 | VERIFY / 1 | Færre; grunn: «1 kandidat, men ikke bekreftet av ground_truth» |
+| Toyota Yaris 2024 | VERIFY / 4 | VERIFY / 3 | Én variant mindre fra L1 |
+
+### 9.3 Vurdering
+
+- **To reelle feilrettinger:** RAV4 (tegnsetting) og Model Y (matchet feil modellrad før). Begge er dokumentert i PR #26.
+- **Tre stramminger som fjerner feil bil:** Golf Plus, Golf Sportsvan og Prius+ fikk før ruter fra en annen modell. Å gi FALLBACK der er i tråd med doktrinen — et kataloghull skal gi hjelpeflyt, ikke et feil glass. **Dette er ikke regresjoner i feilbestillings-forstand, men de øker manuell andel** og må veies mot konvertering.
+- **Fire PINPOINT → VERIFY (ID.4/ID.5):** mindre skråsikkerhet, tre varianter i stedet for én. Tryggere, men mer friksjon. Bør undersøkes: var den gamle PINPOINT faktisk riktig for GTX-varianten, eller var den et lykketreff?
+- **Ingen fasit avviket**, og den dokumenterte forventningen fra 2026-08-19 holdt 50/50 også etter endringen.
+
+### 9.4 Neste steg, i tråd med CTO-ens rekkefølge
+
+1. **Avklar ID.4/ID.5-downgraden** før videre utvidelse — den er den eneste endringen som gir mer friksjon uten åpenbar sikkerhetsgevinst.
+2. **Utvid utvalget trinnvis** til ~300–500 biler, med vekt på (a) flere biler per merke/modell/årgang, (b) nyere elbiler, (c) modellnavn med tegnsetting eller suffiks (`Plug-in Hybrid`, `GTX`, `Plus`, `Sportsvan`, `HBK`, `PHV`).
+3. **De 24 uten kandidater skal ikke regnes som matchfeil** før de er vurdert som kataloghull — det gjelder særlig Golf Plus, Polestar 2, Ariya, bZ4X, Born, Eletre, i3, i7 og RAV4 Plug-in Hybrid.
+4. **Nettlesertest av hjelpeflyten** for nettopp disse 24 bilene.
