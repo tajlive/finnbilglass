@@ -209,7 +209,13 @@
         if (i.vehicle_json) {
           try {
             var v = JSON.parse(i.vehicle_json);
-            if (v.bil) bil = [v.bil.merke, v.bil.modell, v.bil.aar].filter(Boolean).join(' ');
+            if (v.bil) {
+              // Ikke dupliser merket når SVVs modellstreng allerede inneholder det.
+              var mk = String(v.bil.merke || '').trim();
+              var md = String(v.bil.modell || '').trim();
+              var har = mk && md.toUpperCase().indexOf(mk.toUpperCase()) === 0;
+              bil = [har ? '' : mk, md, v.bil.aar].filter(Boolean).join(' ');
+            }
             if (v.resolver && v.resolver.utfall) bil += ' · ' + v.resolver.utfall;
           } catch (e) { /* ignorer */ }
         }

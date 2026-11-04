@@ -1065,7 +1065,12 @@
     var el = $('resultat-oppsummering');
     if (!el) return;
     el.textContent = '';
-    var bil = [penSkrivemaate(state.merke), penSkrivemaate(state.modell), state.aar ? String(state.aar) : '']
+    // SVVs handelsbetegnelse inneholder ofte merket selv («TOYOTA RAV4»).
+    // Da skal merket ikke prependeres — ellers blir det «Toyota Toyota RAV4».
+    var merkePent = penSkrivemaate(state.merke);
+    var modellPent = penSkrivemaate(state.modell);
+    var modellHarMerke = modellPent.toUpperCase().indexOf(String(state.merke || '').toUpperCase().trim()) === 0;
+    var bil = [modellHarMerke ? '' : merkePent, modellPent, state.aar ? String(state.aar) : '']
       .filter(Boolean).join(' ');
     var dl = document.createElement('dl');
     var rad = function (etikett, verdi) {
@@ -2116,7 +2121,12 @@
     var el = $('inquiry-oppsummering');
     var selection = state.glassRequest ? state.glassRequest.selection : null;
     var rute = glassSelectionLabel(selection);
-    var bil = [penSkrivemaate(state.merke), penSkrivemaate(state.modell), state.aar ? String(state.aar) : '']
+    // SVVs handelsbetegnelse inneholder ofte merket selv («TOYOTA RAV4»).
+    // Da skal merket ikke prependeres — ellers blir det «Toyota Toyota RAV4».
+    var merkePent = penSkrivemaate(state.merke);
+    var modellPent = penSkrivemaate(state.modell);
+    var modellHarMerke = modellPent.toUpperCase().indexOf(String(state.merke || '').toUpperCase().trim()) === 0;
+    var bil = [modellHarMerke ? '' : merkePent, modellPent, state.aar ? String(state.aar) : '']
       .filter(Boolean).join(' ');
     var legacy = $('inquiry-glass-summary');
     if (legacy) {
