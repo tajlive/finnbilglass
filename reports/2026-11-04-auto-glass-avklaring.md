@@ -191,3 +191,44 @@ Merk: første forsøk sperret ikke, fordi SVV sender modellstrengen «TOYOTA RAV
 ### 8.4 Produksjon
 
 Uendret og ikke berørt. RAV4-koden er ikke bekreftet, så sperren ligger i kode på staging — den skal **ikke** til produksjon før leverandøren har bekreftet at `8432AGAC` gjelder 2022–2025, eller GT-årene er rettet med dokumentasjon.
+
+---
+
+## 9. RAV4: rotårsaken var søskenrader, ikke GT-årene
+
+Funnet etter Toms tips om at katalogen har størrelse i cm:
+
+**Autoglass-prislisten** (`PROSEKT API 16 MAI26.xls`, 34 800 rader) har **ett varenr med flere eurokoder og ulik årang**:
+
+| Rad | Varenr | Eurokode | Varenavn | Pris |
+|---|---|---|---|---|
+| 27510 | `8432AGAC` | `8432AGACHM` | TOYOTA RAV 4 **19-21** FR AKU LDW | 19 410 |
+| 27511 | `8432AGAC` | `8432AGACHMU` | TOYOTA RAV 4 **2019-** FR AKU LDW | 22 825 |
+| 27512 | `8432AGAC` | `8432AGACHMUV1E` | TOYOTA RAV 4 **2019-** WS GN ACO LDW | 15 810 |
+| 27513 | `8432AGAC` | `8432AGACHMV1E` | TOYOTA RAV 4 **2019-** WS GN ACO LDW | 16 230 |
+| 27516 | `8432AGAC` | `8432AGACMV` | TOYOTA RAV 4 2019- FR AKU SENSOR | 0 |
+
+`prisKandidat()` brukte `LIMIT 1` og tok den **første** raden — altså 19-21-varen — for en 2024-bil. Det var rotårsaken; GT-årene var ikke problemet.
+
+### 9.1 Rettet
+
+`velgPrisRadEtterAar()` velger nå raden hvis varenavn-år inneholder bilens år, og den mest spesifikke når flere dekker året (19-21 foran «2019-» for en 2020-bil). Uten år, eller når ingen rad dekker året: første rad som før.
+
+**Målt på staging `67ddbf8c`:** RAV4 2024 gir nå `8432AGACHMU` = «TOYOTA RAV 4 2019- FR AKU LDW» i stedet for `8432AGACHM` = «… 19-21 …». Utfallet er fortsatt **VERIFY** fordi sperren står — som bestemt.
+
+Hele 117-settet er kjørt på nytt: **0 endringer i utfall eller kandidatantall**, 0 tekniske feil. QA **545/545**.
+
+### 9.2 Størrelse i cm — filen mangler
+
+Jeg har lett gjennom maskinen. Det finnes **én** stor XLS-katalog: `PROSEKT API 16 MAI26.xls` (34 800 rader, også i `~/Developer/autoglassgrossisten/` og `~/Downloads/`). Den har **7 kolonner — Varenr, Varenavn, Merknad, Pris, (tom), Eurokode, (tom) — ingen størrelseskolonne.**
+
+`glass_catalog.dimensions` i D1 er `{"width":null,"height":null,"thickness":null}` for alle tre RAV4-eurokodene. `autoglass-katalog.csv` (Pilkington-scrapen) har heller ingen mål-kolonne.
+
+**Trenger:** stien til XLS-filen som har cm-målene. Med den kan jeg avgjøre saken objektivt:
+
+- er `8432AGACHM` (19-21) og `8432AGACHMU` (2019-) **samme mål** → samme glass, sperren kan fjernes når leverandør bekrefter;
+- er målene **ulike** → to forskjellige ruter, og årvalget er ikke bare riktig, men nødvendig.
+
+### 9.3 Merknad fra Pilkington-katalogen
+
+Den scrapede Pilkington-katalogen (`~/bilglass/data/autoglass-katalog.csv`) sier `8432AGACHMV1E` = **RAV 4, 2019–2029**. Autoglass-prislisten kaller søskenraden «19-21». Kildene er altså uenige om årspennet — også dette avgjøres av målene.

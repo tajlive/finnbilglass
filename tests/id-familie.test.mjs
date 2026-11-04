@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym, pinpointSperre, velgPrisRadEtterAar } from '../src/vin-resolver.ts';
+import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym, pinpointSperre, velgPrisRadEtterAar, prisRaderEtterAar, variantNokkel, pinpointTillatt } from '../src/vin-resolver.ts';
 
 // Faktiske katalograder (brand='VW', frontrute, modell med «ID»).
 const KATALOG = [
@@ -148,20 +148,81 @@ test('PINPOINT-sperre: RAV4 2022-2025 på 8432AGAC gir VERIFY, ikke PINPOINT', (
   assert.equal(pinpointSperre('TOYOTA', 'RAV4', null, '8432AGACHM'), null, 'uten år ingen sperre');
 });
 
-test('étt varenr, flere eurokoder: årang velges fra varenavnet', () => {
-  // Faktiske rader fra Autoglass-prislisten (målt 2026-11-04): varenr 8432AGAC
-  // finnes både som «RAV 4 19-21» og «RAV 4 2019-».
+test('étt varenr, flere eurokoder: alle varianter for året, mest spesifikke først', () => {
+  // Faktiske rader fra Autoglass-prislisten (Excel-rad 27511–27518, målt 2026-11-04).
+  // varenr 8432AGAC har ÅTTE eurokoder; før 2026-11-04 fantes bare seks i basen.
   const rader = [
     { varenavn: 'TOYOTA RAV 4 19-21 FR AKU LDW', eurokode: '8432AGACHM' },
-    { varenkode: '', varenavn: 'TOYOTA RAV 4 2019- FR AKU LDW', eurokode: '8432AGACHMU' },
+    { varenavn: 'TOYOTA RAV 4 2019- FR AKU LDW', eurokode: '8432AGACHMU' },
+    { varenavn: 'TOYOTA RAV 4 2019- WS GN ACO LDW', eurokode: '8432AGACHMUV1E' },
     { varenavn: 'TOYOTA RAV 4 2019- WS GN ACO LDW', eurokode: '8432AGACHMV1E' },
+    { varenavn: 'TOYOTA RAV 4 22- FR AKU LDW', eurokode: '8432AGACHMV1L' },
+    { varenavn: 'TOYOTA RAV 4 22- WS GN ACO LDW', eurokode: '8432AGACHMV30' },
+    { varenavn: 'TOYOTA RAV 4 2019- FR AKU SENSOR', eurokode: '8432AGACMV' },
+    { varenavn: 'TOYOTA RAV 4 22- FR AKU LDW', eurokode: '8432AGACMV1L' },
   ];
-  assert.equal(velgPrisRadEtterAar(rader, 2020).eurokode, '8432AGACHM', '2020 hører til 19-21-varen');
-  assert.equal(velgPrisRadEtterAar(rader, 2024).eurokode, '8432AGACHMU', '2024 skal ikke få 19-21-varen');
-  assert.equal(velgPrisRadEtterAar(rader, null).eurokode, '8432AGACHM', 'uten år: første rad som før');
-  assert.equal(velgPrisRadEtterAar([rader[0]], 2024).eurokode, '8432AGACHM', 'én rad: uendret');
-  assert.equal(
-    velgPrisRadEtterAar([{ varenavn: 'TOYOTA RAV 4 19-21 FR', eurokode: 'X' }], 2024).eurokode, 'X',
-    'ingen rad dekker året: første rad',
+  // 2019-2021: det LUKKEDE intervallet er en sterkere påstand enn «2019-».
+  assert.equal(velgPrisRadEtterAar(rader, 2019).eurokode, '8432AGACHM');
+  assert.equal(velgPrisRadEtterAar(rader, 2021).eurokode, '8432AGACHM');
+  // 2022: «19-21» dekker IKKE 2022 — tidligere slo ±1-års slakken den inn og
+  // ga 19-21-ruten til en 2022-bil. Nå skal bare 22-variantene gjenstå.
+  const i2022 = prisRaderEtterAar(rader, 2022).map((r) => r.eurokode);
+  assert.ok(!i2022.includes('8432AGACHM'), `2022 skal ikke få 19-21-varen, fikk ${i2022}`);
+  assert.deepEqual([...i2022].sort(), ['8432AGACHMV1L', '8432AGACHMV30', '8432AGACMV1L'].sort());
+  // 2024: samme tre 22-varianter — utstyret skiller dem, ikke året.
+  const i2024 = prisRaderEtterAar(rader, 2024).map((r) => r.eurokode);
+  assert.deepEqual([...i2024].sort(), ['8432AGACHMV1L', '8432AGACHMV30', '8432AGACMV1L'].sort());
+  // Åpent intervall («2019-») er sorterbart: Infinity ga før NaN og dermed
+  // urørt rekkefølge, så 2024 fikk 22825-raden (HMU) i stedet for 22-varen.
+  assert.equal(velgPrisRadEtterAar(rader, 2024).eurokode, '8432AGACHMV1L');
+  // Uten år: alle rader, som før.
+  assert.equal(velgPrisRadEtterAar(rader, null).eurokode, '8432AGACHM');
+  // Eneste rad motsier bilens år → ingen kandidat (endret 2026-11-04: før ble
+  // «første rad» brukt, som ga 19-21-ruten til en 2024-bil).
+  assert.equal(velgPrisRadEtterAar([{ varenavn: 'TOYOTA RAV 4 19-21 FR', eurokode: 'X' }], 2024), null);
+});
+
+test('variantnøkkel: varenr alene er ikke identitet', () => {
+  // To rader med SAMME varenr og SAMME varenavn, men ulik eurokode, er to
+  // produkter (8432AGACHMUV1E 15 810 kr vs 8432AGACHMV1E 16 230 kr).
+  const a = variantNokkel('8432AGAC', '8432AGACHMUV1E', 'TOYOTA RAV 4 2019- WS GN ACO LDW');
+  const b = variantNokkel('8432AGAC', '8432AGACHMV1E', 'TOYOTA RAV 4 2019- WS GN ACO LDW');
+  assert.notEqual(a, b, 'ulik eurokode skal gi ulik variant');
+  assert.equal(a, '8432AGAC:8432AGACHMUV1E');
+  // Rader uten eurokode (pyntelister/klips) faller tilbake til varenr + navn.
+  assert.equal(variantNokkel('2298PYKIT', null, 'TOYOTA RAV 4 5D 00-05 PYNTELIST'),
+    variantNokkel('2298PYKIT', '', 'TOYOTA RAV 4 5D 00-05 PYNTELIST'));
+  assert.notEqual(
+    variantNokkel('2298PYKIT', null, 'TOYOTA RAV 4 5D 00-05 PYNTELIST'),
+    variantNokkel('2298PYKIT', null, 'TOYOTA RAV 4 5D 00-05 HOLDLIST'),
   );
+});
+
+test('årang som utelukker bilens år gir ingen kandidat', () => {
+  // Målt 2026-11-04: GT peker på varenr 8848AGCC for Volvo V60 2018. Etter at
+  // de manglende variantene kom inn i basen, dukket «VOLVO V60 5D EST 23-» opp
+  // som kandidat for en 2018-bil. En dokumentert årang som utelukker bilen er
+  // en motstrid, ikke en kandidat.
+  const rader = [
+    { varenavn: 'VOLVO V60 5D EST 23-  FR AKU, LDW', eurokode: '8848AGCCMVZ1X' },
+    { varenavn: 'VOLVO V60 5D EST 18-22  FR AKU,', eurokode: '8848AGCCGHMVZ' },
+  ];
+  assert.deepEqual(prisRaderEtterAar(rader, 2018).map((r) => r.eurokode), ['8848AGCCGHMVZ']);
+  assert.deepEqual(prisRaderEtterAar(rader, 2019).map((r) => r.eurokode), ['8848AGCCGHMVZ']);
+  assert.deepEqual(prisRaderEtterAar(rader, 2024).map((r) => r.eurokode), ['8848AGCCMVZ1X']);
+  // Bare motstridende rader → tom liste (ærlig tom, ikke feil glass).
+  assert.deepEqual(prisRaderEtterAar([rader[0]], 2018), []);
+  // Rader UTEN årang motsier ingenting og beholdes.
+  const utenAar = [{ varenavn: 'MERCEDES SPRINTER (LAV TYPE)', eurokode: '1979GG' }];
+  assert.deepEqual(prisRaderEtterAar(utenAar, 2018).map((r) => r.eurokode), ['1979GG']);
+  // Uten bilens år: alle rader, som før.
+  assert.equal(prisRaderEtterAar(rader, null).length, 2);
+});
+
+test('PINPOINT krever kjent pris', () => {
+  // Kilde-pris 0 betyr «ikke priset»; importen gjør den om til NULL. En slik
+  // rad kan være kandidat (kunden kan be om tilbud), men aldri PINPOINT.
+  assert.equal(pinpointTillatt({ listepris: 10745 }), true);
+  assert.equal(pinpointTillatt({ listepris: 0 }), false);
+  assert.equal(pinpointTillatt({ listepris: null }), false);
 });

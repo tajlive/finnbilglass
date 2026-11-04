@@ -94,9 +94,11 @@ const pl = harFixtures
   ? readFileSync(join(FIX, 'glass-prisliste.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l))
   : [];
 
+// Alle prisrader per kode (varenr ELLER eurokode) — speiler prisKandidater():
+// ett varenr kan ha flere varianter, og L1 skal se dem alle (VERIFY, ikke gjett).
+const plRader = pl.filter((r) => r.rad_type === 'glass');
 const plMap = new Map();
-for (const r of pl) {
-  if (r.rad_type !== 'glass') continue;
+for (const r of plRader) {
   if (r.varenr != null && !plMap.has(String(r.varenr))) plMap.set(String(r.varenr), r);
   if (r.eurokode != null && !plMap.has(String(r.eurokode))) plMap.set(String(r.eurokode), r);
 }
@@ -108,18 +110,20 @@ for (const r of gt) {
   byKey.get(key).push(r);
 }
 
-async function tilKandidat(kode) {
-  const r = plMap.get(String(kode));
-  if (!r) return null;
-  const dek = dekodeEurokode(r.eurokode);
-  const att = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
-  if (dek.posisjon) {
-    att.sensor = dek.egenskaper.includes('sensor');
-    att.antenne = dek.egenskaper.includes('antenne');
-    att.coated = dek.egenskaper.includes('coated');
-    att.hud = dek.egenskaper.includes('oppvarmet');
-  }
-  return { varenr: r.varenr, varenavn: r.varenavn, pris: null, listepris: r.pris, eurokode: r.eurokode, attributter: att };
+async function tilKandidater(kode) {
+  const kode_ = String(kode);
+  const treff = plRader.filter((r) => String(r.varenr) === kode_ || String(r.eurokode ?? '') === kode_);
+  return treff.map((r) => {
+    const dek = dekodeEurokode(r.eurokode);
+    const att = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
+    if (dek.posisjon) {
+      att.sensor = dek.egenskaper.includes('sensor');
+      att.antenne = dek.egenskaper.includes('antenne');
+      att.coated = dek.egenskaper.includes('coated');
+      att.hud = dek.egenskaper.includes('oppvarmet');
+    }
+    return { varenr: r.varenr, varenavn: r.varenavn, pris: null, listepris: r.pris, eurokode: r.eurokode, attributter: att };
+  });
 }
 
 test('fixtures: ground-truth.jsonl er til stede (dump-d1-fixtures.mjs)', { skip: !harFixtures }, () => {
@@ -221,7 +225,8 @@ test('GT-konsistens mot test-500-gt-detaljer: entydige sett må komme fra en mat
 
 test('L1-kandidater: VOLVO TRUCKS F16 blir salgbar PINPOINT-kandidat (1318GN)', { skip: !harFixtures }, async () => {
   const rader = [...(byKey.get('VOLVO TRUCKS|1984') ?? []), ...(byKey.get('VOLVO|1984') ?? [])];
-  const kand = await gtRaderKandidater(rader, 'VOLVO', 'F16', [1984], tilKandidat);
+  const kand = await gtRaderKandidater(rader, 'VOLVO', 'F16', [1984], tilKandidater);
+  // 1318GN har nøyaktig én prisraderad (8813AGN1A) → entydig kandidat.
   assert.equal(kand.length, 1);
   assert.equal(kand[0].varenr, '1318GN');
 });

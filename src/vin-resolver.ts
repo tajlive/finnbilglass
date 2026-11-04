@@ -52,6 +52,9 @@ export interface ResolverKandidat {
   pris: number | null;      // sluttpris (tier), samme regel som matcher
   listepris: number | null;
   eurokode: string | null;
+  /** Stabil identitet for PRODUKTVARIANTEN (varenr + full eurokode).
+   *  Varenr alene er ikke unikt i prislisten — se variantNokkel(). */
+  variantId?: string;
   /** Bare satt i ALL_GLASS_CANDIDATES-modus. */
   posisjon?: KandidatPosisjon;
   attributter: {
@@ -77,6 +80,9 @@ export interface ResolverResultat {
   pris?: number | null;     // sluttpris (tier)
   listepris?: number | null;
   eurokode?: string | null;
+  /** Valgt produktvariant (varenr + full eurokode) — følger kandidaten gjennom
+   *  API-svar, kundens valg og /ops, slik at «samme variant» kan spores. */
+  variantId?: string | null;
   kandidater?: ResolverKandidat[];
   /** Spørsmål som FAKTISK skiller kandidatene (VERIFY) — tom liste = ingen spørsmål nødvendig. */
   sporsmaal?: string[];
@@ -307,43 +313,87 @@ export function erFrontrute(varenavn: string | null, varenr: string, dek: Dekode
  *  Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13);
  *  glass_catalog brukes KUN for kamera/adas (ikke kodet i eurokoden). Ikke-frontrute
  *  (bak/side/dør/takglass) og OEM-delnummer uten FRONTR-markør returnerer null. */
+
 /**
- * Velger riktig prisrad når ett varenr har flere eurokoder med ulik årang.
+ * Variantnøkkel: varenr + full eurokode. Varenummeret alene er IKKE unikt —
+ * Autoglass-prislisten fører flere frontruter på samme varenr med ulik eurokode
+ * og ulikt utstyr (målt 2026-11-04: 1 925 varenr har flere eurokoder, 1 061 av
+ * dem med IDENTISK varenavn). Uten eurokoden i nøkkelen kollapser variantene.
  *
- * Målt 2026-11-04 (Autoglass-prislisten): varenr 8432AGAC finnes både som
- * «TOYOTA RAV 4 19-21 FR AKU LDW» (8432AGACHM) og «TOYOTA RAV 4 2019- FR AKU
- * LDW» (8432AGACHMU). Uten år-bevisst valg tok `LIMIT 1` den første raden, så
- * en 2024-bil fikk 19-21-varen. Nå velges den raden hvis år-intervall fra
- * varenavnet inneholder bilens år — og den mest spesifikke vinner når flere
- * dekker året (19-21 foran «2019-»).
- *
- * Er året ukjent eller ingen rad dekker det: første rad, som før.
+ * Rader uten eurokode (pyntelister, klips, alias) får varenr + navn.
  */
-export function velgPrisRadEtterAar<T extends { varenavn: string | null }>(rader: T[], aar: number | null): T | null {
-  if (!rader.length) return null;
-  if (rader.length === 1 || aar == null) return rader[0];
-  // parseAar returnerer slutt=null for åpne intervaller («2019-»), selv om typen
-  // sier number — derfor normaliseres det her.
-  const medAar = rader
-    .map((r) => {
-      const i = parseAar(r.varenavn);
-      return i ? { r, i: { start: i.start, slutt: (i.slutt ?? null) as number | null } } : null;
-    })
-    .filter((x): x is { r: T; i: { start: number; slutt: number | null } } => x != null);
-  const treff = medAar.filter((x) => aar >= x.i.start - 1 && (x.i.slutt == null || aar <= x.i.slutt + 1));
-  if (!treff.length) return rader[0];
-  treff.sort((a, b) => ((a.i.slutt ?? 9999) - a.i.start) - ((b.i.slutt ?? 9999) - b.i.start));
-  return treff[0].r;
+export function variantNokkel(varenr: string | null | undefined, eurokode: string | null | undefined, varenavn?: string | null): string {
+  const v = String(varenr ?? '').trim().toUpperCase();
+  const e = String(eurokode ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (e) return `${v}:${e}`;
+  return `${v}:~${String(varenavn ?? '').trim().toUpperCase()}`;
 }
 
-async function prisKandidat(env: Env, kode: string, modus: Sokemodus = 'FRONTRUTE_ONLY', aar: number | null = null): Promise<ResolverKandidat | null> {
-  const treff = await env.FINNBILGLASS_DB.prepare(
-    `SELECT varenr, varenavn, pris, eurokode, kommentar FROM glass_prisliste
-     WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 20`
-  ).bind(kode, kode).all<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null; kommentar: string | null }>();
-  const r = velgPrisRadEtterAar(treff.results ?? [], aar);
-  if (!r) return null;
+/**
+ * Alle prisrader som dekker bilens år — BARE den mest spesifikke gruppen.
+ *
+ * Retter to målte feil i den tidligere `velgPrisRadEtterAar`:
+ *  1. Åpent intervall ble aldri sorterbart: parseAar gir `Infinity` for «2019-»,
+ *     og `Infinity - Infinity` er NaN — sammenligningen ble en no-op, så en
+ *     2024-bil fikk den FØRSTE raden (22 825 kr) i stedet for 22-varianten.
+ *  2. ±1 års slakke på år-hintet fra varenavnet gjorde at et LUKKET intervall
+ *     slo et åpent: en 2022-bil fikk «19-21»-ruten (slakke 2021+1 = 2022)
+ *     fordi det lukkede intervallet er «mer spesifikt». Slakke hører til
+ *     kolonnedata (L2), ikke til et år som står eksplisitt i varenavnet.
+ *
+ * Rangering blant radene som dekker året:
+ *   lukket intervall (eksplisitt slutten år) foran åpent («2019-»),
+ *   kortest spenn blant lukkede, senest start blant åpne.
+ * Bare rader med BESTE rang returneres: for en 2024-RAV4 er «22-»-variantene
+ * (tre stk, ulikt utstyr) svaret — ikke de bredere «2019-»-radene, som er en
+ * svakere påstand om året. Flere rader med lik rang = ekte utstyrsvarianter og
+ * skal gi VERIFY, ikke et gjett.
+ *
+ * Ingen rad dekker året:
+ *   - rader UTEN årang (f.eks. «MERCEDES SPRINTER (LAV TYPE)») beholdes — de
+ *     motsier ikke bilens år;
+ *   - rader hvis dokumenterte årang UTELUKKER bilens år forkastes. En «23-»-rute
+ *     skal ikke tilbys til en 2018-bil bare fordi GT peker på samme varenr.
+ *   - finnes ingen av delene, returneres tom liste (ærlig tom fremfor feil glass).
+ */
+export function prisRaderEtterAar<T extends { varenavn: string | null }>(rader: T[], aar: number | null): T[] {
+  if (!rader.length) return [];
+  if (aar == null) return rader;
+  const medAar = rader.map((r) => {
+    const i = parseAar(r.varenavn);
+    const slutt = i && Number.isFinite(i.slutt) ? (i.slutt as number) : null;
+    return { r, start: i?.start ?? null, slutt };
+  });
+  const treff = medAar.filter((x) => x.start != null && aar >= x.start && (x.slutt == null || aar <= x.slutt));
+  if (!treff.length) {
+    // Ingen dokumentert rad dekker året. Behold bare rader uten årang.
+    return medAar.filter((x) => x.start == null).map((x) => x.r);
+  }
+  // [0] = type (lukket først), [1] = spesifisitet (kort spenn / senest start).
+  const rang = (x: { start: number | null; slutt: number | null }): [number, number] =>
+    x.slutt != null ? [0, x.slutt - (x.start ?? x.slutt)] : [1, -(x.start ?? 0)];
+  const rangert = treff.map((x) => ({ x, n: rang(x) }));
+  rangert.sort((a, b) => a.n[0] - b.n[0] || a.n[1] - b.n[1]);
+  const beste = rangert[0].n;
+  return rangert.filter((y) => y.n[0] === beste[0] && y.n[1] === beste[1]).map((y) => y.x.r);
+}
 
+/** Bakoverkompatibel enkeltvalg: den beste raden for året. */
+export function velgPrisRadEtterAar<T extends { varenavn: string | null }>(rader: T[], aar: number | null): T | null {
+  return prisRaderEtterAar(rader, aar)[0] ?? null;
+}
+
+interface PrisRad {
+  varenr: string;
+  varenavn: string | null;
+  pris: number | null;
+  eurokode: string | null;
+  kommentar: string | null;
+}
+
+/** Bygger én kandidat fra én prisrad. Returnerer null når raden ikke er salgbar
+ *  som frontrute (produkt-/priskarantene eller feil glassposisjon). */
+async function byggKandidat(env: Env, r: PrisRad, modus: Sokemodus): Promise<ResolverKandidat | null> {
   // Produkt-karantene: rader merket som glass som egentlig er panel/list
   // (f.eks. TORPEDOVEGG). Se src/glass-karantene.ts.
   if (karanteneGrunn(r.kommentar, r.varenavn)) return null;
@@ -397,6 +447,7 @@ async function prisKandidat(env: Env, kode: string, modus: Sokemodus = 'FRONTRUT
     pris: prisKarantene ? null : tierPris(r.pris),
     listepris: prisKarantene ? null : r.pris,
     eurokode: r.eurokode,
+    variantId: variantNokkel(r.varenr, r.eurokode, r.varenavn),
     posisjon: modus === 'ALL_GLASS_CANDIDATES' ? {
       typekode: tp?.kode ?? null,
       glassklasse: klassifisert.type,
@@ -412,6 +463,36 @@ async function prisKandidat(env: Env, kode: string, modus: Sokemodus = 'FRONTRUT
     } : undefined,
     attributter,
   };
+}
+
+const PRIS_RAD_SQL = `SELECT varenr, varenavn, pris, eurokode, kommentar FROM glass_prisliste
+     WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 20`;
+
+/**
+ * Alle salgbare varianter for et varenr/eurokode-oppslag, avgrenset til bilens år.
+ * Rekkefølgen er «mest spesifikke årang først» (se prisRaderEtterAar).
+ */
+async function prisKandidater(env: Env, kode: string, modus: Sokemodus = 'FRONTRUTE_ONLY', aar: number | null = null): Promise<ResolverKandidat[]> {
+  const treff = await env.FINNBILGLASS_DB.prepare(PRIS_RAD_SQL)
+    .bind(kode, kode).all<PrisRad>();
+  const rader = prisRaderEtterAar(treff.results ?? [], aar);
+  const ut: ResolverKandidat[] = [];
+  const sett = new Set<string>();
+  for (const r of rader) {
+    const k = await byggKandidat(env, r, modus);
+    if (!k) continue;
+    const nokkel = k.variantId ?? k.varenr;
+    if (sett.has(nokkel)) continue; // samme variant to ganger (identisk eurokode)
+    sett.add(nokkel);
+    ut.push(k);
+  }
+  return ut;
+}
+
+/** Enkeltkandidat: den best år-dekkende varianten. Brukes der oppslaget er
+ *  entydig (VIN-overstyring, katalog-eurokode, ktype). */
+async function prisKandidat(env: Env, kode: string, modus: Sokemodus = 'FRONTRUTE_ONLY', aar: number | null = null): Promise<ResolverKandidat | null> {
+  return (await prisKandidater(env, kode, modus, aar))[0] ?? null;
 }
 
 /**
@@ -630,13 +711,19 @@ export function gtRaderSett(
   return sett.size ? sett : null;
 }
 
-/** Ren versjon av lagGroundTruth: GT-rader → unike salgbare frontrute-kandidater. */
+/** Ren versjon av lagGroundTruth: GT-rader → unike salgbare frontrute-kandidater.
+ *
+ *  `tilKandidater` returnerer ALLE varianter raden peker på. GT lagrer varenr
+ *  (salgsnummeret), og ett varenr kan ha flere dokumenterte eurokoder med ulikt
+ *  utstyr og ulik årang. Deduplisering skjer derfor på variant (varenr+eurokode),
+ *  ikke på varenr — ellers ville variantene blitt slått sammen her også.
+ *  Flere varianter for samme år → VERIFY (doktrine: aldri tvetydig PINPOINT). */
 export async function gtRaderKandidater(
   rader: Array<{ model: string; frontrute_eurocode: string | null }>,
   make: string,
   model: string,
   aarList: number[],
-  tilKandidat: (kode: string) => Promise<ResolverKandidat | null>
+  tilKandidater: (kode: string) => Promise<ResolverKandidat[]>
 ): Promise<ResolverKandidat[]> {
   if (!aarList.length) return [];
   const unike = new Map<string, ResolverKandidat>();
@@ -646,8 +733,10 @@ export async function gtRaderKandidater(
   for (const r of sortert) {
     if (!gtRadMatch(r.model, make, model, aarList)) continue;
     if (!r.frontrute_eurocode) continue;
-    const k = await tilKandidat(r.frontrute_eurocode);
-    if (k && !unike.has(k.varenr)) unike.set(k.varenr, k);
+    for (const k of await tilKandidater(r.frontrute_eurocode)) {
+      const nokkel = k.variantId ?? variantNokkel(k.varenr, k.eurokode, k.varenavn);
+      if (!unike.has(nokkel)) unike.set(nokkel, k);
+    }
   }
   return [...unike.values()];
 }
@@ -716,7 +805,7 @@ async function lagGroundTruth(env: Env, make: string, model: string, aarList: nu
      WHERE make IN (${mPlasser}) AND year IN (${plasser})
      ORDER BY confidence DESC, model ASC LIMIT 200`
   ).bind(...makes, ...aarList).all<{ model: string; frontrute_eurocode: string; confidence: number }>();
-  const kandidater = await gtRaderKandidater(rows.results ?? [], make, model, aarList, (kode) => prisKandidat(env, kode, 'FRONTRUTE_ONLY', aarList[0] ?? null));
+  const kandidater = await gtRaderKandidater(rows.results ?? [], make, model, aarList, (kode) => prisKandidater(env, kode, 'FRONTRUTE_ONLY', aarList[0] ?? null));
   // L1-profilsmaling: kundens utstyrssvar gjør GT-varianter entydige (samme
   // doktrine som L2). Uten svar: alle GT-varianter → VERIFY (G1-ærlig).
   return kandidater.length > 1 ? filtrerPaaProfil(kandidater, profil) : kandidater;
@@ -915,6 +1004,13 @@ function medPinpointSperre(res: ResolverResultat, make: string, model: string, a
   return { ...res, utfall: 'VERIFY', grunn: `PINPOINT sperret: ${grunn}`, confidence: Math.min(res.confidence ?? 0, 0.5) };
 }
 
+/** Kan kandidaten bli PINPOINT? Krever kjent, salgbar pris.
+ *  Kilden bruker 0 som «ikke priset» (importen gjør det om til NULL), og et
+ *  PINPOINT med ukjent pris er en pris-lovnad vi ikke kan holde. */
+export function pinpointTillatt(k: { listepris: number | null }): boolean {
+  return typeof k.listepris === 'number' && k.listepris > 0;
+}
+
 /** Felles utfalls-logikk: 0 → FALLBACK, 1 → PINPOINT (med GT-gate), 2+ → VERIFY.
  *  GT-gate (G1-doktrine): PINPOINT krever at kandidaten bekreftes av ground_truth —
  *  unntak: L0 (manuell VIN-fasit) og L1 (GT er selv kilden). */
@@ -922,6 +1018,25 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
   if (kandidater.length === 0) return null;
   if (kandidater.length === 1) {
     const k = kandidater[0];
+    // Pris må være kjent og salgbar. Kilden bruker 0 som «ikke priset», og
+    // importen har gjort det om til NULL; en kandidat uten pris kan vises som
+    // kandidat, men aldri bli PINPOINT (målt 2026-11-04: BMW i7 2022 ble
+    // PINPOINT på en pris-0-rad så snart varianten kom inn i basen).
+    const prisKjent = pinpointTillatt(k);
+    if (!prisKjent) {
+      return {
+        utfall: 'VERIFY',
+        grunn: `L${lag}: 1 kandidat, men prisen er ikke kjent — må bekreftes manuelt`,
+        confidence: Math.min(confidence, 0.5),
+        totalAntall: 1,
+        varenr: k.varenr,
+        varenavn: k.varenavn,
+        eurokode: k.eurokode,
+        variantId: k.variantId ?? null,
+        kandidater: [k],
+        sporsmaal: skillendeSporsmaal([k]),
+      };
+    }
     const gtOk = lag.startsWith('0 ') || lag.startsWith('1 ') || (gtSett && k.eurokode && gtSett.has(k.eurokode.toUpperCase().replace(/[^A-Z0-9]/g, '')));
     if (!gtOk) {
       return {
@@ -943,6 +1058,7 @@ function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence
       pris: k.pris,
       listepris: k.listepris,
       eurokode: k.eurokode,
+      variantId: k.variantId ?? null,
       kandidater: [k],
       sporsmaal: [],
     };
