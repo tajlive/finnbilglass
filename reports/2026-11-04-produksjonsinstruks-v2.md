@@ -1,7 +1,7 @@
 # Produksjonsinstruks v2 — presisert etter Toms merknader
 
 **Dato:** 2026-11-04 · **Branch:** `feat/katalogvarianter-20261104` · **PR:** #28
-**Kodecommit:** `56f4adb` (inkluderer miljø-etikettfiksen) · **Dokumentasjonscommit:** `833ec2d`
+**Kodecommit:** `56f4adb` (inkluderer miljø-etikettfiksen) · **Dokumentasjonscommit:** `5ed25f1` + denne filen
 **Staging verifisert:** `7fdc9345-79eb-4450-bf79-1dd31a1aea5e` (etter etikettfiksen)
 **Status:** venter på Toms godkjenning · produksjon er ikke rørt
 
@@ -34,7 +34,13 @@ SELECT count(*) FROM glass_prisliste
 
 **Forventet: 15 — etter 0048c og fortsatt 15 etter import.**
 
-De 15 (sortert), med SHA-256 av listen = `bbea7f5f067b5ba3b8488496958f35fa`:
+**Serialisering for hashing (må følges eksakt):** de 15 `variant_id`-verdiene sorteres **stigende
+byte-vis (ASCII)**, settes sammen med **LF (`\n`) som skilletegn og ingen avsluttende LF**, kodes som
+**UTF-8** (381 bytes) og hashes med **SHA-256**. (Listen under er allerede i denne rekkefølgen.)
+
+**Full SHA-256 (64 tegn):** `bbea7f5f067b5ba3b8488496958f35fa53187a266c627a1e1669c69e719e7150`
+**Avkortet (32 tegn, som i forrige utkast):** `bbea7f5f067b5ba3b8488496958f35fa` — dette er
+**ikke** en full SHA-256, kun første halvdel; bruk den fulle verdien over som kontroll.
 
 ```
 2426GYEL:5346AGSGYAHJMV#2        2873PYKIT:3574ASGRL+3574AS#2   2999GNMU:8385AGAMUV1B#2
@@ -73,7 +79,7 @@ kontrollert pause** med eksisterende kill switch:
 `503` med den eksisterende, tydelige teksten: *«Vi tar ikke imot nye forespørsler akkurat nå. Prøv
 igjen senere.»* Ingen kunde mister data, og ingen forespørsel havner i en halvferdig katalog.
 
-**Varighet:** pausen er bare steg 1–4 — sekunder til få minutter, ikke hele deployen. Kode-deploy (steg 5) skjer etter at innsending er åpnet igjen.
+**Varighet:** pausen er bare steg 1–4 — sekunder til få minutter, ikke hele deployen. Kode-deploy skjer **mens det fortsatt er stengt**, og innsending åpnes først etter at søk, varianter og priser er kontrollert (steg 7).
 
 ## 3. «Miljø: Produksjon» på staging — var en etikettfeil, nå rettet
 
@@ -95,15 +101,28 @@ igjen senere.»* Ingen kunde mister data, og ingen forespørsel havner i en halv
 
 | Steg | Handling | Kontrollpunkt | Stopp |
 |---|---|---|---|
-| 0 | Backup `glass_prisliste_backup_0048` | 29 627 rader | avvik → stopp |
-| 0b | **Pause** innsending (`inquiries_enabled=0`) | `/api/pilot-status` = `stengt` i ≥2 polls | ikke stengt → stopp |
+| P0 | **Registrer opprinnelig flaggstatus** (`SELECT enabled FROM feature_flags WHERE flag='inquiries_enabled'`) | verdi notert (forventet 1) | kan ikke leses → stopp |
+| P1 | **Pause** innsending (`enabled=0`) | `GET /api/pilot-status` = `stengt` | ikke stengt → stopp |
+| P2 | **Vent ut cachetiden med margin:** dokumentert maks 10 s per isolate → vent **≥30 s**, deretter ny statuskontroll | `stengt` i to kontroller ≥30 s fra hverandre | fortsatt `apen` → stopp |
+| 0 | Backup `glass_prisliste_backup_0048` | 29 627 rader | avvik → stopp + gjenopprett flagg |
 | 1 | `0048` (`a9b780da203eb187`) | 29 627 rader · 29 627 unike `variant_id` | avvik → tilbakeføring |
-| 2 | `0048c` (`4fcd2a09892dcc5f`) | **live konflikter = nøyaktig 15** + hash `bbea7f5f…` | annet tall → stopp, undersøk |
-| 3 | `variant_upsert_00..02` (`67561f8a…`, `9ea1d949…`, `77f2482f…`) | **30 937** rader · RAV4 **8/8** · konflikter fortsatt 15 | avvik → stopp |
-| 4 | `katalog-avstemming.py` | `bare_kilde = 0`, `bare_prod = 3` · `ground_truth` **32 307** uendret | avvik → stopp |
-| 4b | **Åpne** innsending (`inquiries_enabled=1`) | `/api/pilot-status` = `apen` | — |
-| 5 | Deploy Worker (`56f4adb`) | RAV4 2024 → 3 varianter: 6 070,31 / 4 643,75 / 3 357,81 | feil → rull kode |
-| 6 | Én merket testsak + `/ops` | variant, eurokode, estimat, leveringssted synlig | feil → rull kode |
+| 2 | `0048c` (`4fcd2a09892dcc5f`) | **live konflikter = nøyaktig 15** + full SHA-256 `bbea7f5f…e7150` | annet tall/annet hash → stopp, undersøk |
+| 3 | `variant_upsert_00..02` | **30 937** rader · RAV4 **8/8** · konflikter fortsatt 15 | avvik → stopp |
+| 4 | `katalog-avstemming.py` | `bare_kilde = 0`, `bare_prod = 3` · `ground_truth` **32 307** | avvik → stopp |
+| 5 | **Deploy Worker `56f4adb`** (fortsatt stengt) | versjons-ID notert | feil → rull kode, data står |
+| 6 | **Kontroller søk, varianter, priser** | RAV4 2024 → 3 varianter: 6 070,31 / 4 643,75 / 3 357,81 · `/api/pilot-status` = `stengt` | avvik → rull kode |
+| 7 | **Gjenåpne til OPPRINNELIG verdi** (ikke automatisk `1`) | `pilot` = opprinnelig status | avvik → undersøk |
+| 8 | Én merket testsak + `/ops` | variant, eurokode, estimat, leveringssted synlig | feil → rull kode |
+
+**Kunden er altså stengt fra P1 til og med steg 6** — gammel pris-/variantlogikk møter aldri den
+oppdaterte katalogen.
+
+**Hvis kjøringen stopper (etter steg 1 eller senere):**
+1. **Kode:** rull til forrige produksjonsversjon hvis ny kode er deployet (steg 5+).
+2. **Data:** kjør tilbakeføringen (under) hvis steg 1–4 er påbegynt.
+3. **Pause:** bli **stengt** til kode og data er tilbakeført og verifisert.
+4. **Flagg:** sett `inquiries_enabled` tilbake til **verdien fra P0**. Var tjenesten stengt før
+   arbeidet startet, skal den **forbli stengt** — aldri automatisk `enabled=1`.
 
 **Tilbakeføring (prøvd på ren prod-kopi):** kode tilbake først, deretter data — ny kode mot gammelt
 skjema gir 400 for nye varianter. Data: legg bort ny tabell, gi `glass_prisliste_backup_0048`
