@@ -49,6 +49,24 @@ går via samme `sendMail`, men er ikke gjennomgått i denne runden.
 | Knappetekst | `Send forespørsel` / `Be om tilbud` — ingen «Bestill»/«Kjøp» i forespørselsflyten | ✅ |
 | Kandidat ≠ passform | «Vi har funnet flere mulige frontruter» | ✅ |
 
+## 3b. Nye vilkårstekster (etter Toms svar)
+
+`public/betaling.html` har fått en seksjon «Frakt, retur og reklamasjon»:
+
+- **Frakt:** avtales i hvert tilfelle, oppgis i tilbudet. Ingen løfter om gratis frakt
+  eller fast leveringstid.
+- **Retur:** returfrakt betales av kunden; retur og tilbakebetaling må være godkjent
+  før sending. Spesialbestilt glass returneres ikke uten slik godkjenning.
+- **Reklamasjon:** ta kontakt før sending; reklamasjon følger forbrukerkjøpsloven.
+- **Selger:** BLYT AS, org.nr. 929 003 292. Finnbilglass er navnet kunden møter.
+
+Leveringssteget er presisert: «Du oppgir leveringsadresse … Vil du ha glasset til et
+verksted, avtaler du det selv.» (tidligere «avtalt verksted», som kunne leses som at vi
+bestiller verksted).
+
+Verifisert i staging `345d564e` på 390 px og 1280 px: teksten vises, 0 horisontalt
+overløp, 0 konsollfeil.
+
 ## 4. IKKE gjennomgått i denne runden
 
 Dette er reelt gjenstående arbeid, ikke «antatt OK»:
@@ -63,7 +81,7 @@ Dette er reelt gjenstående arbeid, ikke «antatt OK»:
 - Kontaktpreferanse («ikke ring hvis kunden valgte e-post») er **ikke** sporet
   gjennom koden.
 - Mobil/desktop-gjennomgang av de offentlige sidene er **ikke** gjort denne runden.
-- Retur-/reklamasjons-/leveringsvilkår er **ikke** vurdert.
+- Om oss, bilglass uten forsikring og 404 er **ikke** lest linje for linje (kun søkt etter rolle- og garantiformuleringer).
 
 ## 5. Releaseforespørsel (avgrenset)
 
