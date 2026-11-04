@@ -885,12 +885,12 @@
     boks.textContent = '';
     var typer = valgTre && Array.isArray(valgTre.typer) ? valgTre.typer : [];
     if (!typer.length) {
-      visValgHjelp((valgTre && valgTre.melding) || 'Vi fant ingen dokumenterte glass til denne bilen. Send oss en forespørsel, så undersøker vi videre.');
+      visValgHjelp((valgTre && valgTre.melding) || 'Vi fant ingen mulige glassvarianter til denne bilen. Send oss en forespørsel, så undersøker vi videre.');
       return;
     }
     var antallGlass = Number(valgTre.antallKandidater || 0);
     status.textContent = (valgTre.melding || 'Velg ruten det gjelder.')
-      + (antallGlass ? ' ' + antallGlass + ' dokumenterte glass for denne bilen.' : '');
+      + (antallGlass ? ' ' + antallGlass + ' mulige glassvarianter for denne bilen.' : '');
     status.classList.remove('hidden');
     typer.forEach(function (type) {
       var b = document.createElement('button');
@@ -907,8 +907,8 @@
       var hjelp = document.createElement('span');
       hjelp.className = 'glassopt-help';
       hjelp.textContent = type.kind === 'windshield'
-        ? (!type.antall ? 'Vi søker i frontrutedataene' : type.antall === 1 ? '1 dokumentert frontrute' : type.antall + ' dokumenterte frontruter')
-        : (!type.antall ? 'Vi kontrollerer denne ruten manuelt' : type.antall === 1 ? '1 dokumentert glass' : type.antall + ' dokumenterte glass');
+        ? (!type.antall ? 'Vi søker i frontrutedataene' : type.antall === 1 ? '1 mulig frontrute' : type.antall + ' mulige frontruter')
+        : (!type.antall ? 'Vi kontrollerer denne ruten manuelt' : type.antall === 1 ? '1 mulig glassvariant' : type.antall + ' mulige glassvarianter');
       b.appendChild(tittel);
       b.appendChild(hjelp);
       b.addEventListener('click', function () { velgRutetype(type); });

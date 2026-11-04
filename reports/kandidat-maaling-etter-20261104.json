@@ -1,0 +1,5879 @@
+{
+  "oppsummering": {
+    "base": "https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev",
+    "manifest": "data/finn-100.jsonl",
+    "biler": 110,
+    "frontrute": {
+      "kall": 110,
+      "tekniskeFeil": 0,
+      "medKandidater": 95,
+      "unikeKandidaterTotalt": 277,
+      "p50ms": 228,
+      "p95ms": 891
+    },
+    "valgtre": {
+      "kall": 110,
+      "tekniskeFeil": 0,
+      "medKandidater": 36,
+      "unikeKandidaterTotalt": 940,
+      "rutetyper": 202,
+      "steg": 160,
+      "p50ms": 93,
+      "p95ms": 163
+    }
+  },
+  "resultat": [
+    {
+      "bil": {
+        "regnr": "AE13412",
+        "merke": "Volkswagen",
+        "modell": "Golf V",
+        "aar": 2006
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 1054,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "2555BBM:8568ABLBLMVZ1P",
+          "2555BLM:8568ABLMV1PZ",
+          "2555GY:8568AGSGYVZ",
+          "2555GYM:8568AGSGYMVZ1P",
+          "2760BL:8568ABLVZ1H",
+          "2760GY:8600AGAVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 129,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 28,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 9,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 4
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 2
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 3
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EJ18765",
+        "merke": "Hyundai",
+        "modell": "Kona",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 486,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 1,
+        "ider": [
+          "4167ASMR:4167ASMR"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 176,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "LH90120",
+        "merke": "Volkswagen",
+        "modell": "Caravelle",
+        "aar": 2000
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 500,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 149,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 31,
+        "ukjentPlassering": 2,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 3,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 2
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 2
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 10,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 6
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 4
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 12,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "NF73296",
+        "merke": "BMW",
+        "modell": "116i",
+        "aar": 2015
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 466,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 5,
+        "ider": [
+          "3113GN:2467AGNV",
+          "3113GN2:2467AGNV1P",
+          "3113GNCM:2467AGNCMV3P",
+          "3113GY:2467AGNGYV",
+          "3113GYM:2467AGNGYMV2P"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 115,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 24,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 6,
+            "automatisk": {
+              "body": "hatchback"
+            },
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 3
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "coupe",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "hatchback",
+                "antall": 2
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HB80142",
+        "merke": "BMW",
+        "modell": "320d",
+        "aar": 2008
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 409,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "2428GGM:2437AGNGNMV6T",
+          "2428GYM:2437AGNGYMV6T",
+          "2638GYM:2447AGNGYMV1B",
+          "2743GYM:2454AGSGYMV1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 91,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 42,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "automatisk": {
+              "body": "coupe"
+            },
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 32,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 17
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 15
+              }
+            ],
+            "lov": 7
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 3,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "coupe",
+                "antall": 3
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              }
+            ],
+            "lov": 3
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DR94262",
+        "merke": "Toyota",
+        "modell": "Proace",
+        "aar": 2021
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 216,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 1,
+        "ider": [
+          "8439AGSV:"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 146,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED63427",
+        "merke": "Polestar",
+        "modell": "2",
+        "aar": 2022
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 117,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 110,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED45082",
+        "merke": "Nissan",
+        "modell": "Leaf",
+        "aar": 2021
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 157,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "3111GN:6077AGAVZ1D"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 91,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 18,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 7,
+            "automatisk": {
+              "body": "hatchback"
+            },
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 4
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 4,
+            "automatisk": {
+              "body": "hatchback"
+            },
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 2
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 2
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 3,
+            "automatisk": {
+              "body": "hatchback"
+            },
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EB11166",
+        "merke": "Audi",
+        "modell": "e-tron",
+        "aar": 2020
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 128,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "8646ACKC:8646ACKCKMUVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 138,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BR58010",
+        "merke": "Audi",
+        "modell": "A5",
+        "aar": 2008
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 245,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "2800GNCM:8592AGACMVZ2P",
+          "2800GYAM:8592AGSGYAMVZ1B",
+          "2800GYM:8592AGSGYMVZ1P"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 131,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "FT61245",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2018
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 180,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "3393GN:8579AGSVZ6K",
+          "3393GNM:8579AGAMVZ15"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 394,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 6,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "AA78283",
+        "merke": "Peugeot",
+        "modell": "Expert",
+        "aar": 2025
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 1439,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2790CSM:6553ACCMVZ1P",
+          "2790CS:6553ACCVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 110,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "NH12612",
+        "merke": "Isuzu",
+        "modell": "D-max",
+        "aar": 2021
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 232,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "6351AGNC:6351AGNCMV",
+          "3178GN2:6335AGNV75"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 63,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EK42721",
+        "merke": "BMW",
+        "modell": "i3",
+        "aar": 2017
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 296,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "3237GYCM:2470AGAGYCMVW",
+          "3237GYM:2470AGAGYMVW"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 115,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EK70880",
+        "merke": "Kia",
+        "modell": "Soul",
+        "aar": 2017
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 616,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "3253GB:4445AGSBLV",
+          "3253GBC:4445AGSBLCV",
+          "3253GBEL:4445AGSBLHV",
+          "3253GBS:4445AGSBLOV"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 131,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "CV89013",
+        "merke": "Mazda",
+        "modell": "CX-3",
+        "aar": 2018
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 185,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "5184AGAC:5184AGACMVW3L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 154,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED82258",
+        "merke": "BMW",
+        "modell": "iX",
+        "aar": 2022
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 171,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "2300AGAC:2300AGACMVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 95,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED75058",
+        "merke": "Kia",
+        "modell": "Niro",
+        "aar": 2022
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 863,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 1,
+        "ider": [
+          "3397GBCM:4450AGRBLCMOV"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 114,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BC51543",
+        "merke": "Ford",
+        "modell": "Granada",
+        "aar": 1983
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 465,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "1200BZ:3538ABZ",
+          "1200C:3538ACL",
+          "1200GB:3538AGNBL"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 127,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KJ65178",
+        "merke": "Toyota",
+        "modell": "HiLux",
+        "aar": 2025
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 303,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 163,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PR22999",
+        "merke": "Mazda",
+        "modell": "CX-5",
+        "aar": 2014
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 461,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "3151GNCM:5179AGACIMW5V",
+          "3151GNMS:5179AGACIMW4V"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 71,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DS29473",
+        "merke": "Lotus",
+        "modell": "Eletre",
+        "aar": 2026
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 189,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 76,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DN65751",
+        "merke": "BMW",
+        "modell": "X5",
+        "aar": 2011
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 640,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "2967GYCM:2452AGSGYCMV1T",
+          "2967GYM:2452AGSGYMV1T",
+          "2968CSMU:2452ACCMUV1T",
+          "2968GNMU:2452AGSMUV1T"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 81,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "CF91159",
+        "merke": "Volvo",
+        "modell": "V60",
+        "aar": 2018
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 209,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "3185GNMP:8841AGNMPVWZ7X"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 132,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EF97795",
+        "merke": "Cupra",
+        "modell": "Born",
+        "aar": 2022
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 502,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 68,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED72189",
+        "merke": "Porsche",
+        "modell": "Taycan 4",
+        "aar": 2022
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 288,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "6746ACDG:6746ACDGYCMVZ",
+          "6746AGAC:6746AGACMUVZ",
+          "6746AGAG:6746AGAGYCMVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 67,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EP70168",
+        "merke": "BMW",
+        "modell": "i4",
+        "aar": 2026
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 253,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2301AKGS:2465ASCSB",
+          "2301ASMC:2301ASMCT"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 93,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DP72082",
+        "merke": "Volvo",
+        "modell": "XC60",
+        "aar": 2015
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 138,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "3175GNEL:8840AGNHMPVWZ6"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 196,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 29,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 8,
+            "automatisk": {
+              "body": "suv"
+            },
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 4
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 4
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 10,
+            "automatisk": {
+              "body": "suv"
+            },
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 5
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 5
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "automatisk": {
+              "body": "suv"
+            },
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "CV52478",
+        "merke": "BMW",
+        "modell": "E90",
+        "aar": 2008
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 301,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "2743GYM:2454AGSGYMV1B",
+          "2428GGM:2437AGNGNMV6T",
+          "2428GYM:2437AGNGYMV6T",
+          "2638GYM:2447AGNGYMV1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 116,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DP10946",
+        "merke": "Mitsubishi",
+        "modell": "Pajero",
+        "aar": 2013
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 190,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2530GB:5661AGNBL1C",
+          "2530GBEL:5661AGABLHM1U"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 93,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "SD82842",
+        "merke": "Volvo",
+        "modell": "XC60",
+        "aar": 2016
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 155,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "3175GNEL:8840AGNHMPVWZ6"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 73,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 29,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 8,
+            "automatisk": {
+              "body": "suv"
+            },
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 4
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 4
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 10,
+            "automatisk": {
+              "body": "suv"
+            },
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 5
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 5
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "automatisk": {
+              "body": "suv"
+            },
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RK29593",
+        "merke": "Peugeot",
+        "modell": "207",
+        "aar": 2011
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 346,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 5,
+        "ider": [
+          "2725CS:6548ACCVZ",
+          "2725CSM:6548ACCMVZ1B",
+          "2725GN:6548AGSVZ",
+          "2725GNM:6548AGSMVZ1B",
+          "2725GY:6548AGSGYVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 86,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BS66728",
+        "merke": "Volvo",
+        "modell": "V60",
+        "aar": 2013
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 123,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "3185GNMP:8841AGNMPVWZ7X"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 72,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DS30473",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 245,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "8437AGAB:8437AGABLCM1L",
+          "8437AGAB:8437AGABLCMU1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 90,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 10,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RH69811",
+        "merke": "Mitsubishi",
+        "modell": "L200",
+        "aar": 1999
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 154,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "2079GN:5650AGN"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 69,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DR56170",
+        "merke": "Jaguar",
+        "modell": "XF",
+        "aar": 2018
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 1365,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 5,
+        "ider": [
+          "4339ACDC:4339ACDCHMUVZ1B",
+          "3351CSCEL:4339ACDCHMVZ1B",
+          "4339AGAC:4339AGACHMVZ",
+          "4339AGAC:4339AGACMVZ",
+          "2874GNEL:4333AGAHMOVZ2B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 70,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BS35162",
+        "merke": "Land Rover",
+        "modell": "Range Rover",
+        "aar": 2012
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 453,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 16,
+        "ider": [
+          "7046AGAC:",
+          "7046ACDC:",
+          "3365GNCE:",
+          "7048AGRC:",
+          "3004GNEL:",
+          "2803GNEL:",
+          "2632GNM:",
+          "2632GYM:",
+          "2632GYEL:"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 78,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "NV63526",
+        "merke": "Mitsubishi",
+        "modell": "ASX",
+        "aar": 2011
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 276,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "3031GNCM:5689AGNCM1T",
+          "3031GNM2:5689AGNM1T",
+          "3031GY:5689AGNGYV",
+          "3031GYM:5689AGNMV2B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 78,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "SV45016",
+        "merke": "Kia",
+        "modell": "Ceed",
+        "aar": 2014
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 195,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 144,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EN30654",
+        "merke": "Nissan",
+        "modell": "Ariya",
+        "aar": 2025
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 272,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "6107AGAC:"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 73,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RK10863",
+        "merke": "Mitsubishi",
+        "modell": "Outlander",
+        "aar": 2009
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 169,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2776GN:5680AGN",
+          "2776GYEL:5680AGNGYHM1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 135,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DN40465",
+        "merke": "Volkswagen",
+        "modell": "Andre",
+        "aar": 2010
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 193,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 89,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DK84265",
+        "merke": "Volkswagen",
+        "modell": "Touareg",
+        "aar": 2005
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 533,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "2458GYM:8576AGSGYMVZ2B",
+          "2458GY:8576AGSGYVZ3B",
+          "2458GYEL:8576AGSGYHMVZ1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 90,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU23751",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2021
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 378,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2576GNCM:8581AGSCMVZ6T",
+          "2576GNM2:8581AGSMVZ6T"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 91,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "LJ37142",
+        "merke": "Volkswagen",
+        "modell": "Golf Plus",
+        "aar": 2011
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 162,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 129,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EE64697",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2022
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 914,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "8658AGAC:8658AGACMVZ",
+          "8658AGAC:8658AGACMUVZ",
+          "8658ACKC:8658ACKCKMVZ",
+          "8658ACKC:8658ACKCKMUVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 302,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EF94275",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 891,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "8658AGAC:8658AGACMVZ",
+          "8658AGAC:8658AGACMUVZ",
+          "8658ACKC:8658ACKCKMVZ",
+          "8658ACKC:8658ACKCKMUVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 97,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KT88849",
+        "merke": "Volkswagen",
+        "modell": "Golf Sportsvan",
+        "aar": 2014
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 168,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 247,
+        "feil": null,
+        "dekning": "TYNN",
+        "antallKandidater": 3,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 3,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "NF54252",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2012
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 229,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "2576GY:8581AGSGYVZ1B",
+          "2576GYAG:8581AGSAVZ",
+          "2576GYM:8581AGSMVZ1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 110,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "TV92229",
+        "merke": "Volkswagen",
+        "modell": "Touran",
+        "aar": 2017
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 342,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 5,
+        "ider": [
+          "3350GNCM:8630AGACMVZ1C",
+          "3350GNM:8630AGAMVZ1C",
+          "3068GN:8577AGAVZ6K",
+          "3068GNCM:8577AGACMVZ",
+          "3068GNM:8577AGAMVZ95"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 92,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "JV35505",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 193,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2576GNCM:8581AGSCMVZ6T",
+          "2576GNM2:8581AGSMVZ6T"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 115,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PA22490",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 920,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "8658AGAC:8658AGACMVZ",
+          "8658AGAC:8658AGACMUVZ",
+          "8658ACKC:8658ACKCKMVZ",
+          "8658ACKC:8658ACKCKMUVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 150,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EP30980",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 868,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "8658AGAC:8658AGACMVZ",
+          "8658AGAC:8658AGACMUVZ",
+          "8658ACKC:8658ACKCKMVZ",
+          "8658ACKC:8658ACKCKMUVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 92,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ZH53613",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2018
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 173,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2576GNCM:8581AGSCMVZ6T",
+          "2576GNM2:8581AGSMVZ6T"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 88,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EF93501",
+        "merke": "Volkswagen",
+        "modell": "ID.5",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 178,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 97,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PP80006",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2009
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 473,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "2645CSM:8584ACCMVW1B",
+          "2645GNCM:8584AGACMVW1P",
+          "2645GNEL:8584AGSHMVW1B",
+          "2645GYM:8584AGAMVW1B",
+          "2875CSM:8598ACDMVW",
+          "2875GNCM:8598AGACMVW1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 89,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 52,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 12,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 4
+          },
+          {
+            "kind": "side",
+            "kandidater": 17,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 9
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 8
+              }
+            ],
+            "lov": 4
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 3,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "coupe",
+                "antall": 3
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              }
+            ],
+            "lov": 3
+          },
+          {
+            "kind": "roof",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DR81380",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2020
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 161,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2576GNCM:8581AGSCMVZ6T",
+          "2576GNM2:8581AGSMVZ6T"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 81,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EF97598",
+        "merke": "Volkswagen",
+        "modell": "ID.5",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 183,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 105,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "JV16591",
+        "merke": "Volkswagen",
+        "modell": "Touran",
+        "aar": 2013
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 233,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "3068GN:8577AGAVZ6K",
+          "3068GNCM:8577AGACMVZ",
+          "3068GNM:8577AGAMVZ95"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 100,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EB85560",
+        "merke": "Volkswagen",
+        "modell": "ID.3",
+        "aar": 2020
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 166,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "8652AGAC:8652AGACMVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 127,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HB70073",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2009
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 415,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "2525CSGY:8579ACSGYAVZ1B",
+          "2525GY:8579AGSVZ1B",
+          "2525GYAM:8579AGSGYAMVZ1B",
+          "2525GYM:8579AGSGYMVZ1B",
+          "2980GYM:8579AGSMVZ6T",
+          "2525GYA:8579AGSGYAVZ1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 122,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 40,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 18,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 8
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 10
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 11,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "YT69432",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2012
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 398,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "2875GNM2:8598AGAMVW6T",
+          "2875CSM:8598ACDMVW",
+          "2875CSM2:8598ACDMVW6T",
+          "2875GNCM:8598AGACMVW1B",
+          "2875GYM:8598AGSGYMVW",
+          "3070GNCM:8584AGACMVW95"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 84,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 22,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 11,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 8,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 4
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 4
+              }
+            ],
+            "lov": 3
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {
+              "body": "estate"
+            },
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "roof",
+            "kandidater": 1,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "CF56285",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2010
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 459,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "2645CSM:8584ACCMVW1B",
+          "2645GNCM:8584AGACMVW1P",
+          "2645GNEL:8584AGSHMVW1B",
+          "2645GYM:8584AGAMVW1B",
+          "2875CSM:8598ACDMVW",
+          "2875GNCM:8598AGACMVW1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 103,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 62,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 12,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 4
+          },
+          {
+            "kind": "side",
+            "kandidater": 25,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 13
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 12
+              }
+            ],
+            "lov": 4
+          },
+          {
+            "kind": "rear",
+            "kandidater": 9,
+            "automatisk": {},
+            "steg": 3,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 4
+              },
+              {
+                "felt": "body",
+                "verdi": "coupe",
+                "antall": 3
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              }
+            ],
+            "lov": 3
+          },
+          {
+            "kind": "roof",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "SV22710",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2012
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 219,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "2576GY:8581AGSGYVZ1B",
+          "2576GYAG:8581AGSAVZ",
+          "2576GYM:8581AGSMVZ1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 91,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KJ36006",
+        "merke": "Volkswagen",
+        "modell": "Amarok",
+        "aar": 2018
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 154,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "3046GNM2:8609AGSMVW1P"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 98,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DS19610",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 175,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2576GNCM:8581AGSCMVZ6T",
+          "2576GNM2:8581AGSMVZ6T"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 107,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DP53541",
+        "merke": "Volkswagen",
+        "modell": "Andre",
+        "aar": 2015
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 182,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 84,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DR15345",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2017
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 185,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "3393GN:8579AGSVZ6K",
+          "3393GNM:8579AGAMVZ15"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 122,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 6,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HF27481",
+        "merke": "Volkswagen",
+        "modell": "Golf VII",
+        "aar": 2017
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 525,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "3190GNCM:8618AGACMVWZ6P",
+          "3190GNM2:8618AGAMVZ6T",
+          "3252GNCM:8622AGACMV6T",
+          "3252GNM2:8622AGAMV6T",
+          "2811GY:8583AGSGYVZ1H",
+          "3109GNAG:8615AGAAGVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 92,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 67,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 10,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 10,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 5
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 5
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 35,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 18
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 17
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 3,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 4
+              },
+              {
+                "felt": "body",
+                "verdi": "cabriolet",
+                "antall": 3
+              },
+              {
+                "felt": "body",
+                "verdi": "van",
+                "antall": 4
+              }
+            ],
+            "lov": 3
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 5,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 2
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KT97177",
+        "merke": "Volkswagen",
+        "modell": "Crafter",
+        "aar": 2018
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 831,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "8635AGSC:8635AGSCMVZ1C",
+          "8635AGSC:8635AGSCHMVZ1C",
+          "8635AGSIV:8635AGSIVZ",
+          "8635AGSIV:8635AGSIVZ1C"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 169,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EP11031",
+        "merke": "Volkswagen",
+        "modell": "ID. Buzz",
+        "aar": 2026
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 182,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 95,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EL69859",
+        "merke": "Volkswagen",
+        "modell": "e-Golf VII",
+        "aar": 2016
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 459,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "3109GNAG:8615AGAAGVZ",
+          "3109GNAM:8615AGAAMVZ1P",
+          "3190GNCM:8618AGACMVWZ6P",
+          "3190GNM2:8618AGAMVZ6T",
+          "3252GNCM:8622AGACMV6T",
+          "3252GNM2:8622AGAMV6T"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 97,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 67,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 10,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 10,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 5
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 5
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 35,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 18
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 17
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 3,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 4
+              },
+              {
+                "felt": "body",
+                "verdi": "cabriolet",
+                "antall": 3
+              },
+              {
+                "felt": "body",
+                "verdi": "van",
+                "antall": 4
+              }
+            ],
+            "lov": 3
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 5,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 2
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EC68253",
+        "merke": "Volkswagen",
+        "modell": "ID.3",
+        "aar": 2021
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 713,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "8652AGAC:8652AGACMUVZ",
+          "8652AGAC:8652AGACMVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 97,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PP81833",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2009
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 420,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "2525CSGY:8579ACSGYAVZ1B",
+          "2525GY:8579AGSVZ1B",
+          "2525GYAM:8579AGSGYAMVZ1B",
+          "2525GYM:8579AGSGYMVZ1B",
+          "2980GYM:8579AGSMVZ6T",
+          "2525GYA:8579AGSGYAVZ1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 112,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 40,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 18,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 8
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 10
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 11,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "UX62558",
+        "merke": "Volkswagen",
+        "modell": "Tiguan",
+        "aar": 2013
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 145,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "2836GNCM:8595AGACMVZ3P"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 85,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DL94988",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2009
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 228,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "2576GY:8581AGSGYVZ1B",
+          "2576GYAG:8581AGSAVZ",
+          "2576GYM:8581AGSMVZ1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 94,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EN71317",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2025
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 843,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "8658AGAC:8658AGACMVZ",
+          "8658AGAC:8658AGACMUVZ",
+          "8658ACKC:8658ACKCKMVZ",
+          "8658ACKC:8658ACKCKMUVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 98,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EK19551",
+        "merke": "Volkswagen",
+        "modell": "e-Golf VII",
+        "aar": 2017
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 502,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 6,
+        "ider": [
+          "3109GNAG:8615AGAAGVZ",
+          "3109GNAM:8615AGAAMVZ1P",
+          "3190GNCM:8618AGACMVWZ6P",
+          "3190GNM2:8618AGAMVZ6T",
+          "3252GNCM:8622AGACMV6T",
+          "3252GNM2:8622AGAMV6T"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 104,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 67,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 10,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 10,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 5
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 5
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 35,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 18
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 17
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 3,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 4
+              },
+              {
+                "felt": "body",
+                "verdi": "cabriolet",
+                "antall": 3
+              },
+              {
+                "felt": "body",
+                "verdi": "van",
+                "antall": 4
+              }
+            ],
+            "lov": 3
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 5,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 2
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EN74501",
+        "merke": "Volkswagen",
+        "modell": "ID.7",
+        "aar": 2025
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 147,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 80,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PR55317",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2020
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 153,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "3393GN:8579AGSVZ6K",
+          "3393GNM:8579AGAMVZ15"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 94,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 6,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EN67708",
+        "merke": "Volkswagen",
+        "modell": "ID.7",
+        "aar": 2025
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 193,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 0,
+        "ider": []
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 88,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "SD28674",
+        "merke": "Volkswagen",
+        "modell": "Caravelle",
+        "aar": 2006
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 503,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 5,
+        "ider": [
+          "2525CSGY:8579ACSGYAVZ1B",
+          "2525GY:8579AGSVZ1B",
+          "2525GYAM:8579AGSGYAMVZ1B",
+          "2525GYM:8579AGSGYMVZ1B",
+          "2525GYA:8579AGSGYAVZ1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 103,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 39,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 5,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 3
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 18,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 8
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 10
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 11,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EJ17848",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 843,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "8658AGAC:8658AGACMVZ",
+          "8658AGAC:8658AGACMUVZ",
+          "8658ACKC:8658ACKCKMVZ",
+          "8658ACKC:8658ACKCKMUVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 93,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BR51758",
+        "merke": "Volkswagen",
+        "modell": "Eos",
+        "aar": 2007
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 214,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "2731CSM:8587ACCMVW1B",
+          "2731GN:8587AGSVW",
+          "2731GNM:8587AGSMVW1B"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 84,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ST30377",
+        "merke": "Toyota",
+        "modell": "Camry",
+        "aar": 1999
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 111,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "2059GY:8302AGNGYV"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 99,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU37204",
+        "merke": "Toyota",
+        "modell": "Corolla",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 339,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "2801GN:8376AGSW",
+          "2801GNM:8376AGSMW1P",
+          "8430AGAC:8430AGACHMUZ1L",
+          "8430AGAC:8430AGACMUZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 81,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 27,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 4,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "hatchback",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "suv",
+                "antall": 1
+              }
+            ],
+            "lov": 4
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "UF91402",
+        "merke": "Toyota",
+        "modell": "C-HR",
+        "aar": 2021
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 127,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "8421AGAC:8421AGACHMVZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 80,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DS30475",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 188,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "8437AGAB:8437AGABLCM1L",
+          "8437AGAB:8437AGABLCMU1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 98,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 10,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "YE93661",
+        "merke": "Toyota",
+        "modell": "Prius+",
+        "aar": 2013
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 424,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "3170GNMU:8406AGAMUV",
+          "3170GNMU:8406AGAMUV1P"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 87,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KJ63240",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 222,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "8437AGAB:8437AGABLCM1L",
+          "8437AGAB:8437AGABLCMU1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 77,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 10,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU42163",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 262,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "3124GN:8400AGA1B",
+          "3124GNM:8400AGAM1B",
+          "8438AGAC:8438AGACMUZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 84,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "TV71715",
+        "merke": "Toyota",
+        "modell": "RAV4",
+        "aar": 2005
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 260,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 3,
+        "ider": [
+          "2572GN:8323AGN75",
+          "2572GY:8323AGNGYV1B",
+          "2298GY:8323AGNGYV"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 79,
+        "feil": null,
+        "dekning": "TYNN",
+        "antallKandidater": 2,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 1,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DL66882",
+        "merke": "Toyota",
+        "modell": "RAV4",
+        "aar": 2007
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 247,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2696GNEL:8372AGAHVW",
+          "2696GY:8372AGAGYVZ"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 89,
+        "feil": null,
+        "dekning": "TYNN",
+        "antallKandidater": 1,
+        "ukjentPlassering": 1,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RK41592",
+        "merke": "Toyota",
+        "modell": "Aygo",
+        "aar": 2010
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 457,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "2692GN:",
+          "3287GN:",
+          "3287GNC:",
+          "8443AGSC:"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 92,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK19201",
+        "merke": "Toyota",
+        "modell": "bZ4X",
+        "aar": 2025
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 183,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 5,
+        "ider": [
+          "8450AGAC:",
+          "8450ASMV:",
+          "8450ASMR:"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 79,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU36370",
+        "merke": "Toyota",
+        "modell": "Corolla",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 328,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 4,
+        "ider": [
+          "2801GN:8376AGSW",
+          "2801GNM:8376AGSMW1P",
+          "8430AGAC:8430AGACHMUZ1L",
+          "8430AGAC:8430AGACMUZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 87,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 27,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 4,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "hatchback",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "suv",
+                "antall": 1
+              }
+            ],
+            "lov": 4
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BR67700",
+        "merke": "Toyota",
+        "modell": "Land Cruiser",
+        "aar": 2008
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 140,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "FW2652GY:FW2652GYY"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 88,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18792",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 115,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "8440AGAC:8440AGACHMUZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 80,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 27,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 4,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "suv",
+                "antall": 1
+              },
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "hatchback",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              }
+            ],
+            "lov": 4
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18819",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 188,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "8437AGAB:8437AGABLCM1L",
+          "8437AGAB:8437AGABLCMU1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 77,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 10,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KZ59186",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2009
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 174,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2699GN:8370AGAZ1C",
+          "2250GY2:8317AGSGY1P"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 87,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK17847",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2023
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 196,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "8437AGAB:8437AGABLCM1L",
+          "8437AGAB:8437AGABLCMU1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 87,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 10,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU28171",
+        "merke": "Toyota",
+        "modell": "Land Cruiser",
+        "aar": 2021
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 1020,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 15,
+        "ider": [
+          "1671GB:",
+          "3005GG:",
+          "2500GG:",
+          "3005GBAE:",
+          "3005GGEL:",
+          "3005GBAC:",
+          "3005GBCEL:",
+          "2846GBCEL:",
+          "3005GBEL:",
+          "8381AGA1:",
+          "2954GN2:",
+          "2954GY:",
+          "2846GGEL:",
+          "2846GBEL:"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 89,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18786",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 194,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "8437AGAB:8437AGABLCM1L",
+          "8437AGAB:8437AGABLCMU1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 99,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 10,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18815",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 212,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "8437AGAB:8437AGABLCM1L",
+          "8437AGAB:8437AGABLCMU1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 91,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 10,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 1
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 1
+              }
+            ],
+            "lov": 2
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18782",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 127,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "8440AGAC:8440AGACHMUZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 93,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 27,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 4,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "suv",
+                "antall": 1
+              },
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "hatchback",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              }
+            ],
+            "lov": 4
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18798",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 114,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "8440AGAC:8440AGACHMUZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 90,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 27,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 4,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "suv",
+                "antall": 1
+              },
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "hatchback",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              }
+            ],
+            "lov": 4
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18790",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 135,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "8440AGAC:8440AGACHMUZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 123,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 27,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 4,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "suv",
+                "antall": 1
+              },
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "hatchback",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              }
+            ],
+            "lov": 4
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18789",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 118,
+        "feil": null,
+        "utfall": "PINPOINT",
+        "pinpoint": true,
+        "antall": 1,
+        "ider": [
+          "8440AGAC:8440AGACHMUZ1L"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 115,
+        "feil": null,
+        "dekning": "GOD",
+        "antallKandidater": 27,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "automatisk": {},
+            "steg": 2,
+            "alternativer": [
+              {
+                "felt": "side",
+                "verdi": "left",
+                "antall": 7
+              },
+              {
+                "felt": "side",
+                "verdi": "right",
+                "antall": 7
+              }
+            ],
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "automatisk": {},
+            "steg": 4,
+            "alternativer": [
+              {
+                "felt": "body",
+                "verdi": "suv",
+                "antall": 1
+              },
+              {
+                "felt": "body",
+                "verdi": "estate",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "hatchback",
+                "antall": 2
+              },
+              {
+                "felt": "body",
+                "verdi": "sedan",
+                "antall": 2
+              }
+            ],
+            "lov": 4
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EH58246",
+        "merke": "Toyota",
+        "modell": "Proace",
+        "aar": 2025
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 201,
+        "feil": null,
+        "utfall": "FALLBACK",
+        "pinpoint": false,
+        "antall": 1,
+        "ider": [
+          "8439AGSV:"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 104,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RJ91986",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2009
+      },
+      "frontrute": {
+        "status": 200,
+        "ms": 159,
+        "feil": null,
+        "utfall": "VERIFY",
+        "pinpoint": false,
+        "antall": 2,
+        "ider": [
+          "2699GN:8370AGAZ1C",
+          "2250GY2:8317AGSGY1P"
+        ]
+      },
+      "valgtre": {
+        "status": 200,
+        "ms": 122,
+        "feil": null,
+        "dekning": "INGEN",
+        "antallKandidater": 0,
+        "ukjentPlassering": 0,
+        "typer": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "automatisk": {},
+            "steg": 0,
+            "alternativer": [],
+            "lov": 1
+          }
+        ]
+      }
+    }
+  ]
+}

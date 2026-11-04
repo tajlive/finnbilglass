@@ -1,0 +1,4905 @@
+{
+  "oppsummering": {
+    "manifest": "data/finn-100.jsonl",
+    "biler": 110,
+    "feil": 0,
+    "bilerUendret": 110,
+    "bilerEndret": 0,
+    "stegFor": 95,
+    "stegEtter": 95,
+    "lovFor": 252,
+    "lovEtter": 252
+  },
+  "rader": [
+    {
+      "bil": {
+        "regnr": "AE13412",
+        "merke": "Volkswagen",
+        "modell": "Golf V",
+        "aar": 2006
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EJ18765",
+        "merke": "Hyundai",
+        "modell": "Kona",
+        "aar": 2024
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "LH90120",
+        "merke": "Volkswagen",
+        "modell": "Caravelle",
+        "aar": 2000
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "NF73296",
+        "merke": "BMW",
+        "modell": "116i",
+        "aar": 2015
+      },
+      "kandidater": 24,
+      "for": {
+        "typer": 4,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 6,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 6,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HB80142",
+        "merke": "BMW",
+        "modell": "320d",
+        "aar": 2008
+      },
+      "kandidater": 42,
+      "for": {
+        "typer": 4,
+        "steg": 7,
+        "lov": 13,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 32,
+            "steg": 2,
+            "lov": 7
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 3,
+            "lov": 3
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 7,
+        "lov": 13,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 32,
+            "steg": 2,
+            "lov": 7
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 3,
+            "lov": 3
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DR94262",
+        "merke": "Toyota",
+        "modell": "Proace",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED63427",
+        "merke": "Polestar",
+        "modell": "2",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED45082",
+        "merke": "Nissan",
+        "modell": "Leaf",
+        "aar": 2021
+      },
+      "kandidater": 18,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 7,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 4,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 3,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 7,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 4,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 3,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EB11166",
+        "merke": "Audi",
+        "modell": "e-tron",
+        "aar": 2020
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BR58010",
+        "merke": "Audi",
+        "modell": "A5",
+        "aar": 2008
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "FT61245",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "AA78283",
+        "merke": "Peugeot",
+        "modell": "Expert",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "NH12612",
+        "merke": "Isuzu",
+        "modell": "D-max",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EK42721",
+        "merke": "BMW",
+        "modell": "i3",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EK70880",
+        "merke": "Kia",
+        "modell": "Soul",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "CV89013",
+        "merke": "Mazda",
+        "modell": "CX-3",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED82258",
+        "merke": "BMW",
+        "modell": "iX",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED75058",
+        "merke": "Kia",
+        "modell": "Niro",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BC51543",
+        "merke": "Ford",
+        "modell": "Granada",
+        "aar": 1983
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KJ65178",
+        "merke": "Toyota",
+        "modell": "HiLux",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PR22999",
+        "merke": "Mazda",
+        "modell": "CX-5",
+        "aar": 2014
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DS29473",
+        "merke": "Lotus",
+        "modell": "Eletre",
+        "aar": 2026
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DN65751",
+        "merke": "BMW",
+        "modell": "X5",
+        "aar": 2011
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "CF91159",
+        "merke": "Volvo",
+        "modell": "V60",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EF97795",
+        "merke": "Cupra",
+        "modell": "Born",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ED72189",
+        "merke": "Porsche",
+        "modell": "Taycan 4",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EP70168",
+        "merke": "BMW",
+        "modell": "i4",
+        "aar": 2026
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DP72082",
+        "merke": "Volvo",
+        "modell": "XC60",
+        "aar": 2015
+      },
+      "kandidater": 29,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 8,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 10,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 8,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 10,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "CV52478",
+        "merke": "BMW",
+        "modell": "E90",
+        "aar": 2008
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DP10946",
+        "merke": "Mitsubishi",
+        "modell": "Pajero",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "SD82842",
+        "merke": "Volvo",
+        "modell": "XC60",
+        "aar": 2016
+      },
+      "kandidater": 29,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 8,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 10,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 8,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "side",
+            "kandidater": 10,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RK29593",
+        "merke": "Peugeot",
+        "modell": "207",
+        "aar": 2011
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BS66728",
+        "merke": "Volvo",
+        "modell": "V60",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DS30473",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RH69811",
+        "merke": "Mitsubishi",
+        "modell": "L200",
+        "aar": 1999
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DR56170",
+        "merke": "Jaguar",
+        "modell": "XF",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BS35162",
+        "merke": "Land Rover",
+        "modell": "Range Rover",
+        "aar": 2012
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "NV63526",
+        "merke": "Mitsubishi",
+        "modell": "ASX",
+        "aar": 2011
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "SV45016",
+        "merke": "Kia",
+        "modell": "Ceed",
+        "aar": 2014
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EN30654",
+        "merke": "Nissan",
+        "modell": "Ariya",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RK10863",
+        "merke": "Mitsubishi",
+        "modell": "Outlander",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DN40465",
+        "merke": "Volkswagen",
+        "modell": "Andre",
+        "aar": 2010
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DK84265",
+        "merke": "Volkswagen",
+        "modell": "Touareg",
+        "aar": 2005
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU23751",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "LJ37142",
+        "merke": "Volkswagen",
+        "modell": "Golf Plus",
+        "aar": 2011
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EE64697",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EF94275",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KT88849",
+        "merke": "Volkswagen",
+        "modell": "Golf Sportsvan",
+        "aar": 2014
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "NF54252",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2012
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "TV92229",
+        "merke": "Volkswagen",
+        "modell": "Touran",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "JV35505",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PA22490",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EP30980",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2024
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ZH53613",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EF93501",
+        "merke": "Volkswagen",
+        "modell": "ID.5",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PP80006",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DR81380",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2020
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EF97598",
+        "merke": "Volkswagen",
+        "modell": "ID.5",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "JV16591",
+        "merke": "Volkswagen",
+        "modell": "Touran",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EB85560",
+        "merke": "Volkswagen",
+        "modell": "ID.3",
+        "aar": 2020
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HB70073",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "YT69432",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2012
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "CF56285",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2010
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "SV22710",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2012
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KJ36006",
+        "merke": "Volkswagen",
+        "modell": "Amarok",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DS19610",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DP53541",
+        "merke": "Volkswagen",
+        "modell": "Andre",
+        "aar": 2015
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DR15345",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HF27481",
+        "merke": "Volkswagen",
+        "modell": "Golf VII",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KT97177",
+        "merke": "Volkswagen",
+        "modell": "Crafter",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EP11031",
+        "merke": "Volkswagen",
+        "modell": "ID. Buzz",
+        "aar": 2026
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EL69859",
+        "merke": "Volkswagen",
+        "modell": "e-Golf VII",
+        "aar": 2016
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EC68253",
+        "merke": "Volkswagen",
+        "modell": "ID.3",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PP81833",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "UX62558",
+        "merke": "Volkswagen",
+        "modell": "Tiguan",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DL94988",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EN71317",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EK19551",
+        "merke": "Volkswagen",
+        "modell": "e-Golf VII",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EN74501",
+        "merke": "Volkswagen",
+        "modell": "ID.7",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "PR55317",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2020
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EN67708",
+        "merke": "Volkswagen",
+        "modell": "ID.7",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "SD28674",
+        "merke": "Volkswagen",
+        "modell": "Caravelle",
+        "aar": 2006
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EJ17848",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2024
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BR51758",
+        "merke": "Volkswagen",
+        "modell": "Eos",
+        "aar": 2007
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "ST30377",
+        "merke": "Toyota",
+        "modell": "Camry",
+        "aar": 1999
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU37204",
+        "merke": "Toyota",
+        "modell": "Corolla",
+        "aar": 2023
+      },
+      "kandidater": 27,
+      "for": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "etter": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "UF91402",
+        "merke": "Toyota",
+        "modell": "C-HR",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DS30475",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "YE93661",
+        "merke": "Toyota",
+        "modell": "Prius+",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KJ63240",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU42163",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2024
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "TV71715",
+        "merke": "Toyota",
+        "modell": "RAV4",
+        "aar": 2005
+      },
+      "kandidater": 2,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 1,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 1,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "DL66882",
+        "merke": "Toyota",
+        "modell": "RAV4",
+        "aar": 2007
+      },
+      "kandidater": 1,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RK41592",
+        "merke": "Toyota",
+        "modell": "Aygo",
+        "aar": 2010
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK19201",
+        "merke": "Toyota",
+        "modell": "bZ4X",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU36370",
+        "merke": "Toyota",
+        "modell": "Corolla",
+        "aar": 2023
+      },
+      "kandidater": 27,
+      "for": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "etter": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BR67700",
+        "merke": "Toyota",
+        "modell": "Land Cruiser",
+        "aar": 2008
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18792",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "for": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "etter": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18819",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "KZ59186",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK17847",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2023
+      },
+      "kandidater": 10,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "BU28171",
+        "merke": "Toyota",
+        "modell": "Land Cruiser",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18786",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18815",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "for": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "etter": {
+        "typer": 4,
+        "steg": 4,
+        "lov": 6,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 4,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "door",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          },
+          {
+            "kind": "rear",
+            "kandidater": 2,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "ventil",
+            "kandidater": 2,
+            "steg": 2,
+            "lov": 2
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18782",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "for": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "etter": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18798",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "for": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "etter": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18790",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "for": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "etter": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "HK18789",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "for": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "etter": {
+        "typer": 3,
+        "steg": 6,
+        "lov": 11,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 6,
+            "steg": 0,
+            "lov": 1
+          },
+          {
+            "kind": "side",
+            "kandidater": 14,
+            "steg": 2,
+            "lov": 6
+          },
+          {
+            "kind": "rear",
+            "kandidater": 7,
+            "steg": 4,
+            "lov": 4
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "EH58246",
+        "merke": "Toyota",
+        "modell": "Proace",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    },
+    {
+      "bil": {
+        "regnr": "RJ91986",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "for": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "etter": {
+        "typer": 1,
+        "steg": 0,
+        "lov": 1,
+        "perType": [
+          {
+            "kind": "windshield",
+            "kandidater": 0,
+            "steg": 0,
+            "lov": 1
+          }
+        ]
+      },
+      "endring": {
+        "steg": 0,
+        "lov": 0
+      }
+    }
+  ]
+}

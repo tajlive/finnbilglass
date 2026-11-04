@@ -277,9 +277,9 @@ export function byggValgTre({ kandidater, styring, dokumentertKropp }: ValgTreIn
   if (dekning === 'INGEN' && ukjentPlassering > 0) {
     melding = 'Vi har funnet glass til bilen, men kan ikke fastslå hvilken plassering det gjelder. Send oss en forespørsel, så undersøker vi videre.';
   } else if (dekning === 'INGEN') {
-    melding = 'Vi fant ingen dokumenterte glass til denne bilen i katalogen. Det betyr ikke at ruten ikke finnes — send oss en forespørsel, så undersøker vi videre.';
+    melding = 'Vi fant ingen mulige glassvarianter til denne bilen i katalogen. Det betyr ikke at ruten ikke finnes — send oss en forespørsel, så undersøker vi videre.';
   } else {
-    melding = 'Velg ruten det gjelder. Valgene er de plasseringene katalogen har dokumentert for denne bilen.';
+    melding = 'Velg ruten det gjelder. Valgene er de plasseringene katalogen har mulige varianter for. Vi kontrollerer alltid glass og passform manuelt før tilbud.';
   }
 
   return {
