@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym, pinpointSperre } from '../src/vin-resolver.ts';
+import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym, pinpointSperre, velgPrisRadEtterAar } from '../src/vin-resolver.ts';
 
 // Faktiske katalograder (brand='VW', frontrute, modell med «ID»).
 const KATALOG = [
@@ -146,4 +146,22 @@ test('PINPOINT-sperre: RAV4 2022-2025 på 8432AGAC gir VERIFY, ikke PINPOINT', (
   assert.equal(pinpointSperre('TOYOTA', 'COROLLA', 2024, '8432AGACHM'), null);
   assert.equal(pinpointSperre('VOLVO', 'V60', 2024, '8432AGACHM'), null);
   assert.equal(pinpointSperre('TOYOTA', 'RAV4', null, '8432AGACHM'), null, 'uten år ingen sperre');
+});
+
+test('étt varenr, flere eurokoder: årang velges fra varenavnet', () => {
+  // Faktiske rader fra Autoglass-prislisten (målt 2026-11-04): varenr 8432AGAC
+  // finnes både som «RAV 4 19-21» og «RAV 4 2019-».
+  const rader = [
+    { varenavn: 'TOYOTA RAV 4 19-21 FR AKU LDW', eurokode: '8432AGACHM' },
+    { varenkode: '', varenavn: 'TOYOTA RAV 4 2019- FR AKU LDW', eurokode: '8432AGACHMU' },
+    { varenavn: 'TOYOTA RAV 4 2019- WS GN ACO LDW', eurokode: '8432AGACHMV1E' },
+  ];
+  assert.equal(velgPrisRadEtterAar(rader, 2020).eurokode, '8432AGACHM', '2020 hører til 19-21-varen');
+  assert.equal(velgPrisRadEtterAar(rader, 2024).eurokode, '8432AGACHMU', '2024 skal ikke få 19-21-varen');
+  assert.equal(velgPrisRadEtterAar(rader, null).eurokode, '8432AGACHM', 'uten år: første rad som før');
+  assert.equal(velgPrisRadEtterAar([rader[0]], 2024).eurokode, '8432AGACHM', 'én rad: uendret');
+  assert.equal(
+    velgPrisRadEtterAar([{ varenavn: 'TOYOTA RAV 4 19-21 FR', eurokode: 'X' }], 2024).eurokode, 'X',
+    'ingen rad dekker året: første rad',
+  );
 });

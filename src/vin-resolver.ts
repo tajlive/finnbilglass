@@ -307,11 +307,41 @@ export function erFrontrute(varenavn: string | null, varenr: string, dek: Dekode
  *  Attributter: eurokode-dekoder er autoritativ for A/M/C/H (Tom 2026-08-13);
  *  glass_catalog brukes KUN for kamera/adas (ikke kodet i eurokoden). Ikke-frontrute
  *  (bak/side/dør/takglass) og OEM-delnummer uten FRONTR-markør returnerer null. */
-async function prisKandidat(env: Env, kode: string, modus: Sokemodus = 'FRONTRUTE_ONLY'): Promise<ResolverKandidat | null> {
-  const r = await env.FINNBILGLASS_DB.prepare(
+/**
+ * Velger riktig prisrad når ett varenr har flere eurokoder med ulik årang.
+ *
+ * Målt 2026-11-04 (Autoglass-prislisten): varenr 8432AGAC finnes både som
+ * «TOYOTA RAV 4 19-21 FR AKU LDW» (8432AGACHM) og «TOYOTA RAV 4 2019- FR AKU
+ * LDW» (8432AGACHMU). Uten år-bevisst valg tok `LIMIT 1` den første raden, så
+ * en 2024-bil fikk 19-21-varen. Nå velges den raden hvis år-intervall fra
+ * varenavnet inneholder bilens år — og den mest spesifikke vinner når flere
+ * dekker året (19-21 foran «2019-»).
+ *
+ * Er året ukjent eller ingen rad dekker det: første rad, som før.
+ */
+export function velgPrisRadEtterAar<T extends { varenavn: string | null }>(rader: T[], aar: number | null): T | null {
+  if (!rader.length) return null;
+  if (rader.length === 1 || aar == null) return rader[0];
+  // parseAar returnerer slutt=null for åpne intervaller («2019-»), selv om typen
+  // sier number — derfor normaliseres det her.
+  const medAar = rader
+    .map((r) => {
+      const i = parseAar(r.varenavn);
+      return i ? { r, i: { start: i.start, slutt: (i.slutt ?? null) as number | null } } : null;
+    })
+    .filter((x): x is { r: T; i: { start: number; slutt: number | null } } => x != null);
+  const treff = medAar.filter((x) => aar >= x.i.start - 1 && (x.i.slutt == null || aar <= x.i.slutt + 1));
+  if (!treff.length) return rader[0];
+  treff.sort((a, b) => ((a.i.slutt ?? 9999) - a.i.start) - ((b.i.slutt ?? 9999) - b.i.start));
+  return treff[0].r;
+}
+
+async function prisKandidat(env: Env, kode: string, modus: Sokemodus = 'FRONTRUTE_ONLY', aar: number | null = null): Promise<ResolverKandidat | null> {
+  const treff = await env.FINNBILGLASS_DB.prepare(
     `SELECT varenr, varenavn, pris, eurokode, kommentar FROM glass_prisliste
-     WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 1`
-  ).bind(kode, kode).first<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null; kommentar: string | null }>();
+     WHERE rad_type='glass' AND (varenr = ? OR eurokode = ?) LIMIT 20`
+  ).bind(kode, kode).all<{ varenr: string; varenavn: string | null; pris: number | null; eurokode: string | null; kommentar: string | null }>();
+  const r = velgPrisRadEtterAar(treff.results ?? [], aar);
   if (!r) return null;
 
   // Produkt-karantene: rader merket som glass som egentlig er panel/list
@@ -452,7 +482,8 @@ async function lagVinOverride(env: Env, vin: string | null | undefined): Promise
   ).bind(v).all<{ eurocode: string }>();
   const unike = new Map<string, ResolverKandidat>();
   for (const r of rows.results ?? []) {
-    const k = await prisKandidat(env, r.eurocode);
+    // VIN-overstyring er manuell fasit — år brukes ikke til å velge søskenrad.
+    const k = await prisKandidat(env, r.eurocode, 'FRONTRUTE_ONLY', null);
     if (k && !unike.has(k.varenr)) unike.set(k.varenr, k);
   }
   return [...unike.values()];
@@ -685,7 +716,7 @@ async function lagGroundTruth(env: Env, make: string, model: string, aarList: nu
      WHERE make IN (${mPlasser}) AND year IN (${plasser})
      ORDER BY confidence DESC, model ASC LIMIT 200`
   ).bind(...makes, ...aarList).all<{ model: string; frontrute_eurocode: string; confidence: number }>();
-  const kandidater = await gtRaderKandidater(rows.results ?? [], make, model, aarList, (kode) => prisKandidat(env, kode));
+  const kandidater = await gtRaderKandidater(rows.results ?? [], make, model, aarList, (kode) => prisKandidat(env, kode, 'FRONTRUTE_ONLY', aarList[0] ?? null));
   // L1-profilsmaling: kundens utstyrssvar gjør GT-varianter entydige (samme
   // doktrine som L2). Uten svar: alle GT-varianter → VERIFY (G1-ærlig).
   return kandidater.length > 1 ? filtrerPaaProfil(kandidater, profil) : kandidater;
@@ -728,7 +759,7 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
       if (!intervall) continue; // ukjent generasjon → ekskluder (false positive verre enn fallback)
       if (!matcherAar({ start: intervall.start - 1, slutt: intervall.slutt === Infinity ? Infinity : intervall.slutt + 1 }, aar)) continue;
     }
-    const k = await prisKandidat(env, r.eurocode);
+    const k = await prisKandidat(env, r.eurocode, 'FRONTRUTE_ONLY', aar);
     if (!k) continue;
     // prisKandidat gir allerede korrekte attributter (eurokode-dekoder for A/M/C/H,
     // glass_catalog kun for kamera/adas) — IKKE overstyr med glass_catalog-flagg her
@@ -773,7 +804,7 @@ async function lagKtype(env: Env, make: string, model: string, aar: number | nul
       `SELECT eurocode FROM glass_catalog WHERE ktype IN (${plasser}) AND category IN ('frontrute','annet') LIMIT 20`
     ).bind(...batch).all<{ eurocode: string }>();
     for (const r of rows.results ?? []) {
-      const k = await prisKandidat(env, r.eurocode);
+      const k = await prisKandidat(env, r.eurocode, 'FRONTRUTE_ONLY', aar);
       if (k && !unike.has(k.varenr)) unike.set(k.varenr, k);
     }
   }
@@ -823,7 +854,8 @@ async function lagTecdocKtype(env: Env, vin: string | null | undefined): Promise
     const unike = new Map<string, ResolverKandidat>();
     for (const row of rows.results ?? []) {
       if (!row.eurocode) continue;
-      const kandidat = await prisKandidat(env, row.eurocode);
+      // TecDoc-laget er VIN-basert og kjenner ikke årsmodellen her — ingen årvalg.
+      const kandidat = await prisKandidat(env, row.eurocode, 'FRONTRUTE_ONLY', null);
       if (kandidat && !unike.has(kandidat.varenr)) unike.set(kandidat.varenr, kandidat);
     }
     return [...unike.values()];
