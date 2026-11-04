@@ -1,0 +1,2 @@
+-- AUTO-GLASS TYPEKODE fra Apify (posisjonstekst oversatt til kanonisk kode)
+-- kilde=apify-auto-glass kildefil=fil:auto-glass-typekode-5-sarEkPbes0rjlcg3A.json nye=0 uendret=4 konflikter=1

@@ -9,28 +9,34 @@
 
 | Spørsmål | Svar |
 |---|---|
-| Actor | `tomarnejensen/finnbilglass-price-import` (Task `efh6cQo6pYdYdBX8Y`) |
-| Hva hentes | **auto-glass.no** — `/varer/nettbutikk/autoglass/`, forhandlerlogin på `/min-konto/` (`finnbilglass-price-import/src/main.js:10-11,30,98`). Ikke Glavista. |
-| Modus | `typekodeOnly=true` gir **kun varenr + typekode**; pris- og lagerfelt settes til `null`/`UNKNOWN` (`src/extract.js:68,179`, `src/main.js:432,474`) |
-| Siste kjente vellykkede kjøring | 2026-10-31: **50/50 produkter**, 50 unike eurokoder, idempotent re-import (`inserted=0, updated=50`) — dokumentert i `docs/apify-catalog-staging-results-2026-10-31.md` |
-| Testkjøring etterpå | run `sarEkPbes0rjlcg3A`, build 1.0.18, 5/5 produkter, **$0,0023** |
-| Hvor dataene ligger | **Kun i Apify-datasettene (sky) + dokumentasjon.** `apify_catalog_products` finnes **ikke** i produksjons-D1 (76 tabeller) eller staging-D1 (67 tabeller) — tabellen ble aldri migrert inn i de kjørende basene |
-| Automatisert? | Nei. Actor, Task (`efh6cQo6pYdYdBX8Y`) og `scripts/apify-automation.mjs` finnes, men det er **ingen cron/schedule** — hver kjøring og import er manuell |
-| Kostnad | Siste kjente: **$0,0023** for 5 produkter. Full 92-siders discovery er ikke kjørt; kostnad ikke målt |
-| Blokkering | Undersøkt 2026-11-04, fire veier: (1) **ingen Apify-connector** i Hermes (`manage_connections` → bare `cloudflare_mcp` er tilkoblet); (2) anonym API → **404** («Actor was not found or access denied»); (3) lagret OAuth-token (`~/.apify/auth.json`, `expiresAt 2026-11-01T12:25Z`) → **401**; (4) refresh-token i keychain kunne ikke leses som gyldig verdi, og OAuth-refresh svarte `invalid_request: refresh_token Too small`. **Ingen av veiene gir kjøretilgang fra Hermes.** |
+| Actor | `tomarnejensen/finnbilglass-price-import`, id **1QF8RbAZ6ewBALyYj**, build 1.0.18, privat |
+| Task | **`efh6cQo6pYdYdBX8Y`** — «Finnbilglass Typekode Pilot 5» (4 kjøringer) |
+| Hva hentes | **auto-glass.no** — `/varer/nettbutikk/autoglass/`, forhandlerlogin på `/min-konto/` (`finnbilglass-price-import/src/main.js:10-11,30,98`) |
+| Modus | `typekodeOnly=true` gir **kun varenr + posisjon**; pris- og lagerfelt er tomme (`src/extract.js:68,179`) |
 
-**Konsekvens:** piloten kan ikke startes fra Hermes uten at én av disse er på plass: `npx apify-cli login` (interaktivt), eller et API-token lesbart for meg (f.eks. BWS `APIFY_TOKEN`). Selve kjøringen er ellers ferdig tilrettelagt.
+### Kjørt — resultater lest fra Apify-konsollen (innlogget nettleser)
 
-**To pipelines som IKKE må blandes (rettet 2026-11-04):**
+| Kjøring | Run-ID | Tid | Omfang | Kostnad | Datasett |
+|---|---|---|---|---|---|
+| **Typekode-pilot** | `sarEkPbes0rjlcg3A` | 2026-11-01 12:59, 1 m 38 s | **5 varer**, 0 priser, 0 lager | **$0,003** | `T0E4YhoQlmD4stRnt` |
+| Full priskjøring | `3BH4i16MJdDAvT19a` | 2026-11-01 06:37, 10 m 5 s | **92 varer** (9 sider) | **$0,068** | `MMuS1bGw2agb0D0Td` |
 
-| Pipeline | Kilde | Actor | Utdata | Importvei |
-|---|---|---|---|---|
-| Auto-Glass typekode | `auto-glass.no` (login) | `finnbilglass-price-import` | varenr + typekode, **ingen priser** | `glass_typekode` via `scripts/apify-typekode-import.mjs` |
-| Glavista katalog | `glavista.com` sitemap | `finnbilglass-catalog` (`.actor/actor.json`, `actor-catalog.mjs`) | eurokode, attributter, EUR-veil. | `scripts/apify-catalog-adapter.ts` (`source: apify-glavista`) |
+Begge datasettene er lastet ned til `reports/apify/`. Kontosaldo etter kjøringene: **$0,58 av $5,00** (Creator-plan, ingen ny kostnad ved gjenbruk).
 
-**Funn: Auto-Glass-typekoden passer IKKE `apify-catalog-adapter.ts`.** Adapteren krever Glavista-felter (`glavistaNr`, `pris_eur`, `brand_title`, `category_string`) og tagger `source: 'apify-glavista'`. Auto-Glass-aktøren gir `sku`/`varenr` + `typeCodeRaw`/`typeCodeSource`. Derfor er det laget en egen mapper: `scripts/apify-typekode-import.mjs` (validert, se under).
+**Ingen ny Apify-kjøring var nødvendig:** den avtalte piloten (≤5 sider, ≤10 produkter, tak $0,50) er allerede kjørt via Task `efh6cQo6pYdYdBX8Y`, og datasettet ble gjenbrukt i stedet for å brenne nye kreditter.
 
-**Viktig prinsipp holdt:** ingen EUR-pris er eller skal skrives inn som norsk kundepris. I typekode-modus finnes ingen prisfelt; kundeprisen kommer kun fra XLS-listepris × 0,25 × 1,25.
+### Validering mot importveien (målt)
+
+| Kontroll | Resultat |
+|---|---|
+| Pilot (5 varer) → `glass_typekode` | 4 rader **uendret** (identisk med staging), **0 nye**, 1 blokkert konflikt |
+| Blokkert rad | `29730YP` — `sideConflict: true` (kilden sier DRIVER, tidligere rapport PASSENGER uverifisert), `automaticOrderAllowed: false` |
+| **Skrevet til staging** | **0 rader.** Ingenting manglet, og konfliktraden skal ikke auto-importeres |
+| Posisjonstekst → kode (92 varer) | **90 stemte** med eksisterende `glass_typekode`, **2 avvek** |
+| Avvikene | `27411GN` og `27412GN` — speilvendt side (DB: DPF/DFF, kilden: DFF/DPF) → rapportert, ikke overskrevet |
+| 92-vare-datasettet som typekode-import | **Avvist (92/92)** fordi det inneholder `listPriceValue` — det er en priskjøring, ikke typekode. Kildene blandes ikke |
+
+**Funn som endret planen:** aktøren gir **posisjonstekst** («BAKRUTE», «DØRRUTE FREMRE FØRERSIDE»), mens `glass_typekode` bruker **18 korte koder** (F, B, DFF, DPF, DFB, DPB, DFFV, DPFV, DFBV, DPBV, SFB1-3, SPB1-3, BP, BF). Uten oversettelse ville importen fylt tabellen med et annet vokabular og brutt plasseringslogikken. Mapperen oversetter nå, avviser ukjent tekst og blokkerer sidekonflikter.
 
 ### Klar for kjøring: typekode-mapper med validering
 
