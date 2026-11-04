@@ -22,6 +22,7 @@ import { createHash } from 'node:crypto';
 import { buildClassDCandidates, matchClassDCandidates, kropperIRad } from '../src/fitment-v1/catalogue-candidates.ts';
 import { byggValgTre, byggSelection } from '../src/glass-valg.ts';
 import { kontrollerVariant, produkttype } from '../src/glass-variant-kontroll.ts';
+import { posisjonFeltVerdier } from '../src/glass-kandidat-vurdering.ts';
 import { estimertKundeprisInklMva } from '../src/pricing/nok-prising.ts';
 
 const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i >= 0 ? process.argv[i + 1] : d; };
@@ -89,17 +90,23 @@ for (const bil of biler) {
         const sel = byggSelection(type.kind, arvet);
         // Hvert løv representerer et svar kunden kan gi. Kandidatene i løvet må
         // ikke avvises av serveren for det svaret.
+        // Bare kandidater som faktisk hører til dette løvet skal kunne avvises.
+        // (Tidligere ble ALLE bilens kandidater sjekket, også de som riktig er
+        // filtrert bort — det ga falske avvik.)
         for (const k of kandidater) {
+          if (k.posisjon.type !== type.kind) continue;
+          const hørerTil = ['side', 'door', 'placement', 'body'].every((felt) => {
+            const valgt = sel[felt];
+            if (!valgt || valgt === 'unknown') return true;
+            const { verdier } = posisjonFeltVerdier(k.posisjon, felt, k.varenavn);
+            return !verdier || verdier.length === 0 || verdier.includes(valgt);
+          });
+          if (!hørerTil) continue;
           const dom = kontrollerVariant(
             { varenr: k.varenr, varenavn: k.varenavn, eurokode: k.eurokode, kommentar: null },
             { side: sel.side, door: sel.door, placement: sel.placement, body: sel.body },
           );
-          if (dom.status === 'avvist' && k.posisjon.type === type.kind) {
-            // Bare et avvik hvis kandidaten faktisk støtter løvets verdier.
-            const passer =
-              (sel.side === 'unknown' || k.posisjon.side === null || k.posisjon.side === 'begge' || (k.posisjon.side === 'venstre' ? 'left' : 'right') === sel.side);
-            if (passer) noter(bil.test_id, 'VALG_AVVIST', `${type.kind} ${JSON.stringify(arvet)} → ${dom.grunn} for ${k.varenr}`);
-          }
+          if (dom.status === 'avvist') noter(bil.test_id, 'VALG_AVVIST', `${type.kind} ${JSON.stringify(arvet)} → ${dom.grunn} for ${k.varenr}`);
         }
       }
     };

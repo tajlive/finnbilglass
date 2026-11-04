@@ -313,3 +313,17 @@ test('regresjon: BUNNLIST er tilbehør og blir aldri glasskandidat', () => {
   assert.equal(kandidater.length, 1, 'bare frontruten skal stå igjen');
   assert.equal(kandidater[0].varenr, '8432AGAC');
 });
+
+test('regresjon: SENSORGEL er tilbehør, ikke glass', () => {
+  // Funnet i bred kontroll på 616 biler: «VOLVO XC90 5D SUV 12- SENSORGEL»
+  // (3182S) ble tilbudt som glasskandidat.
+  const kandidater = matchClassDCandidates(
+    buildClassDCandidates([
+      { varenr: '3182S', varenavn: 'VOLVO XC90 5D SUV 12-  SENSORGEL', eurokode: '3182S', kommentar: null },
+      { varenr: '3182AGN', varenavn: 'VOLVO XC90 5D SUV 12- FRONTRUTE', eurokode: '3182AGN', kommentar: null },
+    ]),
+    'VOLVO', 'XC90', 2015,
+  );
+  assert.equal(kandidater.length, 1, 'bare frontruten skal stå igjen');
+  assert.equal(kandidater[0].varenr, '3182AGN');
+});

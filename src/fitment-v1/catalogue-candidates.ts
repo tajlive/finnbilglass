@@ -530,7 +530,7 @@ function erTilbehor(c: CatalogueCandidate): boolean {
   // Én felles regel med produkttype(): alt som er en list/klips/pakning er
   // tilbehør, ikke glass. «BUNNLIST» (8432ASMR) slapp tidligere gjennom og ble
   // tilbudt som glasskandidat for RAV4.
-  return erListeRad(c.varenavn, c.varenr) || /PYNTELIST|PYNTLIST|GUMMILIST|KLIPS|PAKNING|LIST\b/.test(c.varenavn);
+  return erListeRad(c.varenavn, c.varenr) || /PYNTELIST|PYNTLIST|GUMMILIST|KLIPS|PAKNING|SENSORGEL|SENSORTAPE|LIST\b/.test(c.varenavn);
 }
 
 /** Kundevendt plasseringstekst. Intern klassifisering skal aldri vises. */
