@@ -145,7 +145,9 @@
       el.innerHTML =
         rad('Worker /health', helse === 200 ? 'OK' : 'FEIL (' + helse + ')', helse === 200 ? 'ok' : 'bad') +
         rad('Pristilbud', pilot.inquiries_enabled ? 'Åpent' : 'Stengt', pilot.inquiries_enabled ? 'ok' : 'bad') +
-        rad('Miljø', (pilot.pilot === 'apen' ? 'Produksjon' : '—'), 'neutral');
+        rad('Miljø', (pilot.environment === 'production' ? 'Produksjon'
+          : pilot.environment === 'staging' ? 'Staging'
+          : 'ukjent'), 'neutral');
     });
     function rad(a, b, k) {
       return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px">' +

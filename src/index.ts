@@ -831,7 +831,10 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     // Én sannhetskilde: henvendelserTillatt(env) (env-flagget først, så D1).
     if (method === 'GET' && path === '/api/pilot-status') {
       const apen = await henvendelserTillatt(env);
-      return json({ ok: true, inquiries_enabled: apen, pilot: apen ? 'apen' : 'stengt' });
+      // environment gjør at /ops kan vise FAKTISK miljø. Uten dette viste
+      // driftskortet «Produksjon» så snart piloten var åpen — også på staging
+      // (målt 2026-11-04, var en ren etikettfeil i public/ops-admin.js).
+      return json({ ok: true, inquiries_enabled: apen, pilot: apen ? 'apen' : 'stengt', environment: env.ENVIRONMENT ?? 'ukjent' });
     }
 
     // Apify-katalog-import (admin, Bearer APIFY_SYNC_TOKEN) — skriver kun apify_catalog_products.
