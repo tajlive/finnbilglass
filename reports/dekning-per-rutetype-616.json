@@ -1,0 +1,14 @@
+{
+  "biler": 616,
+  "perRutetype": {
+    "ingen": 459,
+    "bakrute": 148,
+    "frontrute": 128,
+    "sidefamilie": 120,
+    "dor": 112,
+    "ventil": 49,
+    "ukjent": 43,
+    "side": 40,
+    "tak": 14
+  }
+}
