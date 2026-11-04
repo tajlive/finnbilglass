@@ -25,6 +25,10 @@ fra kunders egne søk i tjenesten. Det er data vi allerede eier, ikke innsamling
 Metode: sekvensielle kall med 450 ms pause, kun mot staging, ingen saker, ingen e-post.
 Manifest: `data/testgrunnlag/manifest-samlet.json`, SHA-256 `2ea5c5ab…`.
 
+**Manifestene er bevisst ikke i git:** `data/testgrunnlag/` er gitignorert fordi filene
+inneholder ekte kjennemerker (personopplysninger). De ligger på disk med kjent SHA-256,
+og rapporten er den sporbare delen — ikke platene.
+
 **Fordeling:** 57 merker · BMW 94 · VW/Volkswagen 113 · Volvo 57 · Toyota 53 · Mercedes 41 ·
 Ford 33 · Audi 31. År: ≤2010 **189**, 2011–2019 **309**, ≥2020 **118**.
 
