@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt } from '../src/vin-resolver.ts';
+import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym } from '../src/vin-resolver.ts';
 
 // Faktiske katalograder (brand='VW', frontrute, modell med «ID»).
 const KATALOG = [
@@ -113,4 +113,19 @@ test('drivlinjevariant arver ikke en annen modells rad (ensidig vakt)', () => {
   assert.equal(gtRadMatch('RAV-4', 'TOYOTA', 'RAV4 PHV', [2024]), false);
   // Raden kan beskrive drivlinjen uten at det blokkerer en ren modell.
   assert.equal(gtRadMatch('NIRO (HYBRID) 2016-2022', 'KIA', 'Niro', [2022]), true);
+});
+
+test('PRIUS PLUS = GRAND PRIUS (butikkatalog vs leverandørkatalog)', () => {
+  // Butikken fører «TOYOTA PRIUS PLUS 7 + 5D CC 12- FR…», Pilkington-katalogen
+  // kaller samme bil «GRAND PRIUS LHD 04/2012 · 2012-2022» (målt 2026-11-04).
+  assert.equal(modellSynonym('PRIUS PLUS'), 'GRAND PRIUS');
+  assert.equal(modellSynonym('PRIUS+'), 'GRAND PRIUS');
+  assert.equal(modellSynonym('PRIUS+SEVEN'), 'GRAND PRIUS');
+  assert.equal(modellSynonym('PRIUS 5D CC'), 'PRIUS 5D CC', 'vanlig Prius skal ikke omdøpes');
+
+  assert.equal(gtRadMatch('GRAND PRIUS LHD 04/', 'TOYOTA', 'PRIUS PLUS', [2013]), true);
+  assert.equal(gtRadMatch('GRAND PRIUS LHD 04/', 'TOYOTA', 'PRIUS 5D CC', [2013]), false,
+    'vanlig Prius skal ikke få Grand Prius-raden');
+  assert.equal(gtRadMatch('PRIUS 5D HBK LHD', 'TOYOTA', 'PRIUS PLUS', [2013]), false,
+    'Prius+ skal ikke få vanlig Prius-rute');
 });

@@ -156,6 +156,27 @@ export function familieTokens(s: string): string[] {
 const GENERISKE_TOKEN = new Set(['ID', 'MODEL']);
 
 /**
+ * Modellnavn der butikkatalog og leverandørkatalog bruker ulike navn på samme bil.
+ *
+ * Målt 2026-11-04 mot www.auto-glass.no: butikken fører «TOYOTA PRIUS PLUS 7 + 5D
+ * CC 12- FR…», mens Pilkington-katalogen (glass_catalog, pilkington-irl) kaller
+ * samme bil «GRAND PRIUS LHD 04/2012 · 2012-2022». Uten synonymet faller en
+ * PRIUS PLUS-kunde til manuell kontroll selv om varen finnes.
+ *
+ * Synonymet er smalt med vilje: det gjelder bare Prius+ / Prius Seven, aldri
+ * «PRIUS» alene (en vanlig Prius skal ikke få Grand Prius-ruten).
+ */
+const MODELL_SYNONYM: Array<[RegExp, string]> = [
+  [/\bPRIUS\s*(?:\+SEVEN|PLUS|SEVEN|\+)(?![A-Z0-9])/g, 'GRAND PRIUS'],
+];
+
+export function modellSynonym(s: string): string {
+  let t = String(s ?? '').toUpperCase();
+  for (const [re, til] of MODELL_SYNONYM) t = t.replace(re, til);
+  return t;
+}
+
+/**
  * Rå ord-tokens fra modellstrengen (≥2 tegn, ikke merkenavn, ikke stopp-ord).
  * Brukes BÅDE til SQL-forfiltrering (LIKE) og som grunnlag for match-tokens.
  *
@@ -485,7 +506,7 @@ export function modellNokkel(s: string): string {
  * å fjerne noen reell feilkilde (målt 2026-11-04). Om en plug-in har samme
  * frontrute er et fitment-spørsmål for Tom, ikke noe matchereren avgjør.
  */
-const NAVNEMODELLER = new Set(['SPORTSVAN', 'PLUS', 'CROSS', 'CONNECT', 'COURIER', 'SHOOTING', 'CC']);
+const NAVNEMODELLER = new Set(['SPORTSVAN', 'PLUS', 'CROSS', 'CONNECT', 'COURIER', 'SHOOTING', 'CC', 'GRAND']);
 
 /**
  * Drivlinjevarianter: en variant KJØRETØYET oppgir, som raden ikke har, gir ikke
@@ -533,10 +554,14 @@ function enkelttegnKonflikt(a: string, b: string): boolean {
   return true;
 }
 
-export function gtRadMatch(radModel: string, make: string, model: string, aarList: number[]): boolean {
+export function gtRadMatch(radModelRaa: string, make: string, modelRaa: string, aarList: number[]): boolean {
+  // Butikk- og leverandørkatalog bruker ulike navn på samme bil (PRIUS PLUS =
+  // GRAND PRIUS). Synonymet gjøres på BEGGE sider, så resten av reglene er uendret.
+  const radModel = modellSynonym(radModelRaa);
+  const model = modellSynonym(modelRaa);
   const tokens = modellTokensAv(model, make);
   const serie = serieKey(make, model, aarList[0]);
-  if (radModel.toUpperCase() === model) return true;
+  if (radModel === model) return true;
   // Skilletegn skal ikke avgjøre: «RAV4» == «RAV 4» == «RAV-4».
   const nokkelRad = modellNokkel(radModel);
   if (nokkelRad && nokkelRad === modellNokkel(model)) return true;
@@ -670,7 +695,8 @@ async function lagGroundTruth(env: Env, make: string, model: string, aarList: nu
  *  År-regel når bilens år er kjent: kandidatens vindu (kolonne ELLER modellstreng) må
  *  være kjent og inneholde året — ellers ekskluderes (unngår feil generasjon). */
 async function lagPilkington(env: Env, make: string, model: string, aar: number | null, profil: BilInput['profil']): Promise<ResolverKandidat[]> {
-  const tokens = modellTokensAv(model, make).slice(0, 4);
+  const modelSyn = modellSynonym(model);
+  const tokens = modellTokensAv(modelSyn, make).slice(0, 4);
   if (!tokens.length) return [];
   // SQL-forfiltreringen bruker RÅ ord: familie-tokenet («ID4») finnes ikke som
   // tekst i katalograder som skriver «ID.4 SUV». Uten dette ga LIKE null rader
@@ -690,11 +716,12 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
   }>();
   const unike = new Map<string, ResolverKandidat>();
   for (const r of rows.results ?? []) {
-    if (!ordTreffKandidat(r.model ?? '', tokens)) continue; // ordbasert — aldri substring, aldri generisk treff alene
+    const radModel = modellSynonym(r.model ?? '');
+    if (!ordTreffKandidat(radModel, tokens)) continue; // ordbasert — aldri substring, aldri generisk treff alene
     // Drivlinje-/navnemodell-variant skal ikke arve en annen modells glass
     // («RAV4 Plug-in Hybrid» skal ikke få RAV 4-raden før fitment er dokumentert).
-    if (variantKonflikt(r.model ?? '', model)) continue;
-    if (drivlinjeKonflikt(model, r.model ?? '')) continue;
+    if (variantKonflikt(radModel, modelSyn)) continue;
+    if (drivlinjeKonflikt(modelSyn, radModel)) continue;
     // Årvindu: kolonne-verdier, ellers år-hint i modellstrengen
     if (aar != null) {
       const intervall = r.year_from != null
