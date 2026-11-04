@@ -2140,7 +2140,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
     const STATISKE_SIDER: Record<string, string> = {
       '/bilglass-uten-forsikring': '/bilglass-uten-forsikring.html',
-      '/personvern': '/personvern.html',
+      '/personopplysninger': '/personopplysninger.html',
+      '/personvern': '/personopplysninger.html',
       '/om-oss': '/om-oss.html',
     };
     if (method === 'GET' && STATISKE_SIDER[path]) {
