@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{{TITTEL}}</title>
-<meta name="description" content="Oversikt over hvilke glassvarianter katalogen har til {{NAVN}}, hva som må kontrolleres, og hvordan du ber om tilbud.">
+<meta name="description" content="Hvilke Golf-generasjoner katalogen vår har glass til, hva som må kontrolleres, og hvordan du ber om tilbud.">
 <meta name="robots" content="noindex,follow">
 <meta name="theme-color" content="#edf8fc">
 <link rel="canonical" href="https://finnbilglass.no/bilglass/{{SLUG}}">
@@ -21,16 +21,23 @@
   <p class="sub">{{INGRESS}}</p>
 
   <section class="qa">
-    <h2>Hva katalogen inneholder</h2>
-    <p>Vi har <strong>{{ANTALL}} katalograder</strong> som gjelder {{NAVN}}, hvorav {{PRISSATTE}} har pris.
-       Radene fordeler seg slik på glasstyper: {{TYPER}}.</p>
+    <h2>Hva katalogen vår inneholder</h2>
+    <p>Vi har <strong>{{ANTALL}} katalograder</strong> som gjelder {{NAVN}}, og {{PRISSATTE}} av dem har pris.
+       {{ITABELL}} av radene kan plasseres sikkert i én generasjon. De øvrige {{UAVKLART}} radene
+       oppgir ikke årstall som lar seg knytte til én generasjon, og vises derfor ikke i tabellen.</p>
 
-    <h2>Dokumenterte år og glasstyper</h2>
-    <table>
-      <thead><tr><th>År</th><th>Rader</th><th>Glasstyper</th></tr></thead>
-      <tbody>{{RADER}}</tbody>
-    </table>
-    <p class="note">Årstallene er hentet fra varenavnene i katalogen. Der katalogen ikke oppgir år, står det «ukjent år» – vi fyller ikke inn noe vi ikke vet.</p>
+    <h2>Generasjoner vi har glass til</h2>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table>
+        <thead><tr><th>Generasjon</th><th>Årsmodeller</th><th>Rader</th><th>Glasstyper katalogen nevner</th></tr></thead>
+        <tbody>{{RADER}}</tbody>
+      </table>
+    </div>
+    <p class="note">Årsmodellene følger Volkswagen Golfs dokumenterte produksjonshistorikk
+       (åtte generasjoner fra 1974) – ikke produktnavnene. En katalograd telles bare når hele
+       årsspennet i varenavnet ligger innenfor generasjonen.
+       {{UKJENTTYPE}} rader har ingen glasstype i varenavnet og står som «Type ikke oppgitt».
+       Vi fyller ikke inn en type vi ikke kan lese ut.</p>
 
     <h2>Dette er kandidater, ikke bekreftet passform</h2>
     <p>En katalograd viser at glasset er ført opp for modellen. Den beviser ikke at akkurat

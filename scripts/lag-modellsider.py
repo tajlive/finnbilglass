@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """Genererer modellsider (UTKAST) fra katalogsnapshotet.
 
-Bare aggregat: årsspenn, glasstyper og antall varianter per generasjon.
-Ingen kjennemerker, ingen kundeopplysninger, ingen påstand om passform.
+Prinsipper:
+- Bare aggregat: antall rader, glasstyper og prissatte rader. Ingen kjennemerker,
+  ingen kundeopplysninger, ingen påstand om passform.
+- Generasjonsgrenser hentes fra dokumentert kilde (Wikipedia: Volkswagen Golf,
+  produksjonsstart Mk1 1974 til Mk8 2019), ikke gjettet fra produktnavn.
+- En katalograd telles bare i en generasjon når hele årsspennet i varenavnet
+  ligger innenfor generasjonens produksjonsvindu. Alt annet er «uavklart» og
+  utelates fra tabellen.
+- Glasstype settes bare når varenavnet faktisk sier det. Ellers «type ikke oppgitt».
 
 Kjør: python3 scripts/lag-modellsider.py [snapshot.json]
-Skriver public/bilglass/<slug>.html med robots=noindex (utkast).
 """
 import collections
 import html
@@ -15,113 +21,123 @@ import re
 import sys
 
 SNAP = sys.argv[1] if len(sys.argv) > 1 else '/tmp/prod-rader.json'
+I_DAG = 2026
 
-MODELLER = [
-    {
-        'slug': 'vw-golf',
-        'merke': 'VW',
-        'token': 'GOLF',
-        'navn': 'Volkswagen Golf',
-        'tittel': 'Bilglass til Volkswagen Golf – oversikt over dokumenterte varianter',
-        'ingress': 'Golf er solgt i mange generasjoner med ulike ruter. Her ser du hvilke '
-                   'generasjoner og glasstyper katalogen vår har oppført, og hvordan du går videre.',
-    },
-    {
-        'slug': 'bmw-3-serie',
-        'merke': 'BMW',
-        'token': '3 SERIE',
-        'navn': 'BMW 3-serie',
-        'tittel': 'Bilglass til BMW 3-serie – oversikt over dokumenterte varianter',
-        'ingress': '3-serien har skiftet både karosseri og ruter gjennom generasjonene. '
-                   'Her ser du hva katalogen vår har oppført, og hva som må kontrolleres før kjøp.',
-    },
-    {
-        'slug': 'toyota-rav4',
-        'merke': 'TOYOTA',
-        'token': 'RAV 4',
-        'navn': 'Toyota RAV4',
-        'tittel': 'Bilglass til Toyota RAV4 – oversikt over dokumenterte varianter',
-        'ingress': 'RAV4 finnes både med og uten oppvarmet frontrute og med ulike '
-                   'førerassistentsystemer. Her ser du hva katalogen skiller mellom.',
-    },
+# Kilde: https://en.wikipedia.org/wiki/Volkswagen_Golf
+# «Produced by Volkswagen since 1974 … across eight generations».
+# Produksjonsstart: Mk1 1974, Mk2 1983, Mk3 1991, Mk4 1997, Mk5 2003,
+# Mk6 2008, Mk7 2012, Mk8 2019. Vinduet slutter året før neste generasjon.
+GOLF_GENERASJONER = [
+    ('Golf I', 1974, 1982),
+    ('Golf II', 1983, 1990),
+    ('Golf III', 1991, 1996),
+    ('Golf IV', 1997, 2002),
+    ('Golf V', 2003, 2007),
+    ('Golf VI', 2008, 2011),
+    ('Golf VII', 2012, 2018),
+    ('Golf VIII', 2019, I_DAG),
 ]
 
 TYPEORD = [
-    ('Frontrute', ('FRONTRUTE', 'FRONT')),
-    ('Bakrute', ('BAKRUTE', 'BAK')),
-    ('Dørrute', ('DØRRUTE', 'DØR', 'DOR')),
-    ('Side-/ventilrute', ('VENTIL', 'SIDE')),
+    ('Frontrute', ('FRONTRUTE',)),
+    ('Bakrute', ('BAKRUTE',)),
+    ('Dørrute', ('DØRRUTE', 'DORRUTE')),
+    ('Ventilrute', ('VENTILRUTE',)),
+    ('Siderute', ('SIDERUTE',)),
 ]
 
 
-def type_av(navn: str) -> str:
+def type_av(navn):
     n = navn.upper()
     for etikett, nokler in TYPEORD:
         if any(k in n for k in nokler):
             return etikett
-    return 'Annet/uavklart'
+    return None
 
 
-def aarsspenn(navn: str) -> str:
-    """Henter årstall fra varenavnet, f.eks. '83-90' eller '2011-'."""
+def spenn(navn):
+    """Årsspenn fra varenavnet som (start, slutt), eller None."""
     m = re.search(r'\b(19\d{2}|20\d{2})\s*-\s*(19\d{2}|20\d{2})?', navn)
     if m:
-        return m.group(1) + ('–' + m.group(2) if m.group(2) else '–')
+        start = int(m.group(1))
+        slutt = int(m.group(2)) if m.group(2) else I_DAG
+        return (start, slutt) if start <= slutt else None
     m = re.search(r'\b(\d{2})\s*-\s*(\d{2})\b', navn)
     if m:
         a, b = int(m.group(1)), int(m.group(2))
-        start = 1900 + a if a > 30 else 2000 + a
-        slutt = 1900 + b if b > 30 else 2000 + b
-        return f'{start}–{slutt}'
-    return 'ukjent år'
+        start = 1900 + a if a > 40 else 2000 + a
+        slutt = 1900 + b if b > 40 else 2000 + b
+        return (start, slutt) if 1970 <= start <= slutt else None
+    return None
 
 
-def main() -> None:
+def main():
     rader = json.load(open(SNAP))[0]['results']
     os.makedirs('public/bilglass', exist_ok=True)
-    mal = open('scripts/mal-modellside.html').read()
 
-    for m in MODELLER:
-        treff = [r for r in rader
-                 if str(r.get('varenavn') or '').upper().startswith(m['merke'])
-                 and m['token'] in str(r.get('varenavn') or '').upper()]
-        if not treff:
-            print(f'  {m["slug"]}: 0 rader – hoppet over')
+    treff = [r for r in rader
+             if str(r.get('varenavn') or '').upper().startswith('VW')
+             and 'GOLF' in str(r.get('varenavn') or '').upper()]
+
+    per_gen = collections.defaultdict(collections.Counter)
+    ukjent_type = 0
+    uavklart = 0
+    prissatte = 0
+
+    for r in treff:
+        navn = str(r.get('varenavn') or '')
+        t = type_av(navn)
+        s = spenn(navn)
+        if isinstance(r.get('pris'), (int, float)) and r['pris'] > 0:
+            prissatte += 1
+        if t is None:
+            ukjent_type += 1
+        gen = None
+        if s:
+            for navn_gen, fra, til in GOLF_GENERASJONER:
+                if fra <= s[0] and s[1] <= til:
+                    gen = navn_gen
+                    break
+        if gen is None:
+            uavklart += 1
             continue
+        per_gen[gen][t or 'Type ikke oppgitt'] += 1
 
-        per_spenn = collections.defaultdict(lambda: collections.Counter())
-        for r in treff:
-            spenn = aarsspenn(str(r.get('varenavn') or ''))
-            per_spenn[spenn][type_av(str(r.get('varenavn') or ''))] += 1
+    totalt = sum(sum(v.values()) for v in per_gen.values())
 
-        # bare spenn med mer enn én rad gir informasjon
-        brukbare = {k: v for k, v in per_spenn.items() if sum(v.values()) >= 2 and k != 'ukjent år'}
-        typer = collections.Counter()
-        for v in per_spenn.values():
-            typer.update(v)
+    rader_html = ''
+    for navn_gen, fra, til in GOLF_GENERASJONER:
+        v = per_gen.get(navn_gen)
+        if not v:
+            continue
+        fordeling = ', '.join('%s (%d)' % (t, n) for t, n in v.most_common())
+        rader_html += ('<tr><td><strong>%s</strong></td><td>%d–%d</td><td>%d</td>'
+                       '<td>%s</td></tr>\n'
+                       % (html.escape(navn_gen), fra, til, sum(v.values()), html.escape(fordeling)))
+    if not rader_html:
+        rader_html = '<tr><td colspan="4">Ingen rader kunne plasseres sikkert i en generasjon.</td></tr>'
 
-        priser = [r['pris'] for r in treff if isinstance(r.get('pris'), (int, float)) and r['pris'] > 0]
+    side = (open('scripts/mal-modellside.html').read()
+            .replace('{{TITTEL}}', 'Bilglass til Volkswagen Golf – hva katalogen dekker')
+            .replace('{{NAVN}}', 'Volkswagen Golf')
+            .replace('{{INGRESS}}', 'Golf er laget i åtte generasjoner siden 1974, og rutene er '
+                                    'ulike fra generasjon til generasjon. Her ser du hva katalogen '
+                                    'vår faktisk har registrert, og hva den ikke sier noe om.')
+            .replace('{{SLUG}}', 'vw-golf')
+            .replace('{{ANTALL}}', str(len(treff)))
+            .replace('{{PRISSATTE}}', str(prissatte))
+            .replace('{{ITABELL}}', str(totalt))
+            .replace('{{UAVKLART}}', str(uavklart))
+            .replace('{{UKJENTTYPE}}', str(ukjent_type))
+            .replace('{{RADER}}', rader_html))
+    open('public/bilglass/vw-golf.html', 'w').write(side)
 
-        rader_html = ''.join(
-            f'<tr><td>{html.escape(spenn)}</td>'
-            f'<td>{sum(v.values())}</td>'
-            f'<td>{html.escape(", ".join(f"{t} ({n})" for t, n in v.most_common()))}</td></tr>'
-            for spenn, v in sorted(brukbare.items())
-        ) or '<tr><td colspan="3">Katalogen har varianter, men årstallene er ikke oppgitt i varenavnet.</td></tr>'
-
-        side = (mal
-                .replace('{{TITTEL}}', html.escape(m['tittel']))
-                .replace('{{NAVN}}', html.escape(m['navn']))
-                .replace('{{INGRESS}}', html.escape(m['ingress']))
-                .replace('{{SLUG}}', m['slug'])
-                .replace('{{ANTALL}}', str(len(treff)))
-                .replace('{{PRISSATTE}}', str(len(priser)))
-                .replace('{{TYPER}}', html.escape(', '.join(f'{t} ({n})' for t, n in typer.most_common())))
-                .replace('{{RADER}}', rader_html))
-        sti = f'public/bilglass/{m["slug"]}.html'
-        open(sti, 'w').write(side)
-        print(f'  {m["slug"]}: {len(treff)} rader, {len(brukbare)} årsspenn, '
-              f'{len(priser)} prissatte → {sti}')
+    print('Golf: %d katalograder, %d prissatte' % (len(treff), prissatte))
+    print('  i tabell: %d  (uavklart: %d, uten type: %d)' % (totalt, uavklart, ukjent_type))
+    for navn_gen, fra, til in GOLF_GENERASJONER:
+        v = per_gen.get(navn_gen)
+        if v:
+            print('  %-9s %d-%d  %3d  %s' % (navn_gen, fra, til, sum(v.values()), dict(v)))
 
 
 if __name__ == '__main__':
