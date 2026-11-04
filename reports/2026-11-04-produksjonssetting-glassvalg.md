@@ -25,6 +25,14 @@ lokal SQLite med produksjonens faktiske `glass_prisliste`-skjema og alle **30 93
 
 **Konklusjon: PASS — releasen kjører uten 0047.** Ingen migrasjon kjørt.
 
+**Presisering om metoden:** et fullt `wrangler d1 export` (98 MB) ble forsøkt
+importert til en lokal D1 for å kjøre `wrangler dev`. Importen skrev ingenting på
+fem minutter og ble stoppet av meg (`IMPORT_EXIT=143`, SIGTERM) — den bakgrunnsjobben
+som senere meldte «exit code 0» er wrapperen, ikke importen. Verifiseringen ble
+derfor gjort på en isolert kopi av **den tabellen releasen faktisk leser**
+(`glass_prisliste`, prod-skjema + alle 30 937 rader) uten `glass_typekode`.
+Det dekker releasens dataavhengighet, men ikke alle 76 tabellene i produksjon.
+
 ## 2. Sluttfiks funnet i produksjonsverifiseringen
 
 Første deploy (`aba64d08`) svarte **201** der utstyrsmotstrid skulle avvises. Årsak:
