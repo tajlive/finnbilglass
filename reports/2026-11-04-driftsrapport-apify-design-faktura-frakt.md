@@ -56,13 +56,13 @@ Ingen døde lenker, ingen tomme seksjoner funnet.
 
 **Anbefaling:** SumUp nå (privatkunder), og velg EHF-kapabel løsning før første bedriftskunde etter 2027 — eller med en gang hvis verkstedene skal faktureres.
 
-**Blokkering: Finnbilglass finnes ikke i Enhetsregisteret.** Søk på «Finnbilglass», «Finnbil» og «Vartanorge» gir 0 treff. Uten organisasjonsnummer kan ingen faktura utstedes lovlig. Kladden under er derfor en **mal med plassholdere**, ikke en reell faktura.
+**Juridisk selger er avklart (2026-11-04):** FinnBilGlass drives av **BLYT AS**, org.nr **929 003 292 MVA**, Tempevegen 31, 7031 Trondheim (stiftet 24.02.2022, næring 46.720 engroshandel med deler og utstyr for motorvogner, MVA-registrert). Betalingskonto **1506.25.52843**. Verifisert mot Enhetsregisteret 2026-11-04. Kladden er nå komplett og ligger som `reports/faktura-kladde-2026-11-04.html` + `.pdf` (én side).
 
 ### Fakturakladd (mal, ikke sendt)
 
 ```
-Selger:        [JURIDISK NAVN]  ·  Org.nr [9 siffer]  ·  [ADRESSE]
-Bank:          [KONTONUMMER]    ·  MVA-registrert: [ja/nei]
+Selger:        BLYT AS  ·  Org.nr 929 003 292 MVA  ·  Tempevegen 31, 7031 Trondheim
+Bank:          1506.25.52843    ·  MVA-registrert: ja (verifisert i Enhetsregisteret)
 Fakturanr:     [tildeles av programmet — aldri manuelt]
 Fakturadato:   2026-11-04    Forfall: 2026-11-18    Referanse: sak #41
 
@@ -81,7 +81,7 @@ Sum inkl. mva       3 357,81
 Merknad: Prisen er et estimat kontrollert manuelt. Ingen bestilling er gjennomført.
 ```
 
-Krav som må oppfylles før dette blir en ekte faktura: org.nr, bankkonto, MVA-status, fortløpende nummer fra programmet, og at glass + pris + levering er **godkjent av menneske**. Et søkeestimat blir aldri en faktura automatisk.
+Frakt og betaling er **etter avtale** (Toms valg 2026-11-04): fraktlinjen står med 0,00 kr og egen merknad, og betalingsbetingelsen er «etter avtale». Krav som gjenstår før dette blir en ekte faktura: fortløpende nummer fra fakturaprogrammet, KID, og at glass + pris + levering er **godkjent av et menneske**. Et søkeestimat blir aldri en faktura automatisk.
 
 ## 4. Frakt — enkleste flyt
 
@@ -124,7 +124,7 @@ Begge tall er riktige, men måler forskjellige ting:
 
 | # | Handling | Hvorfor |
 |---|---|---|
-| 1 | **Oppgi organisasjonsnummer + bankkonto** (eller registrere foretaket) | Uten dette kan ingen faktura utstedes |
+| 1 | ~~Org.nr + bankkonto~~ **LØST**: BLYT AS 929 003 292 MVA · 1506.25.52843 | — |
 | 2 | `apify login` (én gang) | Token utløpt 2026-11-01; API og CLI er stengt |
 | 3 | Opprette/bekrefte SumUp-konto | Fakturaprogrammet må kobles til org.nr og bank |
 | 4 | Bestemme: sender leverandøren direkte, eller skal vi bruke Mybring? | Avgjør hele fraktflyten og om Bring-avtale må tegnes |

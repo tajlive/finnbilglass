@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<title>FAKTURAKLADD (ikke sendt) — BLYT AS</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  * { box-sizing: border-box; }
+  body { font: 10.5pt/1.38 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #14201d; margin: 0; }
+  .varsel { border: 2px dashed #b45309; background: #fff7ed; color: #7c2d12; padding: 8px 12px; border-radius: 8px; font-weight: 700; margin-bottom: 16px; letter-spacing: .02em; }
+  .topp { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+  h1 { font-size: 20pt; margin: 0 0 4px; letter-spacing: -.02em; }
+  .muted { color: #5b6b67; }
+  .selger { font-size: 10pt; }
+  .selger b { display: block; font-size: 12pt; color: #0f3f33; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 0; }
+  th { text-align: left; font-size: 9pt; text-transform: uppercase; letter-spacing: .06em; color: #5b6b67; border-bottom: 1px solid #d7e0dd; padding: 8px 6px; }
+  td { padding: 8px 6px; border-bottom: 1px solid #eef2f1; vertical-align: top; }
+  td.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .sum { margin-top: 14px; margin-left: auto; width: 58%; }
+  .sum tr td { border: 0; padding: 5px 6px; }
+  .sum tr.total td { border-top: 2px solid #0f3f33; font-weight: 700; font-size: 12pt; padding-top: 9px; }
+  .info { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; font-size: 10pt; }
+  .boks { border: 1px solid #d7e0dd; border-radius: 8px; padding: 9px 12px; }
+  .boks h2 { font-size: 9pt; text-transform: uppercase; letter-spacing: .06em; color: #5b6b67; margin: 0 0 6px; }
+  .fot { margin-top: 16px; font-size: 8.5pt; color: #5b6b67; border-top: 1px solid #eef2f1; padding-top: 10px; }
+  .merke { display: inline-block; background: #0f3f33; color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 8.5pt; letter-spacing: .08em; }
+</style>
+</head>
+<body>
+  <div class="varsel">FAKTURAKLADD — IKKE SENDT. Syntetisk kunde. Ingen bestilling er gjennomført.</div>
+
+  <div class="topp">
+    <div class="selger">
+      <b>BLYT AS</b>
+      Tempevegen 31<br>
+      7031 Trondheim<br>
+      Org.nr 929 003 292 MVA<br>
+      support@finnbilglass.no
+    </div>
+    <div style="text-align:right">
+      <span class="merke">KLADD</span>
+      <h1 style="margin-top:10px">Faktura</h1>
+      <div class="muted">Fakturanr. <b>KLADD-2026-0001</b> (tildeles av programmet ved utstedelse)</div>
+    </div>
+  </div>
+
+  <div class="info">
+    <div class="boks">
+      <h2>Faktureres til</h2>
+      Testkunde Hermes (syntetisk)<br>
+      test@example.invalid<br>
+      <span class="muted">Syntetisk kunde — skal ikke motta faktura</span>
+    </div>
+    <div class="boks">
+      <h2>Fakturaopplysninger</h2>
+      Fakturadato: 4. november 2026<br>
+      Forfall: 18. november 2026<br>
+      Deres referanse: <b>sak #41</b> · DS 30475<br>
+      Vår referanse: Tom Arne Jensen
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th style="width:52%">Beskrivelse</th><th>Antall</th><th class="n">Pris eks. mva</th><th class="n">Beløp eks. mva</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <b>Frontrute — TOYOTA RAV 4 22- FR AKU LDW</b><br>
+          <span class="muted">Varenr. 8432AGAC · variant 8432AGACMV1L · eurokode bekreftet<br>
+          Glassvariant og pris kontrollert manuelt. Utstyr: regnsensor, antenne, sol-/varmereflekterende.</span>
+        </td>
+        <td>1 stk</td>
+        <td class="n">2 686,25</td>
+        <td class="n">2 686,25</td>
+      </tr>
+      <tr>
+        <td><b>Frakt</b><br><span class="muted">Etter avtale — kommer som egen linje når transport er bestilt</span></td>
+        <td>1</td>
+        <td class="n">0,00</td>
+        <td class="n">0,00</td>
+      </tr>
+      <tr>
+        <td><b>Tilbehør</b><br><span class="muted">Kun dersom list/klips ikke er inkludert i glasset — bekreftes per sak</span></td>
+        <td>—</td>
+        <td class="n">0,00</td>
+        <td class="n">0,00</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="sum">
+    <tr><td>Sum eks. mva</td><td class="n">2 686,25</td></tr>
+    <tr><td>MVA 25 %</td><td class="n">671,56</td></tr>
+    <tr class="total"><td>Sum inkl. mva</td><td class="n">3 357,81</td></tr>
+  </table>
+
+  <div class="info">
+    <div class="boks">
+      <h2>Betaling</h2>
+      Etter avtale.<br>
+      Bank: <b>1506.25.52843</b><br>
+      <span class="muted">KID/tegnet KID tildeles ved utstedelse.</span>
+    </div>
+    <div class="boks">
+      <h2>Grunnlag</h2>
+      Prisgrunnlag: XLS-listepris 10 745 kr eks. mva<br>
+      Kundepris: 10 745 × 0,25 × 1,25 = <b>3 357,81 kr</b><br>
+      <span class="muted">ESTIMAT kontrollert manuelt før tilbud.</span>
+    </div>
+  </div>
+
+  <div class="fot">
+    BLYT AS · Tempevegen 31, 7031 Trondheim · Org.nr 929 003 292 MVA · support@finnbilglass.no<br>
+    Dette er en kladd for oppsett og kontroll av fakturaflyten. Den er ikke utstedt, ikke sendt og ikke ført i regnskapet.
+    Fakturanummer tildeles fortløpende av fakturaprogrammet ved utstedelse, aldri manuelt.
+  </div>
+</body>
+</html>
