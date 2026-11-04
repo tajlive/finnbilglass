@@ -142,3 +142,52 @@ Det er samme varefamilie som butikkens «TOYOTA PRIUS PLUS 7 + 5D CC 12- FR…»
 ### 7.3 Oppdatert dekningstall
 
 117 biler: **91 med kandidater (77,8 %)**, 26 uten dekning, 0 tekniske feil. (Ett kall — Prius+ — er kjørt på nytt etter aliaset og verifisert direkte; de øvrige 116 er uendret fra kjøringen `pilot-*-endelig`.)
+
+---
+
+## 8. Etter Toms faglige føring (samme dag)
+
+Tom besluttet: RAV4 2022–2025 skal holdes på `VERIFY` til årsmodell/glasskode er bekreftet, GT-årene skal **ikke** endres, og drivlinjevakten skal bare blokkere når katalogen faktisk skiller varianten.
+
+### 8.1 Implementert
+
+| Endring | Commit | Virkning |
+|---|---|---|
+| `pinpointSperre()` — data-drevet sperretabell | `8e6c6d7` | PINPOINT på `8432AGAC` for RAV4 2022–2025 svekkes til `VERIFY`. Kandidaten beholdes. GT er **uendret**. Sperren fjernes når leverandør bekrefter passformen. |
+| L2 uten hard PHEV-blokk (to-pass) | samme | Skiller katalogen varianten (egen rad), brukes bare variantradene. Ellers beholdes de generiske radene → `VERIFY`, ikke `FALLBACK`. |
+
+Sperretabellen er smal og inneholder bare det ene dokumenterte tilfellet:
+
+```ts
+{ eurokodePrefiks: ['8432AGAC'], merke: /^TOYOTA$/, modell: /(?:^|\s)RAV[\s-]?4\b/,
+  aarFra: 2022, aarTil: 2025,
+  grunn: 'GT sier 2022-2025, men varen heter «RAV 4 19-21» …' }
+```
+
+Merk: første forsøk sperret ikke, fordi SVV sender modellstrengen «TOYOTA RAV4» (merkenavnet gjentatt). Regexen er rettet og låst i test.
+
+### 8.2 Målt effekt på de 117 bilene (staging `35b5f96a`)
+
+| Endring fra forrige kjøring | Biler | Resultat |
+|---|---|---|
+| RAV4 2024 | 5 (FBG-T-0056 … -0060) | `PINPOINT/1` → **`VERIFY/1`**, kandidaten står |
+| Volvo V60 PLUG IN HYBRID | 1 (FBG-T-0112) | `FALLBACK/0` → **`VERIFY/5`** |
+| Alt annet | 111 biler | uendret |
+
+**Ingen vanlig V60 ble mer «sikker»:** V60 2013 er nå `VERIFY` med 5 kandidater — ikke PINPOINT. Det var Toms kontrollkrav.
+
+### 8.3 Sluttall for 117 biler
+
+| Måling | Verdi |
+|---|---|
+| Kandidater | **92 av 117 (78,6 %)** |
+| Uten dekning | 25 |
+| Utfall | PINPOINT **11** · VERIFY 81 · FALLBACK 25 |
+| Tekniske feil | **0** |
+| Fasit | **2 av 2 SAMSVAR** |
+| Latens p50 / p95 / maks | 303 / 1 049 / 1 236 ms |
+| QA | **544 tester, 544 pass, 0 fail, 0 skipped** |
+
+### 8.4 Produksjon
+
+Uendret og ikke berørt. RAV4-koden er ikke bekreftet, så sperren ligger i kode på staging — den skal **ikke** til produksjon før leverandøren har bekreftet at `8432AGAC` gjelder 2022–2025, eller GT-årene er rettet med dokumentasjon.
