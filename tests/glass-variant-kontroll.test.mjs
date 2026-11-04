@@ -133,7 +133,7 @@ test('frontrute: side er ikke relevant og skal aldri registreres som uavklart', 
 test('frontrute uten noen svar: ukjent, ikke bekreftet', () => {
   const ut = kontrollerVariant(RAV4, {});
   assert.equal(ut.status, 'ukjent');
-  assert.ok(ut.uavklart.includes('ingen svar å kontrollere mot'));
+  assert.ok(ut.uavklart.some((u) => u.startsWith('ingen dokumenterte egenskaper')));
 });
 
 test('dørrute med ukjent side: ukjent med side i lista', () => {

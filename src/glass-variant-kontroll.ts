@@ -263,7 +263,7 @@ export function kontrollerVariant(
   if (sjekket === 0) {
     // Ingen relevante felt ble kontrollert (f.eks. frontrute uten utstyrssvar).
     // Det er ikke det samme som bekreftet passform.
-    return { status: 'ukjent', notat, uavklart: ['ingen svar å kontrollere mot'] };
+    return { status: 'ukjent', notat, uavklart: ['ingen dokumenterte egenskaper å kontrollere svaret mot'] };
   }
   return { status: 'bekreftet', notat };
 }
