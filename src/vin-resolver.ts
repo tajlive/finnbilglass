@@ -126,17 +126,52 @@ const STOPP_TOKENS = new Set([
   'COMFORT', 'LIFE', 'PASSION', 'BASIC', 'EXECUTIVE', 'R-LINE', 'S-LINE', 'PREMIUM', 'BENZ',
 ]);
 
+/**
+ * Modellfamilier der skilletegn + ett siffer er meningsbærende: «ID.4» → ID4,
+ * «MODEL 3» → MODEL3, «RAV 4» → RAV4.
+ *
+ * Bakgrunn (målt 2026-11-04): `modellTokensAv` forkaster tokens kortere enn to
+ * tegn, så «ID.4» ble til `['ID']`. Siden `ordTreff` godtar ETT treffende token,
+ * matchet «ID» hele VW ID-familien — en ID.3-frontrute (8652AGAC) ble tilbudt
+ * som kandidat for ID.4 og ID.5. Familie-tokenet bevarer sifferet.
+ *
+ * Vakt mot motorkode: «TRANSIT 2.0» gir ikke familie-token (delsvolum, ikke modell).
+ */
+const FAMILIE_MONSTER = /([A-ZÆØÅ]{2,6})[.\s-]+(\d{1,2})(?![0-9])(?![.,]\d)/g;
+/**
+ * Samme for generiske familieord med bokstav-suffiks: «MODEL Y» → MODELY.
+ * Bare for ID/MODEL — ellers ville «GOLF TDI» gitt GOLFTDI og lignende støy.
+ */
+const GENERISK_FAMILIE_MONSTER = /(ID|MODEL)[.\s-]+([A-ZÆØÅ])(?![A-ZÆØÅ0-9])/g;
+
+export function familieTokens(s: string): string[] {
+  const t = (s || '').toUpperCase();
+  const ut: string[] = [];
+  for (const m of t.matchAll(FAMILIE_MONSTER)) ut.push(m[1] + m[2]);
+  for (const m of t.matchAll(GENERISK_FAMILIE_MONSTER)) ut.push(m[1] + m[2]);
+  return ut;
+}
+
+/** Generiske familieord som aldri alene kan gi kandidatstøtte. */
+const GENERISKE_TOKEN = new Set(['ID', 'MODEL']);
+
 /** Signifikante modell-tokens: ≥2 tegn, ikke tall-dominert, ikke i stopp-liste, ikke merkenavnet. */
 export function modellTokensAv(modell: string, merke: string): string[] {
   const merkeNorm = normBrand(merke).replace(/[^A-ZÆØÅ0-9]+/g, '');
   const ord = (modell || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/).filter(Boolean);
-  const tokens: string[] = [];
+  // Familie-tokenet settes først: det er det mest spesifikke, og L2 bruker .slice(0,4).
+  const familier = familieTokens(modell);
+  const tokens: string[] = [...familier];
   for (const o of ord) {
     if (o.length < 2) continue;
     if (o === merkeNorm) continue;
     if (/^\d+$/.test(o) && o.length >= 3 && ord.length > 1) continue; // '200'-lignende trim/motor
     if (/^\d+(KW|KWH)$/.test(o)) continue; // effekt/batteri er ikke glassmodell
     if (STOPP_TOKENS.has(o)) continue;
+    // Generisk forstavelse («ID» av «ID.4», «MODEL» av «MODEL 3») skal ikke bli
+    // et selvstendig token når familie-tokenet finnes — det er nettopp den
+    // brede matchingen som ga ID.3-glass til ID.4/ID.5.
+    if (GENERISKE_TOKEN.has(o) && familier.some((f) => f.startsWith(o))) continue;
     tokens.push(o);
     tokens.push(...(MODEL_TOKEN_ALIAS[o] ?? []));
   }
@@ -149,10 +184,32 @@ function escLike(s: string): string {
 
 /** Ord-tokens (≥2 tegn) for ordbasert matching — aldri substring (unngår «CLA» ⊂ «CLASS»). */
 function ordTokensAv(s: string): Set<string> {
-  return new Set(
-    (s || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/)
-      .filter((t) => t.length >= 2)
-  );
+  return new Set([
+    ...familieTokens(s),
+    ...(s || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/)
+      .filter((t) => t.length >= 2),
+  ]);
+}
+
+/**
+ * Kandidat-matching for L2: som ordTreff, men et generisk treff («ID», «MODEL»)
+ * gir aldri støtte alene. En katalograd må deles med et meningsbærende token —
+ * modellfamilie (ID4), modellnavn eller seriekode.
+ */
+export function ordTreffKandidat(model: string, tokens: string[]): boolean {
+  if (!tokens.length) return false;
+  const sett = ordTokensAv(model);
+  for (const t of tokens) {
+    const eksakt = sett.has(t);
+    // Prefiks-treff (≥4 tegn) er en grov snarvei: den skal aldri gå via et
+    // generisk ord, ellers ville «MODEL3» matchet katalograder som bare heter
+    // «MODEL Y» (nøyaktig den lekkasjen testen under fanger).
+    const prefiks = !eksakt && t.length >= 4 && [...sett].some(
+      (o) => o.length >= 4 && !GENERISKE_TOKEN.has(o) && (o.startsWith(t) || t.startsWith(o)),
+    );
+    if ((eksakt || prefiks) && !GENERISKE_TOKEN.has(t)) return true;
+  }
+  return false;
 }
 export function ordTreff(model: string, tokens: string[]): boolean {
   if (!tokens.length) return false;
@@ -395,25 +452,42 @@ export function modellNokkel(s: string): string {
  * Returnerer true bare når begge navn har slike tegn og de er helt ulike.
  */
 /**
- * Navnemodeller som er egne biler, ikke varianter: Golf Sportsvan/Plus/Cross er
- * ikke en Golf, Transit Connect/Courier er ikke en Transit, Passat CC er ikke en
- * Passat. Uten denne vakten matchet «GOLF SPORTSVAN» GT-raden «GOLF» på ordet
- * GOLF alene — samme feilklasse som familie-regexene i kataloggeneratoren.
+ * Ord som gjør en bil til en ANNEN bil, ikke en variant av samme glass.
+ *
+ * NAVNEMODELLER (symmetrisk vakt): Golf Sportsvan/Plus/Cross er ikke en Golf,
+ * Transit Connect/Courier er ikke en Transit, Passat CC er ikke en Passat.
+ * Uten denne vakten matchet «GOLF SPORTSVAN» GT-raden «GOLF» på ordet GOLF alene.
+ *
+ * DRIVLINJE_ORD (ensidig vakt): en variant kjøretøyet oppgir, som katalograden
+ * ikke har, gjør at raden ikke kan brukes. «RAV4 Plug-in Hybrid» skal ikke arve
+ * «RAV 4», men «Kia Niro» skal fortsatt treffe GT-raden «NIRO (HYBRID) 2016-2022»
+ * — der er drivlinjeordet en beskrivelse av hele modellinjen, ikke en variant.
  */
 const NAVNEMODELLER = new Set(['SPORTSVAN', 'PLUS', 'CROSS', 'CONNECT', 'COURIER', 'SHOOTING', 'CC']);
+const DRIVLINJE_ORD = new Set(['PLUG', 'PLUGIN', 'HYBRID', 'LADEHYBRID', 'PHEV', 'PHV', 'MILD', 'MHEV']);
+
+function ordSett(s: string): Set<string> {
+  return new Set((s || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/).filter(Boolean));
+}
 
 /** Ulike navnemodeller skal aldri møtes, uansett hvilken side ordet står på. */
-function navnemodellKonflikt(a: string, b: string): boolean {
-  const ord = (s: string) => new Set(
-    (s || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/).filter(Boolean),
-  );
-  const oa = ord(a);
-  const ob = ord(b);
+export function variantKonflikt(a: string, b: string): boolean {
+  const oa = ordSett(a);
+  const ob = ordSett(b);
   const na = [...oa].filter((o) => NAVNEMODELLER.has(o));
   const nb = [...ob].filter((o) => NAVNEMODELLER.has(o));
   if (!na.length && !nb.length) return false;
   return na.some((o) => !ob.has(o)) || nb.some((o) => !oa.has(o));
 }
+
+/** Drivlinje-variant kjøretøyet oppgir, som katalograden ikke har. */
+export function drivlinjeKonflikt(kjoretoy: string, katalogRad: string): boolean {
+  const kj = ordSett(kjoretoy);
+  const rad = ordSett(katalogRad);
+  return [...kj].some((o) => DRIVLINJE_ORD.has(o) && !rad.has(o));
+}
+
+const navnemodellKonflikt = variantKonflikt;
 
 function enkelttegnKonflikt(a: string, b: string): boolean {
   const tegn = (s: string) => new Set(
@@ -438,6 +512,7 @@ export function gtRadMatch(radModel: string, make: string, model: string, aarLis
   // felles ordene.
   if (enkelttegnKonflikt(radModel, model)) return false;
   if (navnemodellKonflikt(radModel, model)) return false;
+  if (drivlinjeKonflikt(model, radModel)) return false;
   if (tokens.length && ordTreff(radModel, tokens)) return true;
   if (serie) {
     const gtSerie = gtSerieFor(make, radModel, aarList[0]);
@@ -577,7 +652,11 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
   }>();
   const unike = new Map<string, ResolverKandidat>();
   for (const r of rows.results ?? []) {
-    if (!ordTreff(r.model ?? '', tokens)) continue; // ordbasert — aldri substring
+    if (!ordTreffKandidat(r.model ?? '', tokens)) continue; // ordbasert — aldri substring, aldri generisk treff alene
+    // Drivlinje-/navnemodell-variant skal ikke arve en annen modells glass
+    // («RAV4 Plug-in Hybrid» skal ikke få RAV 4-raden før fitment er dokumentert).
+    if (variantKonflikt(r.model ?? '', model)) continue;
+    if (drivlinjeKonflikt(model, r.model ?? '')) continue;
     // Årvindu: kolonne-verdier, ellers år-hint i modellstrengen
     if (aar != null) {
       const intervall = r.year_from != null
