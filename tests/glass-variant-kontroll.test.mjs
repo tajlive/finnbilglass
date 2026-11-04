@@ -3,6 +3,7 @@
 // aldri som bekreftet passform.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { kontrollerVariant, produkttype, salgsenhet, feltErRelevant } from '../src/glass-variant-kontroll.ts';
 
 const RAV4 = { varenr: '8432AGAC', varenavn: 'TOYOTA RAV 4 22- FR AKU LDW', eurokode: '8432AGACMV1L', kommentar: null };
@@ -170,4 +171,15 @@ test('utstyr: ukjent produktegenskap + kunde sier ja → ukjent', () => {
 test('utstyr: endret svar etter variantvalg gir avvik', () => {
   assert.equal(kontrollerVariant(VARMT, { side: 'left', answers: { oppvarmet: 'ja' } }).status, 'bekreftet');
   assert.equal(kontrollerVariant(VARMT, { side: 'left', answers: { oppvarmet: 'nei' } }).status, 'avvist');
+});
+
+// ── Vakt: utstyrskontrollen kan bare virke hvis kommentar hentes ────────
+// Feilen som ble funnet i produksjon: variant-SELECT manglet `kommentar`, så
+// featuresFraKommentar() fikk alltid tom streng og utstyrsmotstrid ble aldri
+// oppdaget. Denne testen låser at kolonnen faktisk hentes.
+test('variant-oppslaget i /api/inquiry henter kommentar (utstyr)', () => {
+  const kilde = readFileSync('src/index.ts', 'utf8');
+  const select = kilde.match(/SELECT[^"'`]*FROM glass_prisliste WHERE variant_id = \?/);
+  assert.ok(select, 'fant ikke variant-oppslaget');
+  assert.match(select[0], /\bkommentar\b/, 'kommentar må være med, ellers virker ikke utstyrskontrollen');
 });

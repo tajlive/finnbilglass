@@ -1046,10 +1046,10 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         if (!/^[A-Za-z0-9 ._+@#-]{1,40}:[A-Za-z0-9~ ._+@#-]{1,60}$/.test(variantIdRaa)) {
           return json({ ok: false, error: 'Ugyldig variant' }, 400);
         }
-        let rad: { varenr: string; varenavn: string | null; eurokode: string | null; pris: number | null; rad_type: string } | null = null;
+        let rad: { varenr: string; varenavn: string | null; eurokode: string | null; pris: number | null; rad_type: string; kommentar: string | null } | null = null;
         try {
           rad = await env.FINNBILGLASS_DB.prepare(
-            "SELECT varenr, varenavn, eurokode, pris, rad_type FROM glass_prisliste WHERE variant_id = ? LIMIT 1"
+            "SELECT varenr, varenavn, eurokode, pris, rad_type, kommentar FROM glass_prisliste WHERE variant_id = ? LIMIT 1"
           ).bind(variantIdRaa).first();
         } catch {
           rad = null; // eldre database uten variant_id: behold flyten, men merk det
