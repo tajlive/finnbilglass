@@ -2,6 +2,7 @@ import { normalizeGlassSelection, type GlassSelection } from './glass-selection-
 import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
 import { dekodeEurokode } from './eurokode-dekoder';
 import { byggValgTre, FELT_SPORSMAL, GRUNNTYPER } from './glass-valg';
+import { kontrollerVariant, produkttype, salgsenhet } from './glass-variant-kontroll';
 import { sendMail, avsenderEpost } from './mail';
 /** Finnbilglass Worker — frontrute-matcher API + statisk frontend.
  *  POST /api/frontrute  {merke, modell, aar, profil} → glass
@@ -1011,10 +1012,15 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       const leveringssted = typeof b.leveringssted === 'string' ? b.leveringssted.trim().slice(0, 80) : '';
       if (leveringssted) melding = (melding ? melding + '\n' : '') + 'Ønsket leveringssted: ' + leveringssted;
       let glassSammendrag = '';
+      // Kundens valg og utstyrssvar heves ut hit: variantkontrollen under må
+      // kontrollere den valgte varen mot NØYAKTIG de svarene som sendes inn.
+      let valgtSelection: GlassSelection | null = null;
+      const utstyrSvar: Record<string, string> = {};
       if (b.glassRequest !== undefined) {
         const request = b.glassRequest as Record<string, unknown> | null;
         const selection = request && normalizeGlassSelection(request.selection);
         if (!selection) return json({ok:false,error:'Ugyldig glassvalg'},400);
+        valgtSelection = selection;
         glassSammendrag = beskrivGlassvalg(selection);
         // Persist the validated selection in the existing operator-visible note.
         // No schema migration is needed for the quote pilot.
@@ -1025,6 +1031,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           const allowed = ['sensor','antenne','hud','kamera','adas','coated','oppvarmet','akustisk'];
           const entries = Object.entries(answers);
           if (entries.some(([k,v]) => !allowed.includes(k) || !['ja','nei','vet-ikke',true,false,'unknown'].includes(v as string))) return json({ok:false,error:'Ugyldige utstyrssvar'},400);
+          for (const [k, v] of entries) utstyrSvar[k] = v === true ? 'ja' : v === false ? 'nei' : String(v);
           if (entries.length) melding += '\nKundens utstyrssvar (må kontrolleres): ' + JSON.stringify(Object.fromEntries(entries.sort(([a],[b])=>a.localeCompare(b))));
         }
       }
@@ -1058,8 +1065,17 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         if (rad && rad.rad_type !== 'glass') {
           return json({ ok: false, error: 'Valgt variant er ikke et glass' }, 400);
         }
+        // Produkttype fra navn/varenr — rad_type er upålitelig (PYNTELIST KIT
+        // står som 'glass' i basen). Pyntelister/klips er ikke glass.
+        if (rad) {
+          const type = produkttype(rad.varenavn, rad.varenr);
+          if (type !== 'glass') {
+            return json({ ok: false, error: 'Valgt vare er ikke et glass. Velg en glassvariant, så kontrollerer vi den.' }, 400);
+          }
+        }
         // Tilhørighet: for frontrute kan vi etterprøve mot bilens kandidatsett.
         let tilhorighet = 'ikke_verifisert';
+        let kontrollNotat: string[] = [];
         const bil = b.bil && typeof b.bil === 'object' && !Array.isArray(b.bil) ? b.bil as Record<string, unknown> : null;
         const bilMerke = bil && typeof bil.merke === 'string' ? bil.merke : '';
         const bilModell = bil && typeof bil.modell === 'string' ? bil.modell : '';
@@ -1074,12 +1090,31 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
             tilhorighet = 'ikke_verifisert';
           }
         }
+        // Kundens egne svar: side, dør, plassering, karosseri og utstyr.
+        // Dokumentert motstrid avvises her — ikke bare i nettleseren.
+        if (rad) {
+          const dom = kontrollerVariant(rad, {
+            side: valgtSelection?.side,
+            door: valgtSelection?.door,
+            placement: valgtSelection?.placement,
+            body: valgtSelection?.body,
+            answers: utstyrSvar,
+          });
+          if (dom.status === 'avvist') return json({ ok: false, error: dom.melding }, 400);
+          kontrollNotat = dom.status === 'bekreftet' ? ['bekreftet mot kundens svar'] : dom.uavklart;
+          // Ukjent informasjon kan gå videre til manuell kontroll, men skal
+          // aldri lagres som bekreftet passform.
+          if (dom.status === 'ukjent' && tilhorighet === 'bekreftet') tilhorighet = 'bekreftet_bil_ukjent_plassering';
+        }
         const estimat = rad ? estimertKundeprisInklMva(rad.pris) : null;
+        const enhet = rad ? salgsenhet(rad.varenavn) : null;
         variantNote = 'Valgt variant: ' + variantIdRaa +
           (rad ? ' (' + rad.varenr + ' / ' + (rad.eurokode ?? 'uten eurokode') + ') «' + (rad.varenavn ?? '') + '» listepris '
             + (rad.pris ?? 'ukjent') + ' eks. mva · estimert kundepris '
             + (estimat == null ? 'ukjent (pris på forespørsel)' : estimat.toFixed(2).replace('.', ',') + ' kr inkl. mva') : '') +
-          ' · tilhørighet: ' + tilhorighet;
+          ' · tilhørighet: ' + tilhorighet +
+          (kontrollNotat.length ? ' · kontroll: ' + kontrollNotat.join(', ') : '') +
+          (enhet ? ' · salgsenhet: ' + enhet.enhet + ' (' + enhet.grunnlag + ')' : '');
         melding = variantNote + (melding ? '\n' + melding : '');
       }
       if (b.contactPreference === 'begge') {

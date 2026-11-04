@@ -53,39 +53,53 @@ export function vurderFelt(
  *   - manglende/ukjent → `null`
  *   - kildekonflikt → `verdier: null, konflikt: true` (feltet er ubeviselig)
  */
-export function feltVerdier(c: CatalogueCandidate, felt: string): FeltVurdering {
-  const p = c.posisjon;
-  const konflikt = !!p.konflikt;
+/**
+ * Feltets konkrete verdimengde for én posisjon.
+ *
+ * Skilt ut slik at servervalideringen kan bruke NØYAKTIG samme vurdering som
+ * valgtreet, uten å bygge en full kandidat.
+ */
+export function posisjonFeltVerdier(
+  posisjon: { type?: string; side?: string | null; dorLedd?: string | null; ventilLedd?: string | null; konflikt?: boolean },
+  felt: string,
+  varenavn = '',
+): FeltVurdering {
+  const konflikt = !!posisjon.konflikt;
 
   if (felt === 'door') {
     if (konflikt) return { verdier: null, konflikt: true };
-    if (p.dorLedd === 'fremre') return { verdier: ['front'], konflikt: false };
-    if (p.dorLedd === 'bakre') return { verdier: ['rear'], konflikt: false };
+    if (posisjon.dorLedd === 'fremre') return { verdier: ['front'], konflikt: false };
+    if (posisjon.dorLedd === 'bakre') return { verdier: ['rear'], konflikt: false };
     return { verdier: null, konflikt: false };
   }
 
   if (felt === 'placement') {
     if (konflikt) return { verdier: null, konflikt: true };
-    if (p.ventilLedd === 'foran') return { verdier: ['front'], konflikt: false };
-    if (p.ventilLedd === 'bakre') return { verdier: ['rear'], konflikt: false };
+    if (posisjon.ventilLedd === 'foran') return { verdier: ['front'], konflikt: false };
+    if (posisjon.ventilLedd === 'bakre') return { verdier: ['rear'], konflikt: false };
     return { verdier: null, konflikt: false };
   }
 
   if (felt === 'side') {
     if (konflikt) return { verdier: null, konflikt: true };
-    if (p.side === 'venstre') return { verdier: ['left'], konflikt: false };
-    if (p.side === 'hoyre') return { verdier: ['right'], konflikt: false };
+    if (posisjon.side === 'venstre') return { verdier: ['left'], konflikt: false };
+    if (posisjon.side === 'hoyre') return { verdier: ['right'], konflikt: false };
     // «Begge sider» er en dokumentert mengde — ikke ukjent.
-    if (p.side === 'begge') return { verdier: ['left', 'right'], konflikt: false };
+    if (posisjon.side === 'begge') return { verdier: ['left', 'right'], konflikt: false };
     return { verdier: null, konflikt: false };
   }
 
   if (felt === 'body') {
     if (konflikt) return { verdier: null, konflikt: true };
-    const kropper = [...kropperIRad(c.varenavn)];
+    const kropper = [...kropperIRad(varenavn)];
     return { verdier: kropper.length ? kropper : null, konflikt: false };
   }
 
   // layout/section/mounting/system/panel finnes ikke i katalogdataene i dag.
   return { verdier: null, konflikt };
+}
+
+/** Feltets konkrete verdimengde for én kandidat. */
+export function feltVerdier(c: CatalogueCandidate, felt: string): FeltVurdering {
+  return posisjonFeltVerdier(c.posisjon, felt, c.varenavn);
 }
