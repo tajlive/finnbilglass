@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch } from '../src/vin-resolver.ts';
+import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv } from '../src/vin-resolver.ts';
 
 // Faktiske katalograder (brand='VW', frontrute, modell med «ID»).
 const KATALOG = [
@@ -43,6 +43,14 @@ test('modellTokensAv: ID.4 gir familie-token og ikke det generiske «ID»', () =
   const t = modellTokensAv('ID.4', 'VW');
   assert.ok(t.includes('ID4'), `forventet ID4 i ${JSON.stringify(t)}`);
   assert.ok(!t.includes('ID'), `generisk ID skal være fjernet, fikk ${JSON.stringify(t)}`);
+});
+
+test('SQL-forfiltreringen bruker rå ord, ikke familie-tokenet', () => {
+  // LIKE '%ID4%' matcher ikke katalograder som skriver «ID.4 SUV» — målt
+  // 2026-11-04: hele ID.4/ID.5-familien falt til FALLBACK av nettopp dette.
+  assert.deepEqual(sqlTokensAv('ID.4', 'VW'), ['ID']);
+  assert.deepEqual(sqlTokensAv('MODEL Y', 'TESLA'), ['MODEL']);
+  assert.ok(!sqlTokensAv('ID.4', 'VW').includes('ID4'));
 });
 
 test('ID.4 matcher ikke ID.3, ID.5 eller ID.7 på grunnlag av «ID» alene', () => {

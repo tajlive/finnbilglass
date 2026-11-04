@@ -155,27 +155,46 @@ export function familieTokens(s: string): string[] {
 /** Generiske familieord som aldri alene kan gi kandidatstøtte. */
 const GENERISKE_TOKEN = new Set(['ID', 'MODEL']);
 
-/** Signifikante modell-tokens: ≥2 tegn, ikke tall-dominert, ikke i stopp-liste, ikke merkenavnet. */
-export function modellTokensAv(modell: string, merke: string): string[] {
+/**
+ * Rå ord-tokens fra modellstrengen (≥2 tegn, ikke merkenavn, ikke stopp-ord).
+ * Brukes BÅDE til SQL-forfiltrering (LIKE) og som grunnlag for match-tokens.
+ *
+ * SQL-forfiltreringen må bruke de RÅ ordene: familie-tokenet «ID4» finnes ikke
+ * som tekst i katalograder som skriver «ID.4 SUV», så et LIKE på ID4 ga null
+ * rader (målt 2026-11-04: ID.4/ID.5 falt til FALLBACK etter familie-tokenet).
+ */
+function modellOrd(modell: string, merke: string): string[] {
   const merkeNorm = normBrand(merke).replace(/[^A-ZÆØÅ0-9]+/g, '');
   const ord = (modell || '').toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, ' ').split(/\s+/).filter(Boolean);
-  // Familie-tokenet settes først: det er det mest spesifikke, og L2 bruker .slice(0,4).
-  const familier = familieTokens(modell);
-  const tokens: string[] = [...familier];
+  const ut: string[] = [];
   for (const o of ord) {
     if (o.length < 2) continue;
     if (o === merkeNorm) continue;
     if (/^\d+$/.test(o) && o.length >= 3 && ord.length > 1) continue; // '200'-lignende trim/motor
     if (/^\d+(KW|KWH)$/.test(o)) continue; // effekt/batteri er ikke glassmodell
     if (STOPP_TOKENS.has(o)) continue;
+    ut.push(o);
+    ut.push(...(MODEL_TOKEN_ALIAS[o] ?? []));
+  }
+  return [...new Set(ut)];
+}
+
+/** Tokens for SQL-forfiltrering — rå ord, inkludert generiske («ID»). */
+export function sqlTokensAv(modell: string, merke: string): string[] {
+  return modellOrd(modell, merke);
+}
+
+/** Signifikante modell-tokens for MATCHING: familie-token først, generisk forstavelse fjernet. */
+export function modellTokensAv(modell: string, merke: string): string[] {
+  // Familie-tokenet settes først: det er det mest spesifikke, og L2 bruker .slice(0,4).
+  const familier = familieTokens(modell);
+  const rest = modellOrd(modell, merke).filter(
     // Generisk forstavelse («ID» av «ID.4», «MODEL» av «MODEL 3») skal ikke bli
     // et selvstendig token når familie-tokenet finnes — det er nettopp den
     // brede matchingen som ga ID.3-glass til ID.4/ID.5.
-    if (GENERISKE_TOKEN.has(o) && familier.some((f) => f.startsWith(o))) continue;
-    tokens.push(o);
-    tokens.push(...(MODEL_TOKEN_ALIAS[o] ?? []));
-  }
-  return [...new Set(tokens)];
+    (o) => !(GENERISKE_TOKEN.has(o) && familier.some((f) => f.startsWith(o))),
+  );
+  return [...new Set([...familier, ...rest])];
 }
 
 function escLike(s: string): string {
@@ -639,8 +658,13 @@ async function lagGroundTruth(env: Env, make: string, model: string, aarList: nu
 async function lagPilkington(env: Env, make: string, model: string, aar: number | null, profil: BilInput['profil']): Promise<ResolverKandidat[]> {
   const tokens = modellTokensAv(model, make).slice(0, 4);
   if (!tokens.length) return [];
-  const like = tokens.map(() => 'model LIKE ?').join(' OR ');
-  const params: (string | number)[] = [make, ...tokens.map((t) => `%${escLike(t)}%`)];
+  // SQL-forfiltreringen bruker RÅ ord: familie-tokenet («ID4») finnes ikke som
+  // tekst i katalograder som skriver «ID.4 SUV». Uten dette ga LIKE null rader
+  // og ID.4/ID.5 falt til FALLBACK (målt 2026-11-04).
+  const prefilter = sqlTokensAv(model, make).slice(0, 4);
+  const likeOrd = prefilter.length ? prefilter : tokens;
+  const like = likeOrd.map(() => 'model LIKE ?').join(' OR ');
+  const params: (string | number)[] = [make, ...likeOrd.map((t) => `%${escLike(t)}%`)];
   const rows = await env.FINNBILGLASS_DB.prepare(
     `SELECT eurocode, brand, model, year_from, year_to, rain_sensor, antenna, hud, camera, adas, description
      FROM glass_catalog
