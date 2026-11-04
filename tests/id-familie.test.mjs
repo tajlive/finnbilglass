@@ -137,6 +137,8 @@ test('PINPOINT-sperre: RAV4 2022-2025 på 8432AGAC gir VERIFY, ikke PINPOINT', (
     assert.ok(pinpointSperre('TOYOTA', 'RAV4', aar, '8432AGACHM'), `RAV4 ${aar} skal være sperret`);
     assert.ok(pinpointSperre('TOYOTA', 'RAV 4', aar, '8432AGAC'), `«RAV 4» ${aar} skal være sperret`);
   }
+  // SVV kan sende merkenavnet inni modellstrengen («TOYOTA RAV4»).
+  assert.ok(pinpointSperre('TOYOTA', 'TOYOTA RAV4', 2024, '8432AGACHM'), '«TOYOTA RAV4» skal også sperres');
   // Utenfor sperren: eldre år, andre koder, andre modeller.
   assert.equal(pinpointSperre('TOYOTA', 'RAV4', 2021, '8432AGACHM'), null);
   assert.equal(pinpointSperre('TOYOTA', 'RAV4', 2026, '8465AGAC'), null);

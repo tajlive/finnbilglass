@@ -854,7 +854,7 @@ const PINPOINT_SPERRET: Array<{
   {
     eurokodePrefiks: ['8432AGAC'],
     merke: /^TOYOTA$/,
-    modell: /^RAV[\s-]?4/,
+    modell: /(?:^|\s)RAV[\s-]?4\b/,  // SVV kan sende «TOYOTA RAV4» som modellstreng
     aarFra: 2022,
     aarTil: 2025,
     grunn: 'GT sier 2022-2025, men varen heter «RAV 4 19-21» og butikken fører «RAV 4 2019-» separat — årsmodell er ikke bekreftet av leverandør',
