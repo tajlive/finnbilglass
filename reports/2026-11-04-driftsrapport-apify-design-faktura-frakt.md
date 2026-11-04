@@ -32,6 +32,11 @@
 Verifisert i produksjon: desktop 1400 px, mobil 390 px (ingen horisontal overløp: 390 = 390) og i `/ops` sak #41.
 Priskrift og knapper er kontrollert og konsistente: «Estimert pris X kr» + «Endret pris bekreftes manuelt», «Velg dette glasset», «Be om uforpliktende tilbud», «Send forespørsel».
 
+**Systematisk sjekk av offentlige sider** (desktop 1400 px + mobil 390 px, 2026-11-04):
+`/`, `/om-oss`, `/personvern`, `/logg-inn` — alle HTTP 200, 0 konsollfeil, 0 horisontalt overløp, riktig `<h1>`.
+Interne lenker på forsiden: 5 stk, alle svarer 200 (`/betaling.html` → 307 → `/betaling` 200, ufarlig redirect).
+Ingen døde lenker, ingen tomme seksjoner funnet.
+
 **Gjenstående, ikke rettet (krever Toms valg):**
 - `support@finnbilglass.no` vises på alle sider, men domenets MX peker på Domeneshop og postkassen finnes ikke — e-post til adressen forsvinner. Varsler går i dag til `tomarnejensen@gmail.com`.
 - «Logg inn / Min side» i bunnteksten er en lenke uten funksjon for privatkunder.
@@ -100,7 +105,9 @@ Ikke gjort: ingen frakt kjøpt, ingen henting bestilt. Bring-konto/avtalenummer 
 
 **Anbefalt manuell rutine nå:** sak → godkjenn glass i /ops → skriv tilbud i `glass_quotes` (BEKREFTET) → kunde aksepterer (svar lagres på saken) → lag faktura i SumUp med saksnummer som referanse → før fakturanummeret inn i saksnotatet → oppdater `ordre.betalings_status` → legg inn `sporingsnummer` → lukk saken.
 
-**Foreslått, ikke kjørt:** migrasjon `0050_ordre_faktura` som legger til `faktura_nummer` og `faktura_sendt_at` i `ordre` (additiv, lav risiko). Krever Toms godkjenning siden det er produksjonsskjema.
+**Klar, ikke kjørt:** `migrations/pending/0050_ordre_faktura.sql` legger til `faktura_nummer`, `faktura_sendt_at` og `transportor` i `ordre`, pluss indeks på `faktura_nummer`. Rent additivt (ingen rad skrives, ingen kolonne endres), uavhengig av 0048. Krever Toms godkjenning fordi det er produksjonsskjema.
+
+**Apify kjøreklar:** `docs/apify-kjoreklar-2026-11-04.md` — eksakte kommandoer for status, pilotkjøring (kostnadstak $0,50), import til staging og kostnadsbilde. Alt er klart bortsett fra `npx apify-cli login`.
 
 ## 6. Rapportrettelse: +1 313 eller +1 310?
 
