@@ -39,21 +39,22 @@ const biler = manifest.biler.filter((b) => b.harBilopplysninger);
 const feil = [];
 const noter = (test_id, regel, detalj) => feil.push({ test_id, regel, detalj });
 
-// Indeks per merke (samme spørring som Workeren: varenavn LIKE '<merke>%')
-const perMerke = new Map();
-for (const r of snapRader) {
-  const merke = String(r.varenavn ?? '').toUpperCase().split(/[^A-ZÆØÅ0-9]/)[0];
-  const liste = perMerke.get(merke) ?? [];
-  liste.push(r);
-  perMerke.set(merke, liste);
-}
+// Samme merkenormalisering som Workeren: normMerke() («Volkswagen» → «VW»,
+// «Mercedes-Benz» → «MERCEDES») og prefikssøk på varenavn. Uten dette ble
+// Volkswagen-biler målt mot nøkkelen «VOLKSWAGEN», som ikke finnes i katalogen —
+// og dekningen ble underrapportert.
+import { normMerke } from '../src/fitment-v1/catalogue-candidates.ts';
+const raderForMerke = (merke) => {
+  const nokkel = normMerke(merke).toUpperCase().replace(/[%_]/g, '');
+  return snapRader.filter((r) => String(r.varenavn ?? '').toUpperCase().startsWith(nokkel));
+};
 
 let medKandidater = 0, utenKandidater = 0, kandidaterTotalt = 0, lovTotalt = 0;
 const perBil = [];
 
 for (const bil of biler) {
   const merke = String(bil.merke).toUpperCase();
-  const rader = perMerke.get(merke) ?? [];
+  const rader = raderForMerke(bil.merke);
   const indeks = buildClassDCandidates(rader.map((r) => ({ varenr: r.varenr, varenavn: r.varenavn, eurokode: r.eurokode ?? null, kommentar: r.kommentar ?? null })));
   const kandidater = matchClassDCandidates(indeks, bil.merke, bil.modell, bil.aar ?? null);
   kandidaterTotalt += kandidater.length;
@@ -128,7 +129,7 @@ for (const bil of biler) {
 for (const bil of biler) {
   if (!bil.aar) continue;
   const merke = String(bil.merke).toUpperCase();
-  const rader = perMerke.get(merke) ?? [];
+  const rader = raderForMerke(bil.merke);
   const indeks = buildClassDCandidates(rader.map((r) => ({ varenr: r.varenr, varenavn: r.varenavn, eurokode: r.eurokode ?? null, kommentar: r.kommentar ?? null })));
   for (const k of matchClassDCandidates(indeks, bil.merke, bil.modell, bil.aar)) {
     if (k.aarFra != null && bil.aar < k.aarFra) noter(bil.test_id, 'AAR_MOTSTRID', `${k.varenr} starter ${k.aarFra} > ${bil.aar}`);

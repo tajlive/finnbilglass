@@ -330,6 +330,23 @@ export function erListeRad(varenavn: string | null | undefined, varenr: string |
   const vr = (varenr ?? '').toUpperCase();
   return harOrd(navn, LIST_ORD) || /(?:PY|GU)[A-Z]{0,4}$/.test(vr) || /^\d{3,5}K$/.test(vr);
 }
+/**
+ * ÉN felles regel for «dette er tilbehør, ikke glass».
+ *
+ * `catalogue-candidates.erTilbehor()` og `glass-variant-kontroll.produkttype()`
+ * hadde hver sin ordliste og var uenige: BUNNLIST slapp gjennom det ene stedet,
+ * SENSORGEL gjennom det andre. Begge kaller nå denne.
+ *
+ * Ordene er hentet fra katalogen og holdes smale: LIST-treff gjelder bare
+ * produkter som faktisk er lister/klips (verifisert mot 30 937 rader — ingen
+ * ekte glassrad har LIST i navnet uten å være en list).
+ */
+export function erTilbehorVare(varenavn: string | null | undefined, varenr: string | null | undefined): boolean {
+  const navn = String(varenavn ?? '').toUpperCase();
+  if (erListeRad(varenavn, varenr)) return true;
+  return /PYNTELIST|PYNTLIST|GUMMILIST|KLIPS|PAKNING|SENSORGEL|SENSORTAPE|LIST\b/.test(navn);
+}
+
 
 /**
  * Klassifiser én katalograd.

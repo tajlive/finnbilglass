@@ -23,6 +23,7 @@
 import {
   klassifiserGlass,
   erListeRad,
+  erTilbehorVare,
   type GlassType,
   type GlassSide,
   type DorLedd,
@@ -527,10 +528,8 @@ function effektivtIntervall(c: CatalogueCandidate): EffektivIntervall {
 
 /** Er raden en tilbehørs-/listesrad som aldri skal presenteres som glass? */
 function erTilbehor(c: CatalogueCandidate): boolean {
-  // Én felles regel med produkttype(): alt som er en list/klips/pakning er
-  // tilbehør, ikke glass. «BUNNLIST» (8432ASMR) slapp tidligere gjennom og ble
-  // tilbudt som glasskandidat for RAV4.
-  return erListeRad(c.varenavn, c.varenr) || /PYNTELIST|PYNTLIST|GUMMILIST|KLIPS|PAKNING|SENSORGEL|SENSORTAPE|LIST\b/.test(c.varenavn);
+  // Delegerer til den felles regelen — ikke en egen ordliste.
+  return erTilbehorVare(c.varenavn, c.varenr);
 }
 
 /** Kundevendt plasseringstekst. Intern klassifisering skal aldri vises. */

@@ -1,0 +1,5563 @@
+{
+  "oppsummering": {
+    "base": "https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev",
+    "manifest": "data/testgrunnlag/manifest-samlet.json",
+    "manifestSha256": "2ea5c5ab56f9591ecf38a5a53d50cf20dd393277496b08bbeec93589830fd000",
+    "biler": 616,
+    "frontruteMedKandidater": 534,
+    "frontruteUten": 82,
+    "tekniskeFeil": 0,
+    "utfallFordeling": {
+      "VERIFY": 413,
+      "PINPOINT": 87,
+      "FALLBACK": 116
+    },
+    "sha256": "0486ae1742c1a36f03baf2548d34fd9ebd619c36a9c76c7b75e79c93a3117eb0"
+  },
+  "rader": [
+    {
+      "test_id": "FBG-T-0012",
+      "bil": "Ford Granada 1983",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 699,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0025",
+      "bil": "Mitsubishi L200 1999",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 187,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0040",
+      "bil": "Toyota Camry 1999",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 140,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0077",
+      "bil": "Volkswagen Caravelle 2000",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 471,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0104",
+      "bil": "Volkswagen Touareg 2005",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 617,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0061",
+      "bil": "Toyota RAV4 2005",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 287,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0085",
+      "bil": "Volkswagen Golf V 2006",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 663,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0078",
+      "bil": "Volkswagen Caravelle 2006",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 361,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0082",
+      "bil": "Volkswagen Eos 2007",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 291,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0062",
+      "bil": "Toyota RAV4 2007",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 278,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0001",
+      "bil": "Audi A5 2008",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 261,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0049",
+      "bil": "Toyota Land Cruiser 2008",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 168,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0005",
+      "bil": "BMW E90 2008",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 360,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0004",
+      "bil": "BMW 320d 2008",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 361,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0069",
+      "bil": "Volkswagen Caddy Maxi 2009",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 276,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0107",
+      "bil": "Volkswagen Transporter 2009",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 478,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0063",
+      "bil": "Toyota Yaris 2009",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 193,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0100",
+      "bil": "Volkswagen Passat 2009",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 480,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0108",
+      "bil": "Volkswagen Transporter 2009",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 472,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0064",
+      "bil": "Toyota Yaris 2009",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 161,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0027",
+      "bil": "Mitsubishi Outlander 2009",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 197,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0101",
+      "bil": "Volkswagen Passat 2010",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 500,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0067",
+      "bil": "Volkswagen Andre 2010",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 160,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0037",
+      "bil": "Toyota Aygo 2010",
+      "frontruteKandidater": 4,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 546,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0010",
+      "bil": "BMW X5 2011",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 305,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0083",
+      "bil": "Volkswagen Golf Plus 2011",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 197,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0024",
+      "bil": "Mitsubishi ASX 2011",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 315,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0031",
+      "bil": "Peugeot 207 2011",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 363,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0019",
+      "bil": "Land Rover Range Rover 2012",
+      "frontruteKandidater": 16,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 462,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0072",
+      "bil": "Volkswagen Caddy 2012",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 216,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0073",
+      "bil": "Volkswagen Caddy 2012",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 253,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0102",
+      "bil": "Volkswagen Passat 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 420,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0112",
+      "bil": "Volvo V60 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 130,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0028",
+      "bil": "Mitsubishi Pajero 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 180,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0105",
+      "bil": "Volkswagen Touran 2013",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 221,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0103",
+      "bil": "Volkswagen Tiguan 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 128,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0051",
+      "bil": "Toyota Prius+ 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 560,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0026",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2014",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 107,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0084",
+      "bil": "Volkswagen Golf Sportsvan 2014",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 185,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0022",
+      "bil": "Mazda CX-5 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 318,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0016",
+      "bil": "Kia Ceed 2014",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 243,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0068",
+      "bil": "Volkswagen Andre 2015",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 182,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0114",
+      "bil": "Volvo XC60 2015",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 153,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0003",
+      "bil": "BMW 116i 2015",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 355,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0117",
+      "bil": "VW TRANSPORTER 2016",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 205,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0080",
+      "bil": "Volkswagen e-Golf VII 2016",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 525,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0115",
+      "bil": "Volvo XC60 2016",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 150,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0109",
+      "bil": "Volkswagen Transporter 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 195,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0081",
+      "bil": "Volkswagen e-Golf VII 2017",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 536,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0006",
+      "bil": "BMW i3 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 168,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0018",
+      "bil": "Kia Soul 2017",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 307,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0086",
+      "bil": "Volkswagen Golf VII 2017",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 623,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0106",
+      "bil": "Volkswagen Touran 2017",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 367,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0113",
+      "bil": "Volvo V60 2018",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 160,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0021",
+      "bil": "Mazda CX-3 2018",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 127,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0015",
+      "bil": "Jaguar XF 2018",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1260,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0110",
+      "bil": "Volkswagen Transporter 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 176,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0066",
+      "bil": "Volkswagen Amarok 2018",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 150,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0079",
+      "bil": "Volkswagen Crafter 2018",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 843,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0074",
+      "bil": "Volkswagen Caddy 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 167,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0070",
+      "bil": "Volkswagen Caddy Maxi 2020",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 177,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0002",
+      "bil": "Audi e-tron 2020",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 126,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0088",
+      "bil": "Volkswagen ID.3 2020",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 106,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0111",
+      "bil": "Volkswagen Transporter 2020",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 172,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0075",
+      "bil": "Volkswagen Caddy 2021",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 198,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0050",
+      "bil": "Toyota Land Cruiser 2021",
+      "frontruteKandidater": 15,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 927,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0052",
+      "bil": "Toyota Proace 2021",
+      "frontruteKandidater": 1,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 190,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0089",
+      "bil": "Volkswagen ID.3 2021",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 713,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0030",
+      "bil": "Nissan Leaf 2021",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 163,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0014",
+      "bil": "Isuzu D-max 2021",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 349,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0039",
+      "bil": "Toyota C-HR 2021",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 133,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0033",
+      "bil": "Polestar 2 2022",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 146,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0035",
+      "bil": "Porsche Taycan 4 2022",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 375,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0017",
+      "bil": "Kia Niro 2022",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 573,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0009",
+      "bil": "BMW iX 2022",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 174,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0034",
+      "bil": "POLESTAR POLESTAR 2 2022",
+      "frontruteKandidater": 6,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 206,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0090",
+      "bil": "Volkswagen ID.4 GTX 2022",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1081,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0008",
+      "bil": "BMW I7 XDRIVE60 2022",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 201,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0011",
+      "bil": "Cupra Born 2022",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 257,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0046",
+      "bil": "Toyota Corolla 2023",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 293,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0047",
+      "bil": "Toyota Corolla 2023",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 281,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0076",
+      "bil": "Volkswagen Caddy 2023",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 207,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0036",
+      "bil": "TESLA MODEL Y 2023",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 161,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0096",
+      "bil": "Volkswagen ID.5 2023",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 237,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0093",
+      "bil": "Volkswagen ID.4 2023",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1213,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0097",
+      "bil": "Volkswagen ID.5 2023",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 184,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0054",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2023",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 250,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0071",
+      "bil": "Volkswagen Caddy Maxi 2023",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 205,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0091",
+      "bil": "Volkswagen ID.4 GTX 2023",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 945,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0065",
+      "bil": "Toyota Yaris 2024",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 257,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0055",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 216,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0094",
+      "bil": "Volkswagen ID.4 2024",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 979,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0013",
+      "bil": "Hyundai Kona 2024",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 407,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0092",
+      "bil": "Volkswagen ID.4 GTX 2024",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 899,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0041",
+      "bil": "Toyota Corolla Cross 2024",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 128,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0057",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 207,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0042",
+      "bil": "Toyota Corolla Cross 2024",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 119,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0043",
+      "bil": "Toyota Corolla Cross 2024",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 115,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0044",
+      "bil": "Toyota Corolla Cross 2024",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 125,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0045",
+      "bil": "Toyota Corolla Cross 2024",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 125,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0058",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 199,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0059",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 204,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0060",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 201,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0032",
+      "bil": "Peugeot Expert 2025",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 977,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0053",
+      "bil": "Toyota Proace 2025",
+      "frontruteKandidater": 1,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 186,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0029",
+      "bil": "Nissan Ariya 2025",
+      "frontruteKandidater": 3,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 208,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0098",
+      "bil": "Volkswagen ID.7 2025",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 169,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0095",
+      "bil": "Volkswagen ID.4 2025",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 931,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0099",
+      "bil": "Volkswagen ID.7 2025",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 178,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0038",
+      "bil": "Toyota bZ4X 2025",
+      "frontruteKandidater": 5,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 211,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0048",
+      "bil": "Toyota HiLux 2025",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 208,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0020",
+      "bil": "Lotus Eletre 2026",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 154,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0087",
+      "bil": "Volkswagen ID. Buzz 2026",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 155,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0007",
+      "bil": "BMW i4 2026",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 167,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0116",
+      "bil": "VW TRANSPORTER 2005",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 389,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0023",
+      "bil": "MERCEDES CLA 200 D 4MATIC 2016",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 465,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-T-0056",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 214,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0001",
+      "bil": "AMERICAN MOTORS CJ-5 2 DØRERS 1974",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 156,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0002",
+      "bil": "CHEVROLET CAPRICE 1966",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 150,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0003",
+      "bil": "FORD MONDEO 2008",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 226,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0004",
+      "bil": "FORD MONDEO 2009",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 265,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0005",
+      "bil": "VOLVO V50 2010",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 178,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0006",
+      "bil": "FORD FOCUS 2011",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 263,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0007",
+      "bil": "PEUGEOT 308 2011",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 222,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0008",
+      "bil": "VOLVO V60 2012",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 184,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0009",
+      "bil": "VOLVO V60 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 134,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0010",
+      "bil": "VW GOLF 2013",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 623,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0011",
+      "bil": "VW AMAROK 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 121,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0012",
+      "bil": "VW GOLF 2016",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 616,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0013",
+      "bil": "VOLVO V90 2016",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 199,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0014",
+      "bil": "VOLVO XC60 T8 TWIN ENGINE 2017",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 401,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0015",
+      "bil": "OPEL INSIGNIA SPORTS TOURER 2018",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 116,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0016",
+      "bil": "VOLVO XC40 T5 TWIN ENGINE 2020",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 338,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0017",
+      "bil": "CHEVROLET CORVETTE 1989",
+      "frontruteKandidater": 2,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 252,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0018",
+      "bil": "FAW EHS9 2022",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 142,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0019",
+      "bil": "BYD TANG 2023",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 311,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0021",
+      "bil": "VOLVO XC90 2005",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 320,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0022",
+      "bil": "VOLVO XC70 2006",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 199,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0023",
+      "bil": "VOLVO V50 2007",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 224,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0024",
+      "bil": "BMW 116I 2007",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 283,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0025",
+      "bil": "VOLVO V50 2009",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 167,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0026",
+      "bil": "VW GOLF 2010",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 510,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0027",
+      "bil": "MITSUBISHI PAJERO 2010",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 282,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0028",
+      "bil": "TOYOTA AURIS 2010",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 794,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0029",
+      "bil": "MERCEDES B 180 CDI 2014",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 175,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0030",
+      "bil": "KIA SPORTAGE,SL,SLS 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 174,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0031",
+      "bil": "AUDI A5 SPORTBACK 2012",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 394,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0032",
+      "bil": "TOYOTA YARIS HYBRID 2015",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1205,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0033",
+      "bil": "VW PASSAT 2016",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 494,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0034",
+      "bil": "BMW X1 SDRIVE18I 2016",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 178,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0035",
+      "bil": "VOLVO V40 2016",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 213,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0036",
+      "bil": "FORD FOCUS 2016",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 166,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0037",
+      "bil": "TOYOTA RAV4 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 143,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0038",
+      "bil": "BMW M550D XDRIVE 2018",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 164,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0039",
+      "bil": "VW TIGUAN 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1226,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0040",
+      "bil": "FORD FOCUS 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 181,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0041",
+      "bil": "FORD MONDEO 2008",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 232,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0042",
+      "bil": "VW PASSAT 2016",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 479,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0043",
+      "bil": "SKODA KODIAQ 2019",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 571,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0044",
+      "bil": "MERCEDES GLE 350 DE 4MATIC 2021",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 324,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0045",
+      "bil": "FORD EXPLORER 2024",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 299,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0046",
+      "bil": "BMW I5 XDRIVE40 2025",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 202,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0047",
+      "bil": "BMW 520D 2008",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 180,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0048",
+      "bil": "FORD PUMA 2026",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 169,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0049",
+      "bil": "VW GOLF 1999",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 186,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0050",
+      "bil": "AUDI A3 S3 2000",
+      "frontruteKandidater": 1,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 417,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0051",
+      "bil": "HONDA S2000 2000",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 145,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0052",
+      "bil": "TOYOTA AVENSIS 2007",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 210,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0053",
+      "bil": "OPEL INSIGNIA 2009",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 365,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0054",
+      "bil": "VOLVO V50 2009",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 175,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0055",
+      "bil": "BMW 118D 2010",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 238,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0056",
+      "bil": "VW GOLF 2014",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 604,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0057",
+      "bil": "FORD EDGE 2016",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 375,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0058",
+      "bil": "HONDA HR-V 2017",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 113,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0059",
+      "bil": "TOYOTA TOYOTA RAV4 2020",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 332,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0060",
+      "bil": "TOYOTA TOYOTA RAV4 2021",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 352,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0061",
+      "bil": "TOYOTA YARIS CROSS 2022",
+      "frontruteKandidater": 29,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 465,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0062",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 187,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0063",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 170,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0064",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 209,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0065",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 185,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0066",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 181,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0067",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 169,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0068",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 200,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0069",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 203,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0070",
+      "bil": "TOYOTA TOYOTA RAV4 2023",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 177,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0071",
+      "bil": "TOYOTA TOYOTA C-HR 2024",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 313,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0072",
+      "bil": "TOYOTA TOYOTA RAV4 2024",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 210,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0073",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 279,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0074",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 269,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0075",
+      "bil": "TOYOTA TOYOTA YARIS CROSS 2024",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 137,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0076",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 344,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0077",
+      "bil": "TOYOTA TOYOTA COROLLA 2024",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 366,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0078",
+      "bil": "VW GOLF 1988",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 214,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0079",
+      "bil": "TOYOTA HIACE 4WD 2003",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 253,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0080",
+      "bil": "SUZUKI LIANA 2006",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 377,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0081",
+      "bil": "VW POLO 2008",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 175,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0082",
+      "bil": "MERCEDES B 180 CDI 2006",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 161,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0083",
+      "bil": "VW POLO 2009",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 253,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0084",
+      "bil": "AUDI AUDI A3 CABRIOLET 2009",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 614,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0085",
+      "bil": "VOLVO V70 2009",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 160,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0086",
+      "bil": "FORD MONDEO 2008",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 226,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0087",
+      "bil": "TOYOTA AVENSIS 2010",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 442,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0088",
+      "bil": "TOYOTA URBAN CRUISER 2010",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 241,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0089",
+      "bil": "BMW 120D 2006",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 242,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0090",
+      "bil": "VW GOLF 2010",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 576,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0091",
+      "bil": "MERCEDES C 180 CDI 2012",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 190,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0092",
+      "bil": "PEUGEOT 508 2012",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 186,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0093",
+      "bil": "VW GOLF PLUS 2012",
+      "frontruteKandidater": 28,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 313,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0094",
+      "bil": "SKODA SUPERB 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1181,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0095",
+      "bil": "TOYOTA TOYOTA AURIS 2013",
+      "frontruteKandidater": 4,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 1656,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0096",
+      "bil": "MERCEDES E 350 CDI 4MATIC 2010",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 151,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0097",
+      "bil": "KIA PICANTO, MORNING 2014",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1200,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0098",
+      "bil": "BMW 318D 2014",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 215,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0099",
+      "bil": "PEUGEOT 208 2015",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 864,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0100",
+      "bil": "AUDI A4 AVANT 2015",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 372,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0101",
+      "bil": "BMW 328I 2013",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 443,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0102",
+      "bil": "HONDA HONDA CR-V 2017",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 353,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0103",
+      "bil": "MERCEDES C 350 E 2017",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 269,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0104",
+      "bil": "SUZUKI SWIFT 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 228,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0105",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2015",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 153,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0106",
+      "bil": "BMW 330E IPERFORMANCE 2018",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 214,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0107",
+      "bil": "MERCEDES A 180 2019",
+      "frontruteKandidater": 4,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 172,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0108",
+      "bil": "BMW 330E XDRIVE 2021",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 581,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0109",
+      "bil": "PEUGEOT 3008 2020",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 366,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0110",
+      "bil": "TOYOTA TOYOTA YARIS 2021",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 277,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0111",
+      "bil": "VOLVO C40 2022",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 115,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0112",
+      "bil": "PEUGEOT 307 2007",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 293,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0113",
+      "bil": "VW GOLF 2004",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 470,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0114",
+      "bil": "VW GOLF 2004",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 570,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0115",
+      "bil": "VW TOURAN 2005",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 175,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0116",
+      "bil": "VW CADDY LIFE 2005",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 240,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0117",
+      "bil": "VOLVO V50 2008",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 220,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0118",
+      "bil": "OPEL MERIVA-A 2009",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 236,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0119",
+      "bil": "BMW X3 XDRIVE20D 2009",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 174,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0120",
+      "bil": "AUDI AUDI A4 2010",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 466,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0121",
+      "bil": "FORD FOCUS 2011",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 252,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0122",
+      "bil": "VW POLO 2011",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 213,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0123",
+      "bil": "VW GOLF 2011",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 601,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0124",
+      "bil": "MERCEDES S 350 2006",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 151,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0125",
+      "bil": "BMW X1 XDRIVE18D 2011",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 173,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0126",
+      "bil": "OPEL AGILA 2012",
+      "frontruteKandidater": 2,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 361,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0127",
+      "bil": "BMW X6 XDRIVE30D 2009",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 161,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0128",
+      "bil": "FORD FOCUS 2012",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 239,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0129",
+      "bil": "SKODA CITIGO 2012",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 197,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0130",
+      "bil": "VW PASSAT 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 437,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0131",
+      "bil": "SUBARU FORESTER 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 177,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0132",
+      "bil": "VOLVO V40 CROSS COUNTRY 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1291,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0133",
+      "bil": "FORD MONDEO 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 272,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0134",
+      "bil": "TOYOTA YARIS 2015",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 294,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0135",
+      "bil": "SKODA SUPERB 2015",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 228,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0136",
+      "bil": "VOLVO XC70 2016",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 114,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0137",
+      "bil": "AUDI A4 AVANT 2017",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 276,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0138",
+      "bil": "AUDI Q3 2018",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 140,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0139",
+      "bil": "SUBARU OUTBACK 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 152,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0140",
+      "bil": "MERCEDES GLE 500 E 4MATIC 2018",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 243,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0141",
+      "bil": "PEUGEOT 3008 2018",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 338,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0142",
+      "bil": "VOLVO XC40 2018",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 269,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0143",
+      "bil": "TOYOTA TOYOTA AURIS 2019",
+      "frontruteKandidater": 8,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 1699,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0144",
+      "bil": "VOLVO V60 T8 TWIN ENGINE 2019",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 185,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0145",
+      "bil": "VOLVO XC60 T8 TWIN ENGINE 2019",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 271,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0146",
+      "bil": "MERCEDES E 200 CDI 2008",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 339,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0147",
+      "bil": "SKODA OCTAVIA 2021",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 259,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0148",
+      "bil": "SUZUKI SWIFT 2023",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 234,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0149",
+      "bil": "OPEL ASTRA 2010",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 355,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0150",
+      "bil": "BMW 3.0SA - 3.0S 1977",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 189,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0151",
+      "bil": "OPEL OMEGA 2.5 V6 GL 1994",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 232,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0152",
+      "bil": "FORD EXCURSION 2002",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 153,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0153",
+      "bil": "SAAB 9-5 2002",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 131,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0154",
+      "bil": "FORD EXPEDITION 4X4 2004",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 348,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0155",
+      "bil": "VW GOLF 2005",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 643,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0156",
+      "bil": "MERCEDES E 200 KOMPRESSOR 2006",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 395,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0157",
+      "bil": "TOYOTA AYGO 2007",
+      "frontruteKandidater": 4,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 571,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0158",
+      "bil": "SUBARU FORESTER 2008",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 239,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0159",
+      "bil": "VOLVO V70 2008",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 193,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0160",
+      "bil": "MITSUBISHI COLT 2009",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 157,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0161",
+      "bil": "FORD KUGA 2010",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 143,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0162",
+      "bil": "MINI COOPER 2009",
+      "frontruteKandidater": 8,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 249,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0163",
+      "bil": "AUDI AUDI A4 2011",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 406,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0164",
+      "bil": "FORD S-MAX 2011",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 396,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0165",
+      "bil": "AUDI AUDI A7 2011",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 681,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0166",
+      "bil": "FORD MONDEO 2011",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 217,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0167",
+      "bil": "VW TOURAN 2011",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 285,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0168",
+      "bil": "VW PASSAT 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 448,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0169",
+      "bil": "VW TIGUAN 2012",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 115,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0170",
+      "bil": "FIAT 500 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1332,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0171",
+      "bil": "VOLVO XC60 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 140,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0172",
+      "bil": "MERCEDES E 250 CDI 2010",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 165,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0173",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2014",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 120,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0174",
+      "bil": "SKODA OCTAVIA 2015",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1616,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0175",
+      "bil": "VW TRANSPORTER 2015",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 445,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0176",
+      "bil": "FORD MONDEO 2016",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 171,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0177",
+      "bil": "MERCEDES C 350 E 2016",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 222,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0178",
+      "bil": "PEUGEOT EXPERT TRAVELLER 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 180,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0179",
+      "bil": "FORD S-MAX 2017",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 350,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0180",
+      "bil": "BMW 530E IPERFORMANCE 2017",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 351,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0181",
+      "bil": "PEUGEOT 107 2010",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 367,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0182",
+      "bil": "FORD MUSTANG 2008",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 924,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0183",
+      "bil": "BMW 225XE IPERFORMANCE 2019",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 138,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0184",
+      "bil": "VOLVO XC90 T8 TWIN ENGINE 2020",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1045,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0185",
+      "bil": "VOLVO XC60 2021",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 281,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0186",
+      "bil": "VW MULTIVAN 2019",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1203,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0187",
+      "bil": "BMW - 1982",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 152,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0188",
+      "bil": "MERCEDES 380 SL 1980",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 224,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0189",
+      "bil": "VOLVO 240 1993",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 172,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0190",
+      "bil": "AUDI A4 1998",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 124,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0191",
+      "bil": "AUDI 80 QUATTRO 1994",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 205,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0192",
+      "bil": "HONDA HR-V 1999",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 172,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0193",
+      "bil": "AUDI A8 1996",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 243,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0194",
+      "bil": "BMW 325 XI 2002",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 774,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0195",
+      "bil": "JEEP - 2003",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 150,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0196",
+      "bil": "BMW 520I 2003",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 434,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0197",
+      "bil": "BMW X5 3.0D 2003",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 236,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0198",
+      "bil": "SAAB 9-5 2004",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 120,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0199",
+      "bil": "AUDI A8 2,5 TDI 2002",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 132,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0200",
+      "bil": "LAND ROVER RANGE ROVER 2004",
+      "frontruteKandidater": 17,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 407,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0201",
+      "bil": "BMW X3 2.0D 2004",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 203,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0202",
+      "bil": "VOLVO V70 2005",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 188,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0203",
+      "bil": "VOLVO S40 2005",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 223,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0204",
+      "bil": "TOYOTA YARIS VERSO 2005",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 306,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0205",
+      "bil": "TOYOTA COROLLA 2005",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 222,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0206",
+      "bil": "LAND ROVER RANGE ROVER SPORT 2005",
+      "frontruteKandidater": 17,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 311,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0207",
+      "bil": "SUZUKI GRAND VITARA 2005",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 163,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0208",
+      "bil": "LAND ROVER RANGE ROVER SPORT 2005",
+      "frontruteKandidater": 17,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 331,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0209",
+      "bil": "BMW 118I 2005",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 224,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0210",
+      "bil": "PORSCHE BOXSTER 2000",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 115,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0211",
+      "bil": "MERCEDES E 270 CDI 2003",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 347,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0212",
+      "bil": "VW GOLF 2006",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 709,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0213",
+      "bil": "AUDI A4 2006",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 391,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0214",
+      "bil": "MERCEDES R 320 CDI 4MATIC 2006",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 233,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0215",
+      "bil": "VOLVO V70XC 2003",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 166,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0216",
+      "bil": "VOLVO V70 2005",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 203,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0217",
+      "bil": "MERCEDES E 220 CDI 2005",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 350,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0218",
+      "bil": "NISSAN NISSAN MICRA        NISSANNENV 2007",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 170,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0219",
+      "bil": "PEUGEOT 307 2006",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 281,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0220",
+      "bil": "SUBARU IMPREZA 2007",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 297,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0221",
+      "bil": "NISSAN NISSAN PATROL       NISSANNENV 2007",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 194,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0222",
+      "bil": "BMW 525D 2005",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 373,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0223",
+      "bil": "BMW 530D 2004",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 391,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0224",
+      "bil": "VW GOLF 2008",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 643,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0225",
+      "bil": "MERCEDES C 220 CDI 2007",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 138,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0226",
+      "bil": "AUDI A6 2008",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 286,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0227",
+      "bil": "BMW 118D 2009",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 224,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0228",
+      "bil": "BMW 320D XDRIVE 2009",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 334,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0229",
+      "bil": "MERCEDES E 250 CDI 2009",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 439,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0230",
+      "bil": "FORD MONDEO 2009",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 263,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0231",
+      "bil": "CITROEN C4 2010",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 187,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0232",
+      "bil": "BMW X1 XDRIVE 20D 2009",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 609,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0233",
+      "bil": "AUDI AUDI A4 ALLROAD QUATTRO 2010",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 379,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0234",
+      "bil": "BMW 316I 2010",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 296,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0235",
+      "bil": "TOYOTA RAV4 2010",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 272,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0236",
+      "bil": "VW TOURAN 2010",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 135,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0237",
+      "bil": "ALFA ROMEO 159 SPORTWAGON 2007",
+      "frontruteKandidater": 1,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 210,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0238",
+      "bil": "AUDI A4 2008",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 477,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0239",
+      "bil": "BMW 320I 2007",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 315,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0240",
+      "bil": "MITSUBISHI PAJERO 2010",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 338,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0241",
+      "bil": "FIAT FIAT 500 2010",
+      "frontruteKandidater": 3,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 172,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0242",
+      "bil": "LAND ROVER DISCOVERY 4 2010",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 792,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0243",
+      "bil": "CITROEN C3 2011",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 284,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0244",
+      "bil": "TOYOTA YARIS 2010",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 212,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0245",
+      "bil": "VW TIGUAN 2010",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 126,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0246",
+      "bil": "BMW X5 3.0D 2007",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 525,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0247",
+      "bil": "BMW X5 XDRIVE30D 2010",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 363,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0248",
+      "bil": "VW GOLF 2011",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 469,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0249",
+      "bil": "BMW X3 XDRIVE20D 2011",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 448,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0250",
+      "bil": "VW PASSAT 2011",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 401,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0251",
+      "bil": "VW POLO 2011",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 130,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0252",
+      "bil": "BMW X5 3.0SD 2007",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 484,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0253",
+      "bil": "AUDI AUDI A3 2010",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 365,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0254",
+      "bil": "FORD S-MAX 2009",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 406,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0255",
+      "bil": "FORD FOCUS 2011",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 258,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0256",
+      "bil": "BMW 520D 2008",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 471,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0257",
+      "bil": "BMW 116I 2011",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 327,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0258",
+      "bil": "AUDI AUDI Q5 2011",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 181,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0259",
+      "bil": "VW CARAVELLE 2011",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 449,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0260",
+      "bil": "MERCEDES E 200 CDI 2006",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 368,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0261",
+      "bil": "BMW 520D 2011",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 254,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0262",
+      "bil": "SKODA FABIA 2011",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 131,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0263",
+      "bil": "VOLVO V70 2011",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 216,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0264",
+      "bil": "BMW X5 XDRIVE30D 2008",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 453,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0265",
+      "bil": "HONDA HONDA CR-V 2012",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 169,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0266",
+      "bil": "BMW X1 XDRIVE18D 2012",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 192,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0267",
+      "bil": "TOYOTA PRIUS 2012",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 134,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0268",
+      "bil": "VW TIGUAN 2012",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 110,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0269",
+      "bil": "TOYOTA TOYOTA AVENSIS 2012",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 396,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0270",
+      "bil": "BMW X5 XDRIVE30D 2009",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 371,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0271",
+      "bil": "BMW 320D 2009",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 366,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0272",
+      "bil": "SKODA OCTAVIA 2012",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1594,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0273",
+      "bil": "MITSUBISHI PAJERO 2007",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 360,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0274",
+      "bil": "BMW 116D 2011",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 370,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0275",
+      "bil": "AUDI AUDI Q7 2011",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 133,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0276",
+      "bil": "BMW 520D 2012",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 293,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0277",
+      "bil": "MINI COOPER D COUNTRYMAN ALL4 2012",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 148,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0278",
+      "bil": "VW GOLF 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 546,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0279",
+      "bil": "ALFA ROMEO ALFA GIULIETTA 2012",
+      "frontruteKandidater": 51,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 811,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0280",
+      "bil": "VW GOLF 2011",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 351,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0281",
+      "bil": "SUBARU XV 2012",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 151,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0282",
+      "bil": "VW CADDY 2012",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 245,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0283",
+      "bil": "FORD B-MAX 2012",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 415,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0284",
+      "bil": "AUDI A4 ALLROAD QUATTRO 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 509,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0285",
+      "bil": "VOLVO XC70 2012",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 131,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0286",
+      "bil": "FORD S-MAX 2011",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 462,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0287",
+      "bil": "BMW - 2012",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 139,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0288",
+      "bil": "AUDI AUDI A3 2012",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 228,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0289",
+      "bil": "BMW - 2013",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 120,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0290",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 199,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0291",
+      "bil": "VW PASSAT 2013",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 314,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0292",
+      "bil": "PEUGEOT 3008 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 180,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0293",
+      "bil": "VOLVO V70 2012",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 207,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0294",
+      "bil": "TOYOTA TOYOTA YARIS 2011",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 172,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0295",
+      "bil": "VW POLO 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 148,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0296",
+      "bil": "BMW X3 XDRIVE20D 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 508,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0297",
+      "bil": "BMW 520D 2010",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 306,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0298",
+      "bil": "BMW 320D 2013",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 425,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0299",
+      "bil": "VOLVO S80 2013",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 241,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0300",
+      "bil": "BMW 520D 2008",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 431,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0301",
+      "bil": "AUDI RS 4 AVANT 2012",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 254,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0302",
+      "bil": "CITROEN DS3 CABRIO 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 571,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0303",
+      "bil": "VW BEETLE 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 399,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0304",
+      "bil": "BMW X5 XDRIVE30D 2013",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 272,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0305",
+      "bil": "VW GOLF 2013",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 573,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0306",
+      "bil": "VOLVO XC60 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 149,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0307",
+      "bil": "BMW 520D 2012",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 267,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0308",
+      "bil": "BMW X5 XDRIVE30D 2012",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 278,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0309",
+      "bil": "HYUNDAI I20 2013",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 152,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0310",
+      "bil": "MERCEDES VITO 2014",
+      "frontruteKandidater": 5,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 236,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0311",
+      "bil": "BMW X3 XDRIVE20D 2013",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 401,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0312",
+      "bil": "JAGUAR LAND ROVER LIMITED DISCOVERY 2014",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 166,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0313",
+      "bil": "CITROEN C4 PICASSO 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 156,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0314",
+      "bil": "SKODA SUPERB 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1127,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0315",
+      "bil": "OPEL INSIGNIA SPORTS TOURER SW 2014",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 128,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0316",
+      "bil": "MINI COOPER D ALL4 2014",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 275,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0317",
+      "bil": "BMW X5 XDRIVE30D 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 170,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0318",
+      "bil": "TOYOTA SUPRA 1996",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 175,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0319",
+      "bil": "BMW 320D XDRIVE 2014",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 212,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0320",
+      "bil": "VW TOURAN 2014",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 220,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0321",
+      "bil": "AUDI A6 2009",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 285,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0322",
+      "bil": "FORD FOCUS 2014",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 226,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0323",
+      "bil": "MERCEDES 129 1992",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 170,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0324",
+      "bil": "VW POLO 2014",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 118,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0325",
+      "bil": "BMW 118I 2014",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 327,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0326",
+      "bil": "BMW X5 XDRIVE25D 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 177,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0327",
+      "bil": "BMW X5 XDRIVE30D 2011",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 278,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0328",
+      "bil": "VW GOLF 2014",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 650,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0329",
+      "bil": "MERCEDES E 200 CDI 2014",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 108,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0330",
+      "bil": "VOLVO XC70 2014",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 106,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0331",
+      "bil": "MERCEDES CLA 180 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 293,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0332",
+      "bil": "BMW X6 XDRIVE30D 2012",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 166,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0333",
+      "bil": "HONDA CIVIC TOURER 2015",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 123,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0334",
+      "bil": "MERCEDES E 300 BLUETEC HYBRID 2013",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 189,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0335",
+      "bil": "MINI COOPER D 2014",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 279,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0336",
+      "bil": "TOYOTA PRIUS PLUS 2015",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 467,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0337",
+      "bil": "SKODA OCTAVIA 2015",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1581,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0338",
+      "bil": "BMW 525D XDRIVE 2012",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 258,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0339",
+      "bil": "VW GOLF 2013",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 581,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0340",
+      "bil": "FORD FIESTA 2014",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1195,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0341",
+      "bil": "BMW X3 XDRIVE20D 2015",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 396,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0342",
+      "bil": "VW TIGUAN 2015",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 116,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0343",
+      "bil": "VOLVO XC60 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 379,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0344",
+      "bil": "BMW 520D XDRIVE 2015",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 243,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0345",
+      "bil": "SKODA OCTAVIA 2015",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1559,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0346",
+      "bil": "FORD MUSTANG 2015",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 912,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0347",
+      "bil": "AUDI A3 SPORTBACK E-TRON 2015",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 370,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0348",
+      "bil": "MERCEDES-AMG E 55 AMG 2003",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 151,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0349",
+      "bil": "BMW 318D XDRIVE 2015",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 194,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0350",
+      "bil": "TOYOTA AURIS 2015",
+      "frontruteKandidater": 8,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 1587,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0351",
+      "bil": "MINI COOPER SD 2016",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 365,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0352",
+      "bil": "VW PASSAT 2016",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 467,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0353",
+      "bil": "MERCEDES C 180 2016",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 229,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0354",
+      "bil": "BMW 225XE ACTIVE TOURER 2016",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 718,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0355",
+      "bil": "MINI COOPER 2016",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 261,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0356",
+      "bil": "AUDI A3 SPORTBACK E-TRON 2016",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 373,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0357",
+      "bil": "MERCEDES CLS 350 CDI 4MATIC 2013",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 307,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0358",
+      "bil": "MERCEDES C 350 E 2016",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 292,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0359",
+      "bil": "AUDI A4 AVANT 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 421,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0360",
+      "bil": "PORSCHE MACAN 2016",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 157,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0361",
+      "bil": "LEXUS NX300H 2016",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 146,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0362",
+      "bil": "BMW X5 M50D 2015",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 145,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0363",
+      "bil": "MERCEDES E 220 D 2016",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 168,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0364",
+      "bil": "VW TIGUAN 2016",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 107,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0365",
+      "bil": "MERCEDES GLA 200 D 4MATIC 2016",
+      "frontruteKandidater": 6,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 578,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0366",
+      "bil": "VW POLO 2016",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 153,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0367",
+      "bil": "VW PASSAT 2016",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 401,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0368",
+      "bil": "BMW X1 XDRIVE18D 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 320,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0369",
+      "bil": "BMW X5 XDRIVE40E IPERFORMANCE 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 149,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0370",
+      "bil": "BMW 318I 2017",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 204,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0371",
+      "bil": "JAGUAR JAGUAR XE 2017",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 264,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0372",
+      "bil": "LAND ROVER RANGE ROVER VELAR 2017",
+      "frontruteKandidater": 25,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 295,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0373",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2017",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 133,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0374",
+      "bil": "MERCEDES E 350 CDI 4MATIC 2010",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 179,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0375",
+      "bil": "AUDI A3 SPORTBACK 2017",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 341,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0376",
+      "bil": "VW PASSAT 2017",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 490,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0377",
+      "bil": "KIA OPTIMA 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 994,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0378",
+      "bil": "VOLVO XC60 2017",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 312,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0379",
+      "bil": "AUDI Q7 E-TRON 2017",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 193,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0380",
+      "bil": "BMW 530E IPERFORMANCE 2017",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 340,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0381",
+      "bil": "VOLVO V90 CROSS COUNTRY 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1622,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0382",
+      "bil": "SKODA KODIAQ 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 513,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0383",
+      "bil": "VW TIGUAN 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1145,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0384",
+      "bil": "PORSCHE CAYENNE S E-HYBRID 2017",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1084,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0385",
+      "bil": "VOLVO XC90 T8 TWIN ENGINE 2017",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1009,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0386",
+      "bil": "VOLVO XC60 T8 TWIN ENGINE 2017",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 324,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0387",
+      "bil": "VOLVO V90 CROSS COUNTRY 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1476,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0388",
+      "bil": "VOLVO S90 T8 TWIN ENGINE 2018",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 174,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0389",
+      "bil": "BMW M2 2018",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 189,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0390",
+      "bil": "FORD FOCUS 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 182,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0391",
+      "bil": "BMW 530E IPERFORMANCE 2017",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 325,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0392",
+      "bil": "BMW X5 XDRIVE40E IPERFORMANCE 2018",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 224,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0393",
+      "bil": "AUDI A3 SPORTBACK E TRON 2018",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 293,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0394",
+      "bil": "BMW 520D XDRIVE 2018",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 161,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0395",
+      "bil": "VW GOLF 2018",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 584,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0396",
+      "bil": "VOLVO XC60 T8 TWIN ENGINE 2018",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 365,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0397",
+      "bil": "LAND ROVER RANGE ROVER EVOQUE 2017",
+      "frontruteKandidater": 25,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 268,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0398",
+      "bil": "HONDA HR-V 2019",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 132,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0399",
+      "bil": "JAGUAR JAGUAR E-PACE 2019",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1356,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0400",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2018",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 121,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0401",
+      "bil": "BMW M 550D XDRIVE 2015",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 185,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0402",
+      "bil": "BMW M 550D XDRIVE 2012",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 166,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0403",
+      "bil": "VOLVO XC90 T8 TWIN ENGINE 2019",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 956,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0404",
+      "bil": "RENAULT CAPTUR 2019",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1176,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0405",
+      "bil": "CITROEN C4 CACTUS 2019",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1541,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0406",
+      "bil": "TOYOTA AURIS 2015",
+      "frontruteKandidater": 8,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 1551,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0407",
+      "bil": "BMW M2 COMPETITION 2019",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 132,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0408",
+      "bil": "CITROEN C4 CACTUS 2019",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1545,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0409",
+      "bil": "BMW 530E IPERFORMANCE 2018",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 153,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0410",
+      "bil": "LEXUS LEXUS LS500H 2019",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 184,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0411",
+      "bil": "CITROEN BERLINGO 2019",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1843,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0412",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2019",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 111,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0413",
+      "bil": "VOLVO XC60 T8 TWIN ENGINE 2019",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 278,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0414",
+      "bil": "BMW X3 XDRIVE30E 2020",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1689,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0415",
+      "bil": "MERCEDES AMG A 45 S 2020",
+      "frontruteKandidater": 6,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 208,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0416",
+      "bil": "VOLVO XC40 T5 TWIN ENGINE 2020",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 301,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0417",
+      "bil": "VOLVO XC90 T8 TWIN ENGINE 2020",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1057,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0418",
+      "bil": "MERCEDES E 300 E 2020",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 212,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0419",
+      "bil": "VW POLO 2020",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 297,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0420",
+      "bil": "BMW X6 XDRIVE35I 2018",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 897,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0421",
+      "bil": "ASTON MARTIN DB9 2005",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 465,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0422",
+      "bil": "BMW X1 XDRIVE25E 2020",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1078,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0423",
+      "bil": "VOLVO V90 CROSS COUNTRY 2020",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1533,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0424",
+      "bil": "PORSCHE 718 CAYMAN GT4 2021",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 116,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0425",
+      "bil": "PORSCHE 911 GT3 2021",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 222,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0426",
+      "bil": "TOYOTA TOYOTA COROLLA 2021",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 162,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0427",
+      "bil": "PORSCHE TAYCAN 4 2021",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 109,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0428",
+      "bil": "TOYOTA YARIS 2021",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 285,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0429",
+      "bil": "AUDI RS 3 SPORTBACK 2019",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1511,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0430",
+      "bil": "VOLVO XC90 2022",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1022,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0431",
+      "bil": "VOLVO XC60 2022",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 171,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0432",
+      "bil": "VOLVO V60 2022",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 121,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0433",
+      "bil": "TOYOTA TOYOTA C-HR 2023",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 276,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0434",
+      "bil": "MERCEDES-AMG C 32 AMG 2002",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 143,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0435",
+      "bil": "BMW X1 XDRIVE30E 2023",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 187,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0436",
+      "bil": "TOYOTA TOYOTA RAV4 2024",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 183,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0437",
+      "bil": "BMW I4 M50 XDRIVE 2024",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 168,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0438",
+      "bil": "VOLVO XC90 2024",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 892,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0439",
+      "bil": "VOLVO XC60 2025",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 200,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0440",
+      "bil": "XPENG G9 2025",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 226,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0441",
+      "bil": "BMW X3 XDRIVE20D 2011",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 418,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0442",
+      "bil": "OPEL MANTA 2.0S BERLINETT 1982",
+      "frontruteKandidater": 4,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 189,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0443",
+      "bil": "BMW 320 I 1985",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 129,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0444",
+      "bil": "TOYOTA STARLET 1998",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 191,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0445",
+      "bil": "MERCEDES E 320 2003",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 376,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0446",
+      "bil": "NISSAN NISSAN X-TRAIL      NISSANNENV 2006",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 118,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0447",
+      "bil": "SUZUKI GRAND VITARA 2003",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 598,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0448",
+      "bil": "VW GOLF 2007",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 454,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0449",
+      "bil": "TOYOTA AURIS 2007",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 782,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0450",
+      "bil": "MERCEDES C 200 CDI 2008",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 139,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0451",
+      "bil": "MITSUBISHI OUTLANDER 2008",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 163,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0452",
+      "bil": "SUZUKI SX4 2010",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 131,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0453",
+      "bil": "TOYOTA PRIUS 2007",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 574,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0454",
+      "bil": "CITROEN C4 PICASSO 2010",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 413,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0455",
+      "bil": "VW GOLF 2011",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 348,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0456",
+      "bil": "PEUGEOT EXPERT 2011",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 189,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0457",
+      "bil": "VOLVO V50 2011",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 184,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0458",
+      "bil": "PEUGEOT 5008 2011",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 181,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0459",
+      "bil": "SUZUKI GRAND VITARA 2012",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 159,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0460",
+      "bil": "PEUGEOT PARTNER 2012",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 397,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0461",
+      "bil": "MERCEDES E 220 CDI 2012",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 169,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0462",
+      "bil": "SUBARU FORESTER 2013",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 190,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0463",
+      "bil": "VW UP! 2013",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 749,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0464",
+      "bil": "PEUGEOT 5008 2014",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 191,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0465",
+      "bil": "VW SHARAN 2011",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 296,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0466",
+      "bil": "TOYOTA RA4A 2014",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 158,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0467",
+      "bil": "MERCEDES C 180 2012",
+      "frontruteKandidater": 4,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 174,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0468",
+      "bil": "FORD FOCUS 2014",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 300,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0469",
+      "bil": "VW GOLF 2014",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 640,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0470",
+      "bil": "VW GOLF 2014",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 649,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0471",
+      "bil": "FORD KUGA 2014",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 283,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0472",
+      "bil": "VW GOLF 2014",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 663,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0473",
+      "bil": "BMW 320D XDRIVE 2015",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 209,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0474",
+      "bil": "SUZUKI VITARA 2016",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 231,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0475",
+      "bil": "SUZUKI SWIFT 2016",
+      "frontruteKandidater": 3,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 1589,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0476",
+      "bil": "FORD MONDEO 2016",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 165,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0477",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2016",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 129,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0478",
+      "bil": "MERCEDES A 180 2017",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 223,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0479",
+      "bil": "JEEP CHEROKEE 2018",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 243,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0480",
+      "bil": "MERCEDES C 350 E 2018",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 248,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0481",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2017",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 108,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0482",
+      "bil": "PEUGEOT 5008 2018",
+      "frontruteKandidater": 5,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 360,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0483",
+      "bil": "CITROEN C4 CACTUS 2019",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1596,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0484",
+      "bil": "KIA PROCEED 2019",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 119,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0485",
+      "bil": "PEUGEOT 2008 2019",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 837,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0486",
+      "bil": "KIA OPTIMA 2019",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 114,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0487",
+      "bil": "BMW X1 XDRIVE25E 2020",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1211,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0488",
+      "bil": "VOLVO XC40 2020",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 302,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0489",
+      "bil": "KIA NIRO 2021",
+      "frontruteKandidater": 1,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 430,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0490",
+      "bil": "CHEVROLET CORVAIR MONZA 600 1964",
+      "frontruteKandidater": 0,
+      "utfall": "FALLBACK",
+      "grunn": null,
+      "ms": 164,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0491",
+      "bil": "MERCEDES EQC 400 4MATIC 2022",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 361,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0492",
+      "bil": "SKODA SUPERB 2012",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 1197,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0493",
+      "bil": "TOYOTA TOYOTA COROLLA 2023",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 251,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0494",
+      "bil": "TOYOTA TOYOTA COROLLA 2025",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 248,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0495",
+      "bil": "VW CARAVELLE C 1986",
+      "frontruteKandidater": 2,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 159,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0496",
+      "bil": "CHRYSLER NEON 1998",
+      "frontruteKandidater": 1,
+      "utfall": "PINPOINT",
+      "grunn": null,
+      "ms": 143,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0497",
+      "bil": "VOLVO XC90 2005",
+      "frontruteKandidater": 3,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 230,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0498",
+      "bil": "VOLVO V70 2007",
+      "frontruteKandidater": 4,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 363,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0499",
+      "bil": "VW GOLF 2009",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 494,
+      "feil": null
+    },
+    {
+      "test_id": "FBG-L-0500",
+      "bil": "TOYOTA TOYOTA AVENSIS 2010",
+      "frontruteKandidater": 6,
+      "utfall": "VERIFY",
+      "grunn": null,
+      "ms": 516,
+      "feil": null
+    }
+  ]
+}

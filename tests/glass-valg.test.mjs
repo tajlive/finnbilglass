@@ -327,3 +327,31 @@ test('regresjon: SENSORGEL er tilbehør, ikke glass', () => {
   assert.equal(kandidater.length, 1, 'bare frontruten skal stå igjen');
   assert.equal(kandidater[0].varenr, '3182AGN');
 });
+
+// ── Én felles tilbehørsklassifisering ───────────────────────────────────
+// SENSORGEL og BUNNLIST slapp gjennom fordi kandidatsøket og produkttype()
+// hadde hver sin ordliste. Nå delegerer begge til erTilbehorVare().
+import { erTilbehorVare } from '../src/glass-posisjon.ts';
+
+test('tilbehør: sensorgel, sensortape, bunnlist og pyntelist stoppes', () => {
+  for (const navn of [
+    'VOLVO XC90 5D SUV 12-  SENSORGEL',
+    'VOLVO XC90 5D SUV 12-  SENSORTAPE',
+    'TOYOTA RAV 4 2019-   BUNNLIST',
+    'FORD S-MAX 06-  PYNTELIST KIT  V+H',
+    'BMW XM 5D SUV 23-  WS DECOR LIST',
+  ]) {
+    assert.equal(erTilbehorVare(navn, '9999XX'), true, `skal være tilbehør: ${navn}`);
+  }
+});
+
+test('tilbehør: ekte glass med sensor-/listord i beskrivelsen stoppes ikke', () => {
+  for (const navn of [
+    'TOYOTA RAV 4 22- FR AKU LDW',
+    'VOLVO XC90 5D SUV 12- FRONTRUTE SENSOR',
+    'BMW 3ER 4T F30 12- FRONTRUTE HUD KAMERA',
+    'VW GOLF VII 5D 13- BAKRUTE OPPVARMET',
+  ]) {
+    assert.equal(erTilbehorVare(navn, '1234GN'), false, `skal være glass: ${navn}`);
+  }
+});

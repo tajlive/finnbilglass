@@ -1,0 +1,521 @@
+{
+  "antall": 73,
+  "klasser": {
+    "MERKE_IKKE_I_KATALOGEN": 3,
+    "MODELLFAMILIE_IKKE_STOTTET": 69,
+    "FILTRERT_BORT": 1
+  },
+  "detalj": [
+    {
+      "test_id": "FBG-T-0077",
+      "bil": "Volkswagen Caravelle 2000",
+      "klasse": "MERKE_IKKE_I_KATALOGEN",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0067",
+      "bil": "Volkswagen Andre 2010",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0083",
+      "bil": "Volkswagen Golf Plus 2011",
+      "klasse": "MERKE_IKKE_I_KATALOGEN",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0084",
+      "bil": "Volkswagen Golf Sportsvan 2014",
+      "klasse": "MERKE_IKKE_I_KATALOGEN",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0016",
+      "bil": "Kia Ceed 2014",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 718,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0068",
+      "bil": "Volkswagen Andre 2015",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0033",
+      "bil": "Polestar 2 2022",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 33,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0008",
+      "bil": "BMW I7 XDRIVE60 2022",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-T-0011",
+      "bil": "Cupra Born 2022",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 32,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0096",
+      "bil": "Volkswagen ID.5 2023",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0097",
+      "bil": "Volkswagen ID.5 2023",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0098",
+      "bil": "Volkswagen ID.7 2025",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0099",
+      "bil": "Volkswagen ID.7 2025",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0048",
+      "bil": "Toyota HiLux 2025",
+      "klasse": "FILTRERT_BORT",
+      "merkerader": 1753,
+      "familierader": 2
+    },
+    {
+      "test_id": "FBG-T-0020",
+      "bil": "Lotus Eletre 2026",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 18,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-T-0087",
+      "bil": "Volkswagen ID. Buzz 2026",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0001",
+      "bil": "AMERICAN MOTORS CJ-5 2 DØRERS 1974",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0002",
+      "bil": "CHEVROLET CAPRICE 1966",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 741,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0018",
+      "bil": "FAW EHS9 2022",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0029",
+      "bil": "MERCEDES B 180 CDI 2014",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0038",
+      "bil": "BMW M550D XDRIVE 2018",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0046",
+      "bil": "BMW I5 XDRIVE40 2025",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0047",
+      "bil": "BMW 520D 2008",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0057",
+      "bil": "FORD EDGE 2016",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 2118,
+      "familierader": 271
+    },
+    {
+      "test_id": "FBG-L-0079",
+      "bil": "TOYOTA HIACE 4WD 2003",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1753,
+      "familierader": 367
+    },
+    {
+      "test_id": "FBG-L-0082",
+      "bil": "MERCEDES B 180 CDI 2006",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0091",
+      "bil": "MERCEDES C 180 CDI 2012",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0096",
+      "bil": "MERCEDES E 350 CDI 4MATIC 2010",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0124",
+      "bil": "MERCEDES S 350 2006",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0129",
+      "bil": "SKODA CITIGO 2012",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 510,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0150",
+      "bil": "BMW 3.0SA - 3.0S 1977",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0153",
+      "bil": "SAAB 9-5 2002",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 175,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0172",
+      "bil": "MERCEDES E 250 CDI 2010",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0180",
+      "bil": "BMW 530E IPERFORMANCE 2017",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0181",
+      "bil": "PEUGEOT 107 2010",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 933,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0182",
+      "bil": "FORD MUSTANG 2008",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 2118,
+      "familierader": 271
+    },
+    {
+      "test_id": "FBG-L-0187",
+      "bil": "BMW - 1982",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0195",
+      "bil": "JEEP - 2003",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 343,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0198",
+      "bil": "SAAB 9-5 2004",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 175,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0215",
+      "bil": "VOLVO V70XC 2003",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 790,
+      "familierader": 68
+    },
+    {
+      "test_id": "FBG-L-0232",
+      "bil": "BMW X1 XDRIVE 20D 2009",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0256",
+      "bil": "BMW 520D 2008",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0261",
+      "bil": "BMW 520D 2011",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0276",
+      "bil": "BMW 520D 2012",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0287",
+      "bil": "BMW - 2012",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0289",
+      "bil": "BMW - 2013",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0297",
+      "bil": "BMW 520D 2010",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0300",
+      "bil": "BMW 520D 2008",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0307",
+      "bil": "BMW 520D 2012",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0312",
+      "bil": "JAGUAR LAND ROVER LIMITED DISCOVERY 2014",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0323",
+      "bil": "MERCEDES 129 1992",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0334",
+      "bil": "MERCEDES E 300 BLUETEC HYBRID 2013",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0338",
+      "bil": "BMW 525D XDRIVE 2012",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0344",
+      "bil": "BMW 520D XDRIVE 2015",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0346",
+      "bil": "FORD MUSTANG 2015",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 2118,
+      "familierader": 271
+    },
+    {
+      "test_id": "FBG-L-0348",
+      "bil": "MERCEDES-AMG E 55 AMG 2003",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0361",
+      "bil": "LEXUS NX300H 2016",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 335,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0374",
+      "bil": "MERCEDES E 350 CDI 4MATIC 2010",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0380",
+      "bil": "BMW 530E IPERFORMANCE 2017",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0389",
+      "bil": "BMW M2 2018",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0391",
+      "bil": "BMW 530E IPERFORMANCE 2017",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0394",
+      "bil": "BMW 520D XDRIVE 2018",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0401",
+      "bil": "BMW M 550D XDRIVE 2015",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0402",
+      "bil": "BMW M 550D XDRIVE 2012",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0409",
+      "bil": "BMW 530E IPERFORMANCE 2018",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1554,
+      "familierader": 158
+    },
+    {
+      "test_id": "FBG-L-0425",
+      "bil": "PORSCHE 911 GT3 2021",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 451,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0434",
+      "bil": "MERCEDES-AMG C 32 AMG 2002",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 0,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0440",
+      "bil": "XPENG G9 2025",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 11,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0447",
+      "bil": "SUZUKI GRAND VITARA 2003",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 383,
+      "familierader": 0
+    },
+    {
+      "test_id": "FBG-L-0450",
+      "bil": "MERCEDES C 200 CDI 2008",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0461",
+      "bil": "MERCEDES E 220 CDI 2012",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1934,
+      "familierader": 310
+    },
+    {
+      "test_id": "FBG-L-0466",
+      "bil": "TOYOTA RA4A 2014",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 1753,
+      "familierader": 367
+    },
+    {
+      "test_id": "FBG-L-0490",
+      "bil": "CHEVROLET CORVAIR MONZA 600 1964",
+      "klasse": "MODELLFAMILIE_IKKE_STOTTET",
+      "merkerader": 741,
+      "familierader": 0
+    }
+  ]
+}

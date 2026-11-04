@@ -13,7 +13,7 @@
  *   - `ukjent`     : minst ett felt er ukjent → kan gå videre, men lagres ALDRI
  *                    som bekreftet passform
  */
-import { klassifiserGlass, erListeRad } from './glass-posisjon.js';
+import { klassifiserGlass, erTilbehorVare } from './glass-posisjon.js';
 import { kropperIRad } from './fitment-v1/catalogue-candidates.js';
 import { posisjonFeltVerdier, vurderFelt } from './glass-kandidat-vurdering.js';
 
@@ -26,8 +26,8 @@ export type Salgsenhet = 'par' | 'sett' | 'ukjent';
  */
 export function produkttype(varenavn: string | null | undefined, varenr: string | null | undefined): Produkttype {
   const navn = String(varenavn ?? '').toUpperCase();
-  if (/PYNTELIST|PYLIST|YTTERLIST|INNRE LIST|LISTE?\b|KLIPS|PAKNING|GUMMILIST|SENSORGEL|SENSORTAPE|LIM\b/.test(navn)) return 'list';
-  if (erListeRad(varenavn, varenr)) return 'list';
+  // Samme regel som kandidatsøket — ingen egen ordliste her.
+  if (erTilbehorVare(varenavn, varenr)) return 'list';
   if (/VINDUVISKER|VISKERBLAD|TILBEHØR|TILBEHOR/.test(navn)) return 'tilbehor';
   return 'glass';
 }
