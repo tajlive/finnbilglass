@@ -9,15 +9,43 @@
 
 | Spørsmål | Svar |
 |---|---|
-| Hva hentes | `tomarnejensen/finnbilglass-price-import` — Glavista-produktsider (eurokode, typekode, mål, utstyr, EUR-veiledningspris) |
+| Actor | `tomarnejensen/finnbilglass-price-import` (Task `efh6cQo6pYdYdBX8Y`) |
+| Hva hentes | **auto-glass.no** — `/varer/nettbutikk/autoglass/`, forhandlerlogin på `/min-konto/` (`finnbilglass-price-import/src/main.js:10-11,30,98`). Ikke Glavista. |
+| Modus | `typekodeOnly=true` gir **kun varenr + typekode**; pris- og lagerfelt settes til `null`/`UNKNOWN` (`src/extract.js:68,179`, `src/main.js:432,474`) |
 | Siste kjente vellykkede kjøring | 2026-10-31: **50/50 produkter**, 50 unike eurokoder, idempotent re-import (`inserted=0, updated=50`) — dokumentert i `docs/apify-catalog-staging-results-2026-10-31.md` |
 | Testkjøring etterpå | run `sarEkPbes0rjlcg3A`, build 1.0.18, 5/5 produkter, **$0,0023** |
 | Hvor dataene ligger | **Kun i Apify-datasettene (sky) + dokumentasjon.** `apify_catalog_products` finnes **ikke** i produksjons-D1 (76 tabeller) eller staging-D1 (67 tabeller) — tabellen ble aldri migrert inn i de kjørende basene |
 | Automatisert? | Nei. Actor, Task (`efh6cQo6pYdYdBX8Y`) og `scripts/apify-automation.mjs` finnes, men det er **ingen cron/schedule** — hver kjøring og import er manuell |
 | Kostnad | Siste kjente: **$0,0023** for 5 produkter. Full 92-siders discovery er ikke kjørt; kostnad ikke målt |
-| Blokkering | **Apify-tokenet er utløpt** (`auth.json`: `expiresAt 2026-11-01T12:25Z`, OAuth2-refresh gyldig til 2026-12-31). API svarer `user-or-token-not-found`, `apify-cli info` henger på refresh. Krever at Tom kjører `apify login` én gang |
+| Blokkering | Undersøkt 2026-11-04, fire veier: (1) **ingen Apify-connector** i Hermes (`manage_connections` → bare `cloudflare_mcp` er tilkoblet); (2) anonym API → **404** («Actor was not found or access denied»); (3) lagret OAuth-token (`~/.apify/auth.json`, `expiresAt 2026-11-01T12:25Z`) → **401**; (4) refresh-token i keychain kunne ikke leses som gyldig verdi, og OAuth-refresh svarte `invalid_request: refresh_token Too small`. **Ingen av veiene gir kjøretilgang fra Hermes.** |
 
-**Viktig prinsipp holdt:** ingen Glavista-EUR-pris er skrevet inn som norsk kundepris. `apify_catalog_products.pris` er NOK-feltet og står `NULL`; EUR-kilden ligger i egne felt. Kundeprisen kommer fortsatt kun fra XLS-listepris × 0,25 × 1,25.
+**Konsekvens:** piloten kan ikke startes fra Hermes uten at én av disse er på plass: `npx apify-cli login` (interaktivt), eller et API-token lesbart for meg (f.eks. BWS `APIFY_TOKEN`). Selve kjøringen er ellers ferdig tilrettelagt.
+
+**To pipelines som IKKE må blandes (rettet 2026-11-04):**
+
+| Pipeline | Kilde | Actor | Utdata | Importvei |
+|---|---|---|---|---|
+| Auto-Glass typekode | `auto-glass.no` (login) | `finnbilglass-price-import` | varenr + typekode, **ingen priser** | `glass_typekode` via `scripts/apify-typekode-import.mjs` |
+| Glavista katalog | `glavista.com` sitemap | `finnbilglass-catalog` (`.actor/actor.json`, `actor-catalog.mjs`) | eurokode, attributter, EUR-veil. | `scripts/apify-catalog-adapter.ts` (`source: apify-glavista`) |
+
+**Funn: Auto-Glass-typekoden passer IKKE `apify-catalog-adapter.ts`.** Adapteren krever Glavista-felter (`glavistaNr`, `pris_eur`, `brand_title`, `category_string`) og tagger `source: 'apify-glavista'`. Auto-Glass-aktøren gir `sku`/`varenr` + `typeCodeRaw`/`typeCodeSource`. Derfor er det laget en egen mapper: `scripts/apify-typekode-import.mjs` (validert, se under).
+
+**Viktig prinsipp holdt:** ingen EUR-pris er eller skal skrives inn som norsk kundepris. I typekode-modus finnes ingen prisfelt; kundeprisen kommer kun fra XLS-listepris × 0,25 × 1,25.
+
+### Klar for kjøring: typekode-mapper med validering
+
+`scripts/apify-typekode-import.mjs` validerer et Apify-datasett før noe skrives:
+
+| Kontroll | Resultat på syntetisk fixture |
+|---|---|
+| Manglende varenr | avvist (rad 3) |
+| Manglende typekode | avvist (rad 4) |
+| Prisfelt i typekode-datasett | avvist (rad 5: `pris`) |
+| Duplikat varenr, lik typekode | slått sammen (6 → 2 rader) |
+| Samme varenr, ulik typekode | rapportert som konflikt, ikke overskrevet (test 2) |
+| Utdata | idempotent SQL mot `glass_typekode` (varenr PK) |
+
+Merk: `glass_typekode` finnes i **staging** (0047), ikke i produksjon. Import går derfor til staging til 0047 er godkjent.
 
 ## 2. Design — rettet og publisert
 
