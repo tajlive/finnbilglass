@@ -173,3 +173,21 @@ Begge tall er riktige, men måler forskjellige ting:
 | 4 | ~~Fraktflyt~~ **AVGJORT**: leverandøren sender direkte (alternativ A) | Mybring ikke nødvendig |
 | 5 | ~~Godkjenne 0050~~ **AVVENT** (Tom-valg 4C) — venter på fakturaprogram | Ikke nødvendig for leverandørdirekte flyt |
 | 6 | ~~Supportadresse~~ **AVGJORT**: adressen mottar e-post; varsler fortsatt til Gmail (alternativ C) | — |
+
+---
+
+## Beslutning 2026-11-04: XLS er eneste prisgrunnlag
+
+| Regel | Status |
+|---|---|
+| Prisgrunnlag = XLS-listepris eks. mva | ✅ eneste kilde; `src/pricing/nok-prising.ts` |
+| Regel `× 0,25 × 1,25` (= × 0,3125), avrundet til øre, merket estimat | ✅ uendret |
+| Manglende/ugyldig pris → «Pris på forespørsel» | ✅ `nok-prising.ts:57`, `frontrute-view.js:99` |
+| Automatisk prisoppslag mot auto-glass.no | ❌ finnes ikke — 0 kjøretidskall (kun kommentarer/proveniens i koden) |
+| Scraping for prisoppdatering | ❌ ikke startet, ikke planlagt |
+| Apify kun ved konkrete mangler i produktdata | ✅ dokumentert i skill-referanse `prisgrunnlag-og-apify-grenser.md` |
+| Manuell kontroll av glass, pris og frakt før tilbud | ✅ kundeteksten sier dette; innsendt forespørsel = ikke bestilling |
+
+**Målt etterlevelse mot produksjons-D1 (2026-11-04):** 30 937 rader · **26 703** med positiv pris · **4 234** uten pris · faktor 0,3125 · **0 avvik** i hele katalogen. Samme resultat i staging (`scripts/pris-invariant-sjekk.mjs`, exit 0).
+
+**Ingen kodeendring nødvendig** — dagens oppførsel er allerede den besluttede. Endringen er dokumentasjon og låsing av regelen, ikke ny logikk.
