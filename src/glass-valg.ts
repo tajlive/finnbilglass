@@ -212,14 +212,35 @@ export interface ValgTreInndata {
   kandidater: CatalogueCandidate[];
   /** Dokumentert rattplassering for bilen. Utelates → UKJENT (aldri antatt). */
   styring?: Kjorestyring | null;
+  /**
+   * Dokumentert karosseri fra biloppslaget (f.eks. «estate» fra SVV/vognkort).
+   * Når det finnes, spørres det ALDRI om karosseri: en dokumentert stasjonsvogn
+   * skal ikke måtte velge mellom sedan, cabriolet og coupé. Kandidater som
+   * uttrykkelig dokumenterer et annet karosseri forkastes; ukjente beholdes.
+   * Utelates feltet → karosseri er ukjent og spørres bare når svaret skiller.
+   */
+  dokumentertKropp?: string | null;
 }
 
-export function byggValgTre({ kandidater, styring }: ValgTreInndata): ValgTre {
+export function byggValgTre({ kandidater, styring, dokumentertKropp }: ValgTreInndata): ValgTre {
   const kjoring: Kjorestyring = styring === 'LHD' || styring === 'RHD' ? styring : 'UKJENT';
+  // Bare kjente kundeverdier godtas; et ukjent ord skal ikke bli et autosvar.
+  const kropp = dokumentertKropp && Object.hasOwn(KROPP_TITTEL, dokumentertKropp) ? dokumentertKropp : null;
+
+  // Dokumentert karosseri fjerner kandidater som uttrykkelig er en annen karosseritype.
+  // Tømmer filtreringen listen, beholdes alt (samme regel som resten av kjeden).
+  let brukte = kandidater;
+  if (kropp) {
+    const passer = kandidater.filter((c) => {
+      const { verdier } = feltVerdier(c, 'body');
+      return !verdier || verdier.length === 0 || verdier.includes(kropp);
+    });
+    if (passer.length) brukte = passer;
+  }
 
   const perKind = new Map<ValgKind, CatalogueCandidate[]>();
   let ukjentPlassering = 0;
-  for (const c of kandidater) {
+  for (const c of brukte) {
     const kind = KIND_AV_TYPE[c.posisjon.type];
     if (!kind) { ukjentPlassering += 1; continue; }
     const liste = perKind.get(kind) ?? [];
@@ -231,12 +252,13 @@ export function byggValgTre({ kandidater, styring }: ValgTreInndata): ValgTre {
   for (const kind of Object.keys(TITTEL) as ValgKind[]) {
     const liste = perKind.get(kind);
     if (!liste || !liste.length) continue;
-    const feltrekke = FELTREKKE[kind];
+    // Dokumentert karosseri er ikke et spørsmål — det er et faktum om bilen.
+    const feltrekke = kropp ? FELTREKKE[kind].filter((f) => f !== 'body') : FELTREKKE[kind];
     typer.push({
       kind,
       tittel: TITTEL[kind],
       antall: liste.length,
-      automatisk: enigeFelt(liste, feltrekke),
+      automatisk: { ...enigeFelt(liste, feltrekke), ...(kropp ? { body: kropp } : {}) },
       barn: byggNivaa(liste, feltrekke, 0, kjoring),
     });
   }
@@ -248,7 +270,7 @@ export function byggValgTre({ kandidater, styring }: ValgTreInndata): ValgTre {
     typer.unshift({ kind: 'windshield', tittel: TITTEL.windshield, antall: 0, automatisk: {}, barn: [] });
   }
 
-  const antall = kandidater.length;
+  const antall = brukte.length;
   const dekning: Dekning = antall === 0 ? 'INGEN' : antall < 4 ? 'TYNN' : 'GOD';
 
   let melding: string;

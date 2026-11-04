@@ -171,6 +171,72 @@ test('SED+STV bevares som konkret mengde: begge karosserier tilbys', () => {
   assert.deepEqual(rear.barn.map((n) => n.tittel).sort(), ['Sedan', 'Stasjonsvogn']);
 });
 
+test('dokumentert karosseri (stasjonsvogn) gir ingen karosserispørsmål', () => {
+  const tre = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'STV', varenavn: 'VOLVO V70 4D STV 08-', type: 'bakrute' }),
+      kand({ varenr: 'SED', varenavn: 'VOLVO V70 4D SED 08-', type: 'bakrute' }),
+      kand({ varenr: 'CAB', varenavn: 'VOLVO V70 4D CAB 08-', type: 'bakrute' }),
+    ],
+    dokumentertKropp: 'estate',
+  });
+  const rear = tre.typer.find((t) => t.kind === 'rear');
+  // Kjent stasjonsvogn: kunden skal aldri velge mellom sedan/cabriolet/coupé.
+  assert.deepEqual(rear.barn, [], 'ingen karosserispørsmål når biloppslaget dokumenterer karosseri');
+  assert.equal(rear.automatisk.body, 'estate');
+  // Sedan- og cabriolet-raden er uttrykkelig en annen karosseritype og skal bort.
+  assert.equal(rear.antall, 1, 'bare stasjonsvogn-raden står igjen');
+});
+
+test('dokumentert karosseri forkaster aldri en rad som er ukjent', () => {
+  const tre = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'UKJENT', varenavn: 'VOLVO V70 4D 08-', type: 'bakrute' }),
+      kand({ varenr: 'SED', varenavn: 'VOLVO V70 4D SED 08-', type: 'bakrute' }),
+    ],
+    dokumentertKropp: 'estate',
+  });
+  const rear = tre.typer.find((t) => t.kind === 'rear');
+  assert.equal(rear.antall, 1, 'ukjent rad beholdes — den kan være riktig');
+  assert.deepEqual(rear.barn, []);
+  assert.equal(rear.automatisk.body, 'estate');
+});
+
+test('ukjent karosseri: spørsmålet kommer bare når det skiller kandidatene', () => {
+  const likt = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'A', varenavn: 'VOLVO V70 4D STV 08-', type: 'bakrute' }),
+      kand({ varenr: 'B', varenavn: 'VOLVO V70 4D STV 09-', type: 'bakrute' }),
+    ],
+  });
+  assert.deepEqual(likt.typer.find((t) => t.kind === 'rear').barn, [], 'likt karosseri skiller ingenting');
+
+  const ulikt = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'A', varenavn: 'VOLVO V70 4D STV 08-', type: 'bakrute' }),
+      kand({ varenr: 'B', varenavn: 'VOLVO V70 4D SED 08-', type: 'bakrute' }),
+    ],
+  });
+  assert.equal(ulikt.typer.find((t) => t.kind === 'rear').barn.length, 2, 'ulikt karosseri skiller');
+});
+
+test('ukjent rad dokumenterer ikke bakre/venstre eller bakre/høyre', () => {
+  // Regresjon: fremre+venstre og bakre+ukjent. Den ukjente raden skal beholdes
+  // for kontroll, men aldri skape en dokumentert sidekombinasjon for bakre dør.
+  const tre = byggValgTre({
+    kandidater: [
+      kand({ varenr: 'FV', side: 'venstre', dorLedd: 'fremre' }),
+      kand({ varenr: 'BU', side: null, dorLedd: 'bakre' }),
+    ],
+  });
+  const dor = tre.typer.find((t) => t.kind === 'door');
+  const bakre = dor.barn.find((n) => n.verdi === 'rear');
+  assert.ok(bakre, 'bakre dør skal finnes som valg');
+  assert.equal(bakre.antall, 1, 'den ukjente raden er med, men som ukjent');
+  assert.deepEqual(bakre.barn, [], 'ingen sidespørsmål: ukjent side dokumenterer verken venstre eller høyre');
+  assert.equal(bakre.automatisk.side, undefined, 'ukjent side skal aldri autoutfylles');
+});
+
 test('byggSelection er gyldig i kontrakten for alle rutetyper', () => {
   for (const kind of ['windshield', 'door', 'side', 'rear', 'ventil', 'roof']) {
     const selection = byggSelection(kind, {});
