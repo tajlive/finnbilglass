@@ -533,7 +533,9 @@
     // kandidatliste hengende igjen fra forrige søk (målt 2026-11-04).
     frontruteSvar = {};
     valgteGlass = null;
+    eksplisittVariantId = null;
     state.frontruteKandidater = [];
+    state.frontruteSporsmaal = [];
     state.profil = {};
     $('inquiry-form').classList.add('hidden');
     $('inquiry-bekreftet').classList.add('hidden');
@@ -793,6 +795,10 @@
   var valgSti = [];        // kundens valg: [{felt, verdi, tittel}]
   var valgBak = [];        // sti-lengde før hvert kundesteg (for «Tilbake»)
   var valgteGlass = null;  // valgt kandidat fra resultatlisten
+  // Kundens EKSPLISITTE valg («Velg dette glasset») når flere varianter vises.
+  // Auto-valg brukes bare når nøyaktig én kandidat gjenstår; et eksplisitt valg
+  // skal ikke overstyres så lenge varianten fortsatt er blant kandidatene.
+  var eksplisittVariantId = null;
 
   var FELT_SPORSMAL = {
     door: 'Hvilken dørrute gjelder det?',
@@ -1465,22 +1471,26 @@
 
     var vist = V.filtrerPaaSvar(kandidater, frontruteSvar);
     var liste = vist.kandidater;
-    // Én gjenstående kandidat = kundens valg. Da skal varianten (varenr + full
-    // eurokode) følge med i oppsummering, innsending og sak — ellers ville
-    // «samme glass» kunne peke på en annen eurokode under samme varenr.
-    if (liste && liste.length === 1) {
-      valgteGlass = {
-        varenr: liste[0].varenr || '',
-        varenavn: liste[0].varenavn || '',
-        // Eurokoden vises aldri til kunden (Tom 2026-10-31); den utledes bare
-        // internt fra variantId for sporing i saken.
-        eurokode: (liste[0].variantId || '').indexOf(':') > 0 ? String(liste[0].variantId).split(':').slice(1).join(':') : null,
-        variantId: liste[0].variantId || null,
-        posisjon: (liste[0].posisjon && liste[0].posisjon.glassklasse) || ''
-      };
-    } else {
-      valgteGlass = null;
+    // Kundens valg: eksplisitt «Velg dette glasset» vinner så lenge varianten
+    // fortsatt er blant de synlige kandidatene. Gjenstår bare én kandidat, er
+    // den valgt automatisk. Endres kandidatlisten slik at et eksplisitt valg
+    // ikke lenger er gyldig, nullstilles det (ingen skjult gammel variant).
+    state.frontruteSporsmaal = Array.isArray(data && data.sporsmaal) ? data.sporsmaal : (state.frontruteSporsmaal || []);
+    var valgt = null;
+    if (eksplisittVariantId) {
+      valgt = liste.filter(function (k) { return (k.variantId || '') === eksplisittVariantId; })[0] || null;
+      if (!valgt) eksplisittVariantId = null;
     }
+    if (!valgt && liste.length === 1) valgt = liste[0];
+    valgteGlass = valgt ? {
+      varenr: valgt.varenr || '',
+      varenavn: valgt.varenavn || '',
+      // Eurokoden vises aldri til kunden (Tom 2026-10-31); den utledes bare
+      // internt fra variantId for sporing i saken.
+      eurokode: (valgt.variantId || '').indexOf(':') > 0 ? String(valgt.variantId).split(':').slice(1).join(':') : null,
+      variantId: valgt.variantId || null,
+      posisjon: (valgt.posisjon && valgt.posisjon.glassklasse) || ''
+    } : null;
 
     // Ekstra sikring: aldri kall kandidatKort på en tom liste.
     if (!liste || !liste.length) {
@@ -1532,6 +1542,10 @@
       egen.textContent = 'Utstyr: ' + hoved.egenskaper.join(', ');
       $('resultat-kort').append(egen);
     }
+    // Eksplisitt valg også når flere varianter vises: kunden kan peke på den
+    // ruten hun mener bilen har. Valget valideres server-side mot bilens
+    // kandidatsett før saken lagres.
+    leggTilVelgKnapp($('resultat-kort'), liste[0]);
 
     // Øvrige kandidater
     if (liste.length > 1) {
@@ -1543,12 +1557,22 @@
         var k = V.kandidatKort(liste[i]);
         var rad = document.createElement('div');
         rad.className = 'alt-rad';
+        rad.setAttribute('data-variant', liste[i].variantId || '');
         var navn = document.createElement('span');
         navn.textContent = k.navn + (k.egenskaper.length ? ' · ' + k.egenskaper.join(', ') : '');
         var p = document.createElement('span');
         p.className = 'alt-pris';
         p.textContent = k.pris.tekst;
         rad.append(navn, p);
+        var velgAlt = document.createElement('button');
+        velgAlt.type = 'button';
+        velgAlt.className = 'sek velg-glass small' + ((liste[i].variantId || '') === eksplisittVariantId ? ' valgt' : '');
+        velgAlt.textContent = (liste[i].variantId || '') === eksplisittVariantId ? 'Valgt' : 'Velg dette glasset';
+        velgAlt.setAttribute('aria-pressed', (liste[i].variantId || '') === eksplisittVariantId ? 'true' : 'false');
+        (function (valgtKandidat) {
+          velgAlt.addEventListener('click', function () { velgFrontruteKandidat(valgtKandidat); });
+        })(liste[i]);
+        rad.append(velgAlt);
         $('resultat-alt').append(rad);
       }
     }
@@ -1579,6 +1603,35 @@
     var verdi = frontruteSvar[felt];
     var alt = window.FBGView.svarAlternativer(felt).filter(function (a) { return a.verdi === verdi; })[0];
     return alt ? alt.tekst : String(verdi || '');
+  }
+
+  /** «Velg dette glasset» på frontrute-kandidatene. Setter kundens eksplisitte
+   *  valg, oppdaterer oppsummeringen og merker kortet — uten å endre svarene. */
+  function velgFrontruteKandidat(kandidat) {
+    if (!kandidat) return;
+    eksplisittVariantId = kandidat.variantId || null;
+    renderFrontrute(state.glassRequest, {
+      kandidater: state.frontruteKandidater,
+      utfall: state.frontruteKandidater.length === 1 ? 'PINPOINT' : 'VERIFY',
+      sporsmaal: state.frontruteSporsmaal || []
+    }, searchGeneration);
+  }
+
+  /** Legger «Velg dette glasset»-knapp på et kandidatkort. */
+  function leggTilVelgKnapp(container, kandidat) {
+    if (!container || !kandidat || !kandidat.variantId) return;
+    var erValgt = (kandidat.variantId || '') === eksplisittVariantId
+      || ((state.frontruteKandidater || []).length === 1 && !eksplisittVariantId);
+    var knapp = document.createElement('button');
+    knapp.type = 'button';
+    knapp.className = 'sek velg-glass' + (erValgt ? ' valgt' : '');
+    knapp.textContent = erValgt ? 'Valgt' : 'Velg dette glasset';
+    knapp.setAttribute('aria-pressed', erValgt ? 'true' : 'false');
+    knapp.addEventListener('click', function () {
+      if (erValgt) return;
+      velgFrontruteKandidat(kandidat);
+    });
+    container.append(knapp);
   }
 
   function renderFrontruteSporsmaal(felter) {
@@ -1659,6 +1712,9 @@
         knapp.setAttribute('aria-pressed', frontruteSvar[felt] === alt.verdi ? 'true' : 'false');
         knapp.addEventListener('click', function () {
           frontruteSvar[felt] = alt.verdi;
+          // Et nytt svar endrer grunnlaget: et tidligere eksplisitt valg kan ikke
+          // lenger antas gyldig, så det nullstilles og må velges på nytt.
+          eksplisittVariantId = null;
           state.glassRequest = state.glassRequest || {};
           state.glassRequest.answers = frontruteSvar;
           var data = {
