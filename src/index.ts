@@ -350,10 +350,10 @@ function lagKvittering(
   const hilsen = navn ? `Hei ${navn},` : 'Hei,';
   const bil = regnr ? ` for kjøretøyet ${regnr}` : '';
   const emne = saksnr
-    ? `Vi har mottatt forespørselen din (sak ${saksnr})`
+    ? `Vi har mottatt forespørselen din – sak ${saksnr}`
     : 'Vi har mottatt forespørselen din';
   const innledning = `Takk for forespørselen. Vi har registrert den${saksnr ? ' som sak ' + saksnr : ''}${bil}.`;
-  const videre = 'Vi kontrollerer at glasset passer bilen, og finner pris og levering. Du får svaret på e-post.';
+  const videre = 'Vi kontrollerer at glasset passer bilen, og bekrefter pris og frakt. Du får svaret på e-post.';
   const forbehold = 'Dette er en mottakskvittering, ikke en ordrebekreftelse — ingen bestilling er gjennomført. Du bestemmer først når du har fått tilbudet.';
   const montering = 'Vi leverer glasset. Montering avtaler du selv med et verksted.';
   const kontakt = `${kontaktEpost} · 40 40 82 41`;
