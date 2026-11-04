@@ -119,7 +119,7 @@ Merk også: RAV-4 13-serien er en helt annen vare (`3202GNELM` / `8410AGAHMW`), 
 
 ### 7.1 PRIUS PLUS-aliaset er innført og verifisert
 
-Commit `9d4e0ae` (PRIUS PLUS = GRAND PRIUS, smalt synonym + `GRAND` i navnemodell-vakten).
+Commit `f7b0f86` (PRIUS PLUS = GRAND PRIUS, smalt synonym + `GRAND` i navnemodell-vakten).
 QA **543/543** grønt. Deployet til staging `6eebb902`.
 
 Målt på staging etter deploy:
