@@ -1107,7 +1107,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           if (dom.status === 'ukjent' && tilhorighet === 'bekreftet') tilhorighet = 'bekreftet_bil_ukjent_plassering';
         }
         const estimat = rad ? estimertKundeprisInklMva(rad.pris) : null;
-        const enhet = rad ? salgsenhet(rad.varenavn) : null;
+        const enhet = rad ? salgsenhet(rad.varenavn, rad.varenr) : null;
         variantNote = 'Valgt variant: ' + variantIdRaa +
           (rad ? ' (' + rad.varenr + ' / ' + (rad.eurokode ?? 'uten eurokode') + ') «' + (rad.varenavn ?? '') + '» listepris '
             + (rad.pris ?? 'ukjent') + ' eks. mva · estimert kundepris '

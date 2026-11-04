@@ -3,7 +3,7 @@
 // aldri som bekreftet passform.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { kontrollerVariant, produkttype, salgsenhet } from '../src/glass-variant-kontroll.ts';
+import { kontrollerVariant, produkttype, salgsenhet, feltErRelevant } from '../src/glass-variant-kontroll.ts';
 
 const RAV4 = { varenr: '8432AGAC', varenavn: 'TOYOTA RAV 4 22- FR AKU LDW', eurokode: '8432AGACMV1L', kommentar: null };
 const VENSTRE_DOR = { varenr: '1111', varenavn: 'VOLVO V70 4D STV 08- DØRRUTE VS', eurokode: null, kommentar: null };
@@ -27,15 +27,26 @@ test('kontrollerVariant: tilbehør avvises som variant', () => {
 
 // ── Salgsenhet: V+H er sidedekning, ikke bevis på to glass ──────────────
 
-test('salgsenhet: V+H gir uklar, ikke par', () => {
-  const ut = salgsenhet('CITROEN JUMPER V+H DUCATO LAV');
-  assert.equal(ut.enhet, 'uklar');
-  assert.match(ut.grunnlag, /ikke bekreftet pakkeinnhold/);
+test('salgsenhet: V+H gir ukjent, ikke par', () => {
+  const ut = salgsenhet('CITROEN JUMPER V+H DUCATO LAV', '22547CL');
+  assert.equal(ut.enhet, 'ukjent');
+  assert.match(ut.grunnlag, /sidedekning, ikke bekreftet pakkeinnhold/);
 });
 
-test('salgsenhet: uttrykkelig par/sett gir par', () => {
-  assert.equal(salgsenhet('FORD S-MAX 06- SIDERUTE PAR').enhet, 'par');
-  assert.equal(salgsenhet('TOYOTA RAV 4 22- FR AKU LDW').enhet, 'enkel');
+test('salgsenhet: fravær av par-ord er ikke dokumentasjon på enkeltglass', () => {
+  const ut = salgsenhet('TOYOTA RAV 4 22- FR AKU LDW', '8432AGAC');
+  assert.equal(ut.enhet, 'ukjent');
+  assert.match(ut.grunnlag, /ingen kildeopplysning/);
+});
+
+test('salgsenhet: uttrykkelig par/sett av GLASS gir par', () => {
+  assert.equal(salgsenhet('FORD S-MAX 06- SIDERUTE PAR', '9999GN').enhet, 'par');
+});
+
+test('salgsenhet: tilbehørssett er ikke et glasspar', () => {
+  const ut = salgsenhet('FORD S-MAX 06- PYNTELIST SETT', '2735PYKIT');
+  assert.equal(ut.enhet, 'ukjent');
+  assert.match(ut.grunnlag, /ikke glass/);
 });
 
 // ── Riktig bil, feil side ────────────────────────────────────────────────
@@ -100,4 +111,57 @@ test('feil dørledd avvises', () => {
   const ut = kontrollerVariant(bakre, { side: 'left', door: 'front' });
   assert.equal(ut.status, 'avvist');
   assert.equal(ut.grunn, 'dor');
+});
+
+// ── Relevans: «ikke relevant» er ikke «ukjent» ──────────────────────────
+
+test('frontrute: side er ikke relevant og skal aldri registreres som uavklart', () => {
+  // Kunden har svart side, men en frontrute har ingen side — feltet er
+  // «ikke relevant», ikke «ukjent». Svaret skal aldri bli bekreftet passform.
+  const ut = kontrollerVariant(RAV4, { side: 'left', answers: { oppvarmet: 'nei' } });
+  assert.notEqual(ut.status, 'avvist');
+  assert.ok(!('uavklart' in ut) || !ut.uavklart.includes('side'), 'side skal ikke stå som uavklart');
+  assert.notEqual(ut.status, 'bekreftet');
+});
+
+test('frontrute uten noen svar: ukjent, ikke bekreftet', () => {
+  const ut = kontrollerVariant(RAV4, {});
+  assert.equal(ut.status, 'ukjent');
+  assert.ok(ut.uavklart.includes('ingen svar å kontrollere mot'));
+});
+
+test('dørrute med ukjent side: ukjent med side i lista', () => {
+  const ut = kontrollerVariant(VENSTRE_DOR, { door: 'front' });
+  assert.equal(ut.status, 'ukjent');
+  assert.ok(ut.uavklart.includes('side'));
+});
+
+test('feltErRelevant: side gjelder dør/side/ventil, ikke frontrute', () => {
+  assert.equal(feltErRelevant('dor', 'side'), true);
+  assert.equal(feltErRelevant('ventil', 'side'), true);
+  assert.equal(feltErRelevant('frontrute', 'side'), false);
+  assert.equal(feltErRelevant('frontrute', 'body'), true);
+});
+
+// ── Utstyr: dokumentert motstrid avvises, ukjent bekreftes ikke ──────────
+
+test('utstyr: dokumentert oppvarmet + kunde sier ja → bekreftet', () => {
+  const ut = kontrollerVariant(VARMT, { side: 'left', answers: { oppvarmet: 'ja' } });
+  assert.equal(ut.status, 'bekreftet');
+});
+
+test('utstyr: dokumentert oppvarmet + «vet ikke» → ukjent, ikke motstrid', () => {
+  const ut = kontrollerVariant(VARMT, { side: 'left', answers: { oppvarmet: 'vet-ikke' } });
+  assert.equal(ut.status, 'ukjent');
+});
+
+test('utstyr: ukjent produktegenskap + kunde sier ja → ukjent', () => {
+  const ut = kontrollerVariant(VENSTRE_DOR, { side: 'left', answers: { oppvarmet: 'ja' } });
+  assert.equal(ut.status, 'ukjent');
+  assert.ok(ut.uavklart.some((u) => u.startsWith('utstyr:')));
+});
+
+test('utstyr: endret svar etter variantvalg gir avvik', () => {
+  assert.equal(kontrollerVariant(VARMT, { side: 'left', answers: { oppvarmet: 'ja' } }).status, 'bekreftet');
+  assert.equal(kontrollerVariant(VARMT, { side: 'left', answers: { oppvarmet: 'nei' } }).status, 'avvist');
 });

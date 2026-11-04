@@ -18,7 +18,7 @@ import { kropperIRad } from './fitment-v1/catalogue-candidates.js';
 import { posisjonFeltVerdier, vurderFelt } from './glass-kandidat-vurdering.js';
 
 export type Produkttype = 'glass' | 'list' | 'tilbehor' | 'ukjent';
-export type Salgsenhet = 'enkel' | 'par' | 'uklar';
+export type Salgsenhet = 'enkel' | 'par' | 'ukjent';
 
 /**
  * Produkttype fra navn og varenr — ikke fra `rad_type`, som er upålitelig:
@@ -33,19 +33,51 @@ export function produkttype(varenavn: string | null | undefined, varenr: string 
 }
 
 /**
- * Salgsenhet. `V+H` viser at varen DEKKER begge sider, men er ikke bevis på at
- * pakken inneholder to glass. Derfor `par` kun når navnet uttrykkelig sier par/
- * sett; `V+H` alene gir `uklar` med grunnlag.
+ * Salgsenhet. Fravær av par-ord er IKKE dokumentasjon på enkeltglass.
+ * `V+H` viser at varen dekker begge sider, men er ikke bevis på at pakken
+ * inneholder to glass. `par` krever positivt kildegrunnlag (PAR/SETT) OG at
+ * produktet er et glass — et tilbehørssett er ikke et glasspar.
  */
-export function salgsenhet(varenavn: string | null | undefined): { enhet: Salgsenhet; grunnlag: string } {
+export function salgsenhet(
+  varenavn: string | null | undefined,
+  varenr?: string | null,
+): { enhet: Salgsenhet; grunnlag: string } {
   const navn = String(varenavn ?? '').toUpperCase();
-  if (/(?<![A-ZÆØÅ])(?:PAR|SETT|2-PAK|TO-PAK)(?![A-ZÆØÅ])/.test(navn)) {
-    return { enhet: 'par', grunnlag: 'varenavn sier par/sett' };
+  const erGlass = produkttype(varenavn, varenr ?? null) === 'glass';
+  const parOrd = /(?<![A-ZÆØÅ])(?:PAR|SETT|2-PAK|TO-PAK)(?![A-ZÆØÅ])/.test(navn);
+  if (parOrd && erGlass) {
+    return { enhet: 'par', grunnlag: 'varenavn sier par/sett og produktet er glass' };
+  }
+  if (parOrd && !erGlass) {
+    return { enhet: 'ukjent', grunnlag: 'par/sett-ord, men produktet er ikke glass — ikke et glasspar' };
   }
   if (/V\s*\+\s*H|VS\s*[\/+]\s*HS|VENSTRE\s*[\/+]\s*HØYRE/.test(navn)) {
-    return { enhet: 'uklar', grunnlag: 'V+H i varenavn viser sidedekning, ikke bekreftet pakkeinnhold' };
+    return { enhet: 'ukjent', grunnlag: 'V+H viser sidedekning, ikke bekreftet pakkeinnhold' };
   }
-  return { enhet: 'enkel', grunnlag: 'ingen par-markering i varenavn' };
+  // Ingen markering i navnet: kilden sier ingenting om salgsenhet.
+  return { enhet: 'ukjent', grunnlag: 'ingen kildeopplysning om salgsenhet' };
+}
+
+/**
+ * Hvilke felt som er RELEVANTE for hver glasstype.
+ *
+ * Venstre/høyre er ikke en egenskap ved en frontrute — fravær av side skal
+ * derfor ikke registreres som «uavklart». Det er forskjellen mellom «ikke
+ * relevant» og «ukjent»; bare det siste skal til manuell kontroll.
+ */
+const RELEVANTE_FELT: Record<string, string[]> = {
+  frontrute: ['body'],
+  bakrute: ['side', 'body'],
+  dor: ['side', 'door', 'body'],
+  side: ['side', 'body'],
+  sidefamilie: ['side', 'body'],
+  ventil: ['side', 'placement', 'body'],
+  tak: [],
+  ukjent: [],
+};
+
+export function feltErRelevant(type: string, felt: string): boolean {
+  return (RELEVANTE_FELT[type] ?? []).includes(felt);
 }
 
 export interface VariantSvar {
@@ -114,6 +146,9 @@ export function kontrollerVariant(
 
   const notat: string[] = [];
   const uavklart: string[] = [];
+  // Hvor mange relevante felt som faktisk ble prøvd mot et kundesvar.
+  // Null betyr «ingenting å kontrollere mot» — da er svaret ukjent, ikke bekreftet.
+  let sjekket = 0;
 
   // 2) Side
   if (svar.side && svar.side !== 'unknown') {
@@ -123,6 +158,7 @@ export function kontrollerVariant(
       navn,
     );
     const v = vurderFelt(verdier, svar.side, konflikt);
+    if (v !== 'ukjent') sjekket += 1;
     if (v === 'motstrid') {
       return {
         status: 'avvist',
@@ -133,9 +169,11 @@ export function kontrollerVariant(
           '. Velg riktig side på nytt, så kontrollerer vi glasset.',
       };
     }
-    if (v === 'ukjent') uavklart.push('side');
-    if (v === 'konflikt') uavklart.push('side (kildekonflikt)');
-  } else {
+    if (v === 'ukjent' && feltErRelevant(pos.type, 'side')) uavklart.push('side');
+    if (v === 'konflikt' && feltErRelevant(pos.type, 'side')) uavklart.push('side (kildekonflikt)');
+  } else if (feltErRelevant(pos.type, 'side')) {
+    // Side er ikke en egenskap ved en frontrute — da er den ikke «ukjent»,
+    // den er ikke relevant. Bare relevante felt går til manuell kontroll.
     uavklart.push('side');
   }
 
@@ -143,6 +181,7 @@ export function kontrollerVariant(
   if (svar.door && svar.door !== 'unknown' && pos.type === 'dor') {
     const { verdier, konflikt } = posisjonFeltVerdier({ side: pos.side, dorLedd: pos.dorLedd, konflikt: pos.typekonflikt || pos.typekodeKonflikt }, 'door', navn);
     const v = vurderFelt(verdier, svar.door, konflikt);
+    if (v !== 'ukjent') sjekket += 1;
     if (v === 'motstrid') {
       return {
         status: 'avvist',
@@ -152,13 +191,14 @@ export function kontrollerVariant(
           (DOR_TEKST[verdier?.[0] ?? ''] ?? 'en annen dør') + '. Velg på nytt, så kontrollerer vi glasset.',
       };
     }
-    if (v === 'ukjent' || v === 'konflikt') uavklart.push('dørledd');
+    if ((v === 'ukjent' || v === 'konflikt') && feltErRelevant(pos.type, 'door')) uavklart.push('dørledd');
   }
 
   // 4) Plassering (ventilrute foran/bak)
   if (svar.placement && svar.placement !== 'unknown' && pos.type === 'ventil') {
     const { verdier, konflikt } = posisjonFeltVerdier({ side: pos.side, ventilLedd: pos.ventilLedd, konflikt: pos.typekonflikt || pos.typekodeKonflikt }, 'placement', navn);
     const v = vurderFelt(verdier, svar.placement, konflikt);
+    if (v !== 'ukjent') sjekket += 1;
     if (v === 'motstrid') {
       return {
         status: 'avvist',
@@ -169,13 +209,14 @@ export function kontrollerVariant(
           (verdier?.[0] === 'front' ? 'fremre' : 'bakre') + '. Velg på nytt, så kontrollerer vi glasset.',
       };
     }
-    if (v === 'ukjent' || v === 'konflikt') uavklart.push('plassering');
+    if ((v === 'ukjent' || v === 'konflikt') && feltErRelevant(pos.type, 'placement')) uavklart.push('plassering');
   }
 
   // 5) Karosseri — bare når kunden faktisk har oppgitt det.
   if (svar.body && svar.body !== 'unknown') {
     const kropper = [...kropperIRad(navn)];
     const v = vurderFelt(kropper.length ? kropper : null, svar.body, false);
+    if (v !== 'ukjent') sjekket += 1;
     if (v === 'motstrid') {
       return {
         status: 'avvist',
@@ -185,7 +226,7 @@ export function kontrollerVariant(
           kropper.map((k) => BODY_TEKST[k] ?? k).join('/') + '. Velg på nytt, så kontrollerer vi glasset.',
       };
     }
-    if (v === 'ukjent') uavklart.push('karosseri');
+    if (v === 'ukjent' && feltErRelevant(pos.type, 'body')) uavklart.push('karosseri');
   }
 
   // 6) Utstyr kunden har svart på
@@ -200,6 +241,7 @@ export function kontrollerVariant(
     // Katalogen dokumenterer utstyret bare når kommentaren nevner det. Mangler
     // dokumentasjonen, er svaret ukjent — ikke en motsetning.
     if (!dokumentert && onsket) { uavklart.push('utstyr:' + nokkel); continue; }
+    if (dokumentert) sjekket += 1;
     if (dokumentert && !onsket) {
       return {
         status: 'avvist',
@@ -212,6 +254,11 @@ export function kontrollerVariant(
   }
 
   if (uavklart.length) return { status: 'ukjent', notat, uavklart };
+  if (sjekket === 0) {
+    // Ingen relevante felt ble kontrollert (f.eks. frontrute uten utstyrssvar).
+    // Det er ikke det samme som bekreftet passform.
+    return { status: 'ukjent', notat, uavklart: ['ingen svar å kontrollere mot'] };
+  }
   return { status: 'bekreftet', notat };
 }
 
