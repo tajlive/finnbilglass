@@ -79,7 +79,9 @@ test('6. språkregel: «jeg/meg» finnes kun i godkjente unntak', () => {
   // Godkjente unntak
   assert.match(html, /Til meg<\/label>/); // kundens eget valg (levering til privatadresse)
   assert.match(buf, /når jeg betaler selv\?/); // kundens FAQ-spørsmål
-  assert.match(omoss, /Hei, jeg heter Tom Arne og står bak Finnbilglass\./); // Tom-presentasjon
+  // Om oss presenterer ikke lenger enkeltpersonen ved navn (endret 2026-11-04).
+  assert.match(omoss, /<h1>Om Finnbilglass<\/h1>/);
+  assert.doesNotMatch(omoss, /Tom Arne/);
 
   // Forbudt «jeg/meg»-kommunikasjon fra Finnbilglass i app.js
   const forbudtJs = [

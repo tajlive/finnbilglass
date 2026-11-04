@@ -2003,3 +2003,10 @@ footer {
   background: var(--nk-green-soft);
   box-shadow: 0 0 0 1px var(--nk-green) inset;
 }
+
+/* Separate short hero copy for narrow screens. */
+.hero-copy-mobile { display: none; }
+@media (max-width: 559px) {
+  .hero-copy-desktop { display: none; }
+  .hero-copy-mobile { display: block; }
+}
