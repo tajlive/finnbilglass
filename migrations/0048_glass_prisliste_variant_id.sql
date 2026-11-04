@@ -55,11 +55,15 @@ FROM (
     SELECT p.*,
       CASE
         WHEN eurokode IS NOT NULL AND TRIM(eurokode) <> '' THEN
-          UPPER(TRIM(varenr)) || ':' ||
+          UPPER(CASE WHEN varenr LIKE '%.0' AND varenr NOT LIKE '%.%.0'
+                     THEN SUBSTR(TRIM(varenr), 1, LENGTH(TRIM(varenr)) - 2)
+                     ELSE TRIM(varenr) END) || ':' ||
           UPPER(CASE WHEN eurokode LIKE '%.0' AND eurokode NOT LIKE '%.%.0'
                      THEN SUBSTR(TRIM(eurokode), 1, LENGTH(TRIM(eurokode)) - 2)
                      ELSE TRIM(eurokode) END)
-        ELSE UPPER(TRIM(varenr)) || ':~' || UPPER(TRIM(COALESCE(varenavn, '')))
+        ELSE UPPER(CASE WHEN varenr LIKE '%.0' AND varenr NOT LIKE '%.%.0'
+                        THEN SUBSTR(TRIM(varenr), 1, LENGTH(TRIM(varenr)) - 2)
+                        ELSE TRIM(varenr) END) || ':~' || UPPER(TRIM(COALESCE(varenavn, '')))
       END AS base
     FROM glass_prisliste p
   ) t

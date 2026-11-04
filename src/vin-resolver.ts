@@ -717,7 +717,14 @@ export function gtRaderSett(
  *  (salgsnummeret), og ett varenr kan ha flere dokumenterte eurokoder med ulikt
  *  utstyr og ulik årang. Deduplisering skjer derfor på variant (varenr+eurokode),
  *  ikke på varenr — ellers ville variantene blitt slått sammen her også.
- *  Flere varianter for samme år → VERIFY (doktrine: aldri tvetydig PINPOINT). */
+ *  Flere varianter for samme år → VERIFY (doktrine: aldri tvetydig PINPOINT).
+ *
+ *  GT-SIKKERHETSREGEL (2026-11-04): en GT-rad som peker på et VARENR er ikke bevis
+ *  for én bestemt full eurokode. Den kan bare gi PINPOINT når varenr + bilens år
+ *  peker på NØYAKTIG ÉN dokumentert variant. Gir den flere, er koblingen tvetydig
+ *  og resultatet skal være VERIFY — uansett hvor mange GT-rader som peker dit.
+ *  GT-rader som selv inneholder en full eurokode (b2b-seed) er eksplisitt
+ *  variantbevis og kan gi PINPOINT når prisen er kjent. */
 export async function gtRaderKandidater(
   rader: Array<{ model: string; frontrute_eurocode: string | null }>,
   make: string,
@@ -1014,7 +1021,7 @@ export function pinpointTillatt(k: { listepris: number | null }): boolean {
 /** Felles utfalls-logikk: 0 → FALLBACK, 1 → PINPOINT (med GT-gate), 2+ → VERIFY.
  *  GT-gate (G1-doktrine): PINPOINT krever at kandidaten bekreftes av ground_truth —
  *  unntak: L0 (manuell VIN-fasit) og L1 (GT er selv kilden). */
-function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence: number, gtSett: Set<string> | null = null): ResolverResultat | null {
+export function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence: number, gtSett: Set<string> | null = null): ResolverResultat | null {
   if (kandidater.length === 0) return null;
   if (kandidater.length === 1) {
     const k = kandidater[0];

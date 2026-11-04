@@ -1021,6 +1021,57 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           if (entries.length) melding += '\nKundens utstyrssvar (må kontrolleres): ' + JSON.stringify(Object.fromEntries(entries.sort(([a],[b])=>a.localeCompare(b))));
         }
       }
+      // ── Valgt produktvariant (2026-11-04) ─────────────────────────────────
+      // Ett varenr kan ha flere dokumenterte eurokoder med ulikt utstyr og pris.
+      // Nettleseren kan sende hvilken variant som helst, så serveren slår opp
+      // raden selv: produktidentitet og listepris kommer ALLTID fra databasen,
+      // aldri fra klienten. Ukjent variant avvises (400) i stedet for å lagres.
+      let variantNote = '';
+      const variantIdRaa = typeof b.variantId === 'string' ? b.variantId.trim().slice(0, 90) : '';
+      if (variantIdRaa) {
+        if (!/^[A-Za-z0-9 ._+@#-]{1,40}:[A-Za-z0-9~ ._+@#-]{1,60}$/.test(variantIdRaa)) {
+          return json({ ok: false, error: 'Ugyldig variant' }, 400);
+        }
+        let rad: { varenr: string; varenavn: string | null; eurokode: string | null; pris: number | null; rad_type: string } | null = null;
+        try {
+          rad = await env.FINNBILGLASS_DB.prepare(
+            "SELECT varenr, varenavn, eurokode, pris, rad_type FROM glass_prisliste WHERE variant_id = ? LIMIT 1"
+          ).bind(variantIdRaa).first();
+        } catch {
+          rad = null; // eldre database uten variant_id: behold flyten, men merk det
+        }
+        if (!rad) {
+          if (variantIdRaa.includes(':')) {
+            const finnes = await env.FINNBILGLASS_DB.prepare(
+              "SELECT 1 AS ok FROM glass_prisliste WHERE (UPPER(TRIM(varenr)) || ':' || UPPER(TRIM(COALESCE(eurokode,'')))) = ? LIMIT 1"
+            ).bind(variantIdRaa.toUpperCase()).first<{ ok: number }>().catch(() => null);
+            if (!finnes) return json({ ok: false, error: 'Ukjent variant' }, 400);
+          }
+        }
+        if (rad && rad.rad_type !== 'glass') {
+          return json({ ok: false, error: 'Valgt variant er ikke et glass' }, 400);
+        }
+        // Tilhørighet: for frontrute kan vi etterprøve mot bilens kandidatsett.
+        let tilhorighet = 'ikke_verifisert';
+        const bil = b.bil && typeof b.bil === 'object' && !Array.isArray(b.bil) ? b.bil as Record<string, unknown> : null;
+        const bilMerke = bil && typeof bil.merke === 'string' ? bil.merke : '';
+        const bilModell = bil && typeof bil.modell === 'string' ? bil.modell : '';
+        const bilAar = bil && typeof bil.aar === 'number' ? bil.aar : null;
+        if (rad && bilMerke && bilModell && bilAar != null) {
+          try {
+            const res = await resolveFrontrute(env, { merke: bilMerke, modell: bilModell, aar: bilAar });
+            const treff = (res.kandidater ?? []).some((k) => (k.variantId ?? '') === (rad as { variantId?: string }).variantId || (k.varenr === rad!.varenr && (k.eurokode ?? '') === (rad!.eurokode ?? '')));
+            tilhorighet = treff ? 'bekreftet' : 'ikke_i_kandidatsett';
+            if (!treff) return json({ ok: false, error: 'Valgt variant tilhører ikke denne bilen' }, 400);
+          } catch {
+            tilhorighet = 'ikke_verifisert';
+          }
+        }
+        variantNote = 'Valgt variant: ' + variantIdRaa +
+          (rad ? ' (' + rad.varenr + ' / ' + (rad.eurokode ?? 'uten eurokode') + ') «' + (rad.varenavn ?? '') + '» listepris ' + (rad.pris ?? 'ukjent') : '') +
+          ' · tilhørighet: ' + tilhorighet;
+        melding = variantNote + (melding ? '\n' + melding : '');
+      }
       if (b.contactPreference === 'begge') {
         const phone = typeof b.contactPhone === 'string' ? b.contactPhone.replace(/[\s-]/g, '') : '';
         if (!/^(?:\+47|0047)?\d{8}$/.test(phone)) return json({ok:false,error:'Gyldig telefonnummer påkrevd'},400);

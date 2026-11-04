@@ -1181,7 +1181,11 @@
     velg.textContent = 'Velg dette glasset';
     velg.setAttribute('aria-pressed', 'false');
     velg.addEventListener('click', function () {
-      valgteGlass = { varenr: k.varenr || '', varenavn: k.varenavn || '', posisjon: k.posisjon || '' };
+      // variantId følger valget: ett varenr kan ha flere dokumenterte eurokoder
+      // (målt 2026-11-04: 8432AGAC har åtte). Uten den ville «samme glass» kunne
+      // peke på en annen variant i innsendingen enn den kunden så.
+      valgteGlass = { varenr: k.varenr || '', varenavn: k.varenavn || '', posisjon: k.posisjon || '',
+        variantId: k.variantId || null, eurokode: k.eurokode || null };
       document.querySelectorAll('.kandidat-kort').forEach(function (kortEl) {
         var aktiv = kortEl === kort;
         kortEl.classList.toggle('valgt', aktiv);
@@ -2192,7 +2196,9 @@
         regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId, leveringssted: leveringssted || undefined,
         contactPreference: kontaktpreferanse,
         ...(kontaktpreferanse === 'begge' ? { contactPhone: kontaktTelefon } : {}),
-        ...(state.glassRequest ? { glassRequest: state.glassRequest, clientRequestId: clientRequestId } : {})
+        ...(state.glassRequest ? { glassRequest: state.glassRequest, clientRequestId: clientRequestId } : {}),
+        ...(valgteGlass && valgteGlass.variantId ? { variantId: valgteGlass.variantId } : {}),
+        ...(state.merke ? { bil: { merke: state.merke, modell: state.modell, aar: state.aar } } : {})
       })
     })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, status: r.status, data: d }; }); })

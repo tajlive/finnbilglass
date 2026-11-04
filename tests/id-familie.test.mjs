@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym, pinpointSperre, velgPrisRadEtterAar, prisRaderEtterAar, variantNokkel, pinpointTillatt } from '../src/vin-resolver.ts';
+import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym, pinpointSperre, velgPrisRadEtterAar, prisRaderEtterAar, variantNokkel, pinpointTillatt, utfraKandidater } from '../src/vin-resolver.ts';
 
 // Faktiske katalograder (brand='VW', frontrute, modell med «ID»).
 const KATALOG = [
@@ -225,4 +225,27 @@ test('PINPOINT krever kjent pris', () => {
   assert.equal(pinpointTillatt({ listepris: 10745 }), true);
   assert.equal(pinpointTillatt({ listepris: 0 }), false);
   assert.equal(pinpointTillatt({ listepris: null }), false);
+});
+
+test('GT på varenr alene gir aldri PINPOINT når varenr har flere varianter', async () => {
+  // GT lagrer varenr (salgsnummeret). Når varenr + bilens år peker på flere
+  // dokumenterte eurokoder, er GT-koblingen tvetydig — uansett antall GT-rader.
+  const tre = [
+    { varenr: '8432AGAC', varenavn: 'RAV 4 22- FR AKU LDW', eurokode: '8432AGACHMV1L', listepris: 19425, attributter: {} },
+    { varenr: '8432AGAC', varenavn: 'RAV 4 22- WS GN ACO LDW', eurokode: '8432AGACHMV30', listepris: 14860, attributter: {} },
+    { varenr: '8432AGAC', varenavn: 'RAV 4 22- FR AKU LDW', eurokode: '8432AGACMV1L', listepris: 10745, attributter: {} },
+  ];
+  const res = utfraKandidater(tre, '1 (ground_truth)', 0.85);
+  assert.equal(res.utfall, 'VERIFY');
+  assert.equal(res.totalAntall, 3);
+  // Én variant, kjent pris, GT-kilde → PINPOINT er lov.
+  const en = utfraKandidater([tre[0]], '1 (ground_truth)', 0.85);
+  assert.equal(en.utfall, 'PINPOINT');
+  assert.equal(en.variantId, null, 'variantId settes av prisKandidat-laget, ikke her');
+  // Én variant, ukjent pris → aldri PINPOINT (priskravet).
+  const utenPris = utfraKandidater([{ ...tre[0], listepris: null }], '1 (ground_truth)', 0.85);
+  assert.equal(utenPris.utfall, 'VERIFY');
+  // Én variant fra kataloglag uten GT-bekreftelse → VERIFY.
+  const utenGt = utfraKandidater([tre[0]], '2 (glass_catalog)', 0.7, new Set());
+  assert.equal(utenGt.utfall, 'VERIFY');
 });

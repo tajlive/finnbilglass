@@ -96,14 +96,22 @@ def main() -> None:
         return
 
     # ── Hvilke varianter mangler? ────────────────────────────────────────
-    def vnokkel(varenr, eurokode, varenavn) -> str:
-        v = str(varenr or "").strip().upper()
-        e = re.sub(r"[^A-Z0-9]", "", str(eurokode or "").upper())
-        return f"{v}:{e}" if e else f"{v}:~{str(varenavn or '').strip().upper()}"
+    def ascii_upper(t: str) -> str:
+        """SQLite UPPER() er ASCII-only. Nøkkelen må regnes likt i SQL og Python,
+        ellers får «på» og «PÅ» ulik identitet for samme rad."""
+        return "".join(c.upper() if ord(c) < 128 else c for c in t)
 
     def ren_kode(s) -> str:
-        t = str(s or "").strip().upper()
+        """Kanonisk kode: trim + store bokstaver, og fjern float-artefakten «.0».
+        Tegn som + - . beholdes — to eurokoder som bare skiller seg i tegnsetting
+        skal IKKE smelte sammen."""
+        t = ascii_upper(str(s or "").strip())
         return t[:-2] if re.fullmatch(r"\d+\.0", t) else t
+
+    def vnokkel(varenr, eurokode, varenavn) -> str:
+        v = ren_kode(varenr)
+        e = ren_kode(eurokode)
+        return f"{v}:{e}" if e else f"{v}:~{ascii_upper(str(varenavn or '').strip())}"
 
     db_nokler = {
         vnokkel(ren_kode(r["varenr"]), ren_kode(r["eurokode"]), r["varenavn"])
