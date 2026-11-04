@@ -53,7 +53,7 @@
     CONTACTED:   { tekst: 'Besvart',        steg: 'Vi har svart deg. Sjekk e-posten din og svar om saken fortsatt er aktuell.', farge: '#2563EB' },
     NEEDS_INFO:  { tekst: 'Trenger svar',   steg: 'Vi mangler opplysninger fra deg for å finne riktig glass.', farge: '#EA580C' },
     QUOTED:      { tekst: 'Tilbud sendt',   steg: 'Du har fått et tilbud. Si fra om du vil gå videre.', farge: '#7C3AED' },
-    CONFIRMED:   { tekst: 'Bekreftet',      steg: 'Saken er bekreftet. Vi avtaler levering.', farge: '#059669' },
+    CONFIRMED:   { tekst: 'Bekreftet',      steg: 'Saken er bekreftet. Levering og frakt avtales i tilbudet.', farge: '#059669' },
     COMPLETED:   { tekst: 'Fullført',       steg: 'Saken er avsluttet.', farge: '#64748B' },
     REJECTED:    { tekst: 'Avsluttet',      steg: 'Saken er avsluttet. Ta kontakt om du trenger hjelp.', farge: '#64748B' },
   };
