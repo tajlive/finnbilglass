@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym } from '../src/vin-resolver.ts';
+import { modellTokensAv, familieTokens, ordTreffKandidat, gtRadMatch, sqlTokensAv, variantKonflikt, modellSynonym, pinpointSperre } from '../src/vin-resolver.ts';
 
 // Faktiske katalograder (brand='VW', frontrute, modell med «ID»).
 const KATALOG = [
@@ -128,4 +128,20 @@ test('PRIUS PLUS = GRAND PRIUS (butikkatalog vs leverandørkatalog)', () => {
     'vanlig Prius skal ikke få Grand Prius-raden');
   assert.equal(gtRadMatch('PRIUS 5D HBK LHD', 'TOYOTA', 'PRIUS PLUS', [2013]), false,
     'Prius+ skal ikke få vanlig Prius-rute');
+});
+
+test('PINPOINT-sperre: RAV4 2022-2025 på 8432AGAC gir VERIFY, ikke PINPOINT', () => {
+  // Butikken fører «TOYOTA RAV 4 19-21 FR…» atskilt fra «TOYOTA RAV 4 2019- FR…»,
+  // mens GT mapper 2022-2025 til 8432AGAC. GT-årene endres ikke — PINPOINT sperres.
+  for (const aar of [2022, 2023, 2024, 2025]) {
+    assert.ok(pinpointSperre('TOYOTA', 'RAV4', aar, '8432AGACHM'), `RAV4 ${aar} skal være sperret`);
+    assert.ok(pinpointSperre('TOYOTA', 'RAV 4', aar, '8432AGAC'), `«RAV 4» ${aar} skal være sperret`);
+  }
+  // Utenfor sperren: eldre år, andre koder, andre modeller.
+  assert.equal(pinpointSperre('TOYOTA', 'RAV4', 2021, '8432AGACHM'), null);
+  assert.equal(pinpointSperre('TOYOTA', 'RAV4', 2026, '8465AGAC'), null);
+  assert.equal(pinpointSperre('TOYOTA', 'RAV4', 2024, '8410AGAHMW'), null, 'RAV-4 13-serien er ikke sperret');
+  assert.equal(pinpointSperre('TOYOTA', 'COROLLA', 2024, '8432AGACHM'), null);
+  assert.equal(pinpointSperre('VOLVO', 'V60', 2024, '8432AGACHM'), null);
+  assert.equal(pinpointSperre('TOYOTA', 'RAV4', null, '8432AGACHM'), null, 'uten år ingen sperre');
 });

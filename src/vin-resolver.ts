@@ -714,14 +714,12 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
     eurocode: string; brand: string; model: string | null; year_from: number | null; year_to: number | null;
     rain_sensor: number | null; antenna: number | null; hud: number | null; camera: number | null; adas: number | null; description: string | null;
   }>();
-  const unike = new Map<string, ResolverKandidat>();
+  const variantSpesifikk: ResolverKandidat[] = [];
+  const generisk: ResolverKandidat[] = [];
   for (const r of rows.results ?? []) {
     const radModel = modellSynonym(r.model ?? '');
     if (!ordTreffKandidat(radModel, tokens)) continue; // ordbasert — aldri substring, aldri generisk treff alene
-    // Drivlinje-/navnemodell-variant skal ikke arve en annen modells glass
-    // («RAV4 Plug-in Hybrid» skal ikke få RAV 4-raden før fitment er dokumentert).
-    if (variantKonflikt(radModel, modelSyn)) continue;
-    if (drivlinjeKonflikt(modelSyn, radModel)) continue;
+    if (variantKonflikt(radModel, modelSyn)) continue;  // Golf Sportsvan ≠ Golf
     // Årvindu: kolonne-verdier, ellers år-hint i modellstrengen
     if (aar != null) {
       const intervall = r.year_from != null
@@ -735,6 +733,18 @@ async function lagPilkington(env: Env, make: string, model: string, aar: number 
     // prisKandidat gir allerede korrekte attributter (eurokode-dekoder for A/M/C/H,
     // glass_catalog kun for kamera/adas) — IKKE overstyr med glass_catalog-flagg her
     // (glass_catalog har feil/manglende antenna/rain_sensor for 57 %+ av radene).
+    // Drivlinje: en variant kjøretøyet oppgir skal ikke arve grunnmodellens rute —
+    // MEN bare når katalogen faktisk skiller varianten (har en egen rad for den).
+    // Uten en slik rad blokkerer vi ikke kandidatene; resultatet blir VERIFY (målt
+    // 2026-11-04: V60 PLUG IN HYBRID mistet all dekning uten denne nyansen).
+    if (drivlinjeKonflikt(modelSyn, radModel)) variantSpesifikk.push(k);
+    else generisk.push(k);
+  }
+  // Katalogen skiller varianten → bruk bare de variantspesifikke radene.
+  // Ellers: katalogen skiller ikke → behold de generiske (utfall blir VERIFY).
+  const valgte = variantSpesifikk.length ? variantSpesifikk : generisk;
+  const unike = new Map<string, ResolverKandidat>();
+  for (const k of valgte) {
     const nøkkel = k.eurokode ?? k.varenr;
     if (!unike.has(nøkkel)) unike.set(nøkkel, k);
   }
@@ -823,6 +833,56 @@ async function lagTecdocKtype(env: Env, vin: string | null | undefined): Promise
   }
 }
 
+/**
+ * PINPOINT-sperre: glasskoder der ground_truth kan være for vide i årene.
+ *
+ * Svekker PINPOINT til VERIFY — kandidaten blir stående, men kunden må bekrefte.
+ * Brukes når en pålitelig kilde motsier GT: målt 2026-11-04 fører www.auto-glass.no
+ * «TOYOTA RAV 4 19-21 FR…» som egen vare, atskilt fra «TOYOTA RAV 4 2019- FR…»,
+ * mens GT mapper 2022-2025 til samme eurokode (8432AGAC). GT-årene endres IKKE
+ * for å få resultatet til å passe; sperren fjernes først når leverandør har
+ * bekreftet passformen.
+ */
+const PINPOINT_SPERRET: Array<{
+  eurokodePrefiks: string[];
+  merke?: RegExp;
+  modell: RegExp;
+  aarFra: number;
+  aarTil: number;
+  grunn: string;
+}> = [
+  {
+    eurokodePrefiks: ['8432AGAC'],
+    merke: /^TOYOTA$/,
+    modell: /^RAV[\s-]?4/,
+    aarFra: 2022,
+    aarTil: 2025,
+    grunn: 'GT sier 2022-2025, men varen heter «RAV 4 19-21» og butikken fører «RAV 4 2019-» separat — årsmodell er ikke bekreftet av leverandør',
+  },
+];
+
+/** Returnerer sperre-årsak, eller null. Matcher på eurokode-prefiks + bil + år. */
+export function pinpointSperre(make: string, model: string, aar: number | null, eurokode: string | null): string | null {
+  if (aar == null || !eurokode) return null;
+  const kode = eurokode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  for (const s of PINPOINT_SPERRET) {
+    if (!s.eurokodePrefiks.some((p) => kode.startsWith(p))) continue;
+    if (s.merke && !s.merke.test(make.toUpperCase())) continue;
+    if (!s.modell.test(model.toUpperCase())) continue;
+    if (aar < s.aarFra || aar > s.aarTil) continue;
+    return s.grunn;
+  }
+  return null;
+}
+
+/** Svekker PINPOINT til VERIFY når koden er sperret. Fjerner aldri kandidaten. */
+function medPinpointSperre(res: ResolverResultat, make: string, model: string, aar: number | null): ResolverResultat {
+  if (res.utfall !== 'PINPOINT') return res;
+  const grunn = pinpointSperre(make, model, aar, res.eurokode ?? res.kandidater?.[0]?.eurokode ?? null);
+  if (!grunn) return res;
+  return { ...res, utfall: 'VERIFY', grunn: `PINPOINT sperret: ${grunn}`, confidence: Math.min(res.confidence ?? 0, 0.5) };
+}
+
 /** Felles utfalls-logikk: 0 → FALLBACK, 1 → PINPOINT (med GT-gate), 2+ → VERIFY.
  *  GT-gate (G1-doktrine): PINPOINT krever at kandidaten bekreftes av ground_truth —
  *  unntak: L0 (manuell VIN-fasit) og L1 (GT er selv kilden). */
@@ -888,7 +948,7 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   // L1 — ground_truth (verifiserte kjøretøy)
   kand = await lagGroundTruth(env, make, model, aarList, makeRaa, bil.profil);
   res = utfraKandidater(kand, '1 (ground_truth)', 0.85);
-  if (res) return res;
+  if (res) return medPinpointSperre(res, make, model, aar);
 
   // GT-fasit-settet for kjøretøyet (gate for L2/L3-PINPOINT — G1-doktrine)
   const gtSett = await gtEurokoderSett(env, make, model, aarList, makeRaa);
@@ -897,17 +957,17 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   // Ktype alene kan aldri overstyre feature-/OEM-gaten for PINPOINT.
   kand = await lagTecdocKtype(env, bil.vin);
   res = utfraKandidater(kand, '3T (TecDoc VIN→KType)', 0.9, gtSett);
-  if (res) return res;
+  if (res) return medPinpointSperre(res, make, model, aar);
 
   // L2 — Pilkington-katalog
   kand = await lagPilkington(env, make, model, aar, bil.profil);
   res = utfraKandidater(kand, '2 (glass_catalog)', 0.7, gtSett);
-  if (res) return res;
+  if (res) return medPinpointSperre(res, make, model, aar);
 
   // L3 — ktype (kun når data finnes)
   kand = await lagKtype(env, make, model, aar);
   res = utfraKandidater(kand, '3 (ktype)', 0.75, gtSett);
-  if (res) return res;
+  if (res) return medPinpointSperre(res, make, model, aar);
 
   return { utfall: 'FALLBACK', grunn: 'ingen resolver-data — tekstmatcher overtar', confidence: 0 };
 }
