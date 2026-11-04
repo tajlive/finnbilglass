@@ -38,7 +38,7 @@ Interne lenker på forsiden: 5 stk, alle svarer 200 (`/betaling.html` → 307 �
 Ingen døde lenker, ingen tomme seksjoner funnet.
 
 **Gjenstående, ikke rettet (krever Toms valg):**
-- `support@finnbilglass.no` vises på alle sider, men domenets MX peker på Domeneshop og postkassen finnes ikke — e-post til adressen forsvinner. Varsler går i dag til `tomarnejensen@gmail.com`.
+- ~~`support@finnbilglass.no` mangler postkasse~~ **RETTET 2026-11-04:** adressen **mottar e-post** — MX `loke.domene.no` er Domeneshop sin e-posttjeneste (bekreftet av Tom). Min tidligere påstand om manglende postkasse var en slutning fra en mislykket Brevo-leveranse og er trukket. En SMTP-probe fra maskinen var intetsigende (port 25 blokkert lokalt, samme timeout også for `tom@finnbilglass.no` som er kjent fungerende). Interne varsler går fortsatt til `tomarnejensen@gmail.com` — Toms valg (alternativ C).
 - «Logg inn / Min side» i bunnteksten er en lenke uten funksjon for privatkunder.
 
 ## 3. Fakturering — anbefaling
@@ -85,7 +85,16 @@ Frakt og betaling er **etter avtale** (Toms valg 2026-11-04): fraktlinjen står 
 
 ## 4. Frakt — enkleste flyt
 
-**Anbefaling: la leverandøren sende direkte** til verksted/kunde. Glasset er allerede hos leverandøren; en mellomlagring i Trondheim gir dobbel håndtering og dobbel skaderisiko.
+**AVGJORT 2026-11-04 (Tom, alternativ A): leverandøren sender direkte** til kunde/verksted. Vi formidler ordren og bestiller ingen transport selv. Det betyr at Mybring-avtale **ikke** er nødvendig nå.
+
+Flyten ved leverandørdirekte sending:
+1. Kunden har akseptert tilbudet i saken.
+2. Vi sender ordren til leverandøren med varenr, full eurokode/variant og mottakeradresse (verksted eller kunde).
+3. Fraktpris **etter avtale** — legges på fakturaen som egen linje når den er bekreftet, aldri et påslag vi gjetter.
+4. Sporingsnummer mottas fra leverandøren og føres på saken i `ordre.sporingsnummer`; leverandørens ordrereferanse i `ordre.leverandor_ref` — **begge feltene finnes i dag**, så `0050` er ikke nødvendig for denne flyten.
+5. Levering bekreftes ved at kunden/verkstedet kvitterer; `ordre.ordre_status` settes til levert.
+
+Alternative løsninger (Bring stykkgods i Mybring) er dokumentert under, men ikke valgt:
 
 Hvis Finnbilglass bestiller transport selv: **Bring stykkgods til bedrift** — maks 1 200 kg pr. kolli, 9 999 kg totalt, bestilles i Mybring, sporing og leveringsvarsel inkludert. En emballert frontrute (~20–30 kg, ca. 150 × 100 × 20 cm) passer, men **Norgespakke (maks 120 × 60 × 60 cm) er ikke aktuelt** — den går ikke.
 
@@ -125,8 +134,8 @@ Begge tall er riktige, men måler forskjellige ting:
 | # | Handling | Hvorfor |
 |---|---|---|
 | 1 | ~~Org.nr + bankkonto~~ **LØST**: BLYT AS 929 003 292 MVA · 1506.25.52843 | — |
-| 2 | `apify login` (én gang) | Token utløpt 2026-11-01; API og CLI er stengt |
-| 3 | Opprette/bekrefte SumUp-konto | Fakturaprogrammet må kobles til org.nr og bank |
-| 4 | Bestemme: sender leverandøren direkte, eller skal vi bruke Mybring? | Avgjør hele fraktflyten og om Bring-avtale må tegnes |
-| 5 | Godkjenne evt. `0050_ordre_faktura` (fakturanummer-felt) | Eneste hullet i /ops-rutinen |
-| 6 | Bestemme riktig supportadresse | `support@finnbilglass.no` har ingen postkasse i dag |
+| 2 | `apify login` (én gang) | Token utløpt 2026-11-01; API og CLI er stengt. Deretter kjøres pilot (Tom-valg 5A) |
+| 3 | Fakturaprogram — **AVVENT** (Tom 2026-11-04) | Kladden står klar; velges når du er klar |
+| 4 | ~~Fraktflyt~~ **AVGJORT**: leverandøren sender direkte (alternativ A) | Mybring ikke nødvendig |
+| 5 | ~~Godkjenne 0050~~ **AVVENT** (Tom-valg 4C) — venter på fakturaprogram | Ikke nødvendig for leverandørdirekte flyt |
+| 6 | ~~Supportadresse~~ **AVGJORT**: adressen mottar e-post; varsler fortsatt til Gmail (alternativ C) | — |
