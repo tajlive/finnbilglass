@@ -9,7 +9,7 @@ import { sendMail, avsenderEpost } from './mail';
  *  Alt annet (/, styles.css, app.js, index.html) → [assets] public/
  */
 import type { Env } from './types';
-import { matchFrontrute, tierPris, type BilInput } from './matcher';
+import { matchFrontrute, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
 import { resolverModus, anvendResolverPolicy, henvendelserTillatt } from './kill-switch';
 import { svvLookup, svvLookupVin } from './svv';
@@ -45,6 +45,7 @@ import { verifiserAccess } from './access-jwt';
 import { D1AuthStorage } from './auth-storage';
 import { skalLoggeSok } from './sok-logg-policy';
 import { tilOffentligResolverSvar } from './public-contract';
+import { estimertKundeprisInklMva } from './pricing/nok-prising';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -1070,8 +1071,11 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
             tilhorighet = 'ikke_verifisert';
           }
         }
+        const estimat = rad ? estimertKundeprisInklMva(rad.pris) : null;
         variantNote = 'Valgt variant: ' + variantIdRaa +
-          (rad ? ' (' + rad.varenr + ' / ' + (rad.eurokode ?? 'uten eurokode') + ') «' + (rad.varenavn ?? '') + '» listepris ' + (rad.pris ?? 'ukjent') : '') +
+          (rad ? ' (' + rad.varenr + ' / ' + (rad.eurokode ?? 'uten eurokode') + ') «' + (rad.varenavn ?? '') + '» listepris '
+            + (rad.pris ?? 'ukjent') + ' eks. mva · estimert kundepris '
+            + (estimat == null ? 'ukjent (pris på forespørsel)' : estimat.toFixed(2).replace('.', ',') + ' kr inkl. mva') : '') +
           ' · tilhørighet: ' + tilhorighet;
         melding = variantNote + (melding ? '\n' + melding : '');
       }

@@ -16,7 +16,7 @@
  *   L4 FALLBACK      — matchFrontrute (eksisterende, uendret)
  */
 import type { BilInput } from './matcher';
-import { tierPris } from './matcher';
+import { estimertKundeprisInklMva } from './pricing/nok-prising';
 import { matcherAar, parseAar } from './aar-parser';
 import { fraTypekode, klassifiserGlass, filtrerPaPosisjon, type TypekodePosisjon, type Posisjonsonske } from './glass-posisjon';
 export { fraTypekode, klassifiserGlass, filtrerPaPosisjon, type TypekodePosisjon, type Posisjonsonske } from './glass-posisjon';
@@ -444,7 +444,7 @@ async function byggKandidat(env: Env, r: PrisRad, modus: Sokemodus): Promise<Res
   return {
     varenr: r.varenr,
     varenavn: r.varenavn,
-    pris: prisKarantene ? null : tierPris(r.pris),
+    pris: prisKarantene ? null : estimertKundeprisInklMva(r.pris),
     listepris: prisKarantene ? null : r.pris,
     eurokode: r.eurokode,
     variantId: variantNokkel(r.varenr, r.eurokode, r.varenavn),

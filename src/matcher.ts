@@ -1,3 +1,4 @@
+import { estimertKundeprisInklMva } from './pricing/nok-prising';
 /** Frontrute-matcher — kjernen i Finnbilglass.
  *  Kjede: bil {merke, modell, aar, profil} → D1-kandidater (katalogkode-utvidelse)
  *         → eurokode-dekoder + årstall → score → riktig glass.
@@ -219,13 +220,14 @@ export function modelTokensAv(modell: string, merke: string): string[] {
 /** Prisregel (Tom 2026-08-13, intern): listepris × 0,60 → rund NED til nærmeste tier.
  *  5 prisgrupper: 3 990 / 5 490 / 6 990 / 8 490 kr + «spesial» (pris på forespørsel)
  *  når rabattert pris er OVER 8 490 (eller under laveste tier). */
-const TIERS = [3990, 5490, 6990, 8490];
+/**
+ * @deprecated 2026-11-04 — den gamle 0,60-faktoren med faste trinn viste feil
+ * kundepris og sendte varianter over høyeste trinn til «Pris på forespørsel».
+ * Kundeprisen regnes nå av estimertKundeprisInklMva() (XLS-pris eks. mva × 0,25
+ * × 1,25). Beholdt som alias så eldre kall ikke krasjer, men gir samme regel.
+ */
 export function tierPris(listepris: number | null): number | null {
-  if (listepris == null || listepris <= 0) return null;
-  const rabattert = listepris * 0.6;
-  if (rabattert > TIERS[TIERS.length - 1]) return null; // over høyeste tier → «Spesial» (null)
-  const tier = TIERS.filter((t) => t <= rabattert).pop();
-  return tier ?? null; // under laveste tier → «Spesial» (null)
+  return estimertKundeprisInklMva(listepris);
 }
 
 /** Hovedmatcher: bil → sortert kandidatliste + anbefaling. */

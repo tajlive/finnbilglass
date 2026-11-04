@@ -37,6 +37,9 @@ export interface OffentligPris {
   kundePris: number;
   mva: number;
   prisEksMva: number;
+  /** ESTIMERT = beregnet fra veiledende XLS-pris (75 % rabatt + mva), kontrolleres
+   *  manuelt før tilbud. BEKREFTET = bygger på fakturakostnad. */
+  sikkerhet: 'BEKREFTET' | 'ESTIMERT';
 }
 
 export interface OffentligKandidat {
@@ -51,8 +54,10 @@ export interface OffentligGlassSvar {
   /** OK kun når kompatibilitet er bekreftet OG pris finnes. Katalogtreff alene
    *  er alltid MANUAL_REVIEW — pris skal aldri gi OK på egen hånd. */
   status: 'OK' | 'MANUAL_REVIEW';
-  /** Hva prisen i kandidatene faktisk er. Uavhengig av kompatibilitet. */
-  prisStatus: 'BEKREFTET' | 'DELVIS' | 'INGEN';
+  /** Hva prisen i kandidatene faktisk er. Uavhengig av kompatibilitet.
+   *  ESTIMERT = alle kandidater har en beregnet XLS-pris (75 % rabatt + mva),
+   *  BEKREFTET = alle har fakturabasert pris, DELVIS = blandet, INGEN = ingen pris. */
+  prisStatus: 'BEKREFTET' | 'ESTIMERT' | 'DELVIS' | 'INGEN';
   candidates: OffentligKandidat[];
   totalAvailable: number;
   nextCursor?: string;
@@ -67,10 +72,10 @@ export function offentligPris(listepris: number | null | undefined): OffentligPr
   if (typeof listepris !== 'number' || !Number.isFinite(listepris) || listepris <= 0) return null;
   try {
     const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: listepris });
-    if (r.sikkerhet !== 'BEKREFTET' || r.kundePris == null || r.mva == null || r.prisEksMva == null) {
-      return null;
-    }
-    return { kundePris: r.kundePris, mva: r.mva, prisEksMva: r.prisEksMva };
+    // XLS-prisen gir et ESTIMAT (Tom 2026-10-29). Estimatet kan vises, men alltid
+    // merket som estimat — aldri som bekreftet pris.
+    if (r.kundePris == null || r.mva == null || r.prisEksMva == null) return null;
+    return { kundePris: r.kundePris, mva: r.mva, prisEksMva: r.prisEksMva, sikkerhet: r.sikkerhet };
   } catch {
     return null;
   }
@@ -95,8 +100,13 @@ export function tilOffentligKandidat(k: Kandidat & { pris?: number | null }): Of
 export function tilOffentligSvar(r: DiscoveryResult): OffentligGlassSvar {
   const candidates = r.candidates.map((k) => tilOffentligKandidat(k));
   const medPris = candidates.filter((k) => k.pris !== null).length;
+  // Estimat er ikke «bekreftet pris»: statusen skiller derfor på om tallet er
+  // beregnet fra XLS (ESTIMERT) eller bygger på faktura (BEKREFTET).
+  const alleEstimert = candidates.filter((k) => k.pris).every((k) => k.pris!.sikkerhet === 'ESTIMERT');
   const prisStatus: OffentligGlassSvar['prisStatus'] =
-    medPris === 0 ? 'INGEN' : medPris === candidates.length ? 'BEKREFTET' : 'DELVIS';
+    medPris === 0 ? 'INGEN'
+      : medPris < candidates.length ? 'DELVIS'
+        : alleEstimert ? 'ESTIMERT' : 'BEKREFTET';
 
   // Kompatibilitet har høyere prioritet enn pris: et katalogtreff bekrefter
   // ikke at glasset passer bilen. Uten fitment-evidens er svaret MANUAL_REVIEW

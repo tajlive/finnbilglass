@@ -55,12 +55,18 @@ test('status: FALLBACK uten kandidater blir MANUAL_REVIEW', () => {
   assert.equal(s2.kode, 'AMBIGUOUS');
 });
 
-test('pris: dokumentert pris vises som fra-pris med forbehold', () => {
-  const p = V.prisTekst(6990);
+test('pris: beregnet pris vises som ESTIMAT med forbehold', () => {
+  // Prisen er XLS-listepris eks. mva × 0,25 × 1,25 og kontrolleres manuelt
+  // (Tom 2026-10-29). Den skal aldri presenteres som bekreftet pris.
+  const p = V.prisTekst(3357.81);
   assert.equal(p.visPris, true);
-  assert.equal(p.tekst, 'Veiledende fra 6 990 kr');
+  assert.equal(p.tekst, 'Estimert pris 3 357,81 kr');
+  assert.equal(p.usikker, true, 'estimat skal merkes usikkert');
   assert.match(p.detalj, /inkl\. mva/);
+  assert.match(p.detalj, /bekreftes manuelt/i);
   assert.match(p.detalj, /frakt/i);
+  // Hele kroner vises uten øre.
+  assert.equal(V.prisTekst(6250).tekst, 'Estimert pris 6 250 kr');
 });
 
 test('pris: manglende eller ugyldig pris gir «Pris på forespørsel»', () => {

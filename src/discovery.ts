@@ -1,6 +1,6 @@
 import { normBrand, modellTokensAv, ordTreff, erFrontrute } from './vin-resolver';
 import { dekodeEurokode } from './eurokode-dekoder';
-import { LAVESTE_SITERBARE_LISTEPRIS } from './pricing/nok-prising';
+import { MINSTE_GYLDIGE_LISTEPRIS } from './pricing/nok-prising';
 import { karanteneGrunn, prisKaranteneGrunn } from './glass-karantene';
 import { parseAar, matcherAar } from './aar-parser';
 
@@ -153,7 +153,7 @@ async function raderForKoder(env: { FINNBILGLASS_DB: any }, koder: string[], tok
     (k) => `SELECT ${k.join(', ')} FROM glass_prisliste
              WHERE rad_type='glass' AND (varenr IN (${plasser}) OR eurokode IN (${plasser}))
              ${sortering}`,
-    [...koder, ...koder, LAVESTE_SITERBARE_LISTEPRIS],
+    [...koder, ...koder, MINSTE_GYLDIGE_LISTEPRIS],
   );
 
   const harTreff = new Set<string>();
@@ -172,7 +172,7 @@ async function raderForKoder(env: { FINNBILGLASS_DB: any }, koder: string[], tok
       (k) => `SELECT ${k.join(', ')} FROM glass_prisliste
                WHERE rad_type='glass' AND (${likePlasser}) AND (${modellPlasser})
                ${sortering}`,
-      [...mangler.map((k) => `${k}%`), ...tokens.map((t) => `%${t}%`), LAVESTE_SITERBARE_LISTEPRIS],
+      [...mangler.map((k) => `${k}%`), ...tokens.map((t) => `%${t}%`), MINSTE_GYLDIGE_LISTEPRIS],
     );
   }
 
@@ -211,7 +211,7 @@ async function tekstFallback(
   const params: (string | number)[] = [
     `%${merke}%`,
     ...seedOrd.map((o) => `%${o.toUpperCase()}%`),
-    LAVESTE_SITERBARE_LISTEPRIS,
+    MINSTE_GYLDIGE_LISTEPRIS,
   ];
 
   try {

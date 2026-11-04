@@ -87,7 +87,13 @@
 
   function formatNok(tall) {
     if (typeof tall !== 'number' || !isFinite(tall) || tall <= 0) return null;
-    return String(Math.round(tall)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    // Prisen er regnet til øre (XLS-pris × 0,25 × 1,25). Vis øre når de finnes,
+    // ellers hele kroner — aldri skjul et avvik ved å runde.
+    var harOre = Math.abs(tall - Math.round(tall)) > 0.004;
+    var tekst = harOre ? tall.toFixed(2) : String(Math.round(tall));
+    var deler = tekst.split('.');
+    deler[0] = deler[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return deler.join(',');
   }
 
   /** Pris som kan vises for kunden. `null` → «Pris på forespørsel». */
@@ -97,10 +103,12 @@
       return { tekst: 'Pris på forespørsel', usikker: true, visPris: false };
     }
     return {
-      tekst: 'Veiledende fra ' + nok + ' kr',
-      usikker: false,
+      // Estimat, ikke tilbud: prisen er XLS-listepris eks. mva × 0,25 × 1,25 og
+      // kontrolleres manuelt før kunden får tilbud (Tom 2026-10-29).
+      tekst: 'Estimert pris ' + nok + ' kr',
+      usikker: true,
       visPris: true,
-      detalj: 'Veiledende pris inkl. mva — endelig pris bekreftes i tilbudet. Frakt og eventuell levering avklares der.'
+      detalj: 'Estimert glasspris inkl. mva (veiledende pris med 75 % rabatt + mva). Endelig pris bekreftes manuelt i tilbudet. Frakt og eventuell montering kommer i tillegg.'
     };
   }
 
