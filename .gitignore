@@ -17,6 +17,9 @@ data/fixtures/*
 !data/fixtures/self-test-50-cars.json
 !data/fixtures/self-test-50-bilde-full.jpg
 !data/fixtures/self-test-50-bilde-thumb.jpg
+# Testgrunnlag med kjennemerker er personindirekte (SVV-oppslag → eier) og skal
+# ikke i Git. Delbar versjon uten kjennemerker ligger i reports/ (sporet).
+data/testgrunnlag/
 data/gt-ekspansjon/*.json
 data/hull-kart-*
 data/test-100-bom-analyse.json
