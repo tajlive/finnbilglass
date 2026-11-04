@@ -2138,9 +2138,13 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       }
     }
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
-    const STATISKE_SIDER = ['/bilglass-uten-forsikring', '/personvern', '/om-oss'];
-    if (method === 'GET' && STATISKE_SIDER.includes(path)) {
-      const html = await env.ASSETS.fetch(new Request(url.origin + path + '.html'));
+    const STATISKE_SIDER: Record<string, string> = {
+      '/bilglass-uten-forsikring': '/bilglass-uten-forsikring.html',
+      '/personvern': '/personvern.html',
+      '/om-oss': '/om-oss.html',
+    };
+    if (method === 'GET' && STATISKE_SIDER[path]) {
+      const html = await env.ASSETS.fetch(new Request(url.origin + STATISKE_SIDER[path]));
       if (html.ok) return html;
     }
     if (method === 'GET' && path === '/') {
