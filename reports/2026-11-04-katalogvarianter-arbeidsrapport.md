@@ -207,3 +207,8 @@ Regnr `DS30475` (Toyota RAV4 2024):
 Tryggheten er styrket: en kandidat hvis dokumenterte årang utelukker bilen tilbys ikke lenger, PINPOINT krever kjent pris, og RAV4 2022+ gir tre varianter i stedet for én vilkårlig. Alle 35 endringene i 117-settet er forklart.
 
 **Ikke klar for produksjon** før: (a) Tom godkjenner 0048 + import (rollback finnes), (b) mobil/tilbakeknapp er verifisert, (c) leverandøren har bekreftet at `8432AGAC` gjelder 2022–2025 slik at sperren kan vurderes fjernet.
+
+> **RETTELSE 2026-11-04:** beløpet 5 490 kr bygget på den gamle regelen
+> (listepris × 0,60 → faste trinn) og er erstattet. Gjeldende regel er
+> `XLS-listepris eks. mva × 0,25 × 1,25` = **3 357,81 kr** for denne varianten.
+> Se `reports/2026-11-04-pr28-prisregel-og-sluttkontroller.md`.

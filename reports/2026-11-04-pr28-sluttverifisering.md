@@ -162,3 +162,8 @@ Varianttallene (1 275 / 29 / 9 / 1 313) er en **annen måleenhet** og kan ikke t
 5. **`Tilbake`-knappen i frontrute-steget** er ikke systematisk prøvd (den finnes og svarer, men hele sti-sekvensen er ikke gjennomgått).
 
 **Produksjon venter på godkjenning.** Planen i `reports/2026-11-04-katalogvarianter-produksjonsplan.md` pkt. 10 gjelder uendret, med tillegg: etter steg 5 skal sak #36/#39-mønsteret gjentas mot prod-staging, og `/ops`-åpning inngår i kontrollpunkt 6.
+
+> **RETTELSE 2026-11-04:** beløpet 5 490 kr bygget på den gamle regelen
+> (listepris × 0,60 → faste trinn) og er erstattet. Gjeldende regel er
+> `XLS-listepris eks. mva × 0,25 × 1,25` = **3 357,81 kr** for denne varianten.
+> Se `reports/2026-11-04-pr28-prisregel-og-sluttkontroller.md`.
