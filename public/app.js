@@ -529,6 +529,16 @@
     state.clientRequestId = null;
     state.inquiryAttempted = false;
     state.preferredWindshieldCandidate = null;
+    // Ny bil = nytt grunnlag. Uten dette ble gamle utstyrssvar, valgt variant og
+    // kandidatliste hengende igjen fra forrige søk (målt 2026-11-04).
+    frontruteSvar = {};
+    valgteGlass = null;
+    state.frontruteKandidater = [];
+    state.profil = {};
+    $('inquiry-form').classList.add('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    $('resultat-sporsmaal').textContent = '';
+    $('resultat-sporsmaal').classList.add('hidden');
     $('glass-placement').classList.add('hidden');
     $('inquiry-glass-summary').classList.add('hidden');
     state.regnr = regnr ? formatRegnr(regnr) : '';
@@ -1455,6 +1465,22 @@
 
     var vist = V.filtrerPaaSvar(kandidater, frontruteSvar);
     var liste = vist.kandidater;
+    // Én gjenstående kandidat = kundens valg. Da skal varianten (varenr + full
+    // eurokode) følge med i oppsummering, innsending og sak — ellers ville
+    // «samme glass» kunne peke på en annen eurokode under samme varenr.
+    if (liste && liste.length === 1) {
+      valgteGlass = {
+        varenr: liste[0].varenr || '',
+        varenavn: liste[0].varenavn || '',
+        // Eurokoden vises aldri til kunden (Tom 2026-10-31); den utledes bare
+        // internt fra variantId for sporing i saken.
+        eurokode: (liste[0].variantId || '').indexOf(':') > 0 ? String(liste[0].variantId).split(':').slice(1).join(':') : null,
+        variantId: liste[0].variantId || null,
+        posisjon: (liste[0].posisjon && liste[0].posisjon.glassklasse) || ''
+      };
+    } else {
+      valgteGlass = null;
+    }
 
     // Ekstra sikring: aldri kall kandidatKort på en tom liste.
     if (!liste || !liste.length) {
@@ -1549,20 +1575,61 @@
     oppdaterSoknadOppsummering();
   }
 
+  function svartekstFor(felt) {
+    var verdi = frontruteSvar[felt];
+    var alt = window.FBGView.svarAlternativer(felt).filter(function (a) { return a.verdi === verdi; })[0];
+    return alt ? alt.tekst : String(verdi || '');
+  }
+
   function renderFrontruteSporsmaal(felter) {
     var V = window.FBGView;
     var boks = $('resultat-sporsmaal');
     boks.textContent = '';
+    // Spørsmålene gjelder kandidatene som fortsatt er mulige ETTER kundens svar.
+    // Tidligere ble de beregnet på hele settet, så et besvart spørsmål ble stående
+    // selv når bare én variant gjenstod (målt 2026-11-04: RAV4 2024 viste
+    // «Har bilen oppvarmet frontrute?» på nytt etter at kunden svarte «Nei»).
+    var gjenstaar = V.filtrerPaaSvar(state.frontruteKandidater || [], frontruteSvar).kandidater || [];
     var relevante = felter.filter(function (f) {
       // HUD kan ikke leses av glasset: spør bare når minst to kandidater faktisk
       // har ulik kjent verdi for feltet.
-      var kjente = state.frontruteKandidater
+      var kjente = gjenstaar
         .map(function (k) { return (k.attributter || {})[f]; })
         .filter(function (v) { return typeof v === 'boolean'; });
       return new Set(kjente).size > 1;
     });
+    var besvart = Object.keys(frontruteSvar);
     if (!relevante.length) {
-      boks.classList.add('hidden');
+      // Ingenting mer å skille: kunden skal videre til tilbud, ikke svare på nytt.
+      // Har kunden svart, vises svaret med en «Endre svar»-knapp i stedet.
+      if (besvart.length) {
+        var wrapSvar = document.createElement('div');
+        wrapSvar.className = 'sporsmaal';
+        var oppsum = document.createElement('p');
+        oppsum.className = 'note';
+        oppsum.textContent = 'Du svarte: ' + besvart.map(function (f) {
+          return V.sporsmaalstekst(f) + ' – ' + svartekstFor(f).toLowerCase();
+        }).join(' · ') + '. Vi kontrollerer valget før tilbud.';
+        var endre = document.createElement('button');
+        endre.type = 'button';
+        endre.className = 'secondary';
+        endre.textContent = 'Endre svar';
+        endre.addEventListener('click', function () {
+          frontruteSvar = {};
+          if (state.glassRequest) state.glassRequest.answers = {};
+          renderFrontrute(state.glassRequest, {
+            kandidater: state.frontruteKandidater,
+            utfall: 'VERIFY',
+            sporsmaal: felter
+          }, searchGeneration);
+        });
+        wrapSvar.append(oppsum);
+        wrapSvar.append(endre);
+        boks.append(wrapSvar);
+        boks.classList.remove('hidden');
+      } else {
+        boks.classList.add('hidden');
+      }
       return;
     }
     var tittel = document.createElement('h3');
@@ -1597,7 +1664,9 @@
           var data = {
             kandidater: state.frontruteKandidater,
             utfall: state.frontruteKandidater.length === 1 ? 'PINPOINT' : 'VERIFY',
-            sporsmaal: relevante
+            // Hele lista: renderFrontruteSporsmaal regner selv ut hvilke spørsmål
+            // som fortsatt skiller de gjenstående kandidatene.
+            sporsmaal: felter
           };
           renderFrontrute(state.glassRequest, data, searchGeneration);
         });

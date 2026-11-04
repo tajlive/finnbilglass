@@ -142,6 +142,10 @@ export interface OffentligResolverKandidat {
   varenr: string | null;
   varenavn: string | null;
   pris: number | null;
+  /** «varenr:FULL-EUROKODE» — identitet for valgt variant, ikke visningstekst.
+   *  Kunden skal aldri se eurokoden (Tom 2026-10-31), men valget må kunne
+   *  spores tilbake til nøyaktig samme variant i saken og i /ops. */
+  variantId: string | null;
   attributter: Record<string, boolean | null>;
 }
 
@@ -153,10 +157,16 @@ export function tilOffentligResolverKandidat(k: Record<string, unknown> | null |
     if (typeof verdi === 'boolean' || verdi === null) attributter[nøkkel] = verdi as boolean | null;
   }
   const pris = typeof kilde.pris === 'number' && Number.isFinite(kilde.pris) && kilde.pris > 0 ? kilde.pris : null;
+  // variantId = «varenr:FULL-EUROKODE». Den er nødvendig for at kundens valg skal
+  // peke på samme produktvariant gjennom hele flyten (ett varenr kan ha flere
+  // eurokoder med ulikt utstyr og pris). Koden er produktets egen betegnelse,
+  // ikke internpris — listepris og andre interne felt projiseres fortsatt bort.
+  const variantId = typeof kilde.variantId === 'string' && kilde.variantId.length <= 90 ? kilde.variantId : null;
   return {
     varenr: typeof kilde.varenr === 'string' ? kilde.varenr : null,
     varenavn: typeof kilde.varenavn === 'string' ? kilde.varenavn : null,
     pris,
+    variantId,
     attributter,
   };
 }

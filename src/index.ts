@@ -228,7 +228,10 @@ async function adminAutorisert(request: Request, env: Env): Promise<boolean> {
  * testdomener i kontaktfeltet. Reelle kunder skal aldri havne her, så
  * regelen er bevisst smal — bare mønstre som ikke kan være ekte.
  */
-function erTydeligTest(regnr: string | null, kontakt: string, sesjon?: string | null): number {
+function erTydeligTest(regnr: string | null, kontakt: string, sesjon?: string | null, navn?: string | null): number {
+  // Navn som starter med «Test» markerer saken som test (syntetiske
+  // gjennomkjøringer skal aldri blandes med ekte kunder i /ops).
+  if (/^test/i.test((navn || '').trim())) return 1;
   const r = (regnr || '').toUpperCase().replace(/[\s-]/g, '');
   if (r.startsWith('TEST') || r === 'ZZ00000') return 1;
   // Kjørings-ID: alle automatiske tester sender sessionId «TEST-<runId>-<testId>».
@@ -1173,7 +1176,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         const resultater = await inquiryDb.batch([
           inquiryDb.prepare(
             'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)'
-          ).bind(regnr, navn, kontakt, melding, sesjon, vehicleJson, erTydeligTest(regnr, kontakt, sesjon)),
+          ).bind(regnr, navn, kontakt, melding, sesjon, vehicleJson, erTydeligTest(regnr, kontakt, sesjon, navn)),
           inquiryDb.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
