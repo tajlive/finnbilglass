@@ -1,0 +1,6 @@
+name = "finnbilglass-ops-repair"
+main = "worker.js"
+account_id = "80d5b1d56a3e907150ba7348b6182894"
+compatibility_date = "2025-06-01"
+workers_dev = false
+# Keep the two existing exact /ops routes. Domains and Access policies are untouched.
