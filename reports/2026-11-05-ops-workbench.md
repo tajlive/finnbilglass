@@ -1,3 +1,5 @@
+> Oppdatert status: produksjonssetting er gjennomført. Se `2026-11-05-ops-crm-produksjon.md`. Resten beskriver den opprinnelige staging-leveransen.
+
 # Operation Center — leveranse uten nye abonnementer
 
 Dato: 2026-11-05. Branch: feat/ops-free-workbench-20261105. Isolert arbeidstre: /tmp/fbg-architect.
