@@ -1,3 +1,4 @@
+import { glassBodyRejection } from './glass-body-compatibility';
 import { normalizeGlassSelection, type GlassSelection } from './glass-selection-contract';
 import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
 import { dekodeEurokode } from './eurokode-dekoder';
@@ -1080,6 +1081,9 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         const bilMerke = bil && typeof bil.merke === 'string' ? bil.merke : '';
         const bilModell = bil && typeof bil.modell === 'string' ? bil.modell : '';
         const bilAar = bil && typeof bil.aar === 'number' ? bil.aar : null;
+        const bodyRejection = rad && bilMerke && bilModell
+          ? glassBodyRejection({ merke: bilMerke, modell: bilModell }, rad.varenavn) : null;
+        if (bodyRejection) return json({ ok: false, error: bodyRejection }, 400);
         if (rad && bilMerke && bilModell && bilAar != null) {
           try {
             const res = await resolveFrontrute(env, { merke: bilMerke, modell: bilModell, aar: bilAar });

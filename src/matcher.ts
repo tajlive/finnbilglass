@@ -1,3 +1,4 @@
+import { glassBodyRejection } from './glass-body-compatibility';
 import { estimertKundeprisInklMva } from './pricing/nok-prising';
 /** Frontrute-matcher — kjernen i Finnbilglass.
  *  Kjede: bil {merke, modell, aar, profil} → D1-kandidater (katalogkode-utvidelse)
@@ -310,7 +311,7 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
   const front = [...sett.values()].filter((r) => {
     const dek = dekodeEurokode(r.eurokode);
     const erTrim = TRIM_RE.test(r.varenavn ?? '') || TRIM_VARENR_RE.test((r.varenr ?? '').toUpperCase());
-    return !erTrim && (dek.posisjon === 'frontrute' || /FRONT/.test(r.varenavn ?? ''));
+    return !glassBodyRejection(bil, r.varenavn) && !erTrim && (dek.posisjon === 'frontrute' || /FRONT/.test(r.varenavn ?? ''));
   });
   const kandidater = bil.aar != null ? front.filter((r) => matcherAar(parseAar(r.varenavn), bil.aar)) : front;
 

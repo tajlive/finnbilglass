@@ -1,3 +1,4 @@
+import { glassBodyRejection } from './glass-body-compatibility';
 /**
  * OE/VIN-pinpoint-resolver (finnbilglass, Fase 2).
  *
@@ -129,6 +130,7 @@ const STOPP_TOKENS = new Set([
   'CLASS', 'SERIE', 'SERIES', 'LHD', 'RHD', 'AUTOMATIKK', 'AUTOMATIC', 'KOMBI', 'LIMITED',
   'SPORT', 'STYLE', 'TURBO', 'TDI', 'CDI', 'TFSI', 'TSI', 'TFSIE', '4MATIC', 'XDRIVE',
   'SDRIVE', 'BLUETEC', 'DIESEL', 'GTD', 'GTE', 'GTI', 'AMG', 'ACTIVE', 'DYNAMIC', 'TREND',
+  'COUPE', 'COUPÉ', 'SUV', 'SEDAN', 'CABRIOLET', 'HATCHBACK', 'CROSSOVER', 'STV',
   'COMFORT', 'LIFE', 'PASSION', 'BASIC', 'EXECUTIVE', 'R-LINE', 'S-LINE', 'PREMIUM', 'BENZ',
 ]);
 
@@ -159,7 +161,7 @@ export function familieTokens(s: string): string[] {
 }
 
 /** Generiske familieord som aldri alene kan gi kandidatstøtte. */
-const GENERISKE_TOKEN = new Set(['ID', 'MODEL']);
+const GENERISKE_TOKEN = new Set(['ID', 'MODEL', 'COUPE', 'COUPÉ', 'SUV', 'SEDAN', 'CABRIOLET', 'HATCHBACK', 'KOMBI', 'CROSSOVER', 'STV']);
 
 /**
  * Modellnavn der butikkatalog og leverandørkatalog bruker ulike navn på samme bil.
@@ -1104,14 +1106,17 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   // GT-rader kan være nøklet på enten, og VIN-korreksjon må aldri miste GT-treff.
   const aarList = aar == null ? [] : [...new Set([aar, ...(bil.aar != null ? [bil.aar] : [])])];
 
+  // Filter fully materialised variants at EVERY layer, before ranking/capping.
+  const compatible = (ks: ResolverKandidat[]) => ks.filter(k => !glassBodyRejection(bil, k.varenavn));
+
   // L0 — eksakt VIN-overstyring for manuelt verifiserte fasitbiler
   let kand = await lagVinOverride(env, bil.vin);
-  let res = utfraKandidater(kand, '0 (vin_glass_overrides)', 0.95);
+  let res = utfraKandidater(compatible(kand), '0 (vin_glass_overrides)', 0.95);
   if (res) return res;
 
   // L1 — ground_truth (verifiserte kjøretøy)
   kand = await lagGroundTruth(env, make, model, aarList, makeRaa, bil.profil);
-  res = utfraKandidater(kand, '1 (ground_truth)', 0.85);
+  res = utfraKandidater(compatible(kand), '1 (ground_truth)', 0.85);
   if (res) return medPinpointSperre(res, make, model, aar);
 
   // GT-fasit-settet for kjøretøyet (gate for L2/L3-PINPOINT — G1-doktrine)
@@ -1120,17 +1125,17 @@ export async function resolveFrontrute(env: Env, bil: BilInput): Promise<Resolve
   // L3T — lisensiert TecDoc Vehicle Identification + parts linkage.
   // Ktype alene kan aldri overstyre feature-/OEM-gaten for PINPOINT.
   kand = await lagTecdocKtype(env, bil.vin);
-  res = utfraKandidater(kand, '3T (TecDoc VIN→KType)', 0.9, gtSett);
+  res = utfraKandidater(compatible(kand), '3T (TecDoc VIN→KType)', 0.9, gtSett);
   if (res) return medPinpointSperre(res, make, model, aar);
 
   // L2 — Pilkington-katalog
   kand = await lagPilkington(env, make, model, aar, bil.profil);
-  res = utfraKandidater(kand, '2 (glass_catalog)', 0.7, gtSett);
+  res = utfraKandidater(compatible(kand), '2 (glass_catalog)', 0.7, gtSett);
   if (res) return medPinpointSperre(res, make, model, aar);
 
   // L3 — ktype (kun når data finnes)
   kand = await lagKtype(env, make, model, aar);
-  res = utfraKandidater(kand, '3 (ktype)', 0.75, gtSett);
+  res = utfraKandidater(compatible(kand), '3 (ktype)', 0.75, gtSett);
   if (res) return medPinpointSperre(res, make, model, aar);
 
   return { utfall: 'FALLBACK', grunn: 'ingen resolver-data — tekstmatcher overtar', confidence: 0 };

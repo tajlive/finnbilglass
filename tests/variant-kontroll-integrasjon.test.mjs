@@ -131,3 +131,22 @@ test('feil side avvises uten sak', async () => {
   assert.match(ut.tekst, /dokumentert som venstre/);
   assert.equal(db.state.inserts, 0);
 });
+
+test('GLE Coupé-only glass rejected for GLE without body evidence before saving', async () => {
+  const rad = { ...RAD, varenr:'5508AGAC', varenavn:'MERCEDES GLE COUPE W167 20- WS', eurokode:'5508AGACHMVZ1L', variant_id:'5508AGAC:5508AGACHMVZ1L' };
+  const db = lagDb(rad);
+  const ut = await send(db, { ...GRUNN, variantId:rad.variant_id, bil:{merke:'MERCEDES',modell:'GLE 350 DE 4MATIC',aar:2021} });
+  assert.equal(ut.status,400,ut.tekst);
+  assert.match(ut.tekst,/karosserivariant må avklares/);
+  assert.equal(db.state.inserts,0);
+  assert.equal(ut.epost.length,0);
+});
+
+test('explicit SUV cannot submit documented Coupé glass', async () => {
+  const rad = { ...RAD, varenr:'5508AGAC', varenavn:'MERCEDES GLE COUPE W167 20- WS', eurokode:'5508AGACHMVZ1L', variant_id:'5508AGAC:5508AGACHMVZ1L' };
+  const db = lagDb(rad);
+  const ut = await send(db, { ...GRUNN, variantId:rad.variant_id, bil:{merke:'MERCEDES',modell:'GLE SUV',aar:2021} });
+  assert.equal(ut.status,400,ut.tekst);
+  assert.equal(db.state.inserts,0);
+  assert.equal(ut.epost.length,0);
+});
