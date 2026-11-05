@@ -1,0 +1,5821 @@
+{
+ "ZZ33141_regnr": {
+  "aar": 2021,
+  "vin": "W1N1673171A365845",
+  "utfall": "VERIFY",
+  "varenr": [
+   "2340GYM"
+  ]
+ },
+ "ZZ33141_utenVIN": {
+  "utfall": "VERIFY",
+  "varenr": [
+   "5508ACDC",
+   "5508ACKCJ",
+   "5508AGAC",
+   "5508AGAC",
+   "5508AGAC",
+   "5508AGAC"
+  ]
+ },
+ "ZZ33141_medVIN_frontrute": {
+  "utfall": "VERIFY",
+  "varenr": [
+   "2340GYM"
+  ]
+ },
+ "kontroll": {
+  "FBG-T-0012": {
+   "aar": 1983,
+   "vin": "WF0FXXGAGFDE13202",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1200BZ",
+    "1200C",
+    "1200GB"
+   ]
+  },
+  "FBG-T-0025": {
+   "aar": 1999,
+   "vin": "MMBCNK740XD012774",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2079GN"
+   ]
+  },
+  "FBG-T-0040": {
+   "aar": 1999,
+   "vin": "JT153SV2000343866",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2059GY"
+   ]
+  },
+  "FBG-T-0077": {
+   "aar": 2000,
+   "vin": "WV2ZZZ70ZYH087159",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0104": {
+   "aar": 2004,
+   "vin": "WVGZZZ7LZ5D010386",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2458GY",
+    "2458GYEL",
+    "2458GYM"
+   ]
+  },
+  "FBG-T-0061": {
+   "aar": 2005,
+   "vin": "JTEHG20V700091995",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2298GY",
+    "2572GN",
+    "2572GY"
+   ]
+  },
+  "FBG-T-0085": {
+   "aar": 2006,
+   "vin": "WVWZZZ1KZ6P024914",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2555BBM",
+    "2555BLM",
+    "2555GY",
+    "2555GYM",
+    "2760BL"
+   ]
+  },
+  "FBG-T-0078": {
+   "aar": 2005,
+   "vin": "WV2ZZZ7HZ6X008645",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2525CSGY",
+    "2525GY",
+    "2525GYA",
+    "2525GYAM",
+    "2525GYM"
+   ]
+  },
+  "FBG-T-0082": {
+   "aar": 2007,
+   "vin": "WVWZZZ1FZ7V052245",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2731CSM",
+    "2731GN",
+    "2731GNM"
+   ]
+  },
+  "FBG-T-0062": {
+   "aar": 2007,
+   "vin": "JTMBC31V306069158",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2696GNEL",
+    "2696GY"
+   ]
+  },
+  "FBG-T-0001": {
+   "aar": 2007,
+   "vin": "WAUZZZ8T68A002371",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2800GNCM",
+    "2800GYAM",
+    "2800GYM",
+    "2800GYM2"
+   ]
+  },
+  "FBG-T-0049": {
+   "aar": 2008,
+   "vin": "JTEBZ29J900161755",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "FW2652GY"
+   ]
+  },
+  "FBG-T-0005": {
+   "aar": 2008,
+   "vin": "WBAVG11060A569089",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2428GGM",
+    "2428GYM",
+    "2638GYM",
+    "2743GYM"
+   ]
+  },
+  "FBG-T-0004": {
+   "aar": 2008,
+   "vin": "WBAVG91030VG42915",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2428GGM",
+    "2428GYM",
+    "2638GYM",
+    "2743GYM"
+   ]
+  },
+  "FBG-T-0069": {
+   "aar": 2008,
+   "vin": "WV1ZZZ2KZ9X030972",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GY",
+    "2576GYAG",
+    "2576GYM"
+   ]
+  },
+  "FBG-T-0107": {
+   "aar": 2008,
+   "vin": "WV2ZZZ7HZ9H090528",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2525CSGY",
+    "2525GY",
+    "2525GYA",
+    "2525GYAM",
+    "2525GYM",
+    "2980GYM"
+   ]
+  },
+  "FBG-T-0063": {
+   "aar": 2009,
+   "vin": "VNKKH96370A067235",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2250GY2",
+    "2699GN"
+   ]
+  },
+  "FBG-T-0100": {
+   "aar": 2008,
+   "vin": "WVWZZZ3CZ9E060073",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2645CSM",
+    "2645GNCM",
+    "2645GNEL",
+    "2645GYM",
+    "2875CSM",
+    "2875GYM"
+   ]
+  },
+  "FBG-T-0108": {
+   "aar": 2009,
+   "vin": "WV1ZZZ7HZ9H101524",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2525CSGY",
+    "2525GY",
+    "2525GYA",
+    "2525GYAM",
+    "2525GYM",
+    "2980GYM"
+   ]
+  },
+  "FBG-T-0064": {
+   "aar": 2008,
+   "vin": "VNKKC96390A192722",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2250GY2",
+    "2699GN"
+   ]
+  },
+  "FBG-T-0027": {
+   "aar": 2009,
+   "vin": "JMBXJCW8W9Z401095",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2776GN",
+    "2776GYEL"
+   ]
+  },
+  "FBG-T-0101": {
+   "aar": 2010,
+   "vin": "WVWZZZ3CZAE189792",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2645CSM",
+    "2645GNCM",
+    "2645GNEL",
+    "2645GYM",
+    "2875CSM",
+    "2875GNCM"
+   ]
+  },
+  "FBG-T-0067": {
+   "aar": 2010,
+   "vin": "WVWZZZ1KZAM670699",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2680GN",
+    "2680GNM",
+    "2811GY",
+    "2888GN",
+    "2888GY"
+   ]
+  },
+  "FBG-T-0037": {
+   "aar": 2010,
+   "vin": "JTDKG18C00N458861",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0010": {
+   "aar": 2011,
+   "vin": "WBAZW41000L443305",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2967GYCM",
+    "2967GYM",
+    "2968CSMU",
+    "2968GNMU"
+   ]
+  },
+  "FBG-T-0083": {
+   "aar": 2009,
+   "vin": "WVWZZZ1KZAW556843",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0024": {
+   "aar": 2011,
+   "vin": "JMBXNGA1WBZ025971",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3031GNCM",
+    "3031GNM2",
+    "3031GY",
+    "3031GYM"
+   ]
+  },
+  "FBG-T-0031": {
+   "aar": 2011,
+   "vin": "VF3WC8HR0AT099523",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2725CS",
+    "2725CSM",
+    "2725GN",
+    "2725GNM",
+    "2725GY"
+   ]
+  },
+  "FBG-T-0019": {
+   "aar": 2011,
+   "vin": "SALVA2BC9CH617157",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0072": {
+   "aar": 2012,
+   "vin": "WV1ZZZ2KZCX111029",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GY",
+    "2576GYAG",
+    "2576GYM"
+   ]
+  },
+  "FBG-T-0073": {
+   "aar": 2012,
+   "vin": "WV1ZZZ2KZCX087356",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GY",
+    "2576GYAG",
+    "2576GYM"
+   ]
+  },
+  "FBG-T-0102": {
+   "aar": 2012,
+   "vin": "WVWZZZ3CZCE005107",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM",
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "2875GYM",
+    "3070GNCM"
+   ]
+  },
+  "FBG-T-0112": {
+   "aar": 2013,
+   "vin": "YV1GWAA50D1131404",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3185CSBL",
+    "3185GNMP"
+   ]
+  },
+  "FBG-T-0028": {
+   "aar": 2012,
+   "vin": "JMBLYV98WDJ400289",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2283GN",
+    "2530GB",
+    "2530GBEL"
+   ]
+  },
+  "FBG-T-0105": {
+   "aar": 2012,
+   "vin": "WVGZZZ1TZDW036501",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3068GN",
+    "3068GNCM",
+    "3068GNM"
+   ]
+  },
+  "FBG-T-0103": {
+   "aar": 2013,
+   "vin": "WVGZZZ5NZDW072562",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2836GNCM"
+   ]
+  },
+  "FBG-T-0051": {
+   "aar": 2013,
+   "vin": "JTDZS3EU403052650",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3170GNMU",
+    "3170GNMU"
+   ]
+  },
+  "FBG-T-0026": {
+   "aar": 2014,
+   "vin": "JMBXDGG2WEZ012146",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-T-0084": {
+   "aar": 2014,
+   "vin": "WVWZZZAUZFW559552",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0022": {
+   "aar": 2014,
+   "vin": "JMZKEN91800255538",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3151GNCM",
+    "3151GNMS"
+   ]
+  },
+  "FBG-T-0016": {
+   "aar": 2013,
+   "vin": "U5YHM516AEL092977",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0068": {
+   "aar": 2014,
+   "vin": "WVWZZZAUZFW003114",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GYM"
+   ]
+  },
+  "FBG-T-0114": {
+   "aar": 2015,
+   "vin": "YV1DZ8756F2749556",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3175GNEL"
+   ]
+  },
+  "FBG-T-0003": {
+   "aar": 2015,
+   "vin": "WBA2R1108GP777463",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3113GN",
+    "3113GN2",
+    "3113GNCM",
+    "3113GY",
+    "3113GYM"
+   ]
+  },
+  "FBG-T-0117": {
+   "aar": 2016,
+   "vin": "WV1ZZZ7HZGH132076",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3393GN",
+    "3393GNM"
+   ]
+  },
+  "FBG-T-0080": {
+   "aar": 2015,
+   "vin": "WVWZZZAUZGW901159",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3252GNCM",
+    "3252GYM"
+   ]
+  },
+  "FBG-T-0115": {
+   "aar": 2016,
+   "vin": "YV1DZA8CDH2059215",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3175GNEL",
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC",
+    "8846ASMR",
+    "8846ASMR"
+   ]
+  },
+  "FBG-T-0109": {
+   "aar": 2016,
+   "vin": "WV1ZZZ7HZHX008704",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3393GN",
+    "3393GNM"
+   ]
+  },
+  "FBG-T-0081": {
+   "aar": 2016,
+   "vin": "WVWZZZAUZHW901104",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM2",
+    "3252GNCM"
+   ]
+  },
+  "FBG-T-0006": {
+   "aar": 2017,
+   "vin": "WBY1Z6101HV950828",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0018": {
+   "aar": 2017,
+   "vin": "KNAJX81EFH7020502",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3253GB",
+    "3253GBC",
+    "3253GBEL",
+    "3253GBS"
+   ]
+  },
+  "FBG-T-0086": {
+   "aar": 2016,
+   "vin": "WVWZZZAUZHW103532",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM2",
+    "3252GNCM"
+   ]
+  },
+  "FBG-T-0106": {
+   "aar": 2017,
+   "vin": "WVGZZZ1TZHW101231",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3068GN",
+    "3068GNCM",
+    "3068GNM",
+    "3350GNCM",
+    "3350GNM"
+   ]
+  },
+  "FBG-T-0113": {
+   "aar": 2017,
+   "vin": "YV1GWDCH0J2385110",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3185GNMP"
+   ]
+  },
+  "FBG-T-0021": {
+   "aar": 2018,
+   "vin": "JMZDKFW7A01354515",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "5184AGAC"
+   ]
+  },
+  "FBG-T-0015": {
+   "aar": 2018,
+   "vin": "SAJBA2BN7JCY60716",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2874GNEL",
+    "3351CSCEL",
+    "4339ACDC",
+    "4339AGAC",
+    "4339AGAC"
+   ]
+  },
+  "FBG-T-0110": {
+   "aar": 2018,
+   "vin": "WV1ZZZ7HZJH182652",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3393GN",
+    "3393GNM"
+   ]
+  },
+  "FBG-T-0066": {
+   "aar": 2018,
+   "vin": "WV1ZZZ2HZJH015073",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3046GNM2"
+   ]
+  },
+  "FBG-T-0079": {
+   "aar": 2018,
+   "vin": "WV1ZZZSYZJ9051136",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8635AGSC",
+    "8635AGSC",
+    "8635AGSIV",
+    "8635AGSIV"
+   ]
+  },
+  "FBG-T-0074": {
+   "aar": 2018,
+   "vin": "WV1ZZZ2KZJX145565",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GNCM",
+    "2576GNM2"
+   ]
+  },
+  "FBG-T-0070": {
+   "aar": 2020,
+   "vin": "WV1ZZZ2KZLX050741",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GNCM",
+    "2576GNM2"
+   ]
+  },
+  "FBG-T-0002": {
+   "aar": 2019,
+   "vin": "WAUZZZGE3LB007677",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8646ACKC",
+    "8646AGAC"
+   ]
+  },
+  "FBG-T-0088": {
+   "aar": 2020,
+   "vin": "WVWZZZE1ZMP017415",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "8652AGAC"
+   ]
+  },
+  "FBG-T-0111": {
+   "aar": 2019,
+   "vin": "WV1ZZZ7HZKH161826",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3393GN",
+    "3393GNM"
+   ]
+  },
+  "FBG-T-0075": {
+   "aar": 2021,
+   "vin": "WV1ZZZSKZMX015686",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GNCM",
+    "2576GNM2"
+   ]
+  },
+  "FBG-T-0050": {
+   "aar": 2021,
+   "vin": "JTEBR3FJ30K210947",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0052": {
+   "aar": 2021,
+   "vin": "YARVFAHKKGZ196813",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0089": {
+   "aar": 2021,
+   "vin": "WVWZZZE1ZMP077175",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8652AGAC",
+    "8652AGAC"
+   ]
+  },
+  "FBG-T-0030": {
+   "aar": 2021,
+   "vin": "SJNFAAZE1U0144699",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3111GN"
+   ]
+  },
+  "FBG-T-0014": {
+   "aar": 2021,
+   "vin": "MPATFS87JMT006662",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0039": {
+   "aar": 2021,
+   "vin": "NMTK33BX40R091250",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "8421AGAC"
+   ]
+  },
+  "FBG-T-0033": {
+   "aar": 2022,
+   "vin": "LPSVSEDEENL058246",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0035": {
+   "aar": 2021,
+   "vin": "WP0ZZZY1ZNSA61451",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "6746AGAG"
+   ]
+  },
+  "FBG-T-0017": {
+   "aar": 2022,
+   "vin": "KNACC81GFN5132474",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3397GBCM"
+   ]
+  },
+  "FBG-T-0009": {
+   "aar": 2022,
+   "vin": "WBY21CF09NCK28193",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2300AGAC"
+   ]
+  },
+  "FBG-T-0034": {
+   "aar": 2022,
+   "vin": "LPSVSEGEKNL071338",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0090": {
+   "aar": 2022,
+   "vin": "WVGZZZE2ZNP068237",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8658ACKC",
+    "8658ACKC",
+    "8658AGAC",
+    "8658AGAC"
+   ]
+  },
+  "FBG-T-0008": {
+   "aar": 2022,
+   "vin": "WBY51EJ05PCM34419",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2304ACDC"
+   ]
+  },
+  "FBG-T-0011": {
+   "aar": 2022,
+   "vin": "VSSZZZK12PP014506",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0046": {
+   "aar": 2023,
+   "vin": "SB1Z93BE40E344008",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-T-0047": {
+   "aar": 2023,
+   "vin": "SB1KC3CE50E003105",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-T-0076": {
+   "aar": 2022,
+   "vin": "WV1ZZZSK8PX017765",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GNCM",
+    "2576GNM2"
+   ]
+  },
+  "FBG-T-0036": {
+   "aar": 2023,
+   "vin": "XP7YGCEK8PB151026",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "8103AGCC"
+   ]
+  },
+  "FBG-T-0096": {
+   "aar": 2023,
+   "vin": "WVGZZZE2ZPP505466",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0093": {
+   "aar": 2023,
+   "vin": "WVGZZZE2ZPE070521",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8658ACKC",
+    "8658ACKC",
+    "8658AGAC",
+    "8658AGAC"
+   ]
+  },
+  "FBG-T-0097": {
+   "aar": 2023,
+   "vin": "WVGZZZE2ZPP502033",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0054": {
+   "aar": 2023,
+   "vin": "JTMGBRFV00D121863",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-T-0071": {
+   "aar": 2023,
+   "vin": "WV1ZZZSK7PX005378",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GNCM",
+    "2576GNM2"
+   ]
+  },
+  "FBG-T-0091": {
+   "aar": 2023,
+   "vin": "WVGZZZE2ZPE053864",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8658ACKC",
+    "8658ACKC",
+    "8658AGAC",
+    "8658AGAC"
+   ]
+  },
+  "FBG-T-0065": {
+   "aar": 2024,
+   "vin": "YARKBAC3200269191",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3124GN",
+    "3124GNM",
+    "8438AGAC"
+   ]
+  },
+  "FBG-T-0055": {
+   "aar": 2024,
+   "vin": "JTMGBRFV80D191868",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-T-0094": {
+   "aar": 2024,
+   "vin": "WVGZZZE27RE020396",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8658ACKC",
+    "8658ACKC",
+    "8658AGAC",
+    "8658AGAC"
+   ]
+  },
+  "FBG-T-0013": {
+   "aar": 2024,
+   "vin": "TMAH081A6RJ034013",
+   "utfall": "VERIFY",
+   "varenr": [
+    "4167ASMR"
+   ]
+  },
+  "FBG-T-0092": {
+   "aar": 2023,
+   "vin": "WVGZZZE29RE008069",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8658ACKC",
+    "8658ACKC",
+    "8658AGAC",
+    "8658AGAC"
+   ]
+  },
+  "FBG-T-0041": {
+   "aar": 2024,
+   "vin": "JTNACABB80J021197",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-T-0057": {
+   "aar": 2024,
+   "vin": "JTMGBRFV10D201804",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-T-0042": {
+   "aar": 2024,
+   "vin": "JTNACABB60J021179",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-T-0043": {
+   "aar": 2024,
+   "vin": "JTNACABB40J021214",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-T-0044": {
+   "aar": 2024,
+   "vin": "JTNACABB90J020947",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-T-0045": {
+   "aar": 2024,
+   "vin": "JTNACABB70J020669",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-T-0058": {
+   "aar": 2024,
+   "vin": "JTMGBRFV50D203202",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-T-0059": {
+   "aar": 2024,
+   "vin": "JTMGBRFV30D200265",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-T-0060": {
+   "aar": 2024,
+   "vin": "JTMGBRFV80D200391",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-T-0032": {
+   "aar": 2025,
+   "vin": "VF3VLEHZ4R7872186",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2790CS",
+    "2790CSM"
+   ]
+  },
+  "FBG-T-0053": {
+   "aar": 2025,
+   "vin": "YARVTZKUZRZ010150",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0029": {
+   "aar": 2025,
+   "vin": "JN1TDNFE0U0454252",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0098": {
+   "aar": 2025,
+   "vin": "WVWZZZED8SE045268",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0095": {
+   "aar": 2025,
+   "vin": "WVGZZZE23SE065602",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8658ACKC",
+    "8658ACKC",
+    "8658AGAC",
+    "8658AGAC"
+   ]
+  },
+  "FBG-T-0099": {
+   "aar": 2025,
+   "vin": "WVWZZZED4SE045722",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0038": {
+   "aar": 2025,
+   "vin": "JTMABBBA30A084616",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0048": {
+   "aar": 2025,
+   "vin": "AHTBA3CD606284224",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0020": {
+   "aar": 2026,
+   "vin": "LJUBMSA13SK004257",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0087": {
+   "aar": 2025,
+   "vin": "WV2ZZZEB8TH005319",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0007": {
+   "aar": 2025,
+   "vin": "WBY71HD030FV79047",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2301AKGS",
+    "2301ASMC"
+   ]
+  },
+  "FBG-T-0116": {
+   "aar": 2005,
+   "vin": "WV1ZZZ7HZ5H060934",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2525CSGY",
+    "2525GY",
+    "2525GYA",
+    "2525GYAM",
+    "2525GYM"
+   ]
+  },
+  "FBG-T-0023": {
+   "aar": 2016,
+   "vin": "WDD1179021N318527",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-T-0056": {
+   "aar": 2024,
+   "vin": "JTMGBRFVX0D191693",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0001": {
+   "aar": 1974,
+   "vin": "J4F835TA73020",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0002": {
+   "aar": 1966,
+   "vin": "166476C128842",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0003": {
+   "aar": 2008,
+   "vin": "WF0GXXGBBG8K51919",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2308GY",
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0004": {
+   "aar": 2009,
+   "vin": "WF0DXXGBBD8K58855",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2308GY",
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0005": {
+   "aar": 2010,
+   "vin": "YV1MW84E1B2614504",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2750GY",
+    "2750GYM"
+   ]
+  },
+  "FBG-L-0006": {
+   "aar": 2011,
+   "vin": "WF0LXXGCBLBT85822",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3106GN",
+    "3106GNM",
+    "3106GNME",
+    "3106GYEL"
+   ]
+  },
+  "FBG-L-0007": {
+   "aar": 2011,
+   "vin": "VF34C9HR8BY123768",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2843CSM",
+    "2843GN",
+    "2843GNM"
+   ]
+  },
+  "FBG-L-0008": {
+   "aar": 2012,
+   "vin": "YV1FW84A1D1094482",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3185GNMP"
+   ]
+  },
+  "FBG-L-0009": {
+   "aar": 2013,
+   "vin": "YV1FW84ABD1139539",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3185GNMP"
+   ]
+  },
+  "FBG-L-0010": {
+   "aar": 2013,
+   "vin": "WVWZZZAUZEP024034",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GYM"
+   ]
+  },
+  "FBG-L-0011": {
+   "aar": 2013,
+   "vin": "WV1ZZZ2HZEH007751",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3046GNM"
+   ]
+  },
+  "FBG-L-0012": {
+   "aar": 2016,
+   "vin": "WVWZZZAUZFP626189",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GNCM"
+   ]
+  },
+  "FBG-L-0013": {
+   "aar": 2016,
+   "vin": "YV1PW68BCH1000955",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8845AGCC",
+    "8845AGCC",
+    "8845AGCC"
+   ]
+  },
+  "FBG-L-0014": {
+   "aar": 2017,
+   "vin": "YV1UZBABDJ1027602",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC",
+    "8846ASMR",
+    "8846ASMR"
+   ]
+  },
+  "FBG-L-0015": {
+   "aar": 2018,
+   "vin": "W0VZT8GBXJ1149974",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2925CSCM2"
+   ]
+  },
+  "FBG-L-0016": {
+   "aar": 2020,
+   "vin": "YV1XZBBVFL2307894",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8842ASMH",
+    "8842ASMH",
+    "8847AGAC",
+    "8847AGAC",
+    "8847ASMR",
+    "8847ASMR"
+   ]
+  },
+  "FBG-L-0017": {
+   "aar": 1989,
+   "vin": "1G1YY2182K5123048",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0018": {
+   "aar": 2022,
+   "vin": "LFB1FV690M2L53473",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0019": {
+   "aar": 2023,
+   "vin": "LC0CF4CD9P0133129",
+   "utfall": "VERIFY",
+   "varenr": [
+    "E401AGSC",
+    "E401AGSC"
+   ]
+  },
+  "FBG-L-0021": {
+   "aar": 2005,
+   "vin": "YV1CM796751217469",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2472CSBL",
+    "2472CSBL",
+    "2472GB"
+   ]
+  },
+  "FBG-L-0022": {
+   "aar": 2006,
+   "vin": "YV1SZ714671264095",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2700GN"
+   ]
+  },
+  "FBG-L-0023": {
+   "aar": 2007,
+   "vin": "YV1MW765282379716",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2750GY",
+    "2750GYM"
+   ]
+  },
+  "FBG-L-0024": {
+   "aar": 2007,
+   "vin": "WBAUE31090E079185",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2610CSGM",
+    "2610GY",
+    "2610GYM"
+   ]
+  },
+  "FBG-L-0025": {
+   "aar": 2009,
+   "vin": "YV1MW76F2A2540371",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2750GY",
+    "2750GYM"
+   ]
+  },
+  "FBG-L-0026": {
+   "aar": 2010,
+   "vin": "WVWZZZ1KZAP151031",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2680GN",
+    "2680GNM",
+    "2811GY",
+    "2888GN",
+    "2888GY"
+   ]
+  },
+  "FBG-L-0027": {
+   "aar": 2010,
+   "vin": "JMBLYV98WAJ400925",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2283GN",
+    "2530GB",
+    "2530GBEL"
+   ]
+  },
+  "FBG-L-0028": {
+   "aar": 2010,
+   "vin": "SB1KN56E80F072169",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2773GN",
+    "2773GNM2"
+   ]
+  },
+  "FBG-L-0029": {
+   "aar": 2014,
+   "vin": "WDD2462001N077403",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0030": {
+   "aar": 2014,
+   "vin": "U5YPC814AEL526351",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3055GB",
+    "3055GBM"
+   ]
+  },
+  "FBG-L-0031": {
+   "aar": 2012,
+   "vin": "WAUZZZ8T6CA027294",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2800GNCM",
+    "2800GYAM",
+    "2800GYM",
+    "2952GNCM",
+    "2952GYM2"
+   ]
+  },
+  "FBG-L-0032": {
+   "aar": 2015,
+   "vin": "VNKKD3D3X0A173769",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2699GN",
+    "3124GN"
+   ]
+  },
+  "FBG-L-0033": {
+   "aar": 2016,
+   "vin": "WVWZZZ3CZGE140439",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "3300GN",
+    "3300GNCM",
+    "3300GNM"
+   ]
+  },
+  "FBG-L-0034": {
+   "aar": 2016,
+   "vin": "WBAHS1100G5F09942",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2982GY",
+    "2982GYM"
+   ]
+  },
+  "FBG-L-0035": {
+   "aar": 2016,
+   "vin": "YV1MV28L0H2373616",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3165GNMP",
+    "8842ASMH",
+    "8842ASMH"
+   ]
+  },
+  "FBG-L-0036": {
+   "aar": 2016,
+   "vin": "WF05XXGCC5GK20124",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2640GYM",
+    "3593AGAC"
+   ]
+  },
+  "FBG-L-0037": {
+   "aar": 2017,
+   "vin": "JTMRJREV80D159936",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3202GNCE",
+    "3202GNCE"
+   ]
+  },
+  "FBG-L-0038": {
+   "aar": 2018,
+   "vin": "WBAJN910X0BN93991",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0039": {
+   "aar": 2018,
+   "vin": "WVGZZZ5NZKW836875",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2836GN",
+    "2836GYM"
+   ]
+  },
+  "FBG-L-0040": {
+   "aar": 2018,
+   "vin": "WF0NXXGCHNJU63653",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3106GNME",
+    "3593AGAC"
+   ]
+  },
+  "FBG-L-0041": {
+   "aar": 2008,
+   "vin": "WF0EXXGBBE8T16754",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2308GY",
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0042": {
+   "aar": 2016,
+   "vin": "WVWZZZ3CZHE019609",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "3300GN",
+    "3300GNCM",
+    "3300GNM"
+   ]
+  },
+  "FBG-L-0043": {
+   "aar": 2019,
+   "vin": "TMBLK9NS3J8102093",
+   "utfall": "VERIFY",
+   "varenr": [
+    "7820AGAC",
+    "7820AGAM"
+   ]
+  },
+  "FBG-L-0044": {
+   "aar": 2021,
+   "vin": "W1N1671171A435504",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0045": {
+   "aar": 2024,
+   "vin": "WF0RPCEF5RRE03191",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3599AGNC",
+    "W1843GB",
+    "W2566GN",
+    "W2567GN"
+   ]
+  },
+  "FBG-L-0046": {
+   "aar": 2025,
+   "vin": "WBY51HH090CW41683",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0047": {
+   "aar": 2008,
+   "vin": "WBAPX31000C081944",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0048": {
+   "aar": 2026,
+   "vin": "WF02XXERK1SP37127",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2113GN",
+    "2113GNEL"
+   ]
+  },
+  "FBG-L-0049": {
+   "aar": 1999,
+   "vin": "WVWZZZ1JZXW614743",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GY",
+    "2126GYM"
+   ]
+  },
+  "FBG-L-0050": {
+   "aar": 2000,
+   "vin": "WAUZZZ8LZYA101872",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0051": {
+   "aar": 2000,
+   "vin": "JHMAP1130YT005871",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2264GY"
+   ]
+  },
+  "FBG-L-0052": {
+   "aar": 2007,
+   "vin": "SB1BR56L60E167676",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2141GYEL",
+    "2744GNEL"
+   ]
+  },
+  "FBG-L-0053": {
+   "aar": 2009,
+   "vin": "W0LGT67K691012417",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2925CSCM",
+    "2925CSM",
+    "2925GN",
+    "2925GNCM",
+    "2925GNM"
+   ]
+  },
+  "FBG-L-0054": {
+   "aar": 2009,
+   "vin": "YV1MW76F2A2533625",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2750GY",
+    "2750GYM"
+   ]
+  },
+  "FBG-L-0055": {
+   "aar": 2010,
+   "vin": "WBAUD71000P441435",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2610CSGM",
+    "2610GY",
+    "2610GYM"
+   ]
+  },
+  "FBG-L-0056": {
+   "aar": 2014,
+   "vin": "WVWZZZAUZEW389884",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GYM"
+   ]
+  },
+  "FBG-L-0057": {
+   "aar": 2016,
+   "vin": "2FMTK4A38GBC61260",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0058": {
+   "aar": 2017,
+   "vin": "3HGRU8750HM405453",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2217GY"
+   ]
+  },
+  "FBG-L-0059": {
+   "aar": 2020,
+   "vin": "JTMGBRFV90D007442",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0060": {
+   "aar": 2021,
+   "vin": "JTMGBRFV60D015174",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0061": {
+   "aar": 2022,
+   "vin": "JTDKBABB00A052827",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0062": {
+   "aar": 2023,
+   "vin": "JTMGBRFV00D141157",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0063": {
+   "aar": 2023,
+   "vin": "JTMGBRFV40D145342",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0064": {
+   "aar": 2023,
+   "vin": "JTMGBRFV00D146925",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0065": {
+   "aar": 2023,
+   "vin": "JTMGBRFV70D141169",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0066": {
+   "aar": 2023,
+   "vin": "JTMGBRFV80D140788",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0067": {
+   "aar": 2023,
+   "vin": "JTMGBRFV20D144805",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0068": {
+   "aar": 2023,
+   "vin": "JTMGBRFV70D146243",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0069": {
+   "aar": 2023,
+   "vin": "JTMGBRFV50D145429",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0070": {
+   "aar": 2023,
+   "vin": "JTMGBRFV60D148419",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0071": {
+   "aar": 2024,
+   "vin": "NMTK33BX70R280863",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8421AGAC",
+    "8453AGSC",
+    "8453AGSC",
+    "8453AGSC",
+    "8453ASMR"
+   ]
+  },
+  "FBG-L-0072": {
+   "aar": 2024,
+   "vin": "JTMGBRFV40D202705",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0073": {
+   "aar": 2024,
+   "vin": "JTNACABB30J021169",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-L-0074": {
+   "aar": 2024,
+   "vin": "JTNACABB00J021159",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-L-0075": {
+   "aar": 2024,
+   "vin": "JTDKCACB40A061588",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "8440AGAC"
+   ]
+  },
+  "FBG-L-0076": {
+   "aar": 2024,
+   "vin": "JTNACABB50J020721",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-L-0077": {
+   "aar": 2024,
+   "vin": "JTNACABB70J020736",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-L-0078": {
+   "aar": 1988,
+   "vin": "WVWZZZ15ZJK020661",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1299C",
+    "1299GB"
+   ]
+  },
+  "FBG-L-0079": {
+   "aar": 2003,
+   "vin": "JT121JK1800002465",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0080": {
+   "aar": 2006,
+   "vin": "JSAERD31S00352703",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2779GN"
+   ]
+  },
+  "FBG-L-0081": {
+   "aar": 2008,
+   "vin": "WVWZZZ9NZ9Y074711",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2660GY",
+    "2660GYM",
+    "2965GNM"
+   ]
+  },
+  "FBG-L-0082": {
+   "aar": 2006,
+   "vin": "WDD2452071J153045",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0083": {
+   "aar": 2009,
+   "vin": "WVWZZZ9NZ9Y077131",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2660GY",
+    "2660GYM",
+    "2965GNM"
+   ]
+  },
+  "FBG-L-0084": {
+   "aar": 2009,
+   "vin": "TRUZZZ8P0A1003629",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2420CSGY",
+    "2420GY",
+    "2524GY",
+    "2524GYM",
+    "2861GYA",
+    "2861GYAM"
+   ]
+  },
+  "FBG-L-0085": {
+   "aar": 2009,
+   "vin": "YV1BW7240A1138491",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2700GN"
+   ]
+  },
+  "FBG-L-0086": {
+   "aar": 2008,
+   "vin": "WF0GXXGBBG7P82145",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2308GY",
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0087": {
+   "aar": 2010,
+   "vin": "SB1EG76L30E023551",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2141GYEL",
+    "2920GNEL",
+    "2920GNM",
+    "2920GYEL",
+    "2926GNCE",
+    "2926GNEL"
+   ]
+  },
+  "FBG-L-0088": {
+   "aar": 2010,
+   "vin": "JTKKH164001002268",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2954GN2",
+    "2954GY",
+    "FW2652GY"
+   ]
+  },
+  "FBG-L-0089": {
+   "aar": 2006,
+   "vin": "WBAUG51010PV30412",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2610CSGM",
+    "2610GY",
+    "2610GYM"
+   ]
+  },
+  "FBG-L-0090": {
+   "aar": 2010,
+   "vin": "WVWZZZ1KZBW105186",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2680GN",
+    "2811GY",
+    "2888GN",
+    "3109GNAG",
+    "3109GNAM"
+   ]
+  },
+  "FBG-L-0091": {
+   "aar": 2012,
+   "vin": "WDD2040001A664265",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0092": {
+   "aar": 2012,
+   "vin": "VF38E9HD8CL073545",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3086GNG",
+    "3086GNGM"
+   ]
+  },
+  "FBG-L-0093": {
+   "aar": 2012,
+   "vin": "WVWZZZ1KZDW526915",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0094": {
+   "aar": 2013,
+   "vin": "TMBJA73T9D9031992",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2866GNEL",
+    "2866GYM"
+   ]
+  },
+  "FBG-L-0095": {
+   "aar": 2013,
+   "vin": "SB1ZS3JE70E050849",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0096": {
+   "aar": 2010,
+   "vin": "WDD2122891A250232",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0097": {
+   "aar": 2014,
+   "vin": "KNABX511AFT878878",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2579GB"
+   ]
+  },
+  "FBG-L-0098": {
+   "aar": 2014,
+   "vin": "WBA3K11080K286161",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0099": {
+   "aar": 2015,
+   "vin": "VF3CCHMZ6FT163187",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3153GNCM"
+   ]
+  },
+  "FBG-L-0100": {
+   "aar": 2015,
+   "vin": "WAUZZZ8K5FA170829",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2835GY",
+    "2835GYM2",
+    "3330GNCE",
+    "3330GNCM",
+    "3330GNCM",
+    "3330GNMU"
+   ]
+  },
+  "FBG-L-0101": {
+   "aar": 2013,
+   "vin": "WBA3A51000J537769",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3209GNCM",
+    "3209GNCM",
+    "3209GNMU",
+    "3209GYM"
+   ]
+  },
+  "FBG-L-0102": {
+   "aar": 2017,
+   "vin": "SHSRE6740GU204127",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3197GN",
+    "3197GNM",
+    "3197GNM2",
+    "3197GYM2"
+   ]
+  },
+  "FBG-L-0103": {
+   "aar": 2017,
+   "vin": "WDD2052471F581150",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0104": {
+   "aar": 2018,
+   "vin": "JSAAZD53S00103840",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8044AGNC",
+    "8044AGNV"
+   ]
+  },
+  "FBG-L-0105": {
+   "aar": 2015,
+   "vin": "JMBXDGG2WGZ004233",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-L-0106": {
+   "aar": 2018,
+   "vin": "WBA8E1104JK421781",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0107": {
+   "aar": 2019,
+   "vin": "WDD1770841J097999",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2114GY",
+    "2114GYM"
+   ]
+  },
+  "FBG-L-0108": {
+   "aar": 2021,
+   "vin": "WBA5P9108MFK54348",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2490AGAC",
+    "2490AGAC",
+    "2490AGAC",
+    "2490AGAC",
+    "2490AGAM",
+    "2490ASESK"
+   ]
+  },
+  "FBG-L-0109": {
+   "aar": 2020,
+   "vin": "VF3M45GBUKS486823",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2976GN",
+    "2976GNM",
+    "6571AGRC",
+    "6571AGRCI",
+    "6571ASMR"
+   ]
+  },
+  "FBG-L-0110": {
+   "aar": 2021,
+   "vin": "VNKKBAC310A113911",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2699GN",
+    "3124GN",
+    "3124GNM",
+    "8441AGAC"
+   ]
+  },
+  "FBG-L-0111": {
+   "aar": 2022,
+   "vin": "YV1XKEDV4P2031952",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "8850AGAC"
+   ]
+  },
+  "FBG-L-0112": {
+   "aar": 2007,
+   "vin": "VF33C9HXC84929770",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2352CS",
+    "2352GN",
+    "2352GNM",
+    "2352GYM"
+   ]
+  },
+  "FBG-L-0113": {
+   "aar": 2004,
+   "vin": "WVWZZZ1KZ4W053631",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2555BBM",
+    "2555BLM",
+    "2555GY",
+    "2555GYM"
+   ]
+  },
+  "FBG-L-0114": {
+   "aar": 2004,
+   "vin": "WVWZZZ1KZ5W078154",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2555BBM",
+    "2555BLM",
+    "2555GY",
+    "2555GYM",
+    "2680GN"
+   ]
+  },
+  "FBG-L-0115": {
+   "aar": 2005,
+   "vin": "WVGZZZ1TZ5W189160",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2504GY",
+    "2504GYM"
+   ]
+  },
+  "FBG-L-0116": {
+   "aar": 2005,
+   "vin": "WV2ZZZ2KZ5X105486",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GY",
+    "2576GYAG",
+    "2576GYM"
+   ]
+  },
+  "FBG-L-0117": {
+   "aar": 2008,
+   "vin": "YV1MW765282415765",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2750GY",
+    "2750GYM"
+   ]
+  },
+  "FBG-L-0118": {
+   "aar": 2009,
+   "vin": "W0L0XCE7584150293",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2489CSBL",
+    "2489GN",
+    "2489GY"
+   ]
+  },
+  "FBG-L-0119": {
+   "aar": 2009,
+   "vin": "WBAPE11040WJ61384",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2540CSGM",
+    "2540GGM"
+   ]
+  },
+  "FBG-L-0120": {
+   "aar": 2010,
+   "vin": "WAUZZZ8K7BN007201",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2324CSGY",
+    "2324GY",
+    "2324GYM",
+    "2420CSGY",
+    "2420GY",
+    "2835GY"
+   ]
+  },
+  "FBG-L-0121": {
+   "aar": 2011,
+   "vin": "WF0PXXGCDPAA87300",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3106GN",
+    "3106GNM",
+    "3106GYEL"
+   ]
+  },
+  "FBG-L-0122": {
+   "aar": 2011,
+   "vin": "WVWZZZ6RZBY138188",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2965GNM"
+   ]
+  },
+  "FBG-L-0123": {
+   "aar": 2011,
+   "vin": "WVWZZZ1KZBW271779",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "2888GN",
+    "2888GY",
+    "3109GNAG",
+    "3109GNAM"
+   ]
+  },
+  "FBG-L-0124": {
+   "aar": 2006,
+   "vin": "WDD2210561A092614",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0125": {
+   "aar": 2011,
+   "vin": "WBAVP11070VR70188",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2982GY",
+    "2982GYM"
+   ]
+  },
+  "FBG-L-0126": {
+   "aar": 2012,
+   "vin": "W0LFXB32SCM638888",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0127": {
+   "aar": 2009,
+   "vin": "WBAFG61070LW53329",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2969GYM",
+    "2970GNMU"
+   ]
+  },
+  "FBG-L-0128": {
+   "aar": 2012,
+   "vin": "WF0LXXGCBLCA29720",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3106GN",
+    "3106GNM",
+    "3106GNME",
+    "3106GYEL"
+   ]
+  },
+  "FBG-L-0129": {
+   "aar": 2012,
+   "vin": "TMBZZZAAZDD614654",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0130": {
+   "aar": 2012,
+   "vin": "WVWZZZ3CZDE065419",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "3070GNCM"
+   ]
+  },
+  "FBG-L-0131": {
+   "aar": 2013,
+   "vin": "JF1SJ5LC5DG014805",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3201GNEL",
+    "3201GNEL"
+   ]
+  },
+  "FBG-L-0132": {
+   "aar": 2014,
+   "vin": "YV1MZ845BE2048287",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2700GN",
+    "3165GNCP"
+   ]
+  },
+  "FBG-L-0133": {
+   "aar": 2014,
+   "vin": "WF0FXXWPCFEA27467",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0134": {
+   "aar": 2015,
+   "vin": "VNKKJ3D310A279391",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2250GY2",
+    "2699GN",
+    "3124GN",
+    "3124GNM"
+   ]
+  },
+  "FBG-L-0135": {
+   "aar": 2015,
+   "vin": "TMBJB9NP6G7035720",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3317GNM",
+    "3317GYM"
+   ]
+  },
+  "FBG-L-0136": {
+   "aar": 2016,
+   "vin": "YV1BZ87C6G1270219",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2700GN"
+   ]
+  },
+  "FBG-L-0137": {
+   "aar": 2017,
+   "vin": "WAUZZZF44JA075045",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2835GY",
+    "2835GYM2",
+    "3330GNCM",
+    "3330GNCM"
+   ]
+  },
+  "FBG-L-0138": {
+   "aar": 2018,
+   "vin": "WAUZZZ8UXJR059012",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3122GY"
+   ]
+  },
+  "FBG-L-0139": {
+   "aar": 2018,
+   "vin": "JF1BS9LC2HG119289",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2983GNEL",
+    "2983GNEL"
+   ]
+  },
+  "FBG-L-0140": {
+   "aar": 2018,
+   "vin": "WDC1660631B130981",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0141": {
+   "aar": 2018,
+   "vin": "VF3MRHNYWJS252695",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2976GN",
+    "2976GNM",
+    "6571AGRC",
+    "6571AGRCI",
+    "6571ASMR"
+   ]
+  },
+  "FBG-L-0142": {
+   "aar": 2018,
+   "vin": "YV1XZ72VDK2089591",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8842ASMH",
+    "8842ASMH",
+    "8847AGAC",
+    "8847AGAC"
+   ]
+  },
+  "FBG-L-0143": {
+   "aar": 2019,
+   "vin": "SB1MS3JE00E452593",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0144": {
+   "aar": 2019,
+   "vin": "YV1ZWBMUDL1363635",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3185GNMP"
+   ]
+  },
+  "FBG-L-0145": {
+   "aar": 2019,
+   "vin": "YV1UZBMVDL1503536",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC",
+    "8846ASMR",
+    "8846ASMR"
+   ]
+  },
+  "FBG-L-0146": {
+   "aar": 2008,
+   "vin": "WDB2110071B312839",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0147": {
+   "aar": 2021,
+   "vin": "TMBJW0NX4MY086235",
+   "utfall": "VERIFY",
+   "varenr": [
+    "7824ACKC",
+    "7824ACKC",
+    "7824AGAC",
+    "7824AGAC"
+   ]
+  },
+  "FBG-L-0148": {
+   "aar": 2023,
+   "vin": "JSAAZD53S00305693",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8044AGNC",
+    "8044AGNV"
+   ]
+  },
+  "FBG-L-0149": {
+   "aar": 2010,
+   "vin": "W0LPD6ED0AG024405",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2996GN2",
+    "2996GNCM",
+    "2996GNM",
+    "2996GNM2",
+    "2996GYM2"
+   ]
+  },
+  "FBG-L-0150": {
+   "aar": 1977,
+   "vin": "2114057",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0151": {
+   "aar": 1994,
+   "vin": "W0L000021R1133210",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1493C",
+    "1493GB",
+    "1923GBM"
+   ]
+  },
+  "FBG-L-0152": {
+   "aar": 2002,
+   "vin": "1FMSU43F72EA88969",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "W1374GB"
+   ]
+  },
+  "FBG-L-0153": {
+   "aar": 2002,
+   "vin": "YS3EF59E633015324",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0154": {
+   "aar": 2004,
+   "vin": "1FMPU18LX4LB58756",
+   "utfall": "VERIFY",
+   "varenr": [
+    "W1256GB"
+   ]
+  },
+  "FBG-L-0155": {
+   "aar": 2005,
+   "vin": "WVWZZZ1KZ6W062020",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2555BBM",
+    "2555BLM",
+    "2555GY",
+    "2555GYM",
+    "2760BL"
+   ]
+  },
+  "FBG-L-0156": {
+   "aar": 2006,
+   "vin": "WDB2110411B054498",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0157": {
+   "aar": 2007,
+   "vin": "JTDKG10C30N153849",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0158": {
+   "aar": 2008,
+   "vin": "JF1SG5LE58G143242",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2479GGEL",
+    "2865GB",
+    "2865GBEL"
+   ]
+  },
+  "FBG-L-0159": {
+   "aar": 2008,
+   "vin": "YV1BW754181054037",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2700GN",
+    "2700GNM"
+   ]
+  },
+  "FBG-L-0160": {
+   "aar": 2009,
+   "vin": "XMCXJZ34A9F035509",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2723GB"
+   ]
+  },
+  "FBG-L-0161": {
+   "aar": 2010,
+   "vin": "WF0RXXGCDRAU09531",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2873GNEL",
+    "2873GNEL",
+    "3194GN",
+    "3194GNEL",
+    "3194GNEL",
+    "3194GNM"
+   ]
+  },
+  "FBG-L-0162": {
+   "aar": 2009,
+   "vin": "WMWMF310X0TS95409",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0163": {
+   "aar": 2011,
+   "vin": "WAUZZZ8K4BA175577",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2324CSGY",
+    "2324GY",
+    "2324GYM",
+    "2420CSGY",
+    "2420GY",
+    "2835GY"
+   ]
+  },
+  "FBG-L-0164": {
+   "aar": 2011,
+   "vin": "WF0SXXGBWSBJ68041",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2735BLM",
+    "2735GNEL",
+    "2735GNM",
+    "2735GY",
+    "2735GYEL",
+    "3586AGAC"
+   ]
+  },
+  "FBG-L-0165": {
+   "aar": 2011,
+   "vin": "WAUZZZ4G3BN002952",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3066CSCM"
+   ]
+  },
+  "FBG-L-0166": {
+   "aar": 2011,
+   "vin": "WF0GXXGBBGBJ73154",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2308GY",
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0167": {
+   "aar": 2011,
+   "vin": "WVGZZZ1TZBW065481",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3068GN",
+    "3068GNCM",
+    "3068GNM"
+   ]
+  },
+  "FBG-L-0168": {
+   "aar": 2012,
+   "vin": "WVWZZZ3CZDP002519",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "3070GNCM"
+   ]
+  },
+  "FBG-L-0169": {
+   "aar": 2012,
+   "vin": "WVGZZZ5NZDW030534",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2836GNCM"
+   ]
+  },
+  "FBG-L-0170": {
+   "aar": 2013,
+   "vin": "ZFA31200000916534",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2833GN",
+    "2833GN2"
+   ]
+  },
+  "FBG-L-0171": {
+   "aar": 2013,
+   "vin": "YV1DZ87A4D2459330",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3175GNEL"
+   ]
+  },
+  "FBG-L-0172": {
+   "aar": 2010,
+   "vin": "WDD2122031A165341",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0173": {
+   "aar": 2014,
+   "vin": "JMBXLGF6WDZ404636",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-L-0174": {
+   "aar": 2015,
+   "vin": "TMBJG9NEXF0230307",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2583GY",
+    "2986GNM"
+   ]
+  },
+  "FBG-L-0175": {
+   "aar": 2015,
+   "vin": "WV1ZZZ7HZGH072043",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2525CSGY",
+    "2525GY",
+    "2525GYA",
+    "2525GYAM",
+    "2525GYM",
+    "2980GYM"
+   ]
+  },
+  "FBG-L-0176": {
+   "aar": 2016,
+   "vin": "WF0FXXWPCFGY82565",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0177": {
+   "aar": 2016,
+   "vin": "WDD2050471F425255",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0178": {
+   "aar": 2017,
+   "vin": "VF3VEAHXHHZ045265",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1953CS",
+    "1953GY"
+   ]
+  },
+  "FBG-L-0179": {
+   "aar": 2017,
+   "vin": "WF0JXXWPCJHC06680",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2735BLM",
+    "2735GNEL",
+    "2735GNM",
+    "2735GY",
+    "2735GYEL"
+   ]
+  },
+  "FBG-L-0180": {
+   "aar": 2017,
+   "vin": "WBAJA9105JB006416",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0181": {
+   "aar": 2010,
+   "vin": "VF3PNCFB488519451",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0182": {
+   "aar": 2008,
+   "vin": "1ZVHT84N285178020",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0183": {
+   "aar": 2019,
+   "vin": "WBA6Y3100K7D56574",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2497AGAC"
+   ]
+  },
+  "FBG-L-0184": {
+   "aar": 2020,
+   "vin": "YV1LFBMTDL1591388",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3182CSBL",
+    "3320GNCG"
+   ]
+  },
+  "FBG-L-0185": {
+   "aar": 2021,
+   "vin": "LYVUZBFVDMB761195",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC",
+    "8846ASMR",
+    "8846ASMR"
+   ]
+  },
+  "FBG-L-0186": {
+   "aar": 2019,
+   "vin": "WV2ZZZ7HZKH052939",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2525GYA",
+    "2525GYAM",
+    "3393GN",
+    "3393GNEL",
+    "3393GNM",
+    "8579AGAC"
+   ]
+  },
+  "FBG-L-0187": {
+   "aar": 1982,
+   "vin": "WBAAG0100C8526355",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0188": {
+   "aar": 1980,
+   "vin": "10704512000085",
+   "utfall": "VERIFY",
+   "varenr": [
+    "608GG"
+   ]
+  },
+  "FBG-L-0189": {
+   "aar": 1993,
+   "vin": "YV1245883P1951551",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1041C",
+    "1708GB"
+   ]
+  },
+  "FBG-L-0190": {
+   "aar": 1998,
+   "vin": "WAUZZZ8DZWA125762",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "1951GY"
+   ]
+  },
+  "FBG-L-0191": {
+   "aar": 1994,
+   "vin": "WAUZZZ8CZRA134464",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1610GG",
+    "1858GG"
+   ]
+  },
+  "FBG-L-0192": {
+   "aar": 1999,
+   "vin": "JHMGH2450XS223566",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2217GNS",
+    "2217GY"
+   ]
+  },
+  "FBG-L-0193": {
+   "aar": 1996,
+   "vin": "WAUZZZ4DZVN003411",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1924CSGY",
+    "1924GG",
+    "1924GY"
+   ]
+  },
+  "FBG-L-0194": {
+   "aar": 2002,
+   "vin": "WBAEP31090PE83299",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2153CSG",
+    "2153GY",
+    "2153GYEL",
+    "2223GYM",
+    "2428GGM",
+    "2428GYM"
+   ]
+  },
+  "FBG-L-0195": {
+   "aar": 2003,
+   "vin": "1J8G2E8J84Y119059",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0196": {
+   "aar": 2003,
+   "vin": "WBANA31030B159888",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2010CSG",
+    "2010GY",
+    "2010GYM",
+    "2384CSGM",
+    "2384GYM",
+    "2527CSGM"
+   ]
+  },
+  "FBG-L-0197": {
+   "aar": 2003,
+   "vin": "WBAFA710X0LW21112",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2293CSG",
+    "2406CSGM",
+    "2406GYM"
+   ]
+  },
+  "FBG-L-0198": {
+   "aar": 2004,
+   "vin": "YS3EF59C243518901",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0199": {
+   "aar": 2002,
+   "vin": "WAUZZZ4D63N002418",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2501CSCM",
+    "2501GYM"
+   ]
+  },
+  "FBG-L-0200": {
+   "aar": 2004,
+   "vin": "SALLMAMC45A185479",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0201": {
+   "aar": 2004,
+   "vin": "WBAPB11070WE07730",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2540CSGM",
+    "2540GGM"
+   ]
+  },
+  "FBG-L-0202": {
+   "aar": 2005,
+   "vin": "YV1SW494951498456",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2270CSBL",
+    "2270GBM"
+   ]
+  },
+  "FBG-L-0203": {
+   "aar": 2005,
+   "vin": "YV1MS214252105698",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2550GNM",
+    "2550GYM"
+   ]
+  },
+  "FBG-L-0204": {
+   "aar": 2005,
+   "vin": "JTDKW283600360844",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2185GN2",
+    "2185GN3",
+    "2250GY2",
+    "2399GY"
+   ]
+  },
+  "FBG-L-0205": {
+   "aar": 2005,
+   "vin": "SB1KM20E70E102973",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2122GN2",
+    "2122GY2",
+    "2399GY"
+   ]
+  },
+  "FBG-L-0206": {
+   "aar": 2005,
+   "vin": "SALLSAA546A915136",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0207": {
+   "aar": 2005,
+   "vin": "JSAJTD54V00105228",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8032GZPR5"
+   ]
+  },
+  "FBG-L-0208": {
+   "aar": 2005,
+   "vin": "SALLSAA146A922428",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0209": {
+   "aar": 2005,
+   "vin": "WBAUF31000PR40951",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2610CSGM",
+    "2610GY",
+    "2610GYM"
+   ]
+  },
+  "FBG-L-0210": {
+   "aar": 2000,
+   "vin": "WP0ZZZ98ZYS643429",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2074GNM"
+   ]
+  },
+  "FBG-L-0211": {
+   "aar": 2003,
+   "vin": "WDB2112161A281644",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0212": {
+   "aar": 2006,
+   "vin": "WVWZZZ1KZ6W089468",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2555BBM",
+    "2555BLM",
+    "2555GY",
+    "2555GYM",
+    "2760BL"
+   ]
+  },
+  "FBG-L-0213": {
+   "aar": 2006,
+   "vin": "WAUZZZ8H97K008217",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2324CSGY",
+    "2324GY",
+    "2324GYM",
+    "2420CSGY",
+    "2420GY"
+   ]
+  },
+  "FBG-L-0214": {
+   "aar": 2006,
+   "vin": "WDC2511221A016676",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0215": {
+   "aar": 2003,
+   "vin": "YV1SZ59H441135058",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0216": {
+   "aar": 2005,
+   "vin": "YV1SW796952515144",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2270CSBL",
+    "2270GBM"
+   ]
+  },
+  "FBG-L-0217": {
+   "aar": 2005,
+   "vin": "WDB2110061A882524",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0218": {
+   "aar": 2007,
+   "vin": "SJNEDAK12U2218113",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2494GNM",
+    "2494GYM"
+   ]
+  },
+  "FBG-L-0219": {
+   "aar": 2006,
+   "vin": "VF33BRFJC84581879",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2352CS",
+    "2352GN",
+    "2352GNM",
+    "2352GYM"
+   ]
+  },
+  "FBG-L-0220": {
+   "aar": 2007,
+   "vin": "JF1GH3LS58G011099",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2326GN",
+    "2326GYEL",
+    "2327GN",
+    "2327GNEL",
+    "2830GY"
+   ]
+  },
+  "FBG-L-0221": {
+   "aar": 2007,
+   "vin": "JN1TESY61U0156321",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2157GNEL",
+    "2157GY"
+   ]
+  },
+  "FBG-L-0222": {
+   "aar": 2005,
+   "vin": "WBANJ51030B428676",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2384CSGM",
+    "2384GYM",
+    "2527CSGM",
+    "2559CSMU",
+    "2559GNMU"
+   ]
+  },
+  "FBG-L-0223": {
+   "aar": 2004,
+   "vin": "WBANJ71090B511556",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2384CSGM",
+    "2384GYM",
+    "2527CSGM",
+    "2559CSMU",
+    "2559GNMU"
+   ]
+  },
+  "FBG-L-0224": {
+   "aar": 2008,
+   "vin": "WVWZZZ1KZ8W220407",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2680GN",
+    "2680GNM",
+    "2811GY",
+    "2888GN",
+    "2888GY"
+   ]
+  },
+  "FBG-L-0225": {
+   "aar": 2007,
+   "vin": "WDD2040081A006513",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0226": {
+   "aar": 2008,
+   "vin": "WAUZZZ4F28N151109",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2580CSCM",
+    "2580CSCM2",
+    "2580GNCM",
+    "2580GYM"
+   ]
+  },
+  "FBG-L-0227": {
+   "aar": 2009,
+   "vin": "WBAUM91090VL74132",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2610CSGM",
+    "2610GY",
+    "2610GYM"
+   ]
+  },
+  "FBG-L-0228": {
+   "aar": 2009,
+   "vin": "WBAUW710X0A602371",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2428GGM",
+    "2428GYM",
+    "2638GYM",
+    "2743GYM"
+   ]
+  },
+  "FBG-L-0229": {
+   "aar": 2009,
+   "vin": "WDD2120031A039714",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0230": {
+   "aar": 2009,
+   "vin": "WF0GXXGBBG9C62923",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2308GY",
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0231": {
+   "aar": 2010,
+   "vin": "VF7LC9HVCAY501557",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2630CSM",
+    "3090GNM"
+   ]
+  },
+  "FBG-L-0232": {
+   "aar": 2009,
+   "vin": "WBAVP310X0VN07280",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0233": {
+   "aar": 2010,
+   "vin": "WAUZZZ8K2AA156735",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2324CSGY",
+    "2324GY",
+    "2324GYM",
+    "2420CSGY",
+    "2420GY",
+    "2835GY"
+   ]
+  },
+  "FBG-L-0234": {
+   "aar": 2010,
+   "vin": "WBAUS11000A488129",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2428GGM",
+    "2428GYM",
+    "2638GYM",
+    "2743GYM"
+   ]
+  },
+  "FBG-L-0235": {
+   "aar": 2010,
+   "vin": "JTMBB31V10D030373",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2696GNEL",
+    "2696GY"
+   ]
+  },
+  "FBG-L-0236": {
+   "aar": 2010,
+   "vin": "WVGZZZ1TZAW101760",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2821GYM"
+   ]
+  },
+  "FBG-L-0237": {
+   "aar": 2007,
+   "vin": "ZAR93900007138702",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0238": {
+   "aar": 2008,
+   "vin": "WAUZZZ8K39A158571",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2324CSGY",
+    "2324GY",
+    "2324GYM",
+    "2420CSGY",
+    "2420GY",
+    "2835GY"
+   ]
+  },
+  "FBG-L-0239": {
+   "aar": 2007,
+   "vin": "WBAWK71090PW98236",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2428GGM",
+    "2428GYM",
+    "2638GY",
+    "2638GYM"
+   ]
+  },
+  "FBG-L-0240": {
+   "aar": 2010,
+   "vin": "JMBLYV98WAJ401115",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2283GN",
+    "2530GB",
+    "2530GBEL"
+   ]
+  },
+  "FBG-L-0241": {
+   "aar": 2010,
+   "vin": "ZFA31200000561970",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0242": {
+   "aar": 2010,
+   "vin": "SALLAAAG4BA555670",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2632GNM"
+   ]
+  },
+  "FBG-L-0243": {
+   "aar": 2011,
+   "vin": "VF7SC9HP4AW606335",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2380CSM",
+    "2380GYM",
+    "2940GN",
+    "2940GNM"
+   ]
+  },
+  "FBG-L-0244": {
+   "aar": 2010,
+   "vin": "VNKKC96330A256107",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2250GY2",
+    "2699GN"
+   ]
+  },
+  "FBG-L-0245": {
+   "aar": 2010,
+   "vin": "WVGZZZ5NZBW064285",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2836GNCM"
+   ]
+  },
+  "FBG-L-0246": {
+   "aar": 2007,
+   "vin": "WBAFF410X0L106448",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2293CSG",
+    "2752CSGM",
+    "2752GY",
+    "2752GYM",
+    "2780CSMU",
+    "2780GNMU"
+   ]
+  },
+  "FBG-L-0247": {
+   "aar": 2010,
+   "vin": "WBAZW41010L436654",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2967GYCM",
+    "2967GYM",
+    "2968CSMU",
+    "2968GNMU"
+   ]
+  },
+  "FBG-L-0248": {
+   "aar": 2011,
+   "vin": "WVWZZZ1KZBP099697",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "2888GN",
+    "2888GY",
+    "3109GNAG",
+    "3109GNAM"
+   ]
+  },
+  "FBG-L-0249": {
+   "aar": 2011,
+   "vin": "WBAWY310X0L529602",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3077GNCM",
+    "3077GNM",
+    "3077GY",
+    "3077GYM",
+    "3078CSMU",
+    "3078GNMU"
+   ]
+  },
+  "FBG-L-0250": {
+   "aar": 2011,
+   "vin": "WVWZZZ3CZBE357085",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM",
+    "2875GNCM",
+    "2875GYM",
+    "3070CSM",
+    "3070GNCM",
+    "3070GNM"
+   ]
+  },
+  "FBG-L-0251": {
+   "aar": 2011,
+   "vin": "WVWZZZ6RZBY110764",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2965GNM"
+   ]
+  },
+  "FBG-L-0252": {
+   "aar": 2007,
+   "vin": "WBAFF01030LY89976",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2293CSG",
+    "2752CSGM",
+    "2752GY",
+    "2752GYM",
+    "2780CSMU",
+    "2780GNMU"
+   ]
+  },
+  "FBG-L-0253": {
+   "aar": 2010,
+   "vin": "WAUZZZ8P3BA075790",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2524GY",
+    "2524GYM",
+    "2861GYA",
+    "2861GYAM"
+   ]
+  },
+  "FBG-L-0254": {
+   "aar": 2009,
+   "vin": "WF0SXXGBWS8S13721",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0255": {
+   "aar": 2011,
+   "vin": "WF0LXXGCBLBY40971",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3106GN",
+    "3106GNM",
+    "3106GNME",
+    "3106GYEL"
+   ]
+  },
+  "FBG-L-0256": {
+   "aar": 2008,
+   "vin": "WBAPX31080C078645",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0257": {
+   "aar": 2011,
+   "vin": "WBAUH31020E522803",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2610CSGM",
+    "2610GY",
+    "2610GYM"
+   ]
+  },
+  "FBG-L-0258": {
+   "aar": 2011,
+   "vin": "WAUZZZ8R3CA023921",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2895GNCM",
+    "2895GYM"
+   ]
+  },
+  "FBG-L-0259": {
+   "aar": 2011,
+   "vin": "WV2ZZZ7HZCH013043",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2525CSGY",
+    "2525GY",
+    "2525GYA",
+    "2525GYAM",
+    "2525GYM",
+    "2980GYM"
+   ]
+  },
+  "FBG-L-0260": {
+   "aar": 2006,
+   "vin": "WDB2110071B053748",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0261": {
+   "aar": 2011,
+   "vin": "WBAMX11000DU43126",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0262": {
+   "aar": 2011,
+   "vin": "TMBEM65J4C3077813",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2726GNA"
+   ]
+  },
+  "FBG-L-0263": {
+   "aar": 2011,
+   "vin": "YV1BW84A1C1215902",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2700GN",
+    "2700GNMP",
+    "3180GNMP"
+   ]
+  },
+  "FBG-L-0264": {
+   "aar": 2008,
+   "vin": "WBAFF41020L134793",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2752CSGM",
+    "2752GY",
+    "2752GYM",
+    "2780CSMU",
+    "2780GNMU"
+   ]
+  },
+  "FBG-L-0265": {
+   "aar": 2012,
+   "vin": "SHSRE5830CU005780",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3018GN",
+    "3018GNM"
+   ]
+  },
+  "FBG-L-0266": {
+   "aar": 2012,
+   "vin": "WBAVP110X0VU03439",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2982GY",
+    "2982GYM"
+   ]
+  },
+  "FBG-L-0267": {
+   "aar": 2012,
+   "vin": "JTDKN36U305411160",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3170GYM"
+   ]
+  },
+  "FBG-L-0268": {
+   "aar": 2012,
+   "vin": "WVGZZZ5NZCW593973",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2836GNCM"
+   ]
+  },
+  "FBG-L-0269": {
+   "aar": 2012,
+   "vin": "SB1BD76LX0E093804",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2920GNEL",
+    "2920GNM",
+    "2920GYEL",
+    "2926GNCE",
+    "2926GNEL"
+   ]
+  },
+  "FBG-L-0270": {
+   "aar": 2009,
+   "vin": "WBAFF41010L135756",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2752GYM",
+    "2967GYCM",
+    "2967GYM",
+    "2968CSMU",
+    "2968GNMU"
+   ]
+  },
+  "FBG-L-0271": {
+   "aar": 2009,
+   "vin": "WBAUX31030A700504",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2428GGM",
+    "2428GYM",
+    "2638GYM",
+    "2743GYM"
+   ]
+  },
+  "FBG-L-0272": {
+   "aar": 2012,
+   "vin": "TMBHT61Z9C2145850",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2583GY",
+    "2986GNM"
+   ]
+  },
+  "FBG-L-0273": {
+   "aar": 2007,
+   "vin": "JMBLYV98W7J012641",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2283GN",
+    "2530GB",
+    "2530GBEL"
+   ]
+  },
+  "FBG-L-0274": {
+   "aar": 2011,
+   "vin": "WBA1C710X0E964107",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2610CSGM",
+    "2610GY",
+    "2610GYM"
+   ]
+  },
+  "FBG-L-0275": {
+   "aar": 2011,
+   "vin": "WAUZZZ4L1CD003506",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2702GNCM"
+   ]
+  },
+  "FBG-L-0276": {
+   "aar": 2012,
+   "vin": "WBAFW11030DY44200",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0277": {
+   "aar": 2012,
+   "vin": "WMWXD51070WN17515",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3050GNEL"
+   ]
+  },
+  "FBG-L-0278": {
+   "aar": 2012,
+   "vin": "WVWZZZ1KZDW045347",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GN",
+    "3190GNCM",
+    "3190GNM"
+   ]
+  },
+  "FBG-L-0279": {
+   "aar": 2012,
+   "vin": "ZAR94000007177936",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0280": {
+   "aar": 2011,
+   "vin": "WVWZZZ1KZBP139591",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "2888GN",
+    "2888GY",
+    "3109GNAG",
+    "3109GNAM"
+   ]
+  },
+  "FBG-L-0281": {
+   "aar": 2012,
+   "vin": "JF1GP7LC5CG029026",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3152GN"
+   ]
+  },
+  "FBG-L-0282": {
+   "aar": 2012,
+   "vin": "WV2ZZZ2KZDX041299",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2576GY",
+    "2576GYAG",
+    "2576GYM"
+   ]
+  },
+  "FBG-L-0283": {
+   "aar": 2012,
+   "vin": "WF0KXXERJKCL04687",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3188GNEL",
+    "3188GNEL",
+    "3188GNEL",
+    "3188GNEL",
+    "3188GNM"
+   ]
+  },
+  "FBG-L-0284": {
+   "aar": 2012,
+   "vin": "WAUZZZ8K3DA142850",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2324CSGY",
+    "2324GY",
+    "2420CSGY",
+    "2420GY",
+    "2835GY",
+    "2835GYM2"
+   ]
+  },
+  "FBG-L-0285": {
+   "aar": 2012,
+   "vin": "YV1BZ8756D1157710",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2700GN"
+   ]
+  },
+  "FBG-L-0286": {
+   "aar": 2011,
+   "vin": "WF0SXXGBWSBJ78571",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2735BLM",
+    "2735GNEL",
+    "2735GNM",
+    "2735GY",
+    "2735GYEL",
+    "3586AGAC"
+   ]
+  },
+  "FBG-L-0287": {
+   "aar": 2012,
+   "vin": "WBAMW91080DV11108",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0288": {
+   "aar": 2012,
+   "vin": "WAUZZZ8PXCA091552",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2524GY",
+    "2524GYM",
+    "2861GYA2"
+   ]
+  },
+  "FBG-L-0289": {
+   "aar": 2013,
+   "vin": "WBAMY91010D122420",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0290": {
+   "aar": 2013,
+   "vin": "JMBXLGF6WDZ405411",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-L-0291": {
+   "aar": 2013,
+   "vin": "WVWZZZ3CZDE120304",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "3070GNCM"
+   ]
+  },
+  "FBG-L-0292": {
+   "aar": 2013,
+   "vin": "VF3HURHC8CS120770",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2976GN",
+    "2976GNM"
+   ]
+  },
+  "FBG-L-0293": {
+   "aar": 2012,
+   "vin": "YV1BW84A1C1243927",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2700GN",
+    "3180GNMP"
+   ]
+  },
+  "FBG-L-0294": {
+   "aar": 2011,
+   "vin": "VNKKL3D370A002819",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2250GY2",
+    "2699GN"
+   ]
+  },
+  "FBG-L-0295": {
+   "aar": 2013,
+   "vin": "WVWZZZ6RZDY251884",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2965GNM"
+   ]
+  },
+  "FBG-L-0296": {
+   "aar": 2012,
+   "vin": "WBAWY310X00A59740",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3077CSGY",
+    "3077GY2",
+    "3077GYM2",
+    "3078CSMU",
+    "3078GNCM",
+    "3078GNMU"
+   ]
+  },
+  "FBG-L-0297": {
+   "aar": 2010,
+   "vin": "WBAPX31050C360855",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0298": {
+   "aar": 2013,
+   "vin": "WBA3Y31030DZ25965",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3209GNCM",
+    "3209GNCM",
+    "3209GNMU",
+    "3209GYM"
+   ]
+  },
+  "FBG-L-0299": {
+   "aar": 2013,
+   "vin": "YV1AS88A0D1173237",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2180CSBL",
+    "2180CSBL",
+    "2180GBM"
+   ]
+  },
+  "FBG-L-0300": {
+   "aar": 2008,
+   "vin": "WBAPX31080C080458",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0301": {
+   "aar": 2012,
+   "vin": "WUAZZZ8K8DA901448",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2324GY",
+    "2324GYM"
+   ]
+  },
+  "FBG-L-0302": {
+   "aar": 2013,
+   "vin": "VF7SB9HP8DW515541",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3030GN",
+    "3030GNM"
+   ]
+  },
+  "FBG-L-0303": {
+   "aar": 2012,
+   "vin": "WVWZZZ16ZCM657699",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2509GY",
+    "2509GYM",
+    "3140GNAM",
+    "3140GNM",
+    "3140GNM2",
+    "3140GYM"
+   ]
+  },
+  "FBG-L-0304": {
+   "aar": 2013,
+   "vin": "WBAKS410900C33917",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2967GYCM",
+    "2967GYM",
+    "2968CSMU",
+    "2968GNMU"
+   ]
+  },
+  "FBG-L-0305": {
+   "aar": 2013,
+   "vin": "WVWZZZAUZEP020546",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GYM"
+   ]
+  },
+  "FBG-L-0306": {
+   "aar": 2013,
+   "vin": "YV1DZ8756E2548042",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3175GNEL"
+   ]
+  },
+  "FBG-L-0307": {
+   "aar": 2012,
+   "vin": "WBAFW11090DY46422",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0308": {
+   "aar": 2012,
+   "vin": "WBAZW41090L839703",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2967GYCM",
+    "2967GYM",
+    "2968CSMU",
+    "2968GNMU"
+   ]
+  },
+  "FBG-L-0309": {
+   "aar": 2013,
+   "vin": "NLHBA51BADZ248981",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2930GNM"
+   ]
+  },
+  "FBG-L-0310": {
+   "aar": 2014,
+   "vin": "WDF63970513850203",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2036C",
+    "2036GN",
+    "2036GY"
+   ]
+  },
+  "FBG-L-0311": {
+   "aar": 2013,
+   "vin": "WBAWY310300F22057",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3077CSGY",
+    "3077GY2",
+    "3077GYM2",
+    "3078CSMU",
+    "3078GNCM",
+    "3078GNMU"
+   ]
+  },
+  "FBG-L-0312": {
+   "aar": 2014,
+   "vin": "SALLAAEG6EA712351",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0313": {
+   "aar": 2014,
+   "vin": "VF73AAHXTDJ792331",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2940GN",
+    "2940GNM"
+   ]
+  },
+  "FBG-L-0314": {
+   "aar": 2014,
+   "vin": "TMBLF93T9E9038951",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2866GNEL",
+    "2866GYM"
+   ]
+  },
+  "FBG-L-0315": {
+   "aar": 2014,
+   "vin": "W0LGT8GM9E1050702",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2925CSCM2"
+   ]
+  },
+  "FBG-L-0316": {
+   "aar": 2014,
+   "vin": "WMWZD51020WN09847",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3241GNCE",
+    "3241GNCM",
+    "3241GNEL",
+    "3241GYM"
+   ]
+  },
+  "FBG-L-0317": {
+   "aar": 2014,
+   "vin": "WBAKS410000C38942",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3228GNCM",
+    "3228GNCM"
+   ]
+  },
+  "FBG-L-0318": {
+   "aar": 1996,
+   "vin": "JT164JA8000030559",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2459BL",
+    "2459GB"
+   ]
+  },
+  "FBG-L-0319": {
+   "aar": 2014,
+   "vin": "WBA3D51020J458496",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0320": {
+   "aar": 2014,
+   "vin": "WVGZZZ1TZEW040851",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3068GN",
+    "3068GNCM",
+    "3068GNM"
+   ]
+  },
+  "FBG-L-0321": {
+   "aar": 2009,
+   "vin": "WAUZZZ4F9AN003691",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2580CSCM",
+    "2580CSCM2",
+    "2580GNCM",
+    "2580GYM"
+   ]
+  },
+  "FBG-L-0322": {
+   "aar": 2014,
+   "vin": "WF0KXXGCBKES22416",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3106GN",
+    "3106GNM",
+    "3106GNME",
+    "3106GYEL"
+   ]
+  },
+  "FBG-L-0323": {
+   "aar": 1992,
+   "vin": "WDB1290761F071483",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0324": {
+   "aar": 2014,
+   "vin": "WVWZZZ6RZFY034708",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2965GNM2"
+   ]
+  },
+  "FBG-L-0325": {
+   "aar": 2014,
+   "vin": "WBA1A3101FVY04494",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3113GN",
+    "3113GN2",
+    "3113GNCM",
+    "3113GY",
+    "3113GYM"
+   ]
+  },
+  "FBG-L-0326": {
+   "aar": 2014,
+   "vin": "WBAKS210800H96266",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3228GNCM",
+    "3228GNCM"
+   ]
+  },
+  "FBG-L-0327": {
+   "aar": 2011,
+   "vin": "WBAZW41020L444844",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2967GYCM",
+    "2967GYM",
+    "2968CSMU",
+    "2968GNMU"
+   ]
+  },
+  "FBG-L-0328": {
+   "aar": 2014,
+   "vin": "WVWZZZAUZFP500570",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GYM"
+   ]
+  },
+  "FBG-L-0329": {
+   "aar": 2014,
+   "vin": "WDD2120051A776035",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0330": {
+   "aar": 2014,
+   "vin": "YV1BZ8756F1215351",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2700GN"
+   ]
+  },
+  "FBG-L-0331": {
+   "aar": 2013,
+   "vin": "WDD1173421N027868",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0332": {
+   "aar": 2012,
+   "vin": "WBAFH610000B38951",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2969GYM",
+    "2970GNMU"
+   ]
+  },
+  "FBG-L-0333": {
+   "aar": 2015,
+   "vin": "SHHFK3780EU509049",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2739GN"
+   ]
+  },
+  "FBG-L-0334": {
+   "aar": 2013,
+   "vin": "WDD2120981A918178",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0335": {
+   "aar": 2014,
+   "vin": "WMWXN31040T733776",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3241GNCE",
+    "3241GNCM",
+    "3241GNEL",
+    "3241GYM"
+   ]
+  },
+  "FBG-L-0336": {
+   "aar": 2015,
+   "vin": "JTDZS3EU30J001944",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3170GNMU",
+    "3170GNMU"
+   ]
+  },
+  "FBG-L-0337": {
+   "aar": 2015,
+   "vin": "TMBJB7NE5F0140176",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2583GY",
+    "2986GNM"
+   ]
+  },
+  "FBG-L-0338": {
+   "aar": 2012,
+   "vin": "WBAXB91000C591258",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0339": {
+   "aar": 2013,
+   "vin": "WVWZZZAUZDW169261",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GN"
+   ]
+  },
+  "FBG-L-0340": {
+   "aar": 2014,
+   "vin": "WF0DXXGAKDEA49513",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2910GNCE",
+    "2910GNEL",
+    "2910GNEL",
+    "2910GNM2"
+   ]
+  },
+  "FBG-L-0341": {
+   "aar": 2015,
+   "vin": "WBAWZ510XF0M07390",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3077CSGY",
+    "3077GY2",
+    "3077GYM2",
+    "3078CSMU",
+    "3078GNCM",
+    "3078GNMU"
+   ]
+  },
+  "FBG-L-0342": {
+   "aar": 2015,
+   "vin": "WVGZZZ5NZFW587100",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2836GNCM"
+   ]
+  },
+  "FBG-L-0343": {
+   "aar": 2012,
+   "vin": "YV1DZ8756D2375968",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3175CSBL",
+    "3175GNCE",
+    "3175GNCM",
+    "3175GNEL",
+    "3175GNMS"
+   ]
+  },
+  "FBG-L-0344": {
+   "aar": 2015,
+   "vin": "WBA5E7102GGZ93790",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0345": {
+   "aar": 2015,
+   "vin": "TMBJG7NE6F0162799",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2583GY",
+    "2986GNM"
+   ]
+  },
+  "FBG-L-0346": {
+   "aar": 2015,
+   "vin": "1FA6P8TH9F5398588",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0347": {
+   "aar": 2015,
+   "vin": "WAUZZZ8V5GA003043",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3179GYCM",
+    "3179GYM2",
+    "3207GYCM",
+    "3249GYAM",
+    "3249GYM",
+    "3249GYM2"
+   ]
+  },
+  "FBG-L-0348": {
+   "aar": 2003,
+   "vin": "WDB2110761A372464",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0349": {
+   "aar": 2015,
+   "vin": "WBA8H5102GK450929",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0350": {
+   "aar": 2015,
+   "vin": "SB1MS3JEX0E170932",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0351": {
+   "aar": 2016,
+   "vin": "WMWXN9108F2B00346",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3241GNCE",
+    "3241GNCM",
+    "3241GNEL",
+    "3241GYM"
+   ]
+  },
+  "FBG-L-0352": {
+   "aar": 2016,
+   "vin": "WVWZZZ3CZGE157351",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "3300GN",
+    "3300GNCM",
+    "3300GNM"
+   ]
+  },
+  "FBG-L-0353": {
+   "aar": 2016,
+   "vin": "WDD2052401F360745",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0354": {
+   "aar": 2016,
+   "vin": "WBA2C7101GV781676",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3308GNCM",
+    "3349GYCM"
+   ]
+  },
+  "FBG-L-0355": {
+   "aar": 2016,
+   "vin": "WMWXM5105G3B79546",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3241GNCE",
+    "3241GNCM",
+    "3241GNEL",
+    "3241GYM"
+   ]
+  },
+  "FBG-L-0356": {
+   "aar": 2016,
+   "vin": "WAUZZZ8V3GA177774",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3179GYCM",
+    "3179GYM2",
+    "3207GYCM",
+    "3207GYM",
+    "3207GYM2",
+    "3249GYM2"
+   ]
+  },
+  "FBG-L-0357": {
+   "aar": 2013,
+   "vin": "WDD2189931A099117",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0358": {
+   "aar": 2016,
+   "vin": "WDD2052471F424810",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0359": {
+   "aar": 2012,
+   "vin": "WAUZZZ8K8DA082208",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2324CSGY",
+    "2324GY",
+    "2420CSGY",
+    "2420GY",
+    "2835GY",
+    "2835GYM2"
+   ]
+  },
+  "FBG-L-0360": {
+   "aar": 2016,
+   "vin": "WP1ZZZ95ZHLB05589",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3298GNCM",
+    "3298GYM"
+   ]
+  },
+  "FBG-L-0361": {
+   "aar": 2016,
+   "vin": "JTJBJRBZ202039647",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0362": {
+   "aar": 2015,
+   "vin": "WBAKS810500M51048",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3228GNCM",
+    "3228GNCM"
+   ]
+  },
+  "FBG-L-0363": {
+   "aar": 2016,
+   "vin": "WDD2130041A024683",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0364": {
+   "aar": 2016,
+   "vin": "WVGZZZ5NZHW352946",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2836GN",
+    "2836GYM"
+   ]
+  },
+  "FBG-L-0365": {
+   "aar": 2016,
+   "vin": "WDC1569021J348370",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0366": {
+   "aar": 2016,
+   "vin": "WVWZZZ6RZHY122785",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2965GNM2"
+   ]
+  },
+  "FBG-L-0367": {
+   "aar": 2016,
+   "vin": "WVWZZZ3CZHE106673",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "3300GN",
+    "3300GNCM",
+    "3300GNM"
+   ]
+  },
+  "FBG-L-0368": {
+   "aar": 2017,
+   "vin": "WBAHT9103H5F26571",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2982GY",
+    "2982GYM"
+   ]
+  },
+  "FBG-L-0369": {
+   "aar": 2017,
+   "vin": "WBAKT0109H0W15654",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3228GNCM",
+    "3228GNCM"
+   ]
+  },
+  "FBG-L-0370": {
+   "aar": 2017,
+   "vin": "WBA8K1106HA026736",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0371": {
+   "aar": 2017,
+   "vin": "SAJAA4BN7JCP23881",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3324CSCEL",
+    "3324CSCEL",
+    "3324CSCM",
+    "3324GNCE"
+   ]
+  },
+  "FBG-L-0372": {
+   "aar": 2017,
+   "vin": "SALYA2BKXJA709517",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0373": {
+   "aar": 2017,
+   "vin": "JMBXDGG2WJZ001725",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-L-0374": {
+   "aar": 2010,
+   "vin": "WDD2122891A311991",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0375": {
+   "aar": 2017,
+   "vin": "WAUZZZ8V5HA132241",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3179GYCM",
+    "3179GYM2",
+    "3207GYCM",
+    "3207GYM2",
+    "3249GYM2"
+   ]
+  },
+  "FBG-L-0376": {
+   "aar": 2017,
+   "vin": "WVWZZZ3CZJE048980",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2875CSM2",
+    "2875GNCM",
+    "2875GNM2",
+    "3300GN",
+    "3300GNCM",
+    "3300GNM"
+   ]
+  },
+  "FBG-L-0377": {
+   "aar": 2017,
+   "vin": "KNAGV81FBJ5019697",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3371GBCEL"
+   ]
+  },
+  "FBG-L-0378": {
+   "aar": 2017,
+   "vin": "YV1UZBABDJ1021423",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC",
+    "8846ASMR",
+    "8846ASMR"
+   ]
+  },
+  "FBG-L-0379": {
+   "aar": 2017,
+   "vin": "WAUZZZ4M8JD004142",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3326CSCM",
+    "3326GNCM",
+    "3326GNCM"
+   ]
+  },
+  "FBG-L-0380": {
+   "aar": 2017,
+   "vin": "WBAJA9102JG982608",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0381": {
+   "aar": 2017,
+   "vin": "YV1PZ68BCJ1023981",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2700GN",
+    "3165GNCP"
+   ]
+  },
+  "FBG-L-0382": {
+   "aar": 2017,
+   "vin": "TMBLK9NSXJ8032494",
+   "utfall": "VERIFY",
+   "varenr": [
+    "7820AGAC",
+    "7820AGAM"
+   ]
+  },
+  "FBG-L-0383": {
+   "aar": 2017,
+   "vin": "WVGZZZ5NZJW854559",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2836GN",
+    "2836GYM"
+   ]
+  },
+  "FBG-L-0384": {
+   "aar": 2017,
+   "vin": "WP1ZZZ92ZHLA72259",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3226CSCM",
+    "3226CSGYE",
+    "3226GNCM",
+    "3226GYM",
+    "6742ACDC",
+    "6742AGAC"
+   ]
+  },
+  "FBG-L-0385": {
+   "aar": 2017,
+   "vin": "YV1LFBABDJ1347716",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3182CSBL",
+    "3320GNCG"
+   ]
+  },
+  "FBG-L-0386": {
+   "aar": 2017,
+   "vin": "YV1UZBABDJ1046499",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC",
+    "8846ASMR",
+    "8846ASMR"
+   ]
+  },
+  "FBG-L-0387": {
+   "aar": 2018,
+   "vin": "YV1PZA8BCJ1031231",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2700GN",
+    "3165GNCP"
+   ]
+  },
+  "FBG-L-0388": {
+   "aar": 2018,
+   "vin": "LVYPSBABDJP045018",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8845AGCC",
+    "8845AGCC",
+    "8845AGCC"
+   ]
+  },
+  "FBG-L-0389": {
+   "aar": 2018,
+   "vin": "WBS1J5101JVA11781",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0390": {
+   "aar": 2018,
+   "vin": "WF06XXGCC6JT41468",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3593AGAC"
+   ]
+  },
+  "FBG-L-0391": {
+   "aar": 2017,
+   "vin": "WBAJA910XHG621900",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0392": {
+   "aar": 2018,
+   "vin": "WBAKT0105J0Z78667",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3228GNCM",
+    "3228GNCM"
+   ]
+  },
+  "FBG-L-0393": {
+   "aar": 2018,
+   "vin": "WAUZZZ8V9JA131597",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3179GYCM",
+    "3207GYCM",
+    "3207GYM2",
+    "3249GYM2"
+   ]
+  },
+  "FBG-L-0394": {
+   "aar": 2018,
+   "vin": "WBAJP5106KBJ28260",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0395": {
+   "aar": 2018,
+   "vin": "WVWZZZAUZKW800131",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM2",
+    "3252GNCM"
+   ]
+  },
+  "FBG-L-0396": {
+   "aar": 2018,
+   "vin": "YV1UZBMUDK1260996",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC",
+    "8846ASMR",
+    "8846ASMR"
+   ]
+  },
+  "FBG-L-0397": {
+   "aar": 2017,
+   "vin": "SALVA2BN1HH226609",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0398": {
+   "aar": 2019,
+   "vin": "JHMRU1850KX202189",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2217GY"
+   ]
+  },
+  "FBG-L-0399": {
+   "aar": 2019,
+   "vin": "SADFA2BN8J1Z10992",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3377CSCEL",
+    "3377CSCEL",
+    "3377GNCE",
+    "4342ACDC",
+    "4342ACDC"
+   ]
+  },
+  "FBG-L-0400": {
+   "aar": 2018,
+   "vin": "JMBXDGG2WJZ007955",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-L-0401": {
+   "aar": 2015,
+   "vin": "WBA5K91090D895545",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0402": {
+   "aar": 2012,
+   "vin": "WBAMY91020C775408",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0403": {
+   "aar": 2019,
+   "vin": "YV1LFBMTDL1532032",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3182CSBL",
+    "3320GNCG"
+   ]
+  },
+  "FBG-L-0404": {
+   "aar": 2019,
+   "vin": "VF1R8700761850914",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0405": {
+   "aar": 2019,
+   "vin": "VF70PHNZWJE546580",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3090GN"
+   ]
+  },
+  "FBG-L-0406": {
+   "aar": 2015,
+   "vin": "SB1ZS3JE20E160904",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0407": {
+   "aar": 2019,
+   "vin": "WBS2U710XL7D76345",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2497AGAC"
+   ]
+  },
+  "FBG-L-0408": {
+   "aar": 2019,
+   "vin": "VF70PHNPXJE557246",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3090GN"
+   ]
+  },
+  "FBG-L-0409": {
+   "aar": 2018,
+   "vin": "WBAJA9101JG984155",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0410": {
+   "aar": 2019,
+   "vin": "JTHCY1FF405001659",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8429AGAB",
+    "8429AGAB",
+    "8429AGAB"
+   ]
+  },
+  "FBG-L-0411": {
+   "aar": 2019,
+   "vin": "VR7ERHNPJJJ792514",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2077CS",
+    "2885CS",
+    "2885CSM",
+    "2885GN"
+   ]
+  },
+  "FBG-L-0412": {
+   "aar": 2019,
+   "vin": "JMBXDGG3WKZ010561",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-L-0413": {
+   "aar": 2019,
+   "vin": "YV1UZBMVDL1499035",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC",
+    "8846ASMR",
+    "8846ASMR"
+   ]
+  },
+  "FBG-L-0414": {
+   "aar": 2020,
+   "vin": "WBATS1104L9C44696",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2487AGAC",
+    "2487AGAC",
+    "2540CSGM",
+    "2540GGM",
+    "3077CSGY",
+    "3077GNCM"
+   ]
+  },
+  "FBG-L-0415": {
+   "aar": 2020,
+   "vin": "WDD1770541N134066",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2114GY",
+    "2114GYM"
+   ]
+  },
+  "FBG-L-0416": {
+   "aar": 2020,
+   "vin": "YV1XZBBVFL2314609",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8842ASMH",
+    "8842ASMH",
+    "8847AGAC",
+    "8847AGAC",
+    "8847ASMR",
+    "8847ASMR"
+   ]
+  },
+  "FBG-L-0417": {
+   "aar": 2020,
+   "vin": "YV1LFBMTDL1607434",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3182CSBL",
+    "3320GNCG"
+   ]
+  },
+  "FBG-L-0418": {
+   "aar": 2020,
+   "vin": "WDD2130531A740360",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0419": {
+   "aar": 2020,
+   "vin": "WVWZZZAWZLU069649",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2965GNM2"
+   ]
+  },
+  "FBG-L-0420": {
+   "aar": 2018,
+   "vin": "WBAKU2104J0Y35783",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3309GNCM"
+   ]
+  },
+  "FBG-L-0421": {
+   "aar": 2005,
+   "vin": "SCFAD02A65GB03313",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2113AGSBL"
+   ]
+  },
+  "FBG-L-0422": {
+   "aar": 2020,
+   "vin": "WBA71AB07M5S57516",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2982GY",
+    "2982GYM",
+    "3355GNCM",
+    "3355GNCM"
+   ]
+  },
+  "FBG-L-0423": {
+   "aar": 2020,
+   "vin": "YV1PZA8UCL1114032",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2700GN",
+    "3165GNCP"
+   ]
+  },
+  "FBG-L-0424": {
+   "aar": 2021,
+   "vin": "WP0ZZZ98ZMS283737",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3223GYAC"
+   ]
+  },
+  "FBG-L-0425": {
+   "aar": 2021,
+   "vin": "WP0ZZZ99ZMS266728",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0426": {
+   "aar": 2021,
+   "vin": "SB1Z93BE80E135094",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM"
+   ]
+  },
+  "FBG-L-0427": {
+   "aar": 2021,
+   "vin": "WP0ZZZY1ZNSA61197",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "6746AGAG"
+   ]
+  },
+  "FBG-L-0428": {
+   "aar": 2021,
+   "vin": "VNKKBAC350A196758",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2699GN",
+    "3124GN",
+    "3124GNM",
+    "8441AGAC"
+   ]
+  },
+  "FBG-L-0429": {
+   "aar": 2019,
+   "vin": "WUAZZZ8V9KA904141",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8633AGAC",
+    "8633AGAC",
+    "8633AGAC"
+   ]
+  },
+  "FBG-L-0430": {
+   "aar": 2022,
+   "vin": "YV1LFH5VDN1855759",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3182CSBL",
+    "3320GNCG"
+   ]
+  },
+  "FBG-L-0431": {
+   "aar": 2022,
+   "vin": "YV1UZH5V1P1311347",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC"
+   ]
+  },
+  "FBG-L-0432": {
+   "aar": 2022,
+   "vin": "YV1ZWH1V3P1536082",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3185GNMP",
+    "8848AGCC",
+    "8848AGCC",
+    "8848AGCC"
+   ]
+  },
+  "FBG-L-0433": {
+   "aar": 2023,
+   "vin": "NMTK33BX60R289540",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8421AGAC",
+    "8453AGSC",
+    "8453AGSC",
+    "8453AGSC",
+    "8453ASMR"
+   ]
+  },
+  "FBG-L-0434": {
+   "aar": 2002,
+   "vin": "WDB2030651F285473",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0435": {
+   "aar": 2023,
+   "vin": "WBA31EF04R5Y03194",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2303AGAC",
+    "2304ACDC"
+   ]
+  },
+  "FBG-L-0436": {
+   "aar": 2024,
+   "vin": "JTMGBRFV10D206520",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8432AGAC",
+    "8432AGAC",
+    "8432AGAC"
+   ]
+  },
+  "FBG-L-0437": {
+   "aar": 2024,
+   "vin": "WBY31HD08SFU18503",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2301AKGS",
+    "2301ASMC"
+   ]
+  },
+  "FBG-L-0438": {
+   "aar": 2024,
+   "vin": "YV1LFH7V5S1353126",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3320GNCG"
+   ]
+  },
+  "FBG-L-0439": {
+   "aar": 2025,
+   "vin": "YV1UZH7V2S1176949",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8846AGCC",
+    "8846AGCC",
+    "8846AGCC"
+   ]
+  },
+  "FBG-L-0440": {
+   "aar": 2025,
+   "vin": "L1NNSGHB9RB057324",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0441": {
+   "aar": 2011,
+   "vin": "WBAWY31060L542878",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3077GNCM",
+    "3077GNM",
+    "3077GY",
+    "3077GYM",
+    "3078CSMU",
+    "3078GNMU"
+   ]
+  },
+  "FBG-L-0442": {
+   "aar": 1982,
+   "vin": "W0L000055C6092897",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0443": {
+   "aar": 1985,
+   "vin": "WBAAA310309532742",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0444": {
+   "aar": 1998,
+   "vin": "JT152EP9100371271",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1722CL",
+    "2044GN"
+   ]
+  },
+  "FBG-L-0445": {
+   "aar": 2003,
+   "vin": "WDB2110651A457093",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0446": {
+   "aar": 2006,
+   "vin": "JN1TENT30U0310887",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2387GY"
+   ]
+  },
+  "FBG-L-0447": {
+   "aar": 2003,
+   "vin": "JSAFTL52V00209482",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0448": {
+   "aar": 2007,
+   "vin": "WVWZZZ1KZ7W091005",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2680GN",
+    "2680GNM",
+    "2760BL",
+    "2760GY",
+    "2811GY"
+   ]
+  },
+  "FBG-L-0449": {
+   "aar": 2007,
+   "vin": "SB1KC56E10F021134",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2773GN"
+   ]
+  },
+  "FBG-L-0450": {
+   "aar": 2008,
+   "vin": "WDD2042071F130378",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0451": {
+   "aar": 2008,
+   "vin": "JMBXJCW8W8Z408369",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2776GN",
+    "2776GYEL"
+   ]
+  },
+  "FBG-L-0452": {
+   "aar": 2010,
+   "vin": "TSMEYB91S00513886",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "2966GN"
+   ]
+  },
+  "FBG-L-0453": {
+   "aar": 2007,
+   "vin": "JTDKB20U807628560",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2565GN"
+   ]
+  },
+  "FBG-L-0454": {
+   "aar": 2010,
+   "vin": "VF7UA9HZHAJ653570",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2630CSM",
+    "2940GN",
+    "2940GNM",
+    "3090GNM"
+   ]
+  },
+  "FBG-L-0455": {
+   "aar": 2011,
+   "vin": "WVWZZZ1KZBW240148",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "2888GN",
+    "2888GY",
+    "3109GNAG",
+    "3109GNAM"
+   ]
+  },
+  "FBG-L-0456": {
+   "aar": 2011,
+   "vin": "VF3XURHKHAZ033688",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1953CS",
+    "1953GY"
+   ]
+  },
+  "FBG-L-0457": {
+   "aar": 2011,
+   "vin": "YV1MW84F1C2658432",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2750GY",
+    "2750GYM"
+   ]
+  },
+  "FBG-L-0458": {
+   "aar": 2011,
+   "vin": "VF30E9HR8BS321843",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2976GN",
+    "2976GNM"
+   ]
+  },
+  "FBG-L-0459": {
+   "aar": 2012,
+   "vin": "JSAJTD44V00651125",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8032GZPR5"
+   ]
+  },
+  "FBG-L-0460": {
+   "aar": 2012,
+   "vin": "VF37R9HF0CJ545359",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2885CS",
+    "2885CSM",
+    "2885GN",
+    "2885GN2",
+    "2885GNCM",
+    "2885GYM"
+   ]
+  },
+  "FBG-L-0461": {
+   "aar": 2012,
+   "vin": "WDD2120021A540428",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1981BB",
+    "1981BBM",
+    "1981BY",
+    "1981BYM",
+    "1981GN",
+    "1981GY"
+   ]
+  },
+  "FBG-L-0462": {
+   "aar": 2013,
+   "vin": "JF1SJDLZ3DG016910",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3201GNEL",
+    "3201GNEL"
+   ]
+  },
+  "FBG-L-0463": {
+   "aar": 2013,
+   "vin": "WVWZZZAAZED012249",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3148GN",
+    "3148GNCE"
+   ]
+  },
+  "FBG-L-0464": {
+   "aar": 2014,
+   "vin": "VF30ERHHADS258275",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2976GN",
+    "2976GNM"
+   ]
+  },
+  "FBG-L-0465": {
+   "aar": 2011,
+   "vin": "WVWZZZ7NZCV024616",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3045GNCM",
+    "3045GNEL",
+    "3045GNM",
+    "3045GYM"
+   ]
+  },
+  "FBG-L-0466": {
+   "aar": 2014,
+   "vin": "JTMDCREV00D036443",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0467": {
+   "aar": 2012,
+   "vin": "WDD2042311F943352",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0468": {
+   "aar": 2014,
+   "vin": "WF0LXXGCBLEU14450",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3106GN",
+    "3106GNM",
+    "3106GNME",
+    "3106GYEL"
+   ]
+  },
+  "FBG-L-0469": {
+   "aar": 2014,
+   "vin": "WVWZZZAUZFW071686",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GYM"
+   ]
+  },
+  "FBG-L-0470": {
+   "aar": 2014,
+   "vin": "WVWZZZAUZFP026089",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GYM"
+   ]
+  },
+  "FBG-L-0471": {
+   "aar": 2014,
+   "vin": "WF0AXXWPMAEB55128",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2873GNEL",
+    "2873GNEL"
+   ]
+  },
+  "FBG-L-0472": {
+   "aar": 2014,
+   "vin": "WVWZZZAUZFW180223",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2811GY",
+    "3109GNAG",
+    "3109GNAM",
+    "3190GNCM",
+    "3190GNM",
+    "3252GYM"
+   ]
+  },
+  "FBG-L-0473": {
+   "aar": 2015,
+   "vin": "WBA3K5102FK429671",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0474": {
+   "aar": 2016,
+   "vin": "TSMLYE21S00187909",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3318GN",
+    "3318GNCM",
+    "3318GYM"
+   ]
+  },
+  "FBG-L-0475": {
+   "aar": 2016,
+   "vin": "TSMNZD72S00638165",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0476": {
+   "aar": 2016,
+   "vin": "WF0FXXWPCFGA20933",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2812BLEL",
+    "2812GNM"
+   ]
+  },
+  "FBG-L-0477": {
+   "aar": 2016,
+   "vin": "JMBXDGG2WHZ000314",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-L-0478": {
+   "aar": 2017,
+   "vin": "WDD1760421J705444",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2114GY",
+    "2114GYM"
+   ]
+  },
+  "FBG-L-0479": {
+   "aar": 2018,
+   "vin": "1C4PJMDUXGW357130",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "W2056GN"
+   ]
+  },
+  "FBG-L-0480": {
+   "aar": 2018,
+   "vin": "WDD2052471F718550",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2286GYM",
+    "2340GYM",
+    "2551GYM"
+   ]
+  },
+  "FBG-L-0481": {
+   "aar": 2017,
+   "vin": "JMBXDGG2WJZ002128",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3186GYM"
+   ]
+  },
+  "FBG-L-0482": {
+   "aar": 2018,
+   "vin": "VF3MCYHZRJL073635",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2976GN",
+    "2976GNM",
+    "6571AGRC",
+    "6571AGRCI",
+    "6571ASMR"
+   ]
+  },
+  "FBG-L-0483": {
+   "aar": 2019,
+   "vin": "VF70PHNZWJE539369",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3090GN"
+   ]
+  },
+  "FBG-L-0484": {
+   "aar": 2019,
+   "vin": "U5YH6G17GKL003997",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "4458AGSC"
+   ]
+  },
+  "FBG-L-0485": {
+   "aar": 2019,
+   "vin": "VF3CUHNZTJY135671",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0486": {
+   "aar": 2019,
+   "vin": "KNAGV81FBL5041208",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "3371GBCEL"
+   ]
+  },
+  "FBG-L-0487": {
+   "aar": 2020,
+   "vin": "WBA71AB05M5S07956",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2982GY",
+    "2982GYM",
+    "3355GNCM",
+    "3355GNCM"
+   ]
+  },
+  "FBG-L-0488": {
+   "aar": 2020,
+   "vin": "YV1XZBBBFM2450075",
+   "utfall": "VERIFY",
+   "varenr": [
+    "8842ASMH",
+    "8842ASMH",
+    "8847AGAC",
+    "8847AGAC",
+    "8847ASMR",
+    "8847ASMR"
+   ]
+  },
+  "FBG-L-0489": {
+   "aar": 2021,
+   "vin": "KNACC81CGM5429321",
+   "utfall": "VERIFY",
+   "varenr": [
+    "3397GBCM"
+   ]
+  },
+  "FBG-L-0490": {
+   "aar": 1964,
+   "vin": "40667W122515",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0491": {
+   "aar": 2022,
+   "vin": "W1K2938901F046286",
+   "utfall": "FALLBACK",
+   "varenr": []
+  },
+  "FBG-L-0492": {
+   "aar": 2012,
+   "vin": "TMBLE73T9C9074286",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2866GNEL",
+    "2866GYM"
+   ]
+  },
+  "FBG-L-0493": {
+   "aar": 2023,
+   "vin": "JTNACABB10J010235",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-L-0494": {
+   "aar": 2025,
+   "vin": "SB1ZB3AE70E159683",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2801GN",
+    "2801GNM",
+    "8430AGAC",
+    "8430AGAC"
+   ]
+  },
+  "FBG-L-0495": {
+   "aar": 1986,
+   "vin": "WV2ZZZ25ZGH083889",
+   "utfall": "VERIFY",
+   "varenr": [
+    "1073C",
+    "1073GB"
+   ]
+  },
+  "FBG-L-0496": {
+   "aar": 1998,
+   "vin": "1C3ESN7A3WD561259",
+   "utfall": "PINPOINT",
+   "varenr": [
+    "W1179GB"
+   ]
+  },
+  "FBG-L-0497": {
+   "aar": 2005,
+   "vin": "YV1CZ714661266092",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2472CSBL",
+    "2472CSBL",
+    "2472GB"
+   ]
+  },
+  "FBG-L-0498": {
+   "aar": 2007,
+   "vin": "YV1SW814271667864",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2270CSBL",
+    "2270GBM",
+    "2700GN",
+    "2700GNM"
+   ]
+  },
+  "FBG-L-0499": {
+   "aar": 2009,
+   "vin": "WVWZZZ1KZAW167921",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2126GYM",
+    "2680GN",
+    "2680GNM",
+    "2811GY",
+    "2888GN",
+    "2888GY"
+   ]
+  },
+  "FBG-L-0500": {
+   "aar": 2010,
+   "vin": "SB1EG76L30E039071",
+   "utfall": "VERIFY",
+   "varenr": [
+    "2141GYEL",
+    "2920GNEL",
+    "2920GNM",
+    "2920GYEL",
+    "2926GNCE",
+    "2926GNEL"
+   ]
+  }
+ }
+}
