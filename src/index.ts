@@ -1,3 +1,4 @@
+import {workbenchApi,publicOffer,resendWebhook,workbenchHtml} from './ops-workbench/api';
 import { glassBodyRejection } from './glass-body-compatibility';
 import { normalizeGlassSelection, type GlassSelection } from './glass-selection-contract';
 import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
@@ -839,6 +840,21 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       return json({ ok: true, inquiries_enabled: apen, pilot: apen ? 'apen' : 'stengt', environment: env.ENVIRONMENT ?? 'ukjent' });
     }
 
+    // Additive operations workspace; separate feature gate, no billing integration.
+    if (env.OPS_WORKBENCH_ENABLED === 'true') {
+      const offerLink = /^\/tilbud\/([A-Za-z0-9_.-]{20,200})$/.exec(path);
+      const offerAction = /^\/api\/tilbud\/([A-Za-z0-9_.-]{20,200})$/.exec(path);
+      if (offerLink && method === 'GET') return publicOffer(request, env, offerLink[1]);
+      if (offerAction && method === 'POST') return publicOffer(request, env, offerAction[1]);
+      if (path === '/api/webhooks/resend' && method === 'POST') return resendWebhook(request, env);
+      if (path === '/ops/workbench' || path.startsWith('/api/ops/workbench/')) {
+        if (!(await adminAutorisert(request, env))) return json({ok:false,error:'Ikke autorisert'},401);
+        if (path === '/ops/workbench' && method === 'GET') return workbenchHtml();
+        const ident = await verifiserAccess(request, env);
+        return workbenchApi(request, env, ident?.epost || 'autorisert support');
+      }
+    }
+
     // Apify-katalog-import (admin, Bearer APIFY_SYNC_TOKEN) — skriver kun apify_catalog_products.
     if (method === 'POST' && path === '/api/admin/apify-catalog/sync') {
       return handleApifyCatalogSync(request, env);
@@ -1565,6 +1581,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     if (method === 'GET' && path === '/ops') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Ikke autorisert' }, 401);
+      if (env.OPS_WORKBENCH_ENABLED === 'true' && url.searchParams.get('legacy') !== '1') return workbenchHtml();
       return opsAdminUi();
     }
     // Praktisk videresending: gammel/engelsk sti → faktisk innloggingsside.

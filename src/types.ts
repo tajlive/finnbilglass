@@ -22,6 +22,10 @@ export interface Env {
   EVIDENCE_REVIEW_ENABLED?: string;
   EVIDENCE_STATUS_CHANGE_ENABLED?: string;
   RESEND_API_KEY?: string;
+  OPS_WORKBENCH_ENABLED?: string;
+  OPS_LINK_SECRET?: string;
+  RESEND_WEBHOOK_SECRET?: string;
+  OPS_PUBLIC_ORIGIN?: string;
   SUPPORT_FROM_EMAIL?: string;
   /** Adressen kunden kan svare på: Reply-To, bunntekst og manuelle svar. */
   SUPPORT_EPOST?: string;

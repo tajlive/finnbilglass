@@ -60,6 +60,8 @@ workers_dev = true
 # finnbilglass.no over til staging-konfigurasjonen (feil miljø, feil D1).
 routes = []
 [env.staging.vars]
+OPS_WORKBENCH_ENABLED = "true"
+OPS_PUBLIC_ORIGIN = "https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev"
 ENVIRONMENT = "staging"
 ALL_GLASS_KANDIDATER_ENABLED = "true"
 OAUTH_ENABLED_PROVIDERS = "google"
