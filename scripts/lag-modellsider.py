@@ -131,8 +131,7 @@ def main():
             .replace('{{NAVN}}', 'Volkswagen Golf')
             .replace('{{INGRESS}}', 'Golf er laget i åtte generasjoner siden 1974, og rutene er '
                                     'ulike fra generasjon til generasjon. Her ser du hvilke '
-                                    'glassvarianter katalogen vår har registrert per generasjon – '
-                                    'og hva den ikke sier noe om.')
+                                    'katalograder vi har registrert per generasjon – og hva de ikke sier.')
             .replace('{{SLUG}}', 'vw-golf')
             .replace('{{ANTALL}}', str(len(treff)))
             .replace('{{PRISSATTE}}', str(prissatte))
