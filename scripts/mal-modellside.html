@@ -23,21 +23,23 @@
   <section class="qa">
     <h2>Hva katalogen vår inneholder</h2>
     <p>Vi har <strong>{{ANTALL}} katalograder</strong> som gjelder {{NAVN}}, og {{PRISSATTE}} av dem har pris.
-       {{ITABELL}} av radene kan plasseres sikkert i én generasjon. De øvrige {{UAVKLART}} radene
-       oppgir ikke årstall som lar seg knytte til én generasjon, og vises derfor ikke i tabellen.</p>
+       <strong>{{MEDTYPE}}</strong> av radene har en dokumentert plassering (frontrute, bakrute, dør eller
+       ventil/siderute). {{ITABELL}} rader kan i tillegg knyttes sikkert til én generasjon.
+       De øvrige {{UAVKLART}} radene oppgir ikke årstall som lar seg plassere i én generasjon, og vises
+       derfor ikke i tabellen.</p>
 
-    <h2>Generasjoner vi har glass til</h2>
+    <h2>Mulige glassvarianter per generasjon</h2>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
       <table>
-        <thead><tr><th>Generasjon</th><th>Årsmodeller</th><th>Rader</th><th>Glasstyper katalogen nevner</th></tr></thead>
+        <thead><tr><th>Generasjon</th><th>Årsmodeller</th>{{HEAD}}<th>Rader</th><th>Uten plassering</th></tr></thead>
         <tbody>{{RADER}}</tbody>
       </table>
     </div>
-    <p class="note">Årsmodellene følger Volkswagen Golfs dokumenterte produksjonshistorikk
-       (åtte generasjoner fra 1974) – ikke produktnavnene. En katalograd telles bare når hele
-       årsspennet i varenavnet ligger innenfor generasjonen.
-       {{UKJENTTYPE}} rader har ingen glasstype i varenavnet og står som «Type ikke oppgitt».
-       Vi fyller ikke inn en type vi ikke kan lese ut.</p>
+    <p class="note">Årsmodellene følger Volkswagen Golfs dokumenterte produksjonshistorikk (åtte
+       generasjoner fra 1974) – ikke produktnavnene. En rad telles bare når hele årsspennet i
+       varenavnet ligger innenfor generasjonen. Plasseringen kommer fra leverandørens typekode
+       for varenummeret. Kolonnen «Uten plassering» er rader der typekoden mangler eller er
+       holdt tilbake fordi den motsier produktnavnet.</p>
 
     <h2>Dette er kandidater, ikke bekreftet passform</h2>
     <p>En katalograd viser at glasset er ført opp for modellen. Den beviser ikke at akkurat
