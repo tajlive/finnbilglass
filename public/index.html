@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Billigst på bilglass i Norge – uten forsikring | Finnbilglass</title>
+<title>Finn bilglass til bilen din – få kontrollert pris og levering | Finnbilglass</title>
 <meta name="description" content="Finn billig frontrute og bilglass uten forsikring. Vi kontrollerer glass, pris og levering før du bestemmer deg.">
 <meta name="theme-color" content="#edf8fc">
 <link rel="canonical" href="https://finnbilglass.no/">
@@ -31,15 +31,18 @@
       "name": "Finnbilglass",
       "url": "https://finnbilglass.no/",
       "areaServed": "NO",
-      "telephone": "+4740408241",
       "email": "support@finnbilglass.no"
     }
   ]
 }
 </script>
 
-<link rel="stylesheet" href="styles.css?v=20261030-customer-flow-v4">
+<link rel="stylesheet" href="styles.css?v=20261103-nordisk-klarhet">
 <link rel="icon" type="image/svg+xml" href="ikon.svg?v=20261029-customer-design-v1">
+<meta property="og:image" content="https://finnbilglass.no/assets/og-finnbilglass-2026.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 </head>
 <body class="customer-site">
 <div class="wrap">
@@ -127,7 +130,8 @@
       <img class="logo-ikon logo-ikon-bilde" src="/assets/finnbilglass-logo-mark-2026.png" alt="" width="54" height="32">
       <span class="logo-tekst">finn<span>bilglass</span></span>
     </div>
-    <span class="beta" aria-label="Betaversjon">Beta</span>
+    <span class="beta" aria-label="Pilot">Pilot</span>
+    <a class="topp-lenke" id="topp-konto" href="/innlogging">Logg inn</a>
   </header>
 
   <!-- Skjerm 1: Start / søk -->
@@ -136,7 +140,8 @@
       <div class="start-intro">
         <p class="start-kicker">Bilglass uten forsikring</p>
         <h1>Riktig bilglass.<br><span>En pris du forstår.</span></h1>
-        <p class="sub">Uten glassforsikring, eller med høy egenandel? Finn glass til bilen din. Glassteamet kontrollerer riktig variant, pris og levering før du bestemmer deg.</p>
+        <p class="sub hero-copy-desktop">Uten glassdekning – eller må ruten byttes på grunn av slitasje?<br>Finn mulige glassvarianter til bilen din. Vi tilbyr bilglass til svært konkurransedyktige priser og kontrollerer glassvalg, pris og frakt før vi sender deg et tilbud.</p>
+        <p class="sub hero-copy-mobile">Må du betale glasset selv?<br>Finn mulige glass til bilen din til en svært god pris. Vi kontrollerer glassvalg og frakt før vi sender tilbud.</p>
       </div>
 
       <div class="start-search">
@@ -148,7 +153,7 @@
               autocomplete="off" autocapitalize="characters" spellcheck="false" autocorrect="off"
               enterkeyhint="go" maxlength="10" aria-label="Skiltnummer" required>
           </div>
-          <button type="submit" aria-label="Finn glass til bilen">Finn glass til bilen<svg class="ikon" aria-hidden="true"><use href="#ikon-pil"/></svg></button>
+          <button type="submit" aria-label="Finn bilen">Finn bilen<svg class="ikon" aria-hidden="true"><use href="#ikon-pil"/></svg></button>
         </form>
           <button type="button" id="btn-uten-skilt" class="no-plate-toggle" aria-controls="form-vin" aria-expanded="false">Bilen har ikke skilt</button>
           <form id="form-vin" class="search hidden" novalidate aria-label="Søk med understellsnummer">
@@ -187,6 +192,7 @@
           </form>
 
         <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
+        <p class="supplier-note">Vi leverer glasset. Montering avtaler du selv med et verksted.</p>
         <p class="search-reassurance">Vi kontrollerer glass, pris og levering før tilbud.</p>
         <p class="svv-badge"><svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>Bildata fra Statens vegvesen</p>
       </div>
@@ -194,26 +200,18 @@
 
     <section class="supplier-highlights" aria-label="Derfor velger kunder Finnbilglass">
       <article><span class="highlight-icon">▱</span><div><h2>Egenandelen kan bli høy</h2><p>I verste fall kan egenandelen være opptil 10 000 kroner.</p></div></article>
-      <article><span class="highlight-icon">⌁</span><div><h2>Vi leverer – verkstedet monterer</h2><p>Finnbilglass utfører ikke glasskift. Du finner selv verksted og avtaler montering direkte. Partnerverksteder kommer senere.</p></div></article>
+      <article><span class="highlight-icon">⌁</span><div><h2>Vi leverer – verkstedet monterer</h2><p>Finnbilglass utfører ikke glasskift. Du finner selv verksted og avtaler montering direkte.</p></div></article>
     </section>
 
     <section class="offer-steps" aria-labelledby="offer-steps-title">
       <h2 id="offer-steps-title">Bilglass til lav pris – enkelt og oversiktlig</h2>
       <ol>
-        <li><span class="step-number" aria-hidden="true">01</span><div><h3>Finn riktig glass</h3><p>Søk med registreringsnummer.</p></div></li>
-        <li><span class="step-number" aria-hidden="true">02</span><div><h3>Se pris og levering</h3><p>Vi kontrollerer variant, pris og tilgjengelighet.</p></div></li>
-        <li><span class="step-number" aria-hidden="true">03</span><div><h3>Bestill glasset</h3><p>Glasset leveres til deg. Montering avtaler du selv.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">01</span><div><h3>Finn bilen</h3><p>Søk med registreringsnummer.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">02</span><div><h3>Velg glass</h3><p>Du får bare de rutene som er dokumentert for bilen.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">03</span><div><h3>Få kontrollert tilbud</h3><p>Vi kontrollerer variant, pris og levering. Montering avtaler du selv.</p></div></li>
       </ol>
-      <p class="installation-note">Tilbudet gjelder glass og levering. Vi utfører ikke montering. Du avtaler og betaler eventuell montering direkte med verkstedet du velger. Partnerverksteder kommer senere.</p>
+      <p class="installation-note">Tilbudet gjelder glass og levering. Vi utfører ikke montering. Du avtaler og betaler eventuell montering direkte med verkstedet du velger.</p>
     </section>
-
-    <details class="beta-invitasjon">
-      <summary>Beta for inviterte testere</summary>
-      <div>
-        <p>Du er invitert til å teste Finnbilglass før vi åpner for alle. Start med registreringsnummeret og gi oss gjerne tilbakemelding.</p>
-        <p>Vi dobbeltsjekker glassvalg og pris før et eventuelt tilbud sendes.</p>
-      </div>
-    </details>
 
     <!-- Retain the photo bindings while the unverified upload flow is paused. -->
     <button id="btn-foto-regnr" class="foto-prim" type="button" hidden>Bruk skiltfoto</button>
@@ -300,41 +298,25 @@
       <p id="evidence-result" class="note hidden" role="status" aria-live="polite"></p>
     </section>
 
-    <!-- Glasstype-bokser -->
-    <div class="glassvalg" role="group" aria-label="Glasstype">
-      <button class="glassopt" data-type="front" type="button" aria-pressed="false">
-        <span class="glassopt-title">Frontrute</span>
-        <span class="glassopt-help">Vindskjerm foran</span>
-      </button>
-      <button class="glassopt" data-type="door" type="button" aria-pressed="false">
-        <span class="glassopt-title">Dørrute</span>
-        <span class="glassopt-help">Rute i bildøren</span>
-      </button>
-      <button class="glassopt" data-type="side" type="button" aria-pressed="false">
-        <span class="glassopt-title">Siderute</span>
-        <span class="glassopt-help">Sidefelt og småruter</span>
-      </button>
-      <button class="glassopt" data-type="rear" type="button" aria-pressed="false">
-        <span class="glassopt-title">Bakrute</span>
-        <span class="glassopt-help">Glass bak på bilen</span>
-      </button>
-      <button class="glassopt" data-type="roof" type="button" aria-pressed="false">
-        <span class="glassopt-title">Takglass</span>
-        <span class="glassopt-help">Panorama eller takluke</span>
-      </button>
-      <button class="glassopt" data-type="unknown" type="button" aria-pressed="false">
-        <span class="glassopt-title">Vet ikke</span>
-        <span class="glassopt-help">Vi hjelper deg</span>
-      </button>
-    </div>
+    <!-- Rutetype: bygges fra bilens dokumenterte glass (POST /api/glass/valg).
+         Knappene får klasse glassopt + data-type slik at eksisterende
+         smoke-/E2E-script fortsatt finner frontrute-valget. -->
+    <p id="glassvalg-status" class="note" role="status" aria-live="polite"></p>
+    <div id="glassvalg" class="glassvalg" role="group" aria-label="Rutetype"></div>
+
+    <!-- Ett spørsmål om gangen. Hvert steg bygges fra gjenværende kandidater,
+         så kombinasjoner uten katalogstøtte aldri kan velges. -->
     <section id="glass-placement" class="glass-placement hidden" aria-labelledby="glass-placement-title">
+      <nav id="glass-sti" class="steg-sti" aria-label="Valgt rute"></nav>
       <h3 id="glass-placement-title" tabindex="-1">Hvor sitter ruten?</h3>
-      <p id="glass-placement-help" class="note">Velg det du vet. «Vet ikke» sender opplysningen til manuell kontroll.</p>
-      <div id="glass-placement-fields"></div>
+      <p id="glass-placement-help" class="note"></p>
+      <div id="glass-placement-fields" class="valg-liste" role="group" aria-label="Svaralternativer"></div>
       <p id="glass-placement-error" class="note feil hidden" role="alert" aria-live="polite"></p>
-      <button id="btn-glass-search" class="prim" type="button">Fortsett</button>
-      <button id="btn-glass-cancel" class="link" type="button">Velg en annen glasstype</button>
+      <button id="btn-glass-back" class="link hidden" type="button">Tilbake</button>
+      <button id="btn-glass-cancel" class="link" type="button">Velg en annen rutetype</button>
     </section>
+
+    <button id="btn-glass-hjelp" class="link hjelp-lenke" type="button">Jeg finner ikke ruten min / trenger hjelp</button>
     <button class="link" type="button" data-tilbake="start">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Tilbake
@@ -354,14 +336,19 @@
   </section>
 
   <!-- Skjerm 6: Resultat -->
-  <section id="screen-resultat" class="screen hidden" aria-label="Frontrute til bilen" aria-live="polite">
+  <section id="screen-resultat" class="screen hidden" aria-label="Mulige glass til bilen" aria-live="polite">
     <div class="resultat-header">
-      <h2>Vi hjelper deg med å finne riktig glass</h2>
+      <h2 id="resultat-tittel">Mulige glass til bilen din</h2>
     </div>
+    <!-- Valgt bil og plassering øverst: kunden skal aldri måtte gjette hva
+         resultatet gjelder. -->
+    <div id="resultat-oppsummering" class="resultat-oppsummering hidden" aria-label="Valgt bil og rute"></div>
     <div id="resultat-status" class="note status hidden" role="status" aria-live="polite"></div>
     <div id="resultat-kort" class="varekort" role="region" aria-label="Glassdetaljer"></div>
     <div id="resultat-regnr" class="note regnr-note hidden" aria-label="Kjennemerke"></div>
     <div id="resultat-alt" class="alternativer" aria-label="Andre mulige varianter"></div>
+    <div id="resultat-sporsmaal" class="sporsmaal-block hidden" aria-label="Spørsmål om bilens utstyr" aria-live="polite"></div>
+    <button id="btn-resultat-hjelp" class="link hjelp-lenke" type="button">Finner du ikke ruten? Be om hjelp</button>
     <div class="prislinje" role="status" aria-live="polite">
       <p class="prisforklaring">Vi dobbeltsjekker riktig glass og sender deg et tilbud med pris og levering før du bestemmer deg.</p>
     </div>
@@ -369,14 +356,14 @@
       <h3>Trenger du relevant tilbehør?</h3>
       <div class="montasje-valg" id="montasje-valg">
         <span class="muted">Hvor skal glasset sendes?</span>
-        <label><input type="radio" name="montasje" value="verksted" checked> Til avtaleverksted</label>
+        <label><input type="radio" name="montasje" value="verksted" checked> Til verkstedet jeg avtaler med</label>
         <label><input type="radio" name="montasje" value="selv"> Til meg</label>
       </div>
       <div id="tilbehor-liste"></div>
       <p id="tilbehor-verify" class="note hidden">Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet.</p>
-      <p class="note note-tilbehor">Tilbehørspriser vises når beta åpner.</p>
+      <p class="note note-tilbehor">Tilbehørspriser oppgis i tilbudet.</p>
     </div>
-    <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Vi leverer glasset, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte. Partnerverksteder kommer senere.</p>
+    <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Vi leverer glasset, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte.</p>
     <button id="btn-inquiry" class="prim" type="button">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-epost"/></svg>
       Be om uforpliktende tilbud
@@ -384,6 +371,7 @@
     <div id="inquiry-form" class="inquiry hidden" aria-label="Forespørsel om tilbud">
       <h3>Be om tilbud</h3>
       <p class="note">Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør og sender deg pris og levering før du bestiller. Vi leverer glass, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte.</p>
+      <div id="inquiry-oppsummering" class="soknad-oppsummering" aria-label="Dette ber du om tilbud på"></div>
       <p id="inquiry-glass-summary" class="note hidden" aria-label="Valgt glasstype"></p>
       <label class="felt">
         <span>Registreringsnummer</span>
@@ -401,22 +389,32 @@
           <option value="begge">Telefon og e-post</option>
         </select>
       </label>
+      <p class="note">Velg e-post hvis du vil ha skriftlig kvittering med saksnummer.</p>
       <label class="felt">
         <span id="inquiry-kontakt-label">Telefonnummer</span>
-        <input id="inquiry-kontakt" type="tel" autocomplete="tel" inputmode="tel" maxlength="120" placeholder="F.eks. 40 40 82 41">
+        <input id="inquiry-kontakt" type="tel" autocomplete="tel" inputmode="tel" maxlength="120" placeholder="F.eks. 900 00 000">
       </label>
       <label class="felt hidden" id="inquiry-telefon-ekstra-felt">
         <span>Telefonnummer</span>
-        <input id="inquiry-telefon-ekstra" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="F.eks. 40 40 82 41">
+        <input id="inquiry-telefon-ekstra" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="F.eks. 900 00 000">
+      </label>
+      <label class="felt">
+        <span>Ønsket leveringssted (valgfritt)</span>
+        <input id="inquiry-leveringssted" type="text" maxlength="80" autocomplete="address-level2"
+          placeholder="F.eks. Trondheim, eller verkstedet du avtaler med">
       </label>
       <label class="felt">
         <span>Melding (valgfri)</span>
         <textarea id="inquiry-melding" rows="3" maxlength="500" placeholder="Eventuelle spørsmål eller kommentarer"></textarea>
       </label>
       <p id="inquiry-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
+      <p class="note">Forespørselen er uforpliktende. Du bestemmer først når vi har sendt deg pris og levering.</p>
       <button id="btn-inquiry-send" class="sek" type="button">Send forespørsel</button>
     </div>
-    <p id="inquiry-bekreftet" class="note status hidden" role="status" aria-live="polite"></p>
+    <div id="inquiry-bekreftet" class="svar-bekreftelse hidden" role="status" aria-live="polite">
+      <h3>Forespørselen er mottatt</h3>
+      <p id="inquiry-bekreftet-tekst"></p>
+    </div>
     <button class="link" type="button" data-tilbake="spm">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Nytt søk
@@ -437,19 +435,17 @@
   <footer role="contentinfo">
     <div class="footer-kontakt">
       <h4>Spørsmål? Vi hjelper deg.</h4>
-      <a href="tel:+4740408241" class="kontakt-rad">
-        <svg class="ikon" aria-hidden="true"><use href="#ikon-telefon"/></svg>
-        <span>40 40 82 41</span>
-      </a>
       <a href="mailto:support@finnbilglass.no" class="kontakt-rad">
         <svg class="ikon" aria-hidden="true"><use href="#ikon-epost"/></svg>
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling.html">Betaling kommer senere</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Vi dobbeltsjekker alle glassvalg og priser før bestilling.</p>
+    <p class="footer-bunn"><a href="/innlogging" id="bunn-konto">Logg inn / Min side</a> · <a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling">Betaling og levering</a> · <a href="/om-oss">Om oss</a> · <a href="/personopplysninger">Personvern</a> · Vi kontrollerer glassvalg, pris og frakt før du bestiller.</p>
   </footer>
 
 </div><!-- /.wrap -->
-<script src="app.js?v=20261030-customer-flow-v4"></script>
+<script src="frontrute-view.js?v=20261031-frontrute-v1"></script>
+<script src="app.js?v=20261103-nordisk-klarhet"></script>
+<script src="/topplenke.js?v=20261102" defer></script>
 </body>
 </html>

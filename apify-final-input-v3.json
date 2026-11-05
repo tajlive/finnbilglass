@@ -1,0 +1,14 @@
+{
+  "catalogUrls": [
+    "https://auto-glass.no/produkt/bmw-6-serie-2d-coupe-11-bakrute-elantinnksotet/",
+    "https://auto-glass.no/produkt/bmw-z4-2d-cab-09-bakrute-elant-gronn/",
+    "https://auto-glass.no/produkt/bmw-4-series-g22-4d-gran-cpe-20-acu-ldw-sens-cam-10/"
+  ],
+  "mode": "probe",
+  "maxProducts": 3,
+  "maxPages": 3,
+  "includeProductPages": true,
+  "saveState": false,
+  "allowReconciliation": false,
+  "throttleMs": 1500
+}

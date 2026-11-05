@@ -1,0 +1,1892 @@
+{
+  "generert": "2026-11-04T07:39:50+00:00",
+  "kildefil": "/Users/taj/bilglass/PROSEKT API 16 MAI26.xls",
+  "sha256": "479d7971d65041dc98782b89facb20817a954530bb22dcce7a478e00310fa595",
+  "ark": "Sheet1",
+  "antall_rader_i_ark": 34800,
+  "radtyper": {
+    "rapporttittel": 706,
+    "sideskift": 706,
+    "rapportfirma": 706,
+    "rapportbruker": 706,
+    "kolonneoverskrift": 707,
+    "produktlinje": 30967,
+    "annen": 302
+  },
+  "produktlinjer": 30967,
+  "unike_varenr": 27760,
+  "unike_eurokoder": 26023,
+  "varenr_med_flere_eurokoder": {
+    "antall": 1925,
+    "eksempler": {
+      "8424AGSG": [
+        "8424AGSGNAC",
+        "8424AGSGNAC1L",
+        "8424AGSGNAC2L",
+        "8424AGSGNACH10",
+        "8424AGSGNACH1L",
+        "8424AGSGNACH2L",
+        "8424AGSGNAV",
+        "8424AGSGNV"
+      ],
+      "8432AGAC": [
+        "8432AGACHM",
+        "8432AGACHMU",
+        "8432AGACHMUV1E",
+        "8432AGACHMV1E",
+        "8432AGACHMV1L",
+        "8432AGACHMV30",
+        "8432AGACMV",
+        "8432AGACMV1L"
+      ],
+      "2487AGAC": [
+        "2487AGACMUVZ",
+        "2487AGACMUVZ1L",
+        "2487AGACMUVZ2L",
+        "2487AGACMUVZ3L",
+        "2487AGACMVZ",
+        "2487AGACMVZ1L",
+        "2487AGACMVZ2L"
+      ],
+      "3770LYPV5": [
+        "3770LYOV5RQA1J",
+        "3770LYPV5MQ",
+        "3770LYPV5MQ1J",
+        "3770LYPV5RD",
+        "3770LYPV5RQA",
+        "3770LYPV5RV",
+        "3770LYPV5RV1J"
+      ],
+      "3770RYPV5": [
+        "3770RYPV5MQ",
+        "3770RYPV5MQ1J",
+        "3770RYPV5RD",
+        "3770RYPV5RQ",
+        "3770RYPV5RQ1J",
+        "3770RYPV5RV",
+        "3770RYPV5RV1J"
+      ],
+      "5447AGSBL": [
+        "5447AGSBLCEHM2L",
+        "5447AGSBLCHM1L",
+        "5447AGSBLCHM2C",
+        "5447AGSBLCM2C",
+        "5447AGSBLCM2L",
+        "5447AGSBLHM2C",
+        "5447AGSBLM2C"
+      ],
+      "8430AGAC": [
+        "8430AGACHMUZ",
+        "8430AGACHMUZ1L",
+        "8430AGACHMZ",
+        "8430AGACHMZ1L",
+        "8430AGACHZ",
+        "8430AGACMUZ1L",
+        "8430AGACMVZ"
+      ],
+      "2485AGAC": [
+        "2485AGACMUVZ",
+        "2485AGACMUVZ1L",
+        "2485AGACMUVZ2L",
+        "2485AGACMVZ",
+        "2485AGACMVZ1L",
+        "2485AGACMVZ2L"
+      ],
+      "2490AGAC": [
+        "2490AGACMUVZ",
+        "2490AGACMUVZ1L",
+        "2490AGACMUVZ2L",
+        "2490AGACMVZ",
+        "2490AGACMVZ1L",
+        "2490AGACMVZ2L"
+      ],
+      "3186GNCE": [
+        "5697AGACHM1S",
+        "5697AGACHM95",
+        "5697AGACHM96",
+        "5697AGACHMV",
+        "5697AGACHMV1L",
+        "5697AGACHMV20"
+      ],
+      "3202GNCE": [
+        "8410AGAACHMVW1",
+        "8410AGAACHMW3L",
+        "8410AGACHMW",
+        "8410AGACHMW1L",
+        "8410AGACHMW3L",
+        "8410AGACHMW6Q"
+      ],
+      "3770LGSV5": [
+        "3770LGSV5FD",
+        "3770LGSV5FV",
+        "3770LGSV5MQ",
+        "3770LGSV5MQ1J",
+        "3770LGSV5RD",
+        "3770LGSV5RQ1J"
+      ],
+      "3771AGSC": [
+        "3771AGSCHMZ2L",
+        "3771AGSCHMZ3L",
+        "3771AGSCHMZ4L",
+        "3771AGSCMZ2L",
+        "3771AGSCMZ3L",
+        "3771AGSCMZ4L"
+      ],
+      "6349LGSV5": [
+        "6349LGSV5FD1A",
+        "6349LGSV5RD",
+        "6349LGSV5RD1J",
+        "6349LGSV5RDF",
+        "6349LGSV5RQ",
+        "6349LGSV5RQ1J"
+      ],
+      "6349RGSV5": [
+        "6349RGSV5FD1A",
+        "6349RGSV5RD",
+        "6349RGSV5RD1J",
+        "6349RGSV5RDF",
+        "6349RGSV5RQ",
+        "6349RGSV5RQ1J"
+      ]
+    }
+  },
+  "eurokoder_med_flere_varenr": {
+    "antall": 667,
+    "eksempler": {
+      "5689AGNMV1B": [
+        "4147GZPR2",
+        "7919GZPS4",
+        "7939GZPR5",
+        "8032GZPR5",
+        "8036GZPR4",
+        "8304GZPH5",
+        "8362GZPS4",
+        "8382GZPM5",
+        "8410GZPR5",
+        "8412GZPS4",
+        "8557GZPS4",
+        "8596GZPR5",
+        "8600GZPH5",
+        "8608GZP5P",
+        "8611GZPS5"
+      ],
+      "NO EUROCODE": [
+        "W1798GN",
+        "W2098GN",
+        "W2492GN",
+        "W2498GN",
+        "W2606GN",
+        "W2684GN",
+        "W2840GN",
+        "W2842GN",
+        "W2873GN",
+        "W2888GN",
+        "W2900GN",
+        "W2925GN",
+        "W2926GN",
+        "W2977GN"
+      ],
+      "3397018913": [
+        "AR340U",
+        "AR380U",
+        "AR400U",
+        "AR450U",
+        "AR480U",
+        "AR500U",
+        "AR530U",
+        "AR550U",
+        "AR600U",
+        "AR650S",
+        "AR650U"
+      ],
+      "6300ASMVT": [
+        "1199GU",
+        "1607PY",
+        "2378PY",
+        "2670PY"
+      ],
+      "3338LGNH3FDW": [
+        "20571GN",
+        "20572GN",
+        "22145CL",
+        "22145GN"
+      ],
+      "6716LGNC2RQ": [
+        "20599GN",
+        "21441GN",
+        "5447GN",
+        "6716LGNC2"
+      ],
+      "6716RGNC2RQ": [
+        "20600GN",
+        "21442GN",
+        "5446GN",
+        "6716RGNC2"
+      ],
+      "3397007467": [
+        "AM460S",
+        "AM462S",
+        "AM466S",
+        "AM467S"
+      ],
+      "AC104BYPP": [
+        "DB10062YP",
+        "DB13109YP",
+        "DB13110YP",
+        "DD13109YP"
+      ],
+      "6539ASMHT": [
+        "1296GU",
+        "2182PY",
+        "2335PY"
+      ],
+      "6721ASMT": [
+        "1711GU",
+        "1914PY",
+        "509GU"
+      ],
+      "7029AGSHV": [
+        "1995PY",
+        "2179PY",
+        "2632PY"
+      ],
+      "8556AGNGYVZ": [
+        "2051GB",
+        "2051GN",
+        "2081GY"
+      ],
+      "6716LGNC2FV": [
+        "21437GN",
+        "5849GN",
+        "6716LGNC2"
+      ],
+      "5438LGSV3MQ": [
+        "26765GN2",
+        "27105GN",
+        "27105YP"
+      ]
+    }
+  },
+  "duplikater_like": {
+    "antall": 5,
+    "eksempler": [
+      {
+        "varenr": "7253AGNC",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          25469,
+          25470
+        ],
+        "navn": [
+          "USE 8834AGNC1L"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "7289BGNV",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          25503,
+          25504
+        ],
+        "navn": [
+          "DACIA DOKKER 4D VAN 13- BAKRUTE"
+        ],
+        "priser": [
+          2590.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "8815RGNC2",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          29230,
+          29231
+        ],
+        "navn": [
+          "VOLVO 780 2D COUPE 85-91 SIDERUTE"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "BYD T3",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          30499,
+          30500
+        ],
+        "navn": [
+          "BYD T3 VAN  22-  REAR DOORGLASS"
+        ],
+        "priser": [
+          5545.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "SCANCOD",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          33126,
+          33127
+        ],
+        "navn": [
+          null
+        ],
+        "priser": [],
+        "merknader": []
+      }
+    ]
+  },
+  "duplikater_ulike": {
+    "antall": 113,
+    "eksempler": [
+      {
+        "varenr": "2424CSBL",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          7421,
+          7422
+        ],
+        "navn": [
+          "=BRUK 2578CSBL",
+          "=BRUK 2578CSBLM"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2426GYEL",
+        "eurokode": "5346AGSGYAHJMV",
+        "antall": 2,
+        "excel_rader": [
+          7447,
+          7449
+        ],
+        "navn": [
+          "BRUK 2426GYELAM",
+          "MERCEDES SL 2D CAB W230 01-03  NB-"
+        ],
+        "priser": [
+          15.0,
+          24340.0
+        ],
+        "merknader": [
+          "+++SENSOR WITH 4 DIODES",
+          "NB SENSOR MED 4 DIODER"
+        ]
+      },
+      {
+        "varenr": "2737AGNC",
+        "eurokode": "",
+        "antall": 4,
+        "excel_rader": [
+          12634,
+          12635,
+          12636,
+          12637
+        ],
+        "navn": [
+          "USE 3750AGNCHMVWZ96",
+          "USE 3750AGNCMVZ01L"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2761LGSR5",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          13207,
+          13208
+        ],
+        "navn": [
+          "USE 6571LGSR5FD",
+          "USE 6571LGSR5FDKW1J"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2761RGSR5",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          13213,
+          13214
+        ],
+        "navn": [
+          "USE 6571RGSR5FD",
+          "USE 6571RGSR5FDKW1J"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2762LGSR5",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          13230,
+          13231
+        ],
+        "navn": [
+          "BRUK 6571LGSR5FDKW1J",
+          "USE 6571LGSR5FD"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2762RGSR5",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          13235,
+          13236
+        ],
+        "navn": [
+          "BRUK 6571LGSR5FDKW1J",
+          "USE 6571RGSR5FD"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2763BGSV",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          13263,
+          13265
+        ],
+        "navn": [
+          "BRUK 6573BGSV",
+          "BRUK 6573BGSVRU"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2763LGSV2",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          13271,
+          13272
+        ],
+        "navn": [
+          "BRUK 6573LGSV2FD",
+          "BRUK 6573LGSV2FVWZ"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2763LGSV3",
+        "eurokode": "",
+        "antall": 5,
+        "excel_rader": [
+          13273,
+          13274,
+          13275,
+          13276,
+          13277
+        ],
+        "navn": [
+          "BRUK 6573LGSV3RD1J",
+          "BRUK 6573LGSV3RDOZ",
+          "BRUK 6573LGSV3RDZ",
+          "BRUK 6573LGSV3RQW1J",
+          "BRUK 6573LGSV3RVWZ"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2763LYPV3",
+        "eurokode": "",
+        "antall": 3,
+        "excel_rader": [
+          13278,
+          13279,
+          13280
+        ],
+        "navn": [
+          "BRUK 6573LYPV3RD1J",
+          "BRUK 6573LYPV3RQW1J",
+          "BRUK 6573LYPV3RVWZ"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2763RGSV2",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          13282,
+          13283
+        ],
+        "navn": [
+          "BRUK 6573RGSV2FD",
+          "BRUK 6573RGSV2FVWZ"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2763RGSV3",
+        "eurokode": "",
+        "antall": 5,
+        "excel_rader": [
+          13284,
+          13285,
+          13286,
+          13287,
+          13288
+        ],
+        "navn": [
+          "BRUK 6573RGSV3RD1J",
+          "BRUK 6573RGSV3RDOZ",
+          "BRUK 6573RGSV3RDZ",
+          "BRUK 6573RGSV3RQW1J",
+          "BRUK 6573RGSV3RVWZ"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2763RYPV3",
+        "eurokode": "",
+        "antall": 3,
+        "excel_rader": [
+          13289,
+          13290,
+          13291
+        ],
+        "navn": [
+          "BRUK 6573RYPV3RD1J",
+          "BRUK 6573RYPV3RQW1J",
+          "BRUK 6573RYPV3RVWZ"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2771AGRC",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          13512,
+          13513
+        ],
+        "navn": [
+          "USE 6356AGRCHMOUVZ",
+          "USE 6356AGRCMOVZ"
+        ],
+        "priser": [
+          0.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "2873PYKIT",
+        "eurokode": "3574ASGRL+3574AS",
+        "antall": 2,
+        "excel_rader": [
+          15481,
+          15483
+        ],
+        "navn": [
+          "FORD KUGA 07- PYNTELIST",
+          "FORD KUGA 07- PYNTELIST HOLDLIST"
+        ],
+        "priser": [
+          1185.0,
+          1255.0
+        ],
+        "merknader": [
+          "INDRE LIST",
+          "YTRE LIST"
+        ]
+      },
+      {
+        "varenr": "2999GNMU",
+        "eurokode": "8385AGAMUV1B",
+        "antall": 2,
+        "excel_rader": [
+          17809,
+          17810
+        ],
+        "navn": [
+          "TOYOTA PRIUS 5D CC 09-12",
+          "TOYOTA PRIUS 5D CC 12-15"
+        ],
+        "priser": [
+          16635.0,
+          17320.0
+        ],
+        "merknader": [
+          "+++SENSORPAD S3",
+          "+++SENSORPAD S3 B25*H34MM"
+        ]
+      },
+      {
+        "varenr": "3026LGSE5",
+        "eurokode": "",
+        "antall": 2,
+        "excel_rader": [
+          18342,
+          18343
+        ],
+        "navn": [
+          "CHEVROLET CRUZE 5D STV  13-"
+        ],
+        "priser": [
+          0.0,
+          3295.0
+        ],
+        "merknader": [
+          "MAX 30%"
+        ]
+      },
+      {
+        "varenr": "3067CSCM",
+        "eurokode": "8608ACDCMUVWZ1",
+        "antall": 2,
+        "excel_rader": [
+          19143,
+          19145
+        ],
+        "navn": [
+          "AUDI A7 5D CC  06/12-",
+          "AUDI A7 5D CC  10-05/12"
+        ],
+        "priser": [
+          20390.0,
+          20690.0
+        ],
+        "merknader": []
+      },
+      {
+        "varenr": "3067GNCM",
+        "eurokode": "8608AGACMUVWZ1",
+        "antall": 2,
+        "excel_rader": [
+          19147,
+          19149
+        ],
+        "navn": [
+          "AUDI A7 5D CC  06/12-",
+          "AUDI A7 5D CC  10-05/12"
+        ],
+        "priser": [
+          21395.0,
+          22210.0
+        ],
+        "merknader": []
+      }
+    ]
+  },
+  "rader_uten_eurokode": 4194,
+  "rader_uten_varenr": 0,
+  "rader_uten_eurokode_eller_varenr": 4194,
+  "varenavn_med_ulike_eurokoder_samme_varenr": {
+    "antall": 1061,
+    "eksempler": [
+      {
+        "varenr": "2049LYPR5",
+        "varenavn": "ALFA ROMEO STELVIO 5D SUV 17-",
+        "eurokoder": [
+          "2049LYPR5RD",
+          "2049LYPR5RVZ"
+        ],
+        "excel_rader": [
+          2353,
+          2354
+        ],
+        "priser": [
+          2865.0,
+          2865.0
+        ],
+        "merknader": [
+          "31243YP",
+          "MAX 30%"
+        ]
+      },
+      {
+        "varenr": "2049RYPR5",
+        "varenavn": "ALFA ROMEO STELVIO 5D SUV 17-",
+        "eurokoder": [
+          "2049RYPR5RD",
+          "2049RYPR5RVZ"
+        ],
+        "excel_rader": [
+          2357,
+          2358
+        ],
+        "priser": [
+          2865.0,
+          3140.0
+        ],
+        "merknader": [
+          "31244YP",
+          "MAX 30%"
+        ]
+      },
+      {
+        "varenr": "2050LYPR5",
+        "varenavn": "ALFA ROMEO TONALE 5D SUV 22- R",
+        "eurokoder": [
+          "2050LYPR5RD",
+          "2050LYPR5RVZ"
+        ],
+        "excel_rader": [
+          2385,
+          2386
+        ],
+        "priser": [
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2050RYPR5",
+        "varenavn": "ALFA ROMEO TONALE 5D SUV 22- R",
+        "eurokoder": [
+          "2050RYPR5RD",
+          "2050RYPR5RVZ"
+        ],
+        "excel_rader": [
+          2389,
+          2390
+        ],
+        "priser": [
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2180CSBL",
+        "varenavn": "VOLVO S80 4D SED 99-",
+        "eurokoder": [
+          "8828ACCBLMW1R",
+          "8828ACCBLW1M"
+        ],
+        "excel_rader": [
+          4200,
+          4201
+        ],
+        "priser": [
+          7975.0,
+          8525.0
+        ],
+        "merknader": [
+          "EMB=101",
+          "+++SENSOR PAD S21 49*37MM"
+        ]
+      },
+      {
+        "varenr": "2252LYPE5",
+        "varenavn": "MG5  5D EST 22- R DOORW LEFT",
+        "eurokoder": [
+          "2252LYPE5RD",
+          "2252LYPE5RVZ"
+        ],
+        "excel_rader": [
+          5080,
+          5082
+        ],
+        "priser": [
+          3510.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2252RYPE5",
+        "varenavn": "MG5  5D EST 22- R DOORW RIGHT",
+        "eurokoder": [
+          "2252RYPE5RD",
+          "2252RYPE5RVZ"
+        ],
+        "excel_rader": [
+          5084,
+          5086
+        ],
+        "priser": [
+          3710.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2257LGNR5",
+        "varenavn": "MG ZS 5D CROSS/SUV 25- DOORGLASS",
+        "eurokoder": [
+          "2257LGNR5FD",
+          "2257LGNR5RD"
+        ],
+        "excel_rader": [
+          5156,
+          5157
+        ],
+        "priser": [
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2257RGNR5",
+        "varenavn": "MG ZS 5D CROSS/SUV 25- DOORGLASS",
+        "eurokoder": [
+          "2257RGNR5FD",
+          "2257RGNR5RD"
+        ],
+        "excel_rader": [
+          5159,
+          5160
+        ],
+        "priser": [
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2261LGNR5",
+        "varenavn": "MG S5 EV 5D SUV 25- DOORGLASS",
+        "eurokoder": [
+          "2261LGNR5FD",
+          "2261LGNR5RD"
+        ],
+        "excel_rader": [
+          5224,
+          5225
+        ],
+        "priser": [
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2261RGNR5",
+        "varenavn": "MG S5 EV 5D SUV 25- DOORGLASS",
+        "eurokoder": [
+          "2261RGNR5FD",
+          "2261RGNR5RD"
+        ],
+        "excel_rader": [
+          5230,
+          5231
+        ],
+        "priser": [
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2298PYKIT",
+        "varenavn": "TOYOTA RAV 4 5D 00-05 PYNTELIST",
+        "eurokoder": [
+          "8323ASGRL+8323AS",
+          "8323ASMRL1A+8323"
+        ],
+        "excel_rader": [
+          5705,
+          5707
+        ],
+        "priser": [
+          2485.0,
+          4325.0
+        ],
+        "merknader": [
+          "NB-NB HOLDLIST MED",
+          null
+        ]
+      },
+      {
+        "varenr": "2299CSBL",
+        "varenavn": "OPEL CORSA C 3/5D CC 01-",
+        "eurokoder": [
+          "6290ACCBL",
+          "6290ACCBLM1B"
+        ],
+        "excel_rader": [
+          5717,
+          5718
+        ],
+        "priser": [
+          7030.0,
+          7310.0
+        ],
+        "merknader": [
+          "EMB=100",
+          "+++SENSOR PAD S21 49*37MM"
+        ]
+      },
+      {
+        "varenr": "2300ACDC",
+        "varenavn": "BMW iX 5D SUV 21- WS COATED LDW",
+        "eurokoder": [
+          "2300ACDCMUVZ1L",
+          "2300ACDCMUVZ2L"
+        ],
+        "excel_rader": [
+          5738,
+          5739
+        ],
+        "priser": [
+          14630.0,
+          17395.0
+        ],
+        "merknader": [
+          "+++WIDE SENSOR 1 CAMERA",
+          "#-10%#  104"
+        ]
+      },
+      {
+        "varenr": "2300AGAC",
+        "varenavn": "BMW iX 5D SUV 21- WS LDW SENSOR",
+        "eurokoder": [
+          "2300AGACMUVZ1L",
+          "2300AGACMUVZ2L",
+          "2300AGACMVZ"
+        ],
+        "excel_rader": [
+          5740,
+          5741,
+          5742
+        ],
+        "priser": [
+          0.0,
+          13650.0,
+          8600.0
+        ],
+        "merknader": [
+          "104.0",
+          "+++OPEN SENSOR AREA   104",
+          "+++WIDE SENSOR/CAMERA"
+        ]
+      },
+      {
+        "varenr": "2300LGSR5",
+        "varenavn": "BMW iX 5D SUV 21- LEFT GN SOLAR",
+        "eurokoder": [
+          "2300LGSR5FD",
+          "2300LGSR5FVWZ"
+        ],
+        "excel_rader": [
+          5748,
+          5749
+        ],
+        "priser": [
+          3440.0,
+          7505.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2301AGAC",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+        "eurokoder": [
+          "2301AGACMUVZ",
+          "2301AGACMUVZ1L",
+          "2301AGACMVZ1L"
+        ],
+        "excel_rader": [
+          5771,
+          5772,
+          5774
+        ],
+        "priser": [
+          14620.0,
+          10050.0,
+          9325.0
+        ],
+        "merknader": [
+          "LIGHT AND MOISTURE",
+          "LIGHT AND MOISTURE",
+          "LIGHT AND MOISTURE"
+        ]
+      },
+      {
+        "varenr": "2301BYPC",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+        "eurokoder": [
+          "2301BYPCA",
+          "2301BYPCAB"
+        ],
+        "excel_rader": [
+          5777,
+          5778
+        ],
+        "priser": [
+          0.0,
+          9720.0
+        ],
+        "merknader": [
+          null,
+          "WITH BRAKELIGHT"
+        ]
+      },
+      {
+        "varenr": "2301LYPC4",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20- R",
+        "eurokoder": [
+          "2301LYPC4RD",
+          "2301LYPC4RQZ"
+        ],
+        "excel_rader": [
+          5780,
+          5781
+        ],
+        "priser": [
+          0.0,
+          5650.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2301RYPC4",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20- R",
+        "eurokoder": [
+          "2301RYPC4RD",
+          "2301RYPC4RQZ"
+        ],
+        "excel_rader": [
+          5783,
+          5784
+        ],
+        "priser": [
+          0.0,
+          5650.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2302AGAC",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- WS",
+        "eurokoder": [
+          "2302AGACMVZ",
+          "2302AGACMVZ1L",
+          "2302AGACMVZ2L"
+        ],
+        "excel_rader": [
+          5794,
+          5795,
+          5796
+        ],
+        "priser": [
+          0.0,
+          0.0,
+          10505.0
+        ],
+        "merknader": [
+          "+++SENSORPAD S20 31MM",
+          "Forandring på kamera/feste och",
+          "Forandring på kamera/feste och"
+        ]
+      },
+      {
+        "varenr": "2302LGSM5",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- F",
+        "eurokoder": [
+          "2302LGSM5FD",
+          "2302LGSM5FVWZ"
+        ],
+        "excel_rader": [
+          5800,
+          5801
+        ],
+        "priser": [
+          2395.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2302LYPM5",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+        "eurokoder": [
+          "2302LYPM5RD",
+          "2302LYPM5RQZ1L",
+          "2302LYPM5RQZ1M"
+        ],
+        "excel_rader": [
+          5802,
+          5803,
+          5804
+        ],
+        "priser": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          "Endre innkapsling + trekk ved Logo",
+          null
+        ]
+      },
+      {
+        "varenr": "2302RGSM",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- F",
+        "eurokoder": [
+          "2302RGSM5FD",
+          "2302RGSM5FVWZ"
+        ],
+        "excel_rader": [
+          5805,
+          5806
+        ],
+        "priser": [
+          2395.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2302RYPM",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+        "eurokoder": [
+          "2302RYPM5RD",
+          "2302RYPM5RQZ1L",
+          "2302RYPM5RQZ1M"
+        ],
+        "excel_rader": [
+          5812,
+          5813,
+          5814
+        ],
+        "priser": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          "Endre innkapsling + trekk ved Logo",
+          null
+        ]
+      },
+      {
+        "varenr": "2303AGAC",
+        "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+        "eurokoder": [
+          "2303AGACMUVZ",
+          "2303AGACMUVZ1L",
+          "2303AGACMUVZ2L",
+          "2303AGACMVZ"
+        ],
+        "excel_rader": [
+          5828,
+          5829,
+          5830,
+          5831
+        ],
+        "priser": [
+          10455.0,
+          12915.0,
+          12410.0,
+          9550.0
+        ],
+        "merknader": [
+          "NB! HUSK (BMWDEM) SPESIAL",
+          "NB! HUSK (BMWDEM) SPESIAL",
+          "NB! HUSK (BMWDEM) SPESIAL",
+          "NB! HUSK (BMWDEM) SPESIAL"
+        ]
+      },
+      {
+        "varenr": "2304ACDC",
+        "varenavn": "BMW i7 4D LIM 23-  WS SENSOR LDW",
+        "eurokoder": [
+          "2304ACDCMUVZ2L",
+          "2304ACDCMUVZ95"
+        ],
+        "excel_rader": [
+          5848,
+          5849
+        ],
+        "priser": [
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2306AGAC",
+        "varenavn": "BMW 5 4D SED + EST 23- WS LDW",
+        "eurokoder": [
+          "2306AGACMUVZ1L",
+          "2306AGACMUVZ2L",
+          "2306AGACMVZ"
+        ],
+        "excel_rader": [
+          5892,
+          5893,
+          5894
+        ],
+        "priser": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null,
+          null
+        ]
+      },
+      {
+        "varenr": "2308AGSC",
+        "varenavn": "MINI COUNTRYMAN 5D CROSS 24- WS",
+        "eurokoder": [
+          "2308AGSCMVZ",
+          "2308AGSCMVZ1L",
+          "2308AGSCMVZ2L"
+        ],
+        "excel_rader": [
+          5972,
+          5973,
+          5974
+        ],
+        "priser": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null,
+          "TRENGER BILDER"
+        ]
+      },
+      {
+        "varenr": "2308LYPR5",
+        "varenavn": "MINI COUNTRYMAN 5D CROSS 24-",
+        "eurokoder": [
+          "2308LYPR5RD",
+          "2308LYPR5RQAQZ"
+        ],
+        "excel_rader": [
+          5983,
+          5984
+        ],
+        "priser": [
+          0.0,
+          0.0
+        ],
+        "merknader": [
+          null,
+          null
+        ]
+      }
+    ]
+  },
+  "varsler": {
+    "varenr_er_tall": 187,
+    "varenr_ledende_null_usikker": 3,
+    "eurokode_er_tall": 316,
+    "aar_ukjent": 5459,
+    "mangler_eurokode": 4194,
+    "maal_uten_glassbetydning": 169,
+    "mangler_varenavn": 157,
+    "pris_er_null": 4097,
+    "aar_apen_periode": 18778,
+    "erstatningspeker": 1580,
+    "pris_mangler": 156
+  },
+  "aar": {
+    "lukket": 6730,
+    "ukjent": 5459,
+    "apen": 18778
+  },
+  "maal": {
+    "linjer_med_maal": 173,
+    "slag": {
+      "emballasje": 2,
+      "ukjent": 125,
+      "glass": 4,
+      "sensor": 42
+    },
+    "enhet": {
+      "ukjent": 131,
+      "mm": 42
+    },
+    "kun_glassmaal": 4,
+    "eksempler": [
+      {
+        "excel_rad": 13,
+        "varenr": "99",
+        "varenavn": "EMBALLASJE LITEN  (1150x150x720)",
+        "merknad": null,
+        "maal": [
+          {
+            "slag": "emballasje",
+            "raa_tekst": "EMBALLASJE LITEN  (1150x150x720",
+            "verdier": [
+              "1150",
+              "150",
+              "720"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 81,
+        "varenr": "101",
+        "varenavn": "EMBALLASJE MIDDELS",
+        "merknad": "100 = 0,34 M3 (1560X220X990)",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "(1560X220X990",
+            "verdier": [
+              "1560",
+              "220",
+              "990"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 94,
+        "varenr": "101L",
+        "varenavn": "EMB MIDDELS LANG(1900X230X980)",
+        "merknad": null,
+        "maal": [
+          {
+            "slag": "emballasje",
+            "raa_tekst": "EMB MIDDELS LANG(1900X230X980",
+            "verdier": [
+              "1900",
+              "230",
+              "980"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 113,
+        "varenr": "103",
+        "varenavn": "EMBALLASJE  SAAB  + PANORAMA",
+        "merknad": "45x165x70",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "45x165x70",
+            "verdier": [
+              "45",
+              "165",
+              "70"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 128,
+        "varenr": "103BOBIL",
+        "varenavn": "EMBALLASJE BOBIL BRED + LANG +",
+        "merknad": "240X60X140  CA. 2M3",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "240X60X140",
+            "verdier": [
+              "240",
+              "60",
+              "140"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 289,
+        "varenr": "115B",
+        "varenavn": "IKKE BRUK",
+        "merknad": "59x30x40",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "59x30x40",
+            "verdier": [
+              "59",
+              "30",
+              "40"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 706,
+        "varenr": "1421BL",
+        "varenavn": "TOYOTA DYNA 86-98 BL 152X70 NB",
+        "merknad": "EMB=100",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "152X70",
+            "verdier": [
+              "152",
+              "70"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 707,
+        "varenr": "1421C",
+        "varenavn": "TOYOTA DYNA 86-98 152X70 NB SJEKK",
+        "merknad": "EMB=100",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "152X70",
+            "verdier": [
+              "152",
+              "70"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 708,
+        "varenr": "1421GB",
+        "varenavn": "TOYOTA DYNA 86-98 152X70 NB SJEKK",
+        "merknad": "EMB=100",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "152X70",
+            "verdier": [
+              "152",
+              "70"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 1097,
+        "varenr": "1649BB",
+        "varenavn": "SUBARU LEGACY 90- FRONTRUTE",
+        "merknad": "EMB=100  OBS MÅL 84X149",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "84X149",
+            "verdier": [
+              "84",
+              "149"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 1270,
+        "varenr": "1751GB",
+        "varenavn": "IVECO EUROCARGO 91- 93",
+        "merknad": "gummi pakning 198x82 -- ikke",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "198x82",
+            "verdier": [
+              "198",
+              "82"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 1636,
+        "varenr": "1941GN",
+        "varenavn": "IVECO EUROCARGO 94-",
+        "merknad": "1941 er limt silketrykk  199x 82",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "199x 82",
+            "verdier": [
+              "199",
+              "82"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 2153,
+        "varenr": "20336BL",
+        "varenavn": "TOYOTA LANDCRUISER FJ70 85-90",
+        "merknad": "MÅL 48,5X76,5",
+        "maal": [
+          {
+            "slag": "glass",
+            "raa_tekst": "MÅL 48,5X76,5",
+            "verdier": [
+              "48.5",
+              "76.5"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": true
+          }
+        ]
+      },
+      {
+        "excel_rad": 3385,
+        "varenr": "21303BL",
+        "varenavn": "TOYOTA CELICA 3D CC SEPT89-93",
+        "merknad": "OK  MÅL=1335*935",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "1335*935",
+            "verdier": [
+              "1335",
+              "935"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 4201,
+        "varenr": "2180CSBL",
+        "varenavn": "VOLVO S80 4D SED 99-",
+        "merknad": "+++SENSOR PAD S21 49*37MM",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "49*37",
+            "verdier": [
+              "49",
+              "37"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 4913,
+        "varenr": "22411GN",
+        "varenavn": "LAND ROVER DISCOVERY 70-93",
+        "merknad": "NB SJEKK MÅL 660*484",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "660*484",
+            "verdier": [
+              "660",
+              "484"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 4915,
+        "varenr": "22412GN",
+        "varenavn": "LAND ROVER DISCOVERY 70-98",
+        "merknad": "NB SJEKK MÅL 660*484",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "660*484",
+            "verdier": [
+              "660",
+              "484"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 5653,
+        "varenr": "2288GN",
+        "varenavn": "NISSAN MAXIMA 4D SEDAN QX 00",
+        "merknad": "EMB=100    OBS SPEIL 40*30MM",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "40*30",
+            "verdier": [
+              "40",
+              "30"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 5654,
+        "varenr": "2288GY",
+        "varenavn": "NISSAN MAXIMA 4D SEDAN QX 00",
+        "merknad": "EMB=100    OBS SPEIL 40*30MM",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "40*30",
+            "verdier": [
+              "40",
+              "30"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 5718,
+        "varenr": "2299CSBL",
+        "varenavn": "OPEL CORSA C 3/5D CC 01-",
+        "merknad": "+++SENSOR PAD S21 49*37MM",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "49*37",
+            "verdier": [
+              "49",
+              "37"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 5719,
+        "varenr": "2299GNM",
+        "varenavn": "OPEL CORSA C 3/5D CC 01- FRONTR",
+        "merknad": "+++SENSOR PAD S21 49*37MM",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "49*37",
+            "verdier": [
+              "49",
+              "37"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 6038,
+        "varenr": "2310GG",
+        "varenavn": "MAN LAST XXL 00- (224X113)",
+        "merknad": "EMB=102 BARE PLASS TIL 1",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "(224X113",
+            "verdier": [
+              "224",
+              "113"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 6042,
+        "varenr": "2310GY",
+        "varenavn": "MAN LAST XXL 00- (224X113)",
+        "merknad": "EMB=102 BARE PLASS TIL 1",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "(224X113",
+            "verdier": [
+              "224",
+              "113"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 6089,
+        "varenr": "2311PY",
+        "varenavn": "MAN LAST XL (BRED) 00- (224X88)",
+        "merknad": null,
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "(224X88",
+            "verdier": [
+              "224",
+              "88"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      },
+      {
+        "excel_rad": 6816,
+        "varenr": "2375GYEL",
+        "varenavn": "BMW 7 SER SED E65 NB- FRA 11/1-09/03",
+        "merknad": "NB-NB SENSORPRINT 100 X 150",
+        "maal": [
+          {
+            "slag": "ukjent",
+            "raa_tekst": "100 X 150",
+            "verdier": [
+              "100",
+              "150"
+            ],
+            "enhet": "ukjent",
+            "enhet_dokumentert": false,
+            "gjelder_glass": false
+          }
+        ]
+      }
+    ]
+  },
+  "alias_rader": 1580
+}

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administrator – FinnBilGlass Driftsenter</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="/admin-innlogging.css?v=20261102">
+</head>
+<body>
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">
+        <span>finn</span><span>bilglass</span>
+      </div>
+      <span class="env-badge">STAGING</span>
+      <h1 class="auth-title">Driftsenter</h1>
+      <p class="auth-subtitle">Administrator-innlogging. Kun autorisert personale har tilgang.</p>
+    </div>
+
+    <div id="email-step">
+      <div class="form-group">
+        <label class="form-label" for="email">E-postadresse</label>
+        <input type="email" id="email" class="form-input" placeholder="navn@finnbilglass.no">
+        <div class="error-msg" id="email-error">Oppgi en gyldig e-postadresse.</div>
+      </div>
+      <button class="btn-primary" id="send-otp-btn">Send engangskode</button>
+      <div class="resend-text" id="resend-text" style="display:none;">
+        Kode sendt. Mottar du ikke koden? <a href="#" class="resend-link" id="resend-link">Send på nytt</a>
+      </div>
+    </div>
+
+    <div id="otp-step" style="display:none;">
+      <div class="form-group">
+        <label class="form-label" for="otp">Engangskode</label>
+        <div class="otp-inputs">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+        </div>
+        <div class="error-msg" id="otp-error">Koden er ugyldig eller utløpt.</div>
+      </div>
+      <button class="btn-primary" id="verify-otp-btn" disabled>Verifiser og gå inn</button>
+      <button class="btn-secondary" id="back-btn">Tilbake</button>
+      <div class="resend-text">
+        Koden gjelder i 10 minutter. <a href="#" class="resend-link" id="resend-link-2">Send på nytt</a>
+      </div>
+    </div>
+
+    <div class="security-note">
+      <strong>Sikkerhet:</strong> Alle handlinger logges i audit-logg. Tilgang krever autorisert sesjon og gyldig rolle. Alternativer Worker-ruter omgår ikke autentisering.
+    </div>
+  </div>
+</div>
+
+<script src="/admin-innlogging.js?v=20261102" defer></script>
+</body>
+</html>

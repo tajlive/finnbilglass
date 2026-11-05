@@ -1,0 +1,20 @@
+/* Side-spesifikke stiler for admin-innlogging.html — flyttet ut for strengere CSP. */
+.auth-container { max-width: 440px; margin: 40px auto; padding: 24px; }
+  .auth-card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 32px; }
+  .auth-header { text-align: center; margin-bottom: 24px; }
+  .auth-logo { display: flex; align-items: center; gap: 2px; justify-content: center; margin-bottom: 16px; }
+  .auth-logo span:first-child { font-size: 26px; font-weight: 800; color: #0F172A; }
+  .auth-logo span:last-child { font-size: 26px; font-weight: 800; color: #F59E0B; }
+  .auth-title { font-size: 28px; font-weight: 800; color: #0F172A; margin: 8px 0; }
+  .auth-subtitle { font-size: 15px; color: #64748B; line-height: 1.5; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 600; color: #94A3B8; display: block; margin-bottom: 6px; }
+  .form-input { width: 100%; padding: 16px 20px; border-radius: 12px; border: 1px solid #CBD5E1; background: #F8FAFC; font-size: 16px; font-family: 'Inter Tight', system-ui, sans-serif; box-sizing: border-box; }
+  .form-input:focus { outline: none; border-color: #F59E0B; }
+  .btn-primary { width: 100%; padding: 16px 36px; border-radius: 12px; background: #0F172A; color: #FFFFFF; border: none; font-size: 17px; font-weight: 700; cursor: pointer; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .env-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #FFF7ED; color: #92400E; font-size: 11px; font-weight: 700; margin-bottom: 16px; border: 1px solid #FCD34D; }
+  .role-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #F8FAFC; border: 1px solid #E2E8F0; font-size: 12px; color: #475569; margin-bottom: 16px; }
+  .error-msg { color: #DC2626; font-size: 13px; margin-top: 8px; display: none; }
+  .security-note { margin-top: 20px; padding: 16px; background: #F8FAFC; border-radius: 12px; font-size: 13px; color: #64748B; line-height: 1.5; }
+  .security-note strong { color: #0F172A; }

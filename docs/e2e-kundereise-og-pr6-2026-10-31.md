@@ -57,18 +57,22 @@ Modell i `src/pricing/nok-prising.ts`, endepunkt
 
 **Kostnadsgrunnlag (eksplisitt):**
 
+> **RETTET 2026-11-04:** tabellen under beskrev 0,60-faktoren med faste trinn.
+> Den er fjernet. Gjeldende regel (Tom 2026-10-29) er
+> `estimert kundepris = XLS-listepris eks. mva × 0,25 × 1,25`, uten trinn, avrundet
+> til øre, merket **ESTIMERT**. Se `src/pricing/nok-prising.ts`.
+
 | Grunnlag | Kjede | Sikkerhet |
 |---|---|---|
-| `PRISTLISTE_NOK` | listepris × 0,60 → rund ned til trinn | **BEKREFTET** |
-| `SUPPLIER_INVOICE` | fakturakostnad × påslag → rund ned til trinn | **BEKREFTET** |
+| `PRISTLISTE_NOK` | listepris **eks. mva** × 0,25 × 1,25 (75 % rabatt + mva), avrundet til øre | **ESTIMERT** |
+| `SUPPLIER_INVOICE` | fakturakostnad × påslag × 1,25 | **BEKREFTET** |
 | `GLAVISTA_SRP_EUR` | EUR × datert kurs | **ESTIMERT** (gir aldri kundepris) |
 
-**Mva brytes UT, legges ikke på.** Trinnprisene er det kunden ser, inkl. mva:
-5 490 kr → mva 1 098 kr / eks. mva 4 392 kr. En test låser at kundeprisen aldri
-blir 5 490 × 1,25.
+**Mva legges PÅ toppen** for XLS-prisen (den er eks. mva): 10 745 → 2 686,25 eks.
+mva → 3 357,81 inkl. mva.
 
-**Utenfor trinn = «Spesial».** Over 8 490 eller under 3 990 gir `kundePris: null`
-og advarsel `UTENFOR_TRINNSPRIS_SPESIAL` — ikke en gjettet pris.
+**Ingen trinn.** Alle positive listepriser gir en pris; `null` bare når prisen
+mangler eller er ugyldig. Varer uten pris vises som «Pris på forespørsel».
 
 **Datert valutakurs.** `src/pricing/valutakurs.ts` henter Norges Bank
 EXR/B.EUR.NOK.SP (SDMX-JSON) og lagrer **observasjonsdatoen**, ikke hentedatoen.

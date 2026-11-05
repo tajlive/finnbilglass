@@ -1,0 +1,8 @@
+{
+  "actorSpecification": 1,
+  "name": "finnbilglass-price-import",
+  "title": "FinnBilGlass Autoglass Price & Stock Import",
+  "description": "Private authenticated read-only Autoglass catalog crawler; stores unverified list prices and stock status.",
+  "version": "1.0",
+  "input": "./input_schema.json"
+}

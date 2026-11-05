@@ -1,0 +1,1723 @@
+{
+  "oppsummering": {
+    "manifest": "data/finn-100.jsonl",
+    "manifestSha256": "d407e6dc53b656686e9da32fa867e8ac5b9dca6f956d6f244444b1a2fb3de809",
+    "datagrunnlagSha256": "eda1188f084b30d551b070bcd2156aac7ab287ba88c834940f9c98f59f49dd90",
+    "gammelKode": "scripts/_old/glass-valg-OLD.ts (git blob dfbc86b:src/glass-valg.ts = d8d70cfcd0ed03a48163358ff767b76d5d773ec8)",
+    "nyKode": "src/glass-valg.ts",
+    "biler": 110,
+    "bilerMedKandidater": 21,
+    "bilerUendret": 101,
+    "bilerEndret": 9,
+    "stierGammel": 310,
+    "stierNy": 310
+  },
+  "rader": [
+    {
+      "bil": {
+        "regnr": "AE13412",
+        "merke": "Volkswagen",
+        "modell": "Golf V",
+        "aar": 2006
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EJ18765",
+        "merke": "Hyundai",
+        "modell": "Kona",
+        "aar": 2024
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "LH90120",
+        "merke": "Volkswagen",
+        "modell": "Caravelle",
+        "aar": 2000
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "NF73296",
+        "merke": "BMW",
+        "modell": "116i",
+        "aar": 2015
+      },
+      "kandidater": 24,
+      "stierGammel": 16,
+      "stierNy": 16,
+      "felles": 14,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=cabriolet:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=cabriolet:n=3:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=cabriolet:n=2:auto={\"side\":\"left\",\"body\":\"cabriolet\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=cabriolet:n=2:auto={\"side\":\"right\",\"body\":\"cabriolet\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "HB80142",
+        "merke": "BMW",
+        "modell": "320d",
+        "aar": 2008
+      },
+      "kandidater": 42,
+      "stierGammel": 18,
+      "stierNy": 18,
+      "felles": 15,
+      "bareGammel": [
+        "type:side:n=32:auto={}/side=left:n=17:auto={\"side\":\"left\"}/body=cabriolet:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=32:auto={}/side=left:n=17:auto={\"side\":\"left\"}/body=coupe:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=32:auto={}/side=right:n=15:auto={\"side\":\"right\"}/body=coupe:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=32:auto={}/side=left:n=17:auto={\"side\":\"left\"}/body=cabriolet:n=2:auto={\"side\":\"left\"}",
+        "type:side:n=32:auto={}/side=left:n=17:auto={\"side\":\"left\"}/body=coupe:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=32:auto={}/side=right:n=15:auto={\"side\":\"right\"}/body=coupe:n=4:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "DR94262",
+        "merke": "Toyota",
+        "modell": "Proace",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "ED63427",
+        "merke": "Polestar",
+        "modell": "2",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "ED45082",
+        "merke": "Nissan",
+        "modell": "Leaf",
+        "aar": 2021
+      },
+      "kandidater": 18,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EB11166",
+        "merke": "Audi",
+        "modell": "e-tron",
+        "aar": 2020
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BR58010",
+        "merke": "Audi",
+        "modell": "A5",
+        "aar": 2008
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "FT61245",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "AA78283",
+        "merke": "Peugeot",
+        "modell": "Expert",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "NH12612",
+        "merke": "Isuzu",
+        "modell": "D-max",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EK42721",
+        "merke": "BMW",
+        "modell": "i3",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EK70880",
+        "merke": "Kia",
+        "modell": "Soul",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "CV89013",
+        "merke": "Mazda",
+        "modell": "CX-3",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "ED82258",
+        "merke": "BMW",
+        "modell": "iX",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "ED75058",
+        "merke": "Kia",
+        "modell": "Niro",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BC51543",
+        "merke": "Ford",
+        "modell": "Granada",
+        "aar": 1983
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "KJ65178",
+        "merke": "Toyota",
+        "modell": "HiLux",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "PR22999",
+        "merke": "Mazda",
+        "modell": "CX-5",
+        "aar": 2014
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DS29473",
+        "merke": "Lotus",
+        "modell": "Eletre",
+        "aar": 2026
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DN65751",
+        "merke": "BMW",
+        "modell": "X5",
+        "aar": 2011
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "CF91159",
+        "merke": "Volvo",
+        "modell": "V60",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EF97795",
+        "merke": "Cupra",
+        "modell": "Born",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "ED72189",
+        "merke": "Porsche",
+        "modell": "Taycan 4",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EP70168",
+        "merke": "BMW",
+        "modell": "i4",
+        "aar": 2026
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DP72082",
+        "merke": "Volvo",
+        "modell": "XC60",
+        "aar": 2015
+      },
+      "kandidater": 29,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "CV52478",
+        "merke": "BMW",
+        "modell": "E90",
+        "aar": 2008
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DP10946",
+        "merke": "Mitsubishi",
+        "modell": "Pajero",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "SD82842",
+        "merke": "Volvo",
+        "modell": "XC60",
+        "aar": 2016
+      },
+      "kandidater": 29,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "RK29593",
+        "merke": "Peugeot",
+        "modell": "207",
+        "aar": 2011
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BS66728",
+        "merke": "Volvo",
+        "modell": "V60",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DS30473",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "RH69811",
+        "merke": "Mitsubishi",
+        "modell": "L200",
+        "aar": 1999
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DR56170",
+        "merke": "Jaguar",
+        "modell": "XF",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BS35162",
+        "merke": "Land Rover",
+        "modell": "Range Rover",
+        "aar": 2012
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "NV63526",
+        "merke": "Mitsubishi",
+        "modell": "ASX",
+        "aar": 2011
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "SV45016",
+        "merke": "Kia",
+        "modell": "Ceed",
+        "aar": 2014
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EN30654",
+        "merke": "Nissan",
+        "modell": "Ariya",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "RK10863",
+        "merke": "Mitsubishi",
+        "modell": "Outlander",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DN40465",
+        "merke": "Volkswagen",
+        "modell": "Andre",
+        "aar": 2010
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DK84265",
+        "merke": "Volkswagen",
+        "modell": "Touareg",
+        "aar": 2005
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BU23751",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "LJ37142",
+        "merke": "Volkswagen",
+        "modell": "Golf Plus",
+        "aar": 2011
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EE64697",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2022
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EF94275",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "KT88849",
+        "merke": "Volkswagen",
+        "modell": "Golf Sportsvan",
+        "aar": 2014
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "NF54252",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2012
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "TV92229",
+        "merke": "Volkswagen",
+        "modell": "Touran",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "JV35505",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "PA22490",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EP30980",
+        "merke": "Volkswagen",
+        "modell": "ID.4 GTX",
+        "aar": 2024
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "ZH53613",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EF93501",
+        "merke": "Volkswagen",
+        "modell": "ID.5",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "PP80006",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DR81380",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2020
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EF97598",
+        "merke": "Volkswagen",
+        "modell": "ID.5",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "JV16591",
+        "merke": "Volkswagen",
+        "modell": "Touran",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EB85560",
+        "merke": "Volkswagen",
+        "modell": "ID.3",
+        "aar": 2020
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "HB70073",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "YT69432",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2012
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "CF56285",
+        "merke": "Volkswagen",
+        "modell": "Passat",
+        "aar": 2010
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "SV22710",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2012
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "KJ36006",
+        "merke": "Volkswagen",
+        "modell": "Amarok",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DS19610",
+        "merke": "Volkswagen",
+        "modell": "Caddy",
+        "aar": 2023
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DP53541",
+        "merke": "Volkswagen",
+        "modell": "Andre",
+        "aar": 2015
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DR15345",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "HF27481",
+        "merke": "Volkswagen",
+        "modell": "Golf VII",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "KT97177",
+        "merke": "Volkswagen",
+        "modell": "Crafter",
+        "aar": 2018
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EP11031",
+        "merke": "Volkswagen",
+        "modell": "ID. Buzz",
+        "aar": 2026
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EL69859",
+        "merke": "Volkswagen",
+        "modell": "e-Golf VII",
+        "aar": 2016
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EC68253",
+        "merke": "Volkswagen",
+        "modell": "ID.3",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "PP81833",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "UX62558",
+        "merke": "Volkswagen",
+        "modell": "Tiguan",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DL94988",
+        "merke": "Volkswagen",
+        "modell": "Caddy Maxi",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EN71317",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EK19551",
+        "merke": "Volkswagen",
+        "modell": "e-Golf VII",
+        "aar": 2017
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EN74501",
+        "merke": "Volkswagen",
+        "modell": "ID.7",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "PR55317",
+        "merke": "Volkswagen",
+        "modell": "Transporter",
+        "aar": 2020
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EN67708",
+        "merke": "Volkswagen",
+        "modell": "ID.7",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "SD28674",
+        "merke": "Volkswagen",
+        "modell": "Caravelle",
+        "aar": 2006
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "EJ17848",
+        "merke": "Volkswagen",
+        "modell": "ID.4",
+        "aar": 2024
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BR51758",
+        "merke": "Volkswagen",
+        "modell": "Eos",
+        "aar": 2007
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "ST30377",
+        "merke": "Toyota",
+        "modell": "Camry",
+        "aar": 1999
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BU37204",
+        "merke": "Toyota",
+        "modell": "Corolla",
+        "aar": 2023
+      },
+      "kandidater": 27,
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "UF91402",
+        "merke": "Toyota",
+        "modell": "C-HR",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DS30475",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "YE93661",
+        "merke": "Toyota",
+        "modell": "Prius+",
+        "aar": 2013
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "KJ63240",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BU42163",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2024
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "TV71715",
+        "merke": "Toyota",
+        "modell": "RAV4",
+        "aar": 2005
+      },
+      "kandidater": 2,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "DL66882",
+        "merke": "Toyota",
+        "modell": "RAV4",
+        "aar": 2007
+      },
+      "kandidater": 1,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "RK41592",
+        "merke": "Toyota",
+        "modell": "Aygo",
+        "aar": 2010
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "HK19201",
+        "merke": "Toyota",
+        "modell": "bZ4X",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BU36370",
+        "merke": "Toyota",
+        "modell": "Corolla",
+        "aar": 2023
+      },
+      "kandidater": 27,
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "BR67700",
+        "merke": "Toyota",
+        "modell": "Land Cruiser",
+        "aar": 2008
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "HK18792",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "HK18819",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "KZ59186",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "HK17847",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2023
+      },
+      "kandidater": 10,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "BU28171",
+        "merke": "Toyota",
+        "modell": "Land Cruiser",
+        "aar": 2021
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "HK18786",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "HK18815",
+        "merke": "Toyota",
+        "modell": "RAV4 Plug-in Hybrid",
+        "aar": 2024
+      },
+      "kandidater": 10,
+      "stierGammel": 8,
+      "stierNy": 8,
+      "felles": 8,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "HK18782",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "HK18798",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "HK18790",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "HK18789",
+        "merke": "Toyota",
+        "modell": "Corolla Cross",
+        "aar": 2024
+      },
+      "kandidater": 27,
+      "stierGammel": 15,
+      "stierNy": 15,
+      "felles": 13,
+      "bareGammel": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=4:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=5:auto={\"side\":\"right\"}"
+      ],
+      "bareNy": [
+        "type:side:n=14:auto={}/side=left:n=7:auto={\"side\":\"left\"}/body=suv:n=3:auto={\"side\":\"left\"}",
+        "type:side:n=14:auto={}/side=right:n=7:auto={\"side\":\"right\"}/body=suv:n=3:auto={\"side\":\"right\"}"
+      ],
+      "endret": true
+    },
+    {
+      "bil": {
+        "regnr": "EH58246",
+        "merke": "Toyota",
+        "modell": "Proace",
+        "aar": 2025
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    },
+    {
+      "bil": {
+        "regnr": "RJ91986",
+        "merke": "Toyota",
+        "modell": "Yaris",
+        "aar": 2009
+      },
+      "kandidater": 0,
+      "stierGammel": 1,
+      "stierNy": 1,
+      "felles": 1,
+      "bareGammel": [],
+      "bareNy": [],
+      "endret": false
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+[{
+  "sku": "29730YP",
+  "title": "MAZDA CX5 5D SUV 12- VENTILRUTE+SOTET",
+  "titleSource": "TEXT",
+  "glassType": "OVRIG_GLASS",
+  "glassTypeSource": "EXPLICIT_TYPEKODE",
+  "typeCodeRaw": "VENTIL/SIDERUTE FREMRE FØRERSIDE",
+  "typeCodeSource": "SUPPLIER_TYPEKODE_DETAIL_FIELD",
+  "typeCodeConflict": false,
+  "categoryEvidence": "product_cat-2012-2017-i",
+  "sourceUrl": "https://auto-glass.no/produkt/mazda-cx5-5d-suv-12-ventilrutesotet-2/",
+  "sourcePage": "https://auto-glass.no/produkt/mazda-cx5-5d-suv-12-ventilrutesotet-2/",
+  "scope": "DETAIL",
+  "accessories": [
+    {
+      "sku": "DEM1",
+      "title": "DEMLIST KAROSSERI UNIVERSAL 5MM X 6MM - 10 METER",
+      "sourceUrl": null,
+      "sourcePage": "https://auto-glass.no/produkt/mazda-cx5-5d-suv-12-ventilrutesotet-2/",
+      "relation": "LISTED_IN_SUPPLIER_ACCESSORY_SECTION",
+      "verifiedFitment": false,
+      "priceVerified": false
+    }
+  ],
+  "verification": "UNVERIFIED_DISCOVERY_ONLY",
+  "typeCodeObservations": [
+    "VENTIL/SIDERUTE FREMRE FØRERSIDE"
+  ],
+  "typeCodeSide": "DRIVER",
+  "priorReportedSide": "PASSENGER",
+  "priorReportedSideSource": "PRIOR_USER_REPORTED_CORRECTION",
+  "priorReportedSideVerified": false,
+  "sideConflict": true,
+  "reviewReasons": [
+    "SUPPLIER_TYPECODE_VS_REPORTED_SIDE",
+    "UNRESOLVED_REPORTED_SIDE_DISCREPANCY"
+  ],
+  "reviewStatus": "REQUIRES_MANUAL_REVIEW",
+  "manualReviewRequired": true,
+  "automaticOrderAllowed": false,
+  "orderBlockReasons": [
+    "FITMENT_NOT_VERIFIED",
+    "CUSTOMER_PRICING_NOT_VERIFIED",
+    "SIDE_DISCREPANCY_REQUIRES_REVIEW"
+  ]
+},
+{
+  "sku": "DB8426YP",
+  "title": "CHEVROLET S10 2-4D PICK UP 1994-2004 PICK UP BAKRUTE SOTET",
+  "titleSource": "TEXT",
+  "glassType": "OVRIG_GLASS",
+  "glassTypeSource": "EXPLICIT_TYPEKODE",
+  "typeCodeRaw": "BAKRUTE",
+  "typeCodeSource": "SUPPLIER_TYPEKODE_DETAIL_FIELD",
+  "typeCodeConflict": false,
+  "categoryEvidence": "product_cat-1994-2003-s15-pick-up-extended product_cat-1994-2003-s15-pick-up-standard product_cat-2001-2003-s15-pick-up-crew-cab product_cat-2004-s15-pick-up-crew-cab product_cat-2016-2016-k",
+  "sourceUrl": "https://auto-glass.no/produkt/chevrolet-blazer-s10-2-d-bakrute-sotet/",
+  "sourcePage": "https://auto-glass.no/produkt/chevrolet-blazer-s10-2-d-bakrute-sotet/",
+  "scope": "DETAIL",
+  "accessories": [],
+  "verification": "UNVERIFIED_DISCOVERY_ONLY",
+  "typeCodeObservations": [
+    "BAKRUTE"
+  ],
+  "typeCodeSide": null,
+  "priorReportedSide": null,
+  "priorReportedSideSource": null,
+  "priorReportedSideVerified": false,
+  "sideConflict": false,
+  "reviewReasons": [],
+  "reviewStatus": "UNVERIFIED_DISCOVERY_ONLY",
+  "manualReviewRequired": false,
+  "automaticOrderAllowed": false,
+  "orderBlockReasons": [
+    "FITMENT_NOT_VERIFIED",
+    "CUSTOMER_PRICING_NOT_VERIFIED"
+  ]
+},
+{
+  "sku": "27001GD",
+  "title": "BMW 1-SERIE 5D HBK 04- VENTILRUTE+MØRK GN",
+  "titleSource": "TEXT",
+  "glassType": "OVRIG_GLASS",
+  "glassTypeSource": "EXPLICIT_TYPEKODE",
+  "typeCodeRaw": "VENTIL/SIDERUTE FREMRE FØRERSIDE",
+  "typeCodeSource": "SUPPLIER_TYPEKODE_DETAIL_FIELD",
+  "typeCodeConflict": false,
+  "categoryEvidence": "product_cat-2004-2010",
+  "sourceUrl": "https://auto-glass.no/produkt/bmw-1-serie-5d-hbk-04-ventilrutemork-gronn-%c2%a4%c2%a4/",
+  "sourcePage": "https://auto-glass.no/produkt/bmw-1-serie-5d-hbk-04-ventilrutemork-gronn-%c2%a4%c2%a4/",
+  "scope": "DETAIL",
+  "accessories": [],
+  "verification": "UNVERIFIED_DISCOVERY_ONLY",
+  "typeCodeObservations": [
+    "VENTIL/SIDERUTE FREMRE FØRERSIDE"
+  ],
+  "typeCodeSide": "DRIVER",
+  "priorReportedSide": null,
+  "priorReportedSideSource": null,
+  "priorReportedSideVerified": false,
+  "sideConflict": false,
+  "reviewReasons": [],
+  "reviewStatus": "UNVERIFIED_DISCOVERY_ONLY",
+  "manualReviewRequired": false,
+  "automaticOrderAllowed": false,
+  "orderBlockReasons": [
+    "FITMENT_NOT_VERIFIED",
+    "CUSTOMER_PRICING_NOT_VERIFIED"
+  ]
+},
+{
+  "sku": "21390GNL",
+  "title": "VOLVO 940+960 4D SEDAN 91-BAKRUTE EL+LAM OBS!",
+  "titleSource": "TEXT",
+  "glassType": "OVRIG_GLASS",
+  "glassTypeSource": "EXPLICIT_TYPEKODE",
+  "typeCodeRaw": "BAKRUTE",
+  "typeCodeSource": "SUPPLIER_TYPEKODE_DETAIL_FIELD",
+  "typeCodeConflict": false,
+  "categoryEvidence": "product_cat-1991-1998 product_cat-1991-1998-940-serie product_cat-1997-v90",
+  "sourceUrl": "https://auto-glass.no/produkt/volvo-940960-4d-sedan-91-bakrute-el-laminert-obs/",
+  "sourcePage": "https://auto-glass.no/produkt/volvo-940960-4d-sedan-91-bakrute-el-laminert-obs/",
+  "scope": "DETAIL",
+  "accessories": [],
+  "verification": "UNVERIFIED_DISCOVERY_ONLY",
+  "typeCodeObservations": [
+    "BAKRUTE"
+  ],
+  "typeCodeSide": null,
+  "priorReportedSide": null,
+  "priorReportedSideSource": null,
+  "priorReportedSideVerified": false,
+  "sideConflict": false,
+  "reviewReasons": [],
+  "reviewStatus": "UNVERIFIED_DISCOVERY_ONLY",
+  "manualReviewRequired": false,
+  "automaticOrderAllowed": false,
+  "orderBlockReasons": [
+    "FITMENT_NOT_VERIFIED",
+    "CUSTOMER_PRICING_NOT_VERIFIED"
+  ]
+},
+{
+  "sku": "28309GN",
+  "title": "CITROEN C-5 5D HBK+STV 08- FREMRE VENTILR+INK ##@ (SVER)",
+  "titleSource": "TEXT",
+  "glassType": "OVRIG_GLASS",
+  "glassTypeSource": "EXPLICIT_TYPEKODE",
+  "typeCodeRaw": "VENTIL/SIDERUTE FREMRE FØRERSIDE",
+  "typeCodeSource": "SUPPLIER_TYPEKODE_DETAIL_FIELD",
+  "typeCodeConflict": false,
+  "categoryEvidence": "product_cat-2008-5d-st-vogn",
+  "sourceUrl": "https://auto-glass.no/produkt/citroen-c-5-5d-hbkstv-08-fremre-ventilruteinnkaps/",
+  "sourcePage": "https://auto-glass.no/produkt/citroen-c-5-5d-hbkstv-08-fremre-ventilruteinnkaps/",
+  "scope": "DETAIL",
+  "accessories": [],
+  "verification": "UNVERIFIED_DISCOVERY_ONLY",
+  "typeCodeObservations": [
+    "VENTIL/SIDERUTE FREMRE FØRERSIDE"
+  ],
+  "typeCodeSide": "DRIVER",
+  "priorReportedSide": null,
+  "priorReportedSideSource": null,
+  "priorReportedSideVerified": false,
+  "sideConflict": false,
+  "reviewReasons": [],
+  "reviewStatus": "UNVERIFIED_DISCOVERY_ONLY",
+  "manualReviewRequired": false,
+  "automaticOrderAllowed": false,
+  "orderBlockReasons": [
+    "FITMENT_NOT_VERIFIED",
+    "CUSTOMER_PRICING_NOT_VERIFIED"
+  ]
+}]
