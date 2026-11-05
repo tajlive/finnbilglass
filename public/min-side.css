@@ -30,8 +30,21 @@
   .alert-banner { background: #FFF7ED; border: 1px solid #FCD34D; border-radius: 12px; padding: 16px; margin-bottom: 24px; color: #92400E; font-size: 14px; }
   .alert-banner strong { color: #B45309; }
   .user-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: #F8FAFC; border: 1px solid #E2E8F0; font-size: 14px; color: #475569; }
-  .nav-tabs { display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid #E2E8F0; padding-bottom: 16px; }
-  .nav-tab { font-size: 15px; font-weight: 600; color: #94A3B8; cursor: pointer; border-bottom: 2px solid transparent; }
+  .nav-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #E2E8F0; padding-bottom: 8px; overflow-x: auto; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+  .nav-tab { flex: 0 0 auto; min-height: 44px; padding: 10px 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; font: inherit; font-size: 15px; font-weight: 600; color: #64748B; cursor: pointer; white-space: nowrap; }
   .nav-tab.active { color: #F59E0B; border-bottom-color: #F59E0B; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
+  .nav-tab:focus-visible, .account-link:focus-visible, .tab-content:focus-visible { outline: 3px solid #176b59; outline-offset: 3px; }
+  .portal-brand { display: inline-flex; gap: 0; align-items: center; text-decoration: none; font-size: 26px; font-weight: 800; }
+  .portal-brand span:first-child { color: #0F172A; }
+  .portal-brand span:last-child { color: #F59E0B; }
+  .account-link { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; }
+  @media (max-width: 600px) {
+    .portal-container { padding: 16px; }
+    .portal-header { align-items: center; margin-bottom: 20px; }
+    .nav-tabs { gap: 4px; margin-inline: -16px; padding: 0 16px 8px; }
+    .nav-tab { font-size: 14px; }
+    .car-card, .quote-card { flex-direction: column; align-items: stretch; gap: 12px; }
+    .car-card .btn-primary, .quote-card .btn-primary { min-height: 44px; }
+  }

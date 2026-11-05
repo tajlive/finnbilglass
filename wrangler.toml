@@ -32,6 +32,8 @@ bucket_name = "finnbilglass-opplaering"
 #    wrangler secret put CRON_SECRET
 
 [vars]
+OPS_WORKBENCH_ENABLED = "true"
+OPS_PUBLIC_ORIGIN = "https://finnbilglass.no"
 ENVIRONMENT = "production"
 # Sosial innlogging: kun leverandører som står her er aktive. Secrets alene
 # aktiverer ingenting — Microsoft/Facebook er bevisst utsatt.
@@ -96,7 +98,7 @@ binding = "AI"
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/", "/support/evidence", "/ops", "/min-side", "/logg-inn", "/login", "/personvern", "/personvern.html"]
+run_worker_first = ["/", "/support/evidence", "/ops", "/min-side", "/min-side.html", "/logg-inn", "/login", "/personvern", "/personvern.html"]
 
 # ── Custom domains ────────────────────────────────────────────
 # finnbilglass.no / www / api er knyttet til denne Workeren via Workers

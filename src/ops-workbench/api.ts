@@ -5,6 +5,7 @@ import {sendMail} from '../mail';
 import {glassBodyRejection} from '../glass-body-compatibility';
 import {SALES,PAYMENTS,DELIVERIES,TEMPLATES,text,requestId,priceLines,tokenFor,tokenValid,verifyWebhook,deliveryStatus,esc,nok} from './domain';
 import {workbenchHtml,offerHtml} from './ui';
+import {customerDetails,invoiceBasis} from './customer';
 type Row=Record<string,any>;
 const email=(v:string)=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 const out=(d:unknown,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -53,15 +54,31 @@ export async function workbenchApi(request:Request,env:Env,actor:string):Promise
  WHEN EXISTS(SELECT 1 FROM ops_offers q WHERE q.inquiry_id=i.id AND q.status='ACCEPTED') THEN 'ACCEPTED'
  WHEN EXISTS(SELECT 1 FROM ops_offers q WHERE q.inquiry_id=i.id AND q.status='SENT') AND COALESCE(w.sales,'NEW') IN ('NEW','CHECKING') THEN 'OFFER_SENT'
  ELSE w.sales END sales,w.payment,w.delivery,
- (SELECT count(*) FROM ops_messages m WHERE m.inquiry_id=i.id AND m.status IN ('FAILED','BOUNCED','SUPPRESSED') AND m.created_at>COALESCE((SELECT MAX(s.created_at) FROM ops_messages s WHERE s.inquiry_id=i.id AND s.direction='OUT' AND s.status IN ('SENT','DELIVERED')),0)) mail_errors,
+ (SELECT count(*) FROM ops_messages m WHERE m.inquiry_id=i.id AND m.status IN ('FAILED','BOUNCED','SUPPRESSED') AND COALESCE(m.send_reserved_at,m.created_at)>COALESCE((SELECT MAX(COALESCE(s.send_reserved_at,s.created_at)) FROM ops_messages s WHERE s.inquiry_id=i.id AND s.direction='OUT' AND s.status IN ('SENT','DELIVERED')),0)) mail_errors,
  (SELECT max(created_at) FROM ops_messages m WHERE m.inquiry_id=i.id AND m.direction='IN') last_incoming,
- (SELECT max(created_at) FROM ops_messages m WHERE m.inquiry_id=i.id AND m.direction='OUT' AND m.status IN ('SENT','DELIVERED')) last_reply
+ (SELECT max(COALESCE(send_reserved_at,created_at)) FROM ops_messages m WHERE m.inquiry_id=i.id AND m.direction='OUT' AND m.status IN ('SENT','DELIVERED')) last_reply
  FROM beta_inquiries i LEFT JOIN ops_work_state w ON w.inquiry_id=i.id ORDER BY i.id DESC LIMIT 500`).all<Row>();
  return out({ok:true,cases:rows.results??[],templates:TEMPLATES,environment:env.ENVIRONMENT,limits:{emailsPer24Hours:50,providerDailyLimit:100,providerMonthlyLimit:3000},invoice:'Avventer programvalg'});
  }
- const match=/^\/cases\/(\d+)(?:\/(state|messages|offers)(?:\/([a-f0-9-]+))?)?$/.exec(path);
+ const match=/^\/cases\/(\d+)(?:\/(state|messages|offers|customer|export)(?:\/([a-f0-9-]+))?)?$/.exec(path);
  if(match){const id=Number(match[1]),action=match[2];const c=await getCase(db,id);
+ if(action==='customer'&&request.method==='POST'){
+ const b=await body(request);if(!Number.isInteger(b.version)||b.version<0)throw new Error('Last kundeopplysningene på nytt.');
+ const data=customerDetails(b);const now=Date.now();
+ await db.prepare("INSERT OR IGNORE INTO ops_case_customer(inquiry_id,version,details_json,updated_at,updated_by) VALUES(?,0,'{}',?,?)").bind(id,now,actor).run();
+ const result=await db.prepare('UPDATE ops_case_customer SET version=version+1,details_json=?,updated_at=?,updated_by=? WHERE inquiry_id=? AND version=?').bind(JSON.stringify(data),now,actor,id,b.version).run();
+ if(result.meta.changes!==1)return out({error:'Kundeopplysningene er endret i en annen fane. Last saken på nytt.'},409);
+ await audit(db,id,'customer_updated',{fields:Object.keys(data)},actor);return out({ok:true});
+ }
+ if(action==='export'&&request.method==='GET'){
+ const customer=await db.prepare('SELECT * FROM ops_case_customer WHERE inquiry_id=?').bind(id).first<Row>();
+ const q=await db.prepare("SELECT * FROM ops_offers WHERE inquiry_id=? AND status='ACCEPTED'").bind(id).first<Row>();
+ const state=await db.prepare('SELECT * FROM ops_work_state WHERE inquiry_id=?').bind(id).first<Row>();
+ const data=invoiceBasis(c,customer?{...JSON.parse(customer.details_json),version:customer.version}:{name:c.navn,email:email(c.kontakt||'')?c.kontakt:'',buyerType:'person',country:'NO'},q,state);
+ return new Response(JSON.stringify(data,null,2),{headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Disposition':`attachment; filename="FBG-${id}-fakturagrunnlag.json"`}});
+ }
  if(!action&&request.method==='GET'){
+ const customer=await db.prepare('SELECT * FROM ops_case_customer WHERE inquiry_id=?').bind(id).first<Row>();
  const [state,events,messages,offers,legacy,legacyEvents]=await Promise.all([
  db.prepare('SELECT * FROM ops_work_state WHERE inquiry_id=?').bind(id).first<Row>(),
  db.prepare('SELECT * FROM ops_work_events WHERE inquiry_id=? ORDER BY created_at').bind(id).all<Row>(),
@@ -72,7 +89,7 @@ export async function workbenchApi(request:Request,env:Env,actor:string):Promise
  const flow=state??{version:0,sales:c.status==='NEW'?'NEW':['CLOSED','REJECTED'].includes(c.status)?'CLOSED':'CHECKING',payment:'NOT_AGREED',delivery:'NOT_ORDERED'};
  if(!['CLOSED','LOST'].includes(flow.sales)&&(offers.results??[]).some(q=>q.status==='ACCEPTED'))flow.sales='ACCEPTED';
  else if((offers.results??[]).some(q=>q.status==='SENT')&&['NEW','CHECKING'].includes(flow.sales))flow.sales='OFFER_SENT';
- return out({ok:true,inquiry:c,state:flow,events:events.results,messages:messages.results,offers:(offers.results??[]).map(quoteView),legacyOffers:legacy.results,legacyEvents:legacyEvents.results,templates:TEMPLATES});
+ return out({ok:true,inquiry:c,customer:customer?{...JSON.parse(customer.details_json),version:customer.version}:{version:0,name:c.navn,email:email(c.kontakt||'')?c.kontakt:'',buyerType:'person',country:'NO'},state:flow,events:events.results,messages:messages.results,offers:(offers.results??[]).map(quoteView),legacyOffers:legacy.results,legacyEvents:legacyEvents.results,templates:TEMPLATES});
  }
  if(action==='state'&&request.method==='POST'){
  const b=await body(request);if(!Number.isInteger(b.version)||b.version<0)throw new Error('Last saken på nytt.');

@@ -1112,7 +1112,7 @@
     };
     rad('Bil', bil ? bil + (state.regnr ? ' · ' + state.regnr : '') : state.regnr);
     rad('Rute', glassSelectionLabel(selection));
-    rad('Vi kontrollerer', 'riktig variant, pris og levering før du får tilbud');
+    rad('Vi kontrollerer', 'glassvariant, pris, frakt og eventuelt tilbehør før tilbud');
     if (!dl.children.length) { el.classList.add('hidden'); return; }
     el.appendChild(dl);
     el.classList.remove('hidden');
@@ -1220,7 +1220,7 @@
     pris.className = 'kandidat-pris';
     pris.textContent = 'Pris på forespørsel';
     var prisnote = document.createElement('span');
-    prisnote.textContent = ' Vi oppgir pris inkl. mva. og levering i tilbudet.';
+    prisnote.textContent = ' Estimatet gjelder glass inkl. mva. Frakt og eventuelt tilbehør avklares i tilbudet.';
     pris.appendChild(prisnote);
     kort.appendChild(pris);
 
@@ -1384,7 +1384,7 @@
     if (kandidater.length > maks) {
       var mer = document.createElement('p');
       mer.className = 'note';
-      mer.textContent = 'Viser ' + maks + ' av ' + kandidater.length + ' mulige glass. Vi kontrollerer hvilke av dem som er riktig for bilen din.';
+      mer.textContent = 'Viser ' + maks + ' av ' + kandidater.length + ' mulige glasskandidater. Vi kontrollerer hvilken variant som passer før tilbud.';
       $('resultat-kort').appendChild(mer);
     }
     var merknad = document.createElement('p');
@@ -2000,7 +2000,7 @@
       bilnavn();
     kort.querySelector('.meta').textContent = a.kundeprisInklMva != null && antallKandidater <= 1
       ? 'Glasspris ' + Number(a.kundeprisInklMva).toLocaleString('nb-NO') + ' kr inkl. mva.'
-      : antallKandidater > 1 ? antallKandidater + ' mulige varianter · priser vises der katalogen har bekreftet pris inkl. mva.' : 'Riktig glass og pris bekreftes før tilbud.';
+      : antallKandidater > 1 ? antallKandidater + ' mulige varianter · estimert glasspris inkl. mva. vises der den finnes; frakt avklares i tilbudet.' : 'Glassvalg og pris bekreftes før tilbud.';
 
     var specs = [];
     if (state.profil.sensor === true) specs.push('med regnsensor');
@@ -2020,7 +2020,7 @@
     // Release A offers an inquiry without a customer-selected product.
     var intro = document.createElement('p');
     intro.className = 'varianter-intro';
-    intro.textContent = 'Vi kontrollerer riktig frontrute, pris og levering manuelt før tilbud.';
+    intro.textContent = 'Vi kontrollerer glassvariant, pris og frakt manuelt før tilbud.';
     alt.appendChild(intro);
     $('btn-inquiry').textContent = 'Be om uforpliktende tilbud';
     $('btn-inquiry').disabled = false;
@@ -2361,7 +2361,7 @@
         ...(kontaktpreferanse === 'begge' ? { contactPhone: kontaktTelefon } : {}),
         ...(state.glassRequest ? { glassRequest: state.glassRequest, clientRequestId: clientRequestId } : {}),
         ...(valgteGlass && valgteGlass.variantId ? { variantId: valgteGlass.variantId } : {}),
-        ...(state.merke ? { bil: { merke: state.merke, modell: state.modell, aar: state.aar } } : {})
+        ...(state.merke ? { bil: { merke: state.merke, modell: state.modell, aar: state.aar, vin: state.vin || undefined, profil: state.profil || {} } } : {})
       })
     })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, status: r.status, data: d }; }); })

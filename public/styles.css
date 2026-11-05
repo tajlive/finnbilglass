@@ -1706,6 +1706,28 @@ footer {
   transform: none;
 }
 
+/* Accessible mobile table used by catalogue explainers. */
+.customer-site .responsive-table {
+  max-width: 100%;
+  margin: 12px 0 16px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--nk-border);
+  border-radius: 12px;
+  background: #fff;
+}
+.customer-site .responsive-table:focus-visible { outline: 3px solid #176b59; outline-offset: 3px; }
+.customer-site .responsive-table table { min-width: 760px; width: 100%; border-collapse: collapse; }
+.customer-site .responsive-table caption { padding: 12px; text-align: left; font-weight: 700; color: var(--nk-ink); }
+.customer-site .responsive-table th,
+.customer-site .responsive-table td { padding: 10px 12px; border-top: 1px solid var(--nk-border); text-align: left; white-space: nowrap; }
+.customer-site .responsive-table th { background: #f6faf8; }
+.customer-site .table-swipe-hint { display: none; margin: 0; padding: 8px 12px; color: var(--nk-muted); font-size: 14px; }
+@media (max-width: 720px) {
+  .customer-site .table-swipe-hint { display: block; }
+}
+
 .customer-site #screen-glass button.glassopt:focus-visible {
   outline: 3px solid #087b5e;
   outline-offset: 3px;

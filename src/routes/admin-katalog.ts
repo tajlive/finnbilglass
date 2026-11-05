@@ -576,14 +576,17 @@ async function sendTilbudEpost(
     `<p>Her er tilbudet vårt${regnr ? ' til ' + esc(regnr) : ''}:</p>`,
     '<ul>',
     q.varenr ? `<li><strong>Glass:</strong> ${esc(q.varenr)}${q.beskrivelse ? ' — ' + esc(q.beskrivelse) : ''}</li>` : '',
-    `<li><strong>Pris:</strong> ${q.pris} kr ${q.prisType === 'BEKREFTET' ? '(bekreftet)' : '(veiledende)'}</li>`,
+    `<li><strong>Glasspris inkl. mva.:</strong> ${q.pris} kr ${q.prisType === 'BEKREFTET' ? '(bekreftet)' : '(veiledende)'}</li>`,
     q.leveringstid ? `<li><strong>Leveringstid:</strong> ${esc(q.leveringstid)}</li>` : '',
-    q.tillegg ? `<li><strong>Tillegg:</strong> ${esc(q.tillegg)}</li>` : '',
+    q.tillegg ? `<li><strong>Frakt og eventuelt tilbehør:</strong> ${esc(q.tillegg)}</li>` : '',
     q.gyldigTil ? `<li><strong>Gyldig til:</strong> ${esc(q.gyldigTil)}</li>` : '',
     '</ul>',
     q.prisType === 'VEILEDENDE'
       ? '<p>Prisen er veiledende og bekreftes før endelig bestilling.</p>'
       : '<p>Prisen er bekreftet av oss.</p>',
+    '<p>Hvis frakt eller eventuelt tilbehør ikke står oppført, kontakt oss før du bestemmer deg, så avklarer vi om noe kommer i tillegg. Montering inngår ikke; den avtaler og betaler du direkte med verkstedet.</p>',
+    '<p>Du bestemmer selv om du vil godta tilbudet.</p>',
+    '<p>Spørsmål? Svar på denne e-posten eller skriv til ' + esc(env.SUPPORT_EPOST || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no') + '.</p>',
     '<p>— Finnbilglass</p>',
   ].filter(Boolean).join('');
 
@@ -591,7 +594,23 @@ async function sendTilbudEpost(
     to: til,
     subject: `Pristilbud${regnr ? ' — ' + regnr : ''} (v${q.versjon})`,
     html: linjer,
-    text: `Hei ${navn || ''}. Tilbud: ${q.varenr || 'glass'} ${q.pris} kr (${q.prisType}). — Finnbilglass`,
+    text: [
+      `Hei ${navn || ''},`,
+      '',
+      `Her er tilbudet vårt${regnr ? ' til ' + regnr : ''}:`,
+      q.varenr ? `Glass: ${q.varenr}${q.beskrivelse ? ' — ' + q.beskrivelse : ''}` : '',
+      `Glasspris inkl. mva.: ${q.pris} kr (${q.prisType === 'BEKREFTET' ? 'bekreftet' : 'veiledende'})`,
+      q.leveringstid ? `Leveringstid: ${q.leveringstid}` : '',
+      q.tillegg ? `Frakt og eventuelt tilbehør: ${q.tillegg}` : '',
+      q.gyldigTil ? `Tilbudet gjelder til: ${q.gyldigTil}` : '',
+      '',
+      q.prisType === 'VEILEDENDE' ? 'Prisen er veiledende og bekreftes før endelig bestilling.' : 'Prisen er bekreftet av oss.',
+      'Hvis frakt eller eventuelt tilbehør ikke står oppført, kontakt oss før du bestemmer deg, så avklarer vi om noe kommer i tillegg. Montering inngår ikke; den avtaler og betaler du direkte med verkstedet.',
+      'Du bestemmer selv om du vil godta tilbudet.',
+      `Spørsmål? Svar på denne e-posten eller skriv til ${env.SUPPORT_EPOST || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no'}.`,
+      '',
+      '— Finnbilglass',
+    ].filter(Boolean).join('\n'),
     replyTo: env.SUPPORT_EPOST || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no',
   });
 }

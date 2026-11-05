@@ -24,13 +24,13 @@
       });
 
       if (response.status === 401 || !response.ok) {
-        window.location.href = 'innlogging.html';
+        window.location.href = '/innlogging';
         return;
       }
 
       const data = await response.json();
       if (!data.authenticated) {
-        window.location.href = 'innlogging.html';
+        window.location.href = '/innlogging';
         return;
       }
 
@@ -42,7 +42,7 @@
       loadUserData(user);
     } catch (err) {
       console.error('Auth check failed:', err);
-      window.location.href = 'innlogging.html';
+      window.location.href = '/innlogging';
     }
   }
 
@@ -136,11 +136,11 @@
       quotesList.innerHTML = inquiries.map(inq => `
         <div class="quote-card">
           <div class="quote-info">
-            <div class="quote-name">Pristilbud — ${inq.regnr || 'Ikke oppgitt'}</div>
+          <div class="quote-name">Forespørsel #${inq.id} — ${inq.regnr || 'Ikke oppgitt'}</div>
             <div class="quote-status">${statusMerke(inq.status)} ${statusTekst(inq.status)}</div>
+          <div class="quote-status">Opprettet ${new Date(inq.created_at).toLocaleDateString('nb-NO')}</div>
           </div>
-          <div class="quote-price">—</div>
-          <button class="btn-primary" style="padding:8px 16px;font-size:14px;" data-sak="${inq.id}">Se status</button>
+          <button class="btn-primary" style="padding:8px 16px;font-size:14px;" data-sak="${inq.id}">Vis sak</button>
         </div>
       `).join('');
       quotesList.querySelectorAll('[data-sak]').forEach(btn => {
@@ -149,7 +149,7 @@
     } catch (err) {
       console.error('Kunne ikke laste brukerdata:', err);
       document.getElementById('cars-list').innerHTML = '<div class="empty-state"><h3>Kunne ikke laste data</h3><p>Prøv igjen senere.</p></div>';
-      document.getElementById('quotes-list').innerHTML = '<div class="empty-state"><h3>Ingen pristilbud</h3><p>Ingen data tilgjengelig.</p></div>';
+      document.getElementById('quotes-list').innerHTML = '<div class="empty-state"><h3>Kunne ikke laste saker</h3><p>Prøv igjen senere.</p></div>';
     }
   }
 
@@ -162,7 +162,24 @@
       navTabs.forEach(t => t.classList.remove('active'));
       tabContents.forEach(c => c.classList.remove('active'));
       tab.classList.add('active');
+      navTabs.forEach(t => {
+        const active = t === tab;
+        t.setAttribute('aria-selected', String(active));
+        t.tabIndex = active ? 0 : -1;
+      });
       document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      const details = document.getElementById('sak-detaljer');
+      if (details) details.style.display = 'none';
+    });
+    tab.addEventListener('keydown', function(e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End') return;
+      e.preventDefault();
+      const tabs = Array.from(navTabs);
+      const index = tabs.indexOf(tab);
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1
+        : (index + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+      tabs[next].click();
+      tabs[next].focus();
     });
   });
 
@@ -178,44 +195,7 @@
     }
     sessionStorage.clear();
     document.cookie = 'fb_session=; path=/; max-age=0';
-    window.location.href = 'index.html';
-  });
-
-  // File upload
-  const fileUpload = document.getElementById('file-upload');
-  const fileInput = document.getElementById('file-input');
-
-  fileUpload.addEventListener('click', function() {
-    fileInput.click();
-  });
-
-  fileInput.addEventListener('change', function() {
-    if (fileInput.files.length > 0) {
-      console.log('[MOCK] Filer valgt:', fileInput.files.length);
-      const files = Array.from(fileInput.files).map(f => f.name).join(', ');
-      fileUpload.innerHTML = '<div class="upload-icon">✓</div><div class="upload-text" style="color:#059669;font-weight:600;">' + files + '</div>';
-    }
-  });
-
-  // File drag & drop
-  ['dragenter', 'dragover'].forEach(eventName => {
-    fileUpload.addEventListener(eventName, function(e) {
-      e.preventDefault();
-      fileUpload.style.borderColor = '#F59E0B';
-    });
-  });
-  ['dragleave', 'drop'].forEach(eventName => {
-    fileUpload.addEventListener(eventName, function(e) {
-      e.preventDefault();
-      fileUpload.style.borderColor = '#E2E8F0';
-    });
-  });
-  fileUpload.addEventListener('drop', function(e) {
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      console.log('[MOCK] Filer sluppet:', files.length);
-      fileUpload.innerHTML = '<div class="upload-icon">✓</div><div class="upload-text" style="color:#059669;font-weight:600;">' + files.length + ' fil(er) valgt</div>';
-    }
+    window.location.href = '/';
   });
 
   // Initialize

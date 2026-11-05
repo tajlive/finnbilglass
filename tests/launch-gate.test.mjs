@@ -59,15 +59,15 @@ async function kall(path, { method = 'GET', body, host = 'finnbilglass.no', head
   const tekst = await res.text();
   let data = null;
   try { data = JSON.parse(tekst); } catch { /* html */ }
-  return { status: res.status, data, tekst };
+  return { status: res.status, data, tekst, location: res.headers.get('Location') };
 }
 
 // ── (5) Hostname-isolasjon: admin-flaten er utilgjengelig fra offentlig domene ──
 
-test('offentlig host: /ops avvises med 403 og lekker ikke admin-innhold', async () => {
+test('offentlig host: /ops leder til Access-host og lekker ikke admin-innhold', async () => {
   const r = await kall('/ops');
-  assert.equal(r.status, 403);
-  assert.equal(r.data?.ok, false);
+  assert.equal(r.status, 302);
+  assert.equal(r.location, 'https://ops.finnbilglass.no/ops');
   assert.ok(!/saksbehandler|innboks|api\/ops/i.test(r.tekst), 'offentlig /ops-svar skal ikke inneholde admin-innhold');
 });
 

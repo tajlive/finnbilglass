@@ -1,7 +1,7 @@
 import {workbenchApi,publicOffer,resendWebhook,workbenchHtml} from './ops-workbench/api';
 import { glassBodyRejection } from './glass-body-compatibility';
 import { normalizeGlassSelection, type GlassSelection } from './glass-selection-contract';
-import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate } from './fitment-v1/catalogue-candidates';
+import { matchClassDCandidates, buildClassDCandidates, posisjonsTekst, normMerke, type CatalogueCandidate, type ClassDOenske } from './fitment-v1/catalogue-candidates';
 import { dekodeEurokode } from './eurokode-dekoder';
 import { byggValgTre, FELT_SPORSMAL, GRUNNTYPER } from './glass-valg';
 import { kontrollerVariant, produkttype, salgsenhet } from './glass-variant-kontroll';
@@ -355,8 +355,8 @@ function lagKvittering(
     ? `Vi har mottatt forespørselen din – sak ${saksnr}`
     : 'Vi har mottatt forespørselen din';
   const innledning = `Takk for forespørselen. Vi har registrert den${saksnr ? ' som sak ' + saksnr : ''}${bil}.`;
-  const videre = 'Vi kontrollerer at glasset passer bilen, og bekrefter pris og frakt. Du får svaret på e-post.';
-  const forbehold = 'Dette er en mottakskvittering, ikke en ordrebekreftelse — ingen bestilling er gjennomført. Du bestemmer først når du har fått tilbudet.';
+  const videre = 'Vi kontrollerer hvilken glassvariant som passer, og oppgir pris, frakt og eventuelt tilbehør i tilbudet. Du får svar på e-post.';
+  const forbehold = 'Dette bekrefter at forespørselen er registrert hos oss. Det er ikke en ordrebekreftelse, og ingen bestilling er gjennomført. Du bestemmer først når du godtar tilbudet.';
   const montering = 'Vi leverer glasset. Montering avtaler du selv med et verksted.';
   const kontakt = kontaktEpost;
 
@@ -609,6 +609,53 @@ async function hentAlleKandidater(
 }
 
 /**
+ * Samme kandidatgrunnlag som kundens søk bruker, for å unngå at innsendingen
+ * avviser et valg som nettopp ble vist. Frontrute følger resolver + kill switch
+ * + tekstreserve; øvrige rutetyper følger CLASS_D med samme plasseringsvalg.
+ */
+async function variantIValgtKandidatsett(
+  env: Env,
+  bil: BilInput,
+  selection: GlassSelection | null,
+  rad: { varenr: string; eurokode: string | null },
+): Promise<boolean> {
+  const erVariant = (k: { varenr?: string | null; eurokode?: string | null }) =>
+    k.varenr === rad.varenr && (k.eurokode ?? '') === (rad.eurokode ?? '');
+
+  if (selection && selection.kind !== 'windshield') {
+    const klasse = KIND_TIL_GLASSEKLASSE[selection.kind];
+    if (!klasse) return false;
+    const onske: ClassDOenske = {
+      glassklasse: klasse,
+      dorLedd: selection.kind === 'door'
+        ? selection.door === 'front' ? 'fremre' : selection.door === 'rear' ? 'bakre' : null
+        : null,
+      ventilLedd: selection.kind === 'ventil'
+        ? selection.placement === 'front' ? 'foran' : selection.placement === 'rear' ? 'bakre' : null
+        : null,
+      produktSide: selection.side === 'left' ? 'venstre' : selection.side === 'right' ? 'hoyre' : null,
+      kropp: selection.body && selection.body !== 'unknown'
+        ? selection.body as NonNullable<ClassDOenske['kropp']>
+        : null,
+    };
+    const kandidater = await hentAlleKandidater(env, {
+      merke: bil.merke,
+      modell: bil.modell ?? null,
+      aar: bil.aar ?? null,
+    }, onske);
+    return kandidater.some(erVariant);
+  }
+
+  const resolver = await resolveFrontrute(env, bil);
+  const offentligResolver = (await anvendResolverPolicy(env, resolver))!;
+  if (offentligResolver.utfall === 'FALLBACK') {
+    const fallback = await matchFrontrute(env, bil);
+    return (fallback.kandidater ?? []).some(erVariant);
+  }
+  return (offentligResolver.kandidater ?? []).some(erVariant);
+}
+
+/**
  * POST /api/glass/valg — hvilke ruter og plasseringer bilen faktisk har
  * dokumentert i katalogen.
  *
@@ -818,6 +865,9 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     // Exact hostname matching — substring check can give false positives
     const isOpsHostname = hostname === 'ops-staging.finnbilglass.no' ||
                           hostname === 'ops.finnbilglass.no';
+    if (method === 'GET' && path === '/ops' && ['finnbilglass.no','www.finnbilglass.no'].includes(url.hostname)) {
+      return Response.redirect('https://ops.finnbilglass.no/ops', 302);
+    }
     const isAdminRoute = path.startsWith('/ops') || path.startsWith('/api/ops/');
     if (isAdminRoute && !isOpsHostname) {
       return json({ ok: false, error: 'Admin-ruten er ikke tilgjengelig fra dette domene' }, 403);
@@ -1102,8 +1152,26 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         if (bodyRejection) return json({ ok: false, error: bodyRejection }, 400);
         if (rad && bilMerke && bilModell && bilAar != null) {
           try {
-            const res = await resolveFrontrute(env, { merke: bilMerke, modell: bilModell, aar: bilAar });
-            const treff = (res.kandidater ?? []).some((k) => (k.variantId ?? '') === (rad as { variantId?: string }).variantId || (k.varenr === rad!.varenr && (k.eurokode ?? '') === (rad!.eurokode ?? '')));
+            const profil: NonNullable<BilInput['profil']> = {};
+            const klientProfil = bil && bil.profil && typeof bil.profil === 'object' && !Array.isArray(bil.profil)
+              ? bil.profil as Record<string, unknown>
+              : {};
+            for (const felt of ['sensor', 'antenne', 'coated'] as const) {
+              if (typeof klientProfil[felt] === 'boolean') profil[felt] = klientProfil[felt] as boolean;
+            }
+            // Svar gitt i glasssteget overstyrer eldre profilverdier fra søket.
+            for (const felt of ['sensor', 'antenne', 'coated'] as const) {
+              if (utstyrSvar[felt] === 'ja') profil[felt] = true;
+              else if (utstyrSvar[felt] === 'nei') profil[felt] = false;
+            }
+            const bilForKontroll: BilInput = {
+              merke: bilMerke,
+              modell: bilModell,
+              aar: bilAar,
+              ...(bil && typeof bil.vin === 'string' && bil.vin.trim() ? { vin: bil.vin.trim() } : {}),
+              profil,
+            };
+            const treff = await variantIValgtKandidatsett(env, bilForKontroll, valgtSelection, rad);
             tilhorighet = treff ? 'bekreftet' : 'ikke_i_kandidatsett';
             if (!treff) return json({ ok: false, error: 'Valgt variant tilhører ikke denne bilen' }, 400);
           } catch {
@@ -2160,10 +2228,14 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     }
     // Statiske undersider for GEO/SEO (ren URL → .html): «Bilglass uten forsikring», «Personvern»
     // Gammel adresse: 301 til den nye, saa vi ikke har to like sider.
-    if (method === 'GET' && path === '/personvern') {
+    if (method === 'GET' && (path === '/personvern' || path === '/personvern.html')) {
       return Response.redirect(new URL('/personopplysninger', url.origin).toString(), 301);
     }
-    // Modellsider (utkast): /bilglass/<slug> → public/bilglass/<slug>.html
+    // Den eldre .html-adressen må ikke servere en duplisert personverntekst.
+    if (method === 'GET' && path === '/min-side.html') {
+      return Response.redirect(new URL('/min-side', url.origin).toString(), 302);
+    }
+    // Bilglassguider og katalogsider: /bilglass/<slug> → public/bilglass/<slug>.html
     if (method === 'GET' && /^\/bilglass\/[a-z0-9-]{2,40}$/.test(path)) {
       const fil = await env.ASSETS.fetch(new Request(url.origin + path + '.html'));
       if (fil.ok) return fil;

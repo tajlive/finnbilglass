@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html lang="nb">
+<html lang="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Min side – FinnBilGlass</title>
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="/min-side.css?v=20261102">
+<title>Min side – Finnbilglass</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="/styles.css?v=20261105-kundesider">
+<link rel="stylesheet" href="/min-side.css?v=20261105-kundesider">
 </head>
 <body>
 <div class="portal-container">
   <header class="portal-header">
     <div>
-      <div style="display:flex;align-items:center;gap:2px;">
-        <span style="font-size:26px;font-weight:800;color:#0F172A;">finn</span>
-        <span style="font-size:26px;font-weight:800;color:#F59E0B;">bilglass</span>
-      </div>
+      <a href="/" class="portal-brand" aria-label="Finnbilglass – forsiden"><span>finn</span><span>bilglass</span></a>
     </div>
     <div class="portal-actions">
       <button class="btn-logout" id="logout-btn">Logg ut</button>
@@ -26,31 +25,31 @@
   </div>
 
   <!-- Nav tabs -->
-  <div class="nav-tabs">
-    <div class="nav-tab active" data-tab="cars">Mine biler</div>
-    <div class="nav-tab" data-tab="quotes">Mine pristilbud</div>
-    <div class="nav-tab" data-tab="documents">Dokumentasjon</div>
-    <div class="nav-tab" data-tab="settings">Innstillinger</div>
+  <div class="nav-tabs" role="tablist" aria-label="Min side">
+    <button type="button" class="nav-tab active" id="tab-button-cars" role="tab" aria-selected="true" aria-controls="tab-cars" data-tab="cars">Forespørsler</button>
+    <button type="button" class="nav-tab" id="tab-button-quotes" role="tab" aria-selected="false" aria-controls="tab-quotes" data-tab="quotes" tabindex="-1">Saker og tilbud</button>
+    <button type="button" class="nav-tab" id="tab-button-documents" role="tab" aria-selected="false" aria-controls="tab-documents" data-tab="documents" tabindex="-1">Dokumentasjon</button>
+    <button type="button" class="nav-tab" id="tab-button-settings" role="tab" aria-selected="false" aria-controls="tab-settings" data-tab="settings" tabindex="-1">Innstillinger</button>
   </div>
+  <div id="sak-detaljer" class="case-details" style="display:none;" aria-live="polite"></div>
 
   <!-- Mine biler tab -->
-  <div class="tab-content active" id="tab-cars">
+  <div class="tab-content active" id="tab-cars" role="tabpanel" aria-labelledby="tab-button-cars" tabindex="0">
     <div class="section">
       <div class="section-title">
-        <span>🚗</span> Mine biler
+        <span aria-hidden="true">📄</span> Forespørsler
       </div>
       <div id="cars-list">
         <!-- Bilkort legges til dynamisk -->
       </div>
-      <div id="sak-detaljer" style="display:none;margin-top:16px;"></div>
     </div>
   </div>
 
   <!-- Mine pristilbud tab -->
-  <div class="tab-content" id="tab-quotes">
+  <div class="tab-content" id="tab-quotes" role="tabpanel" aria-labelledby="tab-button-quotes" tabindex="0">
     <div class="section">
       <div class="section-title">
-        <span>💰</span> Mine pristilbud
+        <span aria-hidden="true">💬</span> Saker og tilbud
       </div>
       <div id="quotes-list">
         <!-- Tilbudskort legges til dynamisk -->
@@ -59,38 +58,35 @@
   </div>
 
   <!-- Dokumentasjon tab -->
-  <div class="tab-content" id="tab-documents">
+  <div class="tab-content" id="tab-documents" role="tabpanel" aria-labelledby="tab-button-documents" tabindex="0">
     <div class="section">
       <div class="section-title">
         <span>📎</span> Dokumentasjon
       </div>
       <div class="card">
-        <div class="card-title">Last opp bilder eller dokumenter</div>
-        <p style="color:#64748B;font-size:14px;margin-bottom:16px;">Last opp bilder av skiltnummeret eller glasset for å hjelpe oss med å finne riktig vare.</div>
-        <div class="file-upload" id="file-upload">
-          <div class="upload-icon">📷</div>
-          <div class="upload-text">Velg filer eller dra dem hit</div>
-        </div>
-        <input type="file" id="file-input" multiple style="display:none;">
+        <div class="card-title">Bilder til forespørselen</div>
+        <p style="color:#64748B;font-size:14px;margin-bottom:16px;">Bilder kan sendes sammen med en forespørsel fra søket. Opplasting fra Min side er ikke tilgjengelig her ennå.</p>
+        <a class="btn-secondary account-link" href="/">Gå til bilglassøket</a>
       </div>
     </div>
   </div>
 
   <!-- Innstillinger tab -->
-  <div class="tab-content" id="tab-settings">
+  <div class="tab-content" id="tab-settings" role="tabpanel" aria-labelledby="tab-button-settings" tabindex="0">
     <div class="section">
       <div class="section-title">
         <span>⚙️</span> Kontoinnstillinger
       </div>
       <div class="card">
         <div class="card-title">Personvern</div>
-        <p style="color:#64748B;font-size:14px;">Dine personopplysninger behandles i samsvar med personopplysningsloven. Vi deler ikke data med tredjeparter uten ditt samtykke.</p>
-        <button class="btn-secondary" style="padding:10px 20px;">Vis personvernserklæring</button>
+        <p style="color:#64748B;font-size:14px;">Les hvilke opplysninger vi behandler, hvorfor de brukes og hvilke leverandører som behandler dem på våre vegne.</p>
+        <a class="btn-secondary account-link" href="/personopplysninger">Les personvernerklæringen</a>
       </div>
       <div class="card">
         <div class="card-title">Sikkerhet</div>
         <p style="color:#64748B;font-size:14px;">Engangskoder utløper etter 10 minutter. Sesjonen avsluttes automatisk etter inaktivitet.</p>
-        <button class="btn-secondary" style="padding:10px 20px;">Endre e-postadresse</button>
+        <p style="color:#64748B;font-size:14px;">Trenger du å endre e-postadressen på kontoen? Skriv til kundestøtte, så hjelper vi deg manuelt.</p>
+        <a class="btn-secondary account-link" href="mailto:support@finnbilglass.no?subject=Endre%20e-postadresse%20p%C3%A5%20Min%20side">Kontakt kundestøtte</a>
       </div>
     </div>
   </div>
@@ -101,6 +97,6 @@
   </div>
 </div>
 
-<script src="/min-side.js?v=20261102" defer></script>
+<script src="/min-side.js?v=20261105-kundesider" defer></script>
 </body>
 </html>

@@ -39,7 +39,7 @@ function normalisertTekst(h) {
 const tekst = normalisertTekst(html);
 
 test('forside: godkjent hero-tekst finnes i normalisert DOM', () => {
-  assert.match(tekst, /Riktig bilglass\. En pris du forstår\./);
+  assert.match(tekst, /Finn bilglass\. Få prisen avklart\./);
 });
 
 test('forside: gammel forside er ikke tilbake', () => {
@@ -135,7 +135,8 @@ test('forside: alle lokale assets som refereres finnes på disk', () => {
   for (const r of refs) {
     if (ignorer(r)) continue;
     const sti = join(ROOT, 'public', r.replace(/^\//, ''));
-    if (!existsSync(sti) || statSync(sti).size === 0) mangler.push(r);
+    const fil = existsSync(sti) ? sti : sti + '.html';
+    if (!existsSync(fil) || statSync(fil).size === 0) mangler.push(r);
   }
   assert.deepEqual(mangler, [], `manglende assets: ${mangler.join(', ')}`);
 });

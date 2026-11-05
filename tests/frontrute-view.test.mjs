@@ -63,7 +63,7 @@ test('pris: beregnet pris vises som ESTIMAT med forbehold', () => {
   assert.equal(p.tekst, 'Estimert pris 3 357,81 kr');
   assert.equal(p.usikker, true, 'estimat skal merkes usikkert');
   assert.match(p.detalj, /inkl\. mva/);
-  assert.match(p.detalj, /bekreftes manuelt/i);
+  assert.match(p.detalj, /bekreftes i tilbudet/i);
   assert.match(p.detalj, /frakt/i);
   // Hele kroner vises uten øre.
   assert.equal(V.prisTekst(6250).tekst, 'Estimert pris 6 250 kr');

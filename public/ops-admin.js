@@ -271,12 +271,12 @@
             '<div class="card"><h2>Pristilbud</h2><p class="hint">Bekreftet pris kreves før et bindende tilbud sendes.</p>' +
               '<div class="field"><label for="t-varenr">Varenr</label><input id="t-varenr" maxlength="40"></div>' +
               '<div class="field"><label for="t-eurokode">Eurokode</label><input id="t-eurokode" maxlength="40"></div>' +
-              '<div class="field"><label for="t-pris">Pris (kr)</label><input id="t-pris" type="number" min="0" step="1"></div>' +
+              '<div class="field"><label for="t-pris">Glasspris inkl. mva. (kr)</label><input id="t-pris" type="number" min="0" step="1"><p class="hint">Før opp frakt og eventuelt tilbehør separat under «Tillegg».</p></div>' +
               '<div class="field"><label for="t-type">Pristype</label><select id="t-type">' +
                 '<option value="VEILEDENDE">Veiledende</option><option value="BEKREFTET">Bekreftet</option>' +
               '</select></div>' +
               '<div class="field"><label for="t-levering">Leveringstid</label><input id="t-levering" maxlength="80"></div>' +
-              '<div class="field"><label for="t-tillegg">Tillegg</label><input id="t-tillegg" maxlength="400" placeholder="f.eks. list, klips, montasje"></div>' +
+              '<div class="field"><label for="t-tillegg">Frakt og eventuelt tilbehør</label><input id="t-tillegg" maxlength="400" placeholder="f.eks. frakt, klips eller annen del"></div>' +
               '<div class="field"><label for="t-gyldig">Gyldig til</label><input id="t-gyldig" maxlength="20" placeholder="2026-11-30"></div>' +
               '<div class="field"><label for="t-begrunnelse">Begrunnelse (påkrevd)</label><textarea id="t-begrunnelse" maxlength="600"></textarea></div>' +
               '<div class="row"><button class="btn ghost" id="tilbud-lagre">Lagre utkast</button>' +

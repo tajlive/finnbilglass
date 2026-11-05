@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="nb">
+<html lang="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Logg inn – FinnBilGlass</title>
+<title>Logg inn – Finnbilglass</title>
+<meta name="description" content="Logg inn for å se forespørslene dine, eller fortsett som gjest for å søke etter bilglass.">
+<meta name="theme-color" content="#edf8fc">
 <meta name="robots" content="noindex,follow">
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="/innlogging.css?v=20261102">
+<link rel="stylesheet" href="/styles.css?v=20261105-kundesider">
+<link rel="stylesheet" href="/innlogging.css?v=20261105-kundesider">
 </head>
 <body>
 <div class="auth-container">
@@ -16,11 +18,10 @@
         <span>finn</span><span>bilglass</span>
       </div>
       <h1 class="auth-title">Logg inn</h1>
-      <p class="auth-subtitle">Vi sender en engangskode til e-postadressen din. Koden gjelder én gang og i 10 minutter.</p>
+      <p class="auth-subtitle">Logg inn for å se forespørslene dine. Du kan bruke Google eller få en engangskode på e-post.</p>
     </div>
 
     <div id="sosial-blokk" style="margin-bottom:18px;">
-      <link rel="stylesheet" href="/innlogging.css?v=20261102">
       <a class="sosial-knapp" data-provider="google" href="/api/auth/oauth/google/start" rel="nofollow" style="display:none">
         <span class="sosial-ikon" aria-hidden="true">G</span> Fortsett med Google
       </a>
@@ -40,7 +41,7 @@
     <div id="email-step">
       <div class="form-group">
         <label class="form-label" for="email">E-postadresse</label>
-        <input type="email" id="email" class="form-input" placeholder="navn@epost.no">
+        <input type="email" id="email" class="form-input" placeholder="navn@epost.no" autocomplete="email" inputmode="email">
         <div class="error-msg" id="email-error">Oppgi en gyldig e-postadresse.</div>
       </div>
       <button class="btn-primary" id="send-otp-btn">Send engangskode</button>
@@ -52,14 +53,14 @@
 
     <div id="otp-step" style="display:none;">
       <div class="form-group">
-        <label class="form-label" for="otp">Engangskode</label>
+        <label class="form-label" for="otp-1">Engangskode</label>
         <div class="otp-inputs">
-          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
-          <input type="text" class="otp-input" maxlength="1" inputmode="numeric">
+          <input type="text" id="otp-1" class="otp-input" maxlength="1" inputmode="numeric" autocomplete="one-time-code" aria-label="Siffer 1">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric" aria-label="Siffer 2">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric" aria-label="Siffer 3">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric" aria-label="Siffer 4">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric" aria-label="Siffer 5">
+          <input type="text" class="otp-input" maxlength="1" inputmode="numeric" aria-label="Siffer 6">
         </div>
         <div class="error-msg" id="otp-error">Koden er ugyldig eller utløpt.</div>
       </div>
@@ -76,6 +77,6 @@
   </div>
 </div>
 
-<script src="/innlogging.js?v=20261102" defer></script>
+<script src="/innlogging.js?v=20261105-kundesider" defer></script>
 </body>
 </html>

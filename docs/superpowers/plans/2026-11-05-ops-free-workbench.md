@@ -34,3 +34,14 @@
 - [x] 7. Commit report, exact limitations and production integration instructions. Keep old production unchanged until this package is reviewed.
 
 Ruling: Code and staging complete. Live mailbox/provider routing stays disconnected until the production package is integrated; do not route real customers to staging. Browser Access handoff completed and actual staging save verified. No new paid subscriptions.
+
+## Production continuation 2026-11-05
+User: finish through production, ready for CRM and invoices; existing quotas only.
+- [x] Preserve current production source: downloaded Worker compared to main dry-run, exact match except existing local VIN plausibility patch. 16 public files + facts page byte-match live; min-side.html protected redirects to login. Imported only these production source changes into isolated tree.
+- [x] Structured case customer, optimistic locking, accepted frozen offer export (not invoice). New additive 0052.
+- [x] Independent review; country validation and draft-send timing findings fixed with RED/GREEN tests. 646 full QA PASS, 31 workbench tests, typecheck/syntax green.
+- [x] Database backup taken before migrations; full Worker source/settings snapshot retained locally.
+- [ ] Apply only 0051 + 0052 in production after same-dump rehearsal; set scoped feature vars/secrets; deploy tagged exact SHA.
+- [ ] Replace old root-domain ops repair UI by fixed redirect; keep Access policies intact.
+- [ ] Verify live browser, customer flow, signed provider event and invoice basis.
+No real invoice, new subscription, 0050, catalogue mutation or mailbox MX change.
