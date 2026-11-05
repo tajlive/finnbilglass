@@ -1,4 +1,4 @@
-import { glassBodyRejection } from './glass-body-compatibility';
+import { glassBodyRejection, isBodyIdentityWord } from './glass-body-compatibility';
 import { estimertKundeprisInklMva } from './pricing/nok-prising';
 /** Frontrute-matcher — kjernen i Finnbilglass.
  *  Kjede: bil {merke, modell, aar, profil} → D1-kandidater (katalogkode-utvidelse)
@@ -209,7 +209,7 @@ export function likePrefiks(tok: string): string {
  *  - BMW M-prefiks-alias («M550D» → «550D» — katalogen skriver uten M). */
 export function modelTokensAv(modell: string, merke: string): string[] {
   const merkeNorm = merke.toUpperCase().replace(/[^A-ZÆØÅ0-9]+/g, '');
-  let tokens = modell.toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter((t) => t.length >= 2);
+  let tokens = modell.toUpperCase().split(/[^A-ZÆØÅ0-9]+/).filter((t) => t.length >= 2 && !isBodyIdentityWord(t));
   if (tokens.length > 1 && tokens[0] === merkeNorm) tokens = tokens.slice(1);
   // M-prefiks-alias: «M550D» → «550D» (SVV skriver M, katalogen uten).
   // Tillater drivverk-suffiks («M550D XDRIVE» → token «M550D» → alias «550D»).
@@ -252,7 +252,7 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
 
   const seedSql = `SELECT varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type
     FROM glass_prisliste
-    WHERE rad_type='glass' AND ${frontGlob} AND ${likePrim} AND (${likeSek})
+    WHERE rad_type='glass' AND ${frontGlob} AND ${likePrim} AND (${likeSek || '0'})
     ORDER BY pris`;
   const seed = await env.FINNBILGLASS_DB.prepare(seedSql)
     .bind(...primParams, ...sekParams)
@@ -293,7 +293,7 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
   for (const r of alle) {
     const n = (r.varenavn ?? '').toUpperCase();
     const okMerke = primaer.every((k) => ordTreff(n, k));
-    const okSek = modelTokens.length === 0 || modelTokens.some((t) => ordTreff(n, t));
+    const okSek = modelTokens.length === 0 ? !bil.modell?.trim() : modelTokens.some((t) => ordTreff(n, t));
     // Nøkkel = eurokode (unikt produkt), IKKE varenr — varenr kan ha flere eurokode-varianter
     // (f.eks. 3172GNCM finnes som 5381AGACMVW1B OG 5381AGACMVW1T = to ulike produkter).
     if (okMerke && okSek) sett.set(r.eurokode ?? r.varenr, r);

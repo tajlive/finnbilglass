@@ -1,3 +1,8 @@
+// CAB is cabriolet in glass product labels; EXT CAB on pickups describes the cab.
+// These words remain in descriptions and body evidence, but never prove model identity.
+const BODY_IDENTITY_WORDS=new Set(['CAB','CPE','COUPE','COUPÉ','CABRIOLET','CONVERTIBLE','SUV','SEDAN','HATCHBACK','KOMBI','CROSSOVER','STV','2D','3D','4D','5D']);
+export function isBodyIdentityWord(token:string):boolean{return BODY_IDENTITY_WORDS.has(token.toUpperCase());}
+
 /** Negative compatibility gate, shared by resolver, fallback and submission.
  * Explicit product labels are restrictions, not proof that a vehicle has that body.
  * In particular, an unqualified GLE is NOT inferred to be an SUV.

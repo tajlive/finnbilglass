@@ -1,4 +1,4 @@
-import { glassBodyRejection } from './glass-body-compatibility';
+import { glassBodyRejection, isBodyIdentityWord } from './glass-body-compatibility';
 /**
  * OE/VIN-pinpoint-resolver (finnbilglass, Fase 2).
  *
@@ -201,7 +201,7 @@ function modellOrd(modell: string, merke: string): string[] {
     if (o === merkeNorm) continue;
     if (/^\d+$/.test(o) && o.length >= 3 && ord.length > 1) continue; // '200'-lignende trim/motor
     if (/^\d+(KW|KWH)$/.test(o)) continue; // effekt/batteri er ikke glassmodell
-    if (STOPP_TOKENS.has(o)) continue;
+    if (STOPP_TOKENS.has(o) || isBodyIdentityWord(o)) continue;
     ut.push(o);
     ut.push(...(MODEL_TOKEN_ALIAS[o] ?? []));
   }
