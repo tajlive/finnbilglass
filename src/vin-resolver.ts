@@ -535,7 +535,16 @@ export function vinModelYear(vin: string | null | undefined, hintAar: number | n
   const v = (vin ?? '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (v.length < 11) return null;
   const c = v.charAt(9); // posisjon 10 (1-indeksert)
-  if (/^[1-9]$/.test(c)) return 2000 + parseInt(c, 10); // 2001–2009
+  // VIN-året kan bare brukes når det er rimelig nær registreringsåret. Uten denne
+  // sperren flyttet en enkelt tegnfeil/ukjent koding bilen flere tiår: VIN
+  // W1N1673171A365845 (GLE Coupé 2021) har «1» i posisjon 10, som tabellen leser
+  // som 2001 — og da matchet resolveren en W203 Coupé fra 2001–02.
+  const innenforRimeligAvstand = (kandidat: number) =>
+    hintAar == null || Math.abs(kandidat - hintAar) <= 10;
+  if (/^[1-9]$/.test(c)) {
+    const aar = 2000 + parseInt(c, 10); // 2001–2009
+    return innenforRimeligAvstand(aar) ? aar : (hintAar ?? null);
+  }
   const BOKSTAV: Record<string, number> = {
     A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, J: 8, K: 9, L: 10, M: 11, N: 12,
     P: 13, R: 14, S: 15, T: 16, V: 17, W: 18, X: 19, Y: 20,
