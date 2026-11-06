@@ -17,7 +17,7 @@ import { glassBodyRejection, isBodyIdentityWord } from './glass-body-compatibili
  *   L4 FALLBACK      — matchFrontrute (eksisterende, uendret)
  */
 import type { BilInput } from './matcher';
-import { estimertKundeprisInklMva } from './pricing/nok-prising';
+import { estimertFrontruteKundeprisInklMva, estimertKundeprisInklMva } from './pricing/nok-prising';
 import { matcherAar, parseAar } from './aar-parser';
 import { fraTypekode, klassifiserGlass, filtrerPaPosisjon, type TypekodePosisjon, type Posisjonsonske } from './glass-posisjon';
 export { fraTypekode, klassifiserGlass, filtrerPaPosisjon, type TypekodePosisjon, type Posisjonsonske } from './glass-posisjon';
@@ -395,7 +395,7 @@ interface PrisRad {
 
 /** Bygger én kandidat fra én prisrad. Returnerer null når raden ikke er salgbar
  *  som frontrute (produkt-/priskarantene eller feil glassposisjon). */
-async function byggKandidat(env: Env, r: PrisRad, modus: Sokemodus): Promise<ResolverKandidat | null> {
+export async function byggKandidat(env: Env, r: PrisRad, modus: Sokemodus): Promise<ResolverKandidat | null> {
   // Produkt-karantene: rader merket som glass som egentlig er panel/list
   // (f.eks. TORPEDOVEGG). Se src/glass-karantene.ts.
   if (karanteneGrunn(r.kommentar, r.varenavn)) return null;
@@ -446,7 +446,9 @@ async function byggKandidat(env: Env, r: PrisRad, modus: Sokemodus): Promise<Res
   return {
     varenr: r.varenr,
     varenavn: r.varenavn,
-    pris: prisKarantene ? null : estimertKundeprisInklMva(r.pris),
+    pris: prisKarantene ? null : (klassifisert.erFrontrute
+      ? estimertFrontruteKundeprisInklMva(r.pris)
+      : estimertKundeprisInklMva(r.pris)),
     listepris: prisKarantene ? null : r.pris,
     eurokode: r.eurokode,
     variantId: variantNokkel(r.varenr, r.eurokode, r.varenavn),
