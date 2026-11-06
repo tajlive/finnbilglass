@@ -46,7 +46,7 @@ import { verifiserAccess } from './access-jwt';
 import { D1AuthStorage } from './auth-storage';
 import { skalLoggeSok } from './sok-logg-policy';
 import { tilOffentligResolverSvar } from './public-contract';
-import { estimertKundeprisInklMva } from './pricing/nok-prising';
+import { estimertFrontruteKundeprisInklMva, estimertKundeprisInklMva } from './pricing/nok-prising';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -1106,7 +1106,9 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           // aldri lagres som bekreftet passform.
           if (dom.status === 'ukjent' && tilhorighet === 'bekreftet') tilhorighet = 'bekreftet_bil_ukjent_kontroll';
         }
-        const estimat = rad ? estimertKundeprisInklMva(rad.pris) : null;
+        const estimat = rad ? (valgtSelection?.kind === 'windshield'
+          ? estimertFrontruteKundeprisInklMva(rad.pris)
+          : estimertKundeprisInklMva(rad.pris)) : null;
         const enhet = rad ? salgsenhet(rad.varenavn, rad.varenr) : null;
         variantNote = 'Valgt variant: ' + variantIdRaa +
           (rad ? ' (' + rad.varenr + ' / ' + (rad.eurokode ?? 'uten eurokode') + ') «' + (rad.varenavn ?? '') + '» listepris '
