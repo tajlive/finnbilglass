@@ -895,8 +895,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       if (method === 'GET' && path === '/api/customer/inquiries') {
         try {
           const sessions = await getInquiryDb(env).prepare(
-            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE session_id = ? OR kontakt = ? ORDER BY created_at DESC LIMIT 100',
-          ).bind(user.userId, user.email).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE customer_id = ? ORDER BY created_at DESC LIMIT 100',
+          ).bind(user.userId).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
           return json({ ok: true, inquiries: sessions.results ?? [] });
         } catch (e) {
           // Tabellen finnes ikke ennå (migrasjon ikke anvendt) — returner tom liste
@@ -910,8 +910,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         try {
           const inquiryId = Number(inquiryMatch[1]);
           const inquiry = await getInquiryDb(env).prepare(
-            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE id = ? AND (session_id = ? OR kontakt = ?)',
-          ).bind(inquiryId, user.userId, user.email).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE id = ? AND customer_id = ?',
+          ).bind(inquiryId, user.userId).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
           if (!inquiry) {
             return json({ ok: false, error: 'HENVENDELSE_FINNES_IKKE' }, 404);
           }
@@ -999,6 +999,10 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       // Produksjon: FINNBILGLASS_DB er den eneste tilgjengelige D1.
       // Fail-closed på staging: kaster feil hvis FINNBILGLASS_STAGING_AUTH mangler.
       const inquiryDb: D1Database = getInquiryDb(env);
+      // Only attach ownership when the request carries a valid server-side auth
+      // session. Guest submissions remain available to staff, never by email guess.
+      const authenticatedCustomer = await requireAuth(request);
+      const customerId = authenticatedCustomer?.userId ?? null;
       // Pilotstopp: stopper nye henvendelser umiddelbart, uten å vente på
       // resolver-cachen. Sjekkes foran alt annet så ingen sak opprettes.
       if (!(await henvendelserTillatt(env))) {
@@ -1219,8 +1223,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         const sesjon = sessionId(body, request);
         const resultater = await inquiryDb.batch([
           inquiryDb.prepare(
-            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)'
-          ).bind(regnr, navn, kontakt, melding, sesjon, vehicleJson, erTydeligTest(regnr, kontakt, sesjon, navn)),
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sesjon, vehicleJson, erTydeligTest(regnr, kontakt, sesjon, navn), customerId),
           inquiryDb.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
