@@ -395,16 +395,26 @@ export async function requireRole(
   const user = await requireAuth(request);
   if (!user) return null;
 
+  // Sesjonsrollen kan være eldre enn en nylig rolleendring. Autoriser alltid
+  // mot den gjeldende brukerposten, og avvis hvis posten mangler.
+  let currentUser: AuthUser | null;
+  try {
+    currentUser = await auth.getUserByEmail(user.email);
+  } catch {
+    return null;
+  }
+  if (!currentUser) return null;
+
   const roleHierarchy: Record<string, number> = {
     CUSTOMER: 0,
     OPERATOR: 1,
     REVIEWER: 2,
     ADMIN: 3,
   };
-  const userLevel = roleHierarchy[user.role];
+  const userLevel = roleHierarchy[currentUser.role];
   const minRequired = Math.min(...requiredRoles.map((r) => roleHierarchy[r]));
   if (userLevel < minRequired) {
     return null;
   }
-  return user;
+  return { ...user, role: currentUser.role, name: currentUser.name, userId: currentUser.userId };
 }

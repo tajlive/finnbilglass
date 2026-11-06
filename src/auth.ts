@@ -125,10 +125,15 @@ const auth = {
       await store.sessionDelete(session.sessionId);
       return null;
     }
-    // Oppdater aktivitet
+    // Ikke skriv sesjonsraden på lesing: en parallell tilbakekalling kan ha
+    // slettet raden etter sessionGet(), og sessionSet() ville gjenopprettet den.
     session.lastActivity = Date.now();
-    await store.sessionSet(session);
     return sessionRowToSession(session);
+  },
+
+  /** Hent gjeldende bruker og rolle fra autoritativ D1-lagring. */
+  async getUserByEmail(email: string): Promise<AuthUser | null> {
+    return getStorage().userGetByEmail(email);
   },
 
   /**

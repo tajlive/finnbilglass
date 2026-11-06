@@ -143,7 +143,12 @@ test('Admin API: ADMIN kan endre brukerrolle', async () => {
   assertStatus(status, 200, 'admin change role');
   assertOk(body, 'admin change role');
 
-  const { status: listStatus, body: listBody } = await callRoute(
+  const changedUser = await auth.getUserByEmail('admin@test.no');
+  assert.ok(changedUser, 'rolleendring skal bevare e-post og eksisterende bruker');
+  assert.equal(changedUser.name, 'admin');
+  assert.equal(changedUser.role, 'REVIEWER');
+
+  const { status: demotedStatus } = await callRoute(
     handleAdminRoute,
     'GET',
     'http://localhost/api/admin/users',
@@ -151,11 +156,7 @@ test('Admin API: ADMIN kan endre brukerrolle', async () => {
     undefined,
     { Cookie: sessionCookieHeader(cookie) }
   );
-  assertStatus(listStatus, 200, 'admin users after role change');
-  const changedUser = listBody.users.find((u) => u.email === 'admin@test.no');
-  assert.ok(changedUser, 'rolleendring skal bevare e-post og eksisterende bruker');
-  assert.equal(changedUser.name, 'admin');
-  assert.equal(changedUser.role, 'REVIEWER');
+  assertStatus(demotedStatus, 403, 'old admin session must honor current D1 role');
 });
 
 test('Admin API: REVIEWER kan IKKE endre brukerrolle', async () => {
