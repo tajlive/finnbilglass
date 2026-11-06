@@ -42,13 +42,17 @@ import { handleGoogleConfig, handleGoogleLogin } from './routes/google-auth';
 import { handleOAuthStart, handleOAuthCallback, handleLinkInfo, handleProviders } from './routes/oauth';
 import { handleCspReport, cspReportOnly, reportingEndpoints } from './routes/csp';
 import { handleR2Inventar } from './routes/r2-inventar';
+import { availableCheckoutMethods, handleCreatePaymentLink, handleStripeWebhook } from './routes/stripe-payments';
+import { handleCustomerPaymentOrders } from './routes/customer-payment-orders';
 import { handleAdminRoute } from './routes/admin';
+import { mottakEpost, getEpostHistorikk, sendManuellEpost } from './routes/epost';
+import { syncGmailEmails, gmailSyncStatus } from './routes/gmail-sync';
 import { setAuthStorage } from './auth';
 import { verifiserAccess } from './access-jwt';
 import { D1AuthStorage } from './auth-storage';
 import { skalLoggeSok } from './sok-logg-policy';
 import { tilOffentligResolverSvar } from './public-contract';
-import { estimertKundeprisInklMva } from './pricing/nok-prising';
+import { estimertFrontruteKundeprisInklMva, estimertKundeprisInklMva } from './pricing/nok-prising';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -951,6 +955,12 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       return handleAdminRoute(request, env);
     }
 
+    if (method === 'GET' && path === '/api/payment-methods') {
+      return json({ methods: availableCheckoutMethods(env) }, 200);
+    }
+    // Stripe is the sole public webhook route. Signature verification happens inside the handler.
+    if (method === 'POST' && path === '/api/stripe/webhook') return handleStripeWebhook(request, env);
+
     // Kunde-ruter (P0 Fase 5.9) — krever autentisert sesjon
     if (path.startsWith('/api/customer/')) {
       const user = await requireAuth(request);
@@ -958,12 +968,16 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         return json({ ok: false, error: 'IKKE_AUTENTISERT' }, 401);
       }
 
+      if (path === '/api/customer/payment-orders' || /^\/api\/customer\/payment-orders\/[A-Za-z0-9_-]{8,100}\/invoice$/.test(path)) {
+        return handleCustomerPaymentOrders(request, env, getInquiryDb(env), user.userId);
+      }
+
       // GET /api/customer/inquiries — liste kundens forespørsler
       if (method === 'GET' && path === '/api/customer/inquiries') {
         try {
           const sessions = await getInquiryDb(env).prepare(
-            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE session_id = ? OR kontakt = ? ORDER BY created_at DESC LIMIT 100',
-          ).bind(user.userId, user.email).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE customer_id = ? ORDER BY created_at DESC LIMIT 100',
+          ).bind(user.userId).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
           return json({ ok: true, inquiries: sessions.results ?? [] });
         } catch (e) {
           // Tabellen finnes ikke ennå (migrasjon ikke anvendt) — returner tom liste
@@ -977,8 +991,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         try {
           const inquiryId = Number(inquiryMatch[1]);
           const inquiry = await getInquiryDb(env).prepare(
-            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE id = ? AND (session_id = ? OR kontakt = ?)',
-          ).bind(inquiryId, user.userId, user.email).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE id = ? AND customer_id = ?',
+          ).bind(inquiryId, user.userId).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
           if (!inquiry) {
             return json({ ok: false, error: 'HENVENDELSE_FINNES_IKKE' }, 404);
           }
@@ -1066,6 +1080,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       // Produksjon: FINNBILGLASS_DB er den eneste tilgjengelige D1.
       // Fail-closed på staging: kaster feil hvis FINNBILGLASS_STAGING_AUTH mangler.
       const inquiryDb: D1Database = getInquiryDb(env);
+      const authenticatedCustomer = await requireAuth(request);
+      const customerId = authenticatedCustomer?.userId ?? null;
       // Pilotstopp: stopper nye henvendelser umiddelbart, uten å vente på
       // resolver-cachen. Sjekkes foran alt annet så ingen sak opprettes.
       if (!(await henvendelserTillatt(env))) {
@@ -1194,7 +1210,9 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           // aldri lagres som bekreftet passform.
           if (dom.status === 'ukjent' && tilhorighet === 'bekreftet') tilhorighet = 'bekreftet_bil_ukjent_kontroll';
         }
-        const estimat = rad ? estimertKundeprisInklMva(rad.pris) : null;
+        const estimat = rad ? (valgtSelection?.kind === 'windshield'
+          ? estimertFrontruteKundeprisInklMva(rad.pris)
+          : estimertKundeprisInklMva(rad.pris)) : null;
         const enhet = rad ? salgsenhet(rad.varenavn, rad.varenr) : null;
         variantNote = 'Valgt variant: ' + variantIdRaa +
           (rad ? ' (' + rad.varenr + ' / ' + (rad.eurokode ?? 'uten eurokode') + ') «' + (rad.varenavn ?? '') + '» listepris '
@@ -1305,8 +1323,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         const sesjon = sessionId(body, request);
         const resultater = await inquiryDb.batch([
           inquiryDb.prepare(
-            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)'
-          ).bind(regnr, navn, kontakt, melding, sesjon, vehicleJson, erTydeligTest(regnr, kontakt, sesjon, navn)),
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sesjon, vehicleJson, erTydeligTest(regnr, kontakt, sesjon, navn), customerId),
           inquiryDb.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
@@ -1764,10 +1782,43 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       return handleTilbud(request, env, Number(tilbudMatch[1]), method);
     }
+    const paymentLinkMatch = /^\/api\/ops\/inquiries\/(\d+)\/payment-link$/.exec(path);
+    if (method === 'POST' && paymentLinkMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleCreatePaymentLink(request, env, Number(paymentLinkMatch[1]));
+    }
     const epostMatch = /^\/api\/ops\/inquiries\/(\d+)\/epost$/.exec(path);
     if (method === 'GET' && epostMatch) {
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       return handleEpostHistorikk(env, Number(epostMatch[1]));
+    }
+
+    // ── E-postsynkronisering (ny API) ───────────────────────────────────────────
+    const epostMottakMatch = /^\/api\/ops\/epost\/mottak$/.exec(path);
+    if (method === 'POST' && epostMottakMatch) {
+      // Resend webhook - verifiserer signatur internt, ingen admin-autentisering nødvendig
+      return mottakEpost(env, request);
+    }
+    const epostHistorikkMatch = /^\/api\/ops\/epost\/historikk\/(\d+)$/.exec(path);
+    if (method === 'GET' && epostHistorikkMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return getEpostHistorikk(env, Number(epostHistorikkMatch[1]));
+    }
+    const epostSendeMatch = /^\/api\/ops\/epost\/sende$/.exec(path);
+    if (method === 'POST' && epostSendeMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return sendManuellEpost(env, request);
+    }
+    const gmailSyncMatch = /^\/api\/ops\/epost\/gmail-sync$/.exec(path);
+    if (method === 'POST' && gmailSyncMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      const result = await syncGmailEmails(env);
+      return json(result);
+    }
+    const gmailSyncStatusMatch = /^\/api\/ops\/epost\/gmail-sync\/status$/.exec(path);
+    if (method === 'GET' && gmailSyncStatusMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return json(await gmailSyncStatus(env));
     }
 
     const inquiryStatusMatch = /^\/api\/ops\/inquiries\/(\d+)\/status$/.exec(path);

@@ -18,6 +18,18 @@
 
   function $(id) { return document.getElementById(id); }
 
+  function visBetalingsmetoder() {
+    var panel = $('payment-methods');
+    if (!panel) return;
+    fetch('/api/payment-methods', { credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : { methods: [] }; })
+      .then(function (d) {
+        if (Array.isArray(d.methods) && d.methods.indexOf('card') !== -1 && d.methods.indexOf('klarna') !== -1) panel.hidden = false;
+      })
+      .catch(function () { /* hide payment claims when the server cannot confirm availability */ });
+  }
+  visBetalingsmetoder();
+
   // ── Opplæringslogging (Tom 2026-08-17): ALLE valg og inntasting lagres.
   //    Session-id (localStorage) kobler hele kundereisen: søk → bekreft →
   //    utstyrs-svar → tilbehør. Bilder lagres separat (R2).

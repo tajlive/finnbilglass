@@ -42,14 +42,15 @@ async function sendOtpEmail(env: Env, to: string, code: string): Promise<{ ok: b
   const esc = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
   const svar = await sendMail(env, {
     to,
-    subject: `Din engangskode: ${code}`,
+    subject: 'Innloggingskode til Finnbilglass',
     html:
-      `<p>Hei,</p><p>Engangskoden din er:</p>` +
+      `<p>Hei,</p><p>Bruk denne engangskoden for å logge inn på Min side:</p>` +
       `<p style="font-size:28px;font-weight:700;letter-spacing:6px;font-family:monospace">${esc(code)}</p>` +
-      `<p>Koden gjelder i 10 minutter og kan bare brukes én gang.</p>` +
+      `<p>Koden utløper om 10 minutter og kan bare brukes én gang. Ikke del den med andre.</p>` +
+      `<p><a href="https://finnbilglass.no/innlogging">Gå til innlogging</a></p>` +
       `<p style="color:#637286;font-size:12px">Har du ikke bedt om koden, kan du se bort fra denne e-posten.</p>` +
       `<p>— Finnbilglass</p>`,
-    text: `Engangskoden din er ${code}. Den gjelder i 10 minutter og kan bare brukes én gang.`,
+    text: `Hei,\n\nBruk denne engangskoden for å logge inn på Min side: ${code}\n\nKoden utløper om 10 minutter og kan bare brukes én gang. Ikke del den med andre.\n\nGå til innlogging: https://finnbilglass.no/innlogging\n\nHvis du ikke ba om koden, kan du se bort fra denne e-posten.\n\n— Finnbilglass`,
   });
   return svar.ok ? { ok: true } : { ok: false, error: svar.error || 'EPOST_IKKE_KONFIGURERT' };
 }
@@ -395,16 +396,26 @@ export async function requireRole(
   const user = await requireAuth(request);
   if (!user) return null;
 
+  // Sesjonsrollen kan være eldre enn en nylig rolleendring. Autoriser alltid
+  // mot den gjeldende brukerposten, og avvis hvis posten mangler.
+  let currentUser: AuthUser | null;
+  try {
+    currentUser = await auth.getUserByEmail(user.email);
+  } catch {
+    return null;
+  }
+  if (!currentUser) return null;
+
   const roleHierarchy: Record<string, number> = {
     CUSTOMER: 0,
     OPERATOR: 1,
     REVIEWER: 2,
     ADMIN: 3,
   };
-  const userLevel = roleHierarchy[user.role];
+  const userLevel = roleHierarchy[currentUser.role];
   const minRequired = Math.min(...requiredRoles.map((r) => roleHierarchy[r]));
   if (userLevel < minRequired) {
     return null;
   }
-  return user;
+  return { ...user, role: currentUser.role, name: currentUser.name, userId: currentUser.userId };
 }

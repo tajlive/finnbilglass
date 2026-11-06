@@ -51,7 +51,7 @@ test('3. P0.2-fotoopplevelse beholdt (kamera + bildebibliotek)', () => {
 
 test('4. invitert kundeflyt erstatter beta-invitasjonen (godkjent forside)', () => {
   // Godkjent kundeforside (288ae3a): hero, regnr-søk, VIN-søk og forespørselsskjema.
-  assert.match(html, /Finn bilglass\.<br><span>Få prisen avklart\.<\/span>/);
+  assert.match(html, /Vi utfordrer prisene på <span>bilglass\.<\/span>/);
   assert.match(html, /id="form-regnr"/);
   assert.match(html, /id="form-vin"/);
   // Den gamle personlige beta-invitasjonen (førsteperson) er fjernet.
@@ -65,9 +65,9 @@ test('4. invitert kundeflyt erstatter beta-invitasjonen (godkjent forside)', () 
 test('5. språkregel: aktiv kundereise bruker «vi»', () => {
   assert.match(html, /Vil du at vi skal dobbeltsjekke\?/);
   assert.match(html, /Det hjelper oss å kontrollere riktig glass før vi sender tilbud\./);
-  assert.match(html, /Vi kontrollerer glassvalg og sender totalpris i tilbudet før du bestemmer deg/);
+  assert.match(html, /Vi kontrollerer glassvarianten og oppgir totalpris/);
   assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet\./);
-  assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør/);
+  assert.match(html, /Send forespørselen, så kontrollerer vi glassvariant/);
   assert.match(html, /Vi fant ikke et trygt treff i katalogen\. Send oss en forespørsel/);
   assert.match(html, /Vi kontrollerer glassvalg, pris og frakt før du bestiller\./);
   assert.match(js, /Vi har funnet en mulig kandidat ut fra bildataene dine\. Vi dobbeltsjekker valget manuelt før vi sender tilbud\./);

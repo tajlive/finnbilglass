@@ -129,7 +129,7 @@ export function opsAdminUi(): Response {
     </section>
   </main>
 </div>
-<script src="/ops-admin.js?v=20261103" defer></script>
+<script src="/ops-admin.js?v=20261106-tekster" defer></script>
 </body>
 </html>`;
   return new Response(html, {

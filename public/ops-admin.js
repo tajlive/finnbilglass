@@ -68,8 +68,8 @@
   }
 
   var STATUS_TEKST = {
-    NEW: 'Ny', CONTACTED: 'Besvart', NEEDS_INFO: 'Trenger svar', QUOTED: 'Tilbud sendt',
-    OFFERED: 'Tilbudt', CONFIRMED: 'Bekreftet', COMPLETED: 'Fullført', REJECTED: 'Avvist', CLOSED: 'Lukket',
+    NEW: 'Ny', CONTACTED: 'Kontaktet', NEEDS_INFO: 'Trenger svar', QUOTED: 'Tilbud sendt',
+    OFFERED: 'Tilbud sendt', CONFIRMED: 'Bekreftet', COMPLETED: 'Fullført', REJECTED: 'Avvist', CLOSED: 'Lukket',
   };
 
   function pill(status) {
@@ -251,7 +251,7 @@
           '<div class="detail-grid">' +
             '<div class="card"><h2>Endre status</h2><p class="hint">Logges med ansvarlig og tidsstempel.</p>' +
               '<div class="field"><label for="ny-status">Ny status</label><select id="ny-status">' +
-                ['CONTACTED', 'NEEDS_INFO', 'QUOTED', 'CONFIRMED', 'CLOSED', 'REJECTED'].map(function (x) {
+                ['CONTACTED', 'NEEDS_INFO', 'OFFERED', 'CONFIRMED', 'CLOSED', 'REJECTED'].map(function (x) {
                   return '<option value="' + x + '">' + esc(STATUS_TEKST[x]) + '</option>';
                 }).join('') +
               '</select></div>' +
@@ -269,9 +269,10 @@
 
           '<div class="detail-grid">' +
             '<div class="card"><h2>Pristilbud</h2><p class="hint">Bekreftet pris kreves før et bindende tilbud sendes.</p>' +
-              '<div class="field"><label for="t-varenr">Varenr</label><input id="t-varenr" maxlength="40"></div>' +
-              '<div class="field"><label for="t-eurokode">Eurokode</label><input id="t-eurokode" maxlength="40"></div>' +
-              '<div class="field"><label for="t-pris">Glasspris inkl. mva. (kr)</label><input id="t-pris" type="number" min="0" step="1"><p class="hint">Før opp frakt og eventuelt tilbehør separat under «Tillegg».</p></div>' +
+              '<div class="field"><label for="t-varenr">Varenummer (internt)</label><input id="t-varenr" maxlength="40"></div>' +
+              '<div class="field"><label for="t-eurokode">Eurokode (intern glassidentifikator)</label><input id="t-eurokode" maxlength="40"></div>' +
+              '<div class="field"><label for="t-pris">Glasspris inkl. mva. (kr)</label><input id="t-pris" type="number" min="0" step="1"><p class="hint">Oppgi frakt og eventuelle tillegg separat, og ta alt med i totalprisen.</p></div>' +
+              '<div class="field"><label for="t-totalpris">Totalpris kunden skal betale inkl. mva., frakt og oppførte tillegg (kr)</label><input id="t-totalpris" type="number" min="1" step="1"><p class="hint">Oppgi summen kunden har godkjent. Tilbud som sendes må ha bekreftet totalpris.</p></div>' +
               '<div class="field"><label for="t-type">Pristype</label><select id="t-type">' +
                 '<option value="VEILEDENDE">Veiledende</option><option value="BEKREFTET">Bekreftet</option>' +
               '</select></div>' +
@@ -283,6 +284,8 @@
               '<button class="btn teal" id="tilbud-send">Lagre og send</button>' +
               '<span id="tilbud-melding" class="muted"></span></div>' +
               '<div id="tilbud-liste" style="margin-top:12px"></div>' +
+              '<div class="field"><label for="betalingsaksept">Hvor godtok kunden totalprisen?</label><select id="betalingsaksept"><option value="PHONE">Telefon</option><option value="EMAIL">E-post</option><option value="IN_PERSON">Personlig</option></select></div>' +
+              '<div class="field"><label for="betalingsaksept-notat">Notat om kundens godkjenning av totalprisen</label><textarea id="betalingsaksept-notat" maxlength="300" placeholder="For eksempel: Kunden godtok beløpet på telefon [dato]."></textarea></div>' +
             '</div>' +
             '<div class="card"><h2>E-posthistorikk</h2><p class="hint">Svar, statusendringer og notater på saken.</p>' +
               '<div id="epost-liste"><div class="empty">Laster…</div></div>' +
@@ -451,6 +454,7 @@
       varenr: (document.getElementById('t-varenr').value || '').trim(),
       eurokode: (document.getElementById('t-eurokode').value || '').trim(),
       pris: parseInt(document.getElementById('t-pris').value, 10) || 0,
+      totalPris: parseInt(document.getElementById('t-totalpris').value, 10) || 0,
       prisType: document.getElementById('t-type').value,
       leveringstid: (document.getElementById('t-levering').value || '').trim(),
       tillegg: (document.getElementById('t-tillegg').value || '').trim(),
@@ -463,6 +467,7 @@
     api('/api/ops/inquiries/' + inquiryId + '/tilbud', { method: 'POST', body: kropp })
       .then(function (d) {
         melding.textContent = d.sendt ? ('Sendt (v' + d.versjon + ').') : (d.advarsel || ('Lagret som v' + d.versjon + '.'));
+        lastTilbud(inquiryId);
       })
       .catch(function (e) { melding.textContent = ''; alert(e.message); });
   }
@@ -474,12 +479,36 @@
       var t = d.tilbud || [];
       el.innerHTML = t.length
         ? '<ul class="timeline">' + t.map(function (x) {
+            var betalingsknapp = x.id && x.sendt_at && x.pris_type === 'BEKREFTET' && x.total_kr
+              ? '<br><button class="btn teal" type="button" data-payment-quote="' + esc(x.id) + '">Send betalingslenke · ' + esc(x.total_kr) + ' kr</button>'
+              : '';
             return '<li><time>v' + x.versjon + ' · ' + new Date(x.opprettet_at).toLocaleString('nb-NO') + ' · ' + esc(x.opprettet_av) + '</time>' +
-              esc(x.pris_kr) + ' kr (' + esc(x.pris_type) + ')' + (x.varenr ? ' · ' + esc(x.varenr) : '') +
-              (x.sendt_at ? ' · <span style="color:var(--ok)">sendt</span>' : ' · <span class="muted">ikke sendt</span>') + '</li>';
+              esc(x.pris_kr) + ' kr glass (' + esc(x.pris_type) + ')' + (x.total_kr ? ' · total ' + esc(x.total_kr) + ' kr' : '') + (x.varenr ? ' · ' + esc(x.varenr) : '') +
+              (x.sendt_at ? ' · <span style="color:var(--ok)">sendt</span>' : ' · <span class="muted">ikke sendt</span>') + betalingsknapp + '</li>';
           }).join('') + '</ul>'
         : '<p class="muted">Ingen tilbud registrert.</p>';
+      el.querySelectorAll('[data-payment-quote]').forEach(function (button) {
+        button.addEventListener('click', function () { sendPaymentLink(inquiryId, Number(button.dataset.paymentQuote)); });
+      });
     }).catch(function () { el.innerHTML = ''; });
+  }
+
+  function sendPaymentLink(inquiryId, quoteId) {
+    var method = document.getElementById('betalingsaksept');
+    var note = document.getElementById('betalingsaksept-notat');
+    var acceptanceNote = note ? note.value.trim() : '';
+    if (!acceptanceNote) { alert('Skriv et kort notat om hvordan kunden godtok totalprisen.'); if (note) note.focus(); return; }
+    if (!window.crypto || !window.crypto.randomUUID) { alert('Nettleseren støtter ikke sikker utsending.'); return; }
+    if (!window.confirm('Send betalingslenken til kunden for det godtatte totalbeløpet?')) return;
+    api('/api/ops/inquiries/' + inquiryId + '/payment-link', {
+      method: 'POST',
+      body: { quoteId: quoteId, requestId: window.crypto.randomUUID(), accepted: true,
+        acceptanceMethod: method ? method.value : '', acceptanceNote: acceptanceNote },
+    }).then(function (d) {
+      alert(d.alreadySent ? 'Betalingslenken er allerede sendt.' : 'Betalingslenken er sendt til kunden.');
+      lastTilbud(inquiryId);
+      lastEpost(inquiryId);
+    }).catch(function (e) { alert(e.message); });
   }
 
   function lastEpost(inquiryId) {

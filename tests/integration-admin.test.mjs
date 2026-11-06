@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { handleAdminRoute } from '../src/routes/admin.ts';
 import { handleAuthRoute } from '../src/routes/auth.ts';
-import { auth, reset, setUserRole, setAuthStorage } from '../src/auth.ts';
+import { auth, reset, setUserRole, setAuthStorage, getStorage } from '../src/auth.ts';
 import { D1EmulatorAuthStorage } from '../src/auth-storage.ts';
 import { D1Emulator } from '../src/auth-store.ts';
 import {
@@ -28,7 +28,7 @@ const env = createTestEnv();
 
 // Hjelpefunksjon: logg inn som en bestemt rolle og returner sesjonscookie
 async function loginAs(email, role) {
-  setUserRole(email, role);
+  await getStorage().userSet({ userId: 'test-' + email, email, role, name: email.split('@')[0], createdAt: Date.now(), updatedAt: Date.now() });
 
   // Send OTP
   await callRoute(
@@ -142,6 +142,21 @@ test('Admin API: ADMIN kan endre brukerrolle', async () => {
   );
   assertStatus(status, 200, 'admin change role');
   assertOk(body, 'admin change role');
+
+  const changedUser = await auth.getUserByEmail('admin@test.no');
+  assert.ok(changedUser, 'rolleendring skal bevare e-post og eksisterende bruker');
+  assert.equal(changedUser.name, 'admin');
+  assert.equal(changedUser.role, 'REVIEWER');
+
+  const { status: demotedStatus } = await callRoute(
+    handleAdminRoute,
+    'GET',
+    'http://localhost/api/admin/users',
+    env,
+    undefined,
+    { Cookie: sessionCookieHeader(cookie) }
+  );
+  assertStatus(demotedStatus, 403, 'old admin session must honor current D1 role');
 });
 
 test('Admin API: REVIEWER kan IKKE endre brukerrolle', async () => {
@@ -245,4 +260,37 @@ test('Admin API: Manglende rolle-parametr avvises', async () => {
   );
   assertStatus(status, 400, 'admin missing role');
   assertError(body, 'ROLLE_PÅKREVD', 'admin missing role');
+});
+
+// ── Testgruppe: Session revoke funksjonalitet ──
+test('Admin API: Session revoke fjerner tilgang til eksisterende sesjoner', async () => {
+  const cookie_admin = await loginAs('admin@test.no', 'ADMIN');
+
+  // Opprett en sesjon for admin-brukeren
+  const adminSessionResponse = await callRoute(handleAuthRoute, 'POST', 'http://localhost/api/auth/otp/verify', env,
+    { email: 'admin@test.no', code: (await (await import('../src/auth.ts')).auth.generateOtp('admin@test.no')).code },
+    { 'x-local-test': 'true' });
+  const cookie_admin_session = adminSessionResponse.headers.get('set-cookie');
+  const sessionId_match = cookie_admin_session && cookie_admin_session.match(/fb_session=([^;]+)/);
+  const sessionId = sessionId_match ? sessionId_match[1] : null;
+  if (!sessionId) return new Error('Klarte ikke opprette admin-sesjon');
+
+  // Verifiser at sesjonen fungerer
+  const { status: status_before, body: body_before } = await callRoute(handleAdminRoute, 'GET',
+    'http://localhost/api/admin/sessions', env, undefined,
+    { Cookie: `fb_session=${sessionId}` });
+  assertStatus(status_before, 200, 'session active before revoke');
+  assertOk(body_before, 'session active before revoke');
+
+  // Admin revokerer sin egen sesjon
+  const { status: status_revoke, body: body_revoke } = await callRoute(handleAdminRoute, 'POST',
+    'http://localhost/api/admin/sessions/' + sessionId + '/revoke', env, undefined,
+    { Cookie: sessionCookieHeader(cookie_admin) });
+  assertStatus(status_revoke, 200, 'session revoked successfully');
+
+  // Verifiser at sesjonen ikke lenger virker etter revoke
+  const { status: status_after, body: body_after } = await callRoute(handleAdminRoute, 'GET',
+    'http://localhost/api/admin/sessions', env, undefined,
+    { Cookie: `fb_session=${sessionId}` });
+  assertStatus(status_after, 401, 'revoked session returns 401');
 });

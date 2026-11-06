@@ -11,11 +11,9 @@ export interface Env {
   /** STAGING: konversasjonell assistent (fitment-v1/conversation-v1). Prod default: AV. */
   ASSISTANT_ENABLED?: string;
   MULTI_GLASS_ENABLED?: string;
-  /**
-   * ALL_GLASS-kandidater i /api/glass/kandidater (dør/side/ventil/bak/tak).
-   * Default AV: quote-piloten svarer MANUAL_REVIEW uten katalogtreff.
-   * Kun eksplisitt "true" slår på — aldri implisitt, aldri i produksjon uten eier-OK.
-   */
+  /** ALL_GLASS-kandidater i /api/glass/kandidater (dør/side/ventil/bak/tak). */
+  /** Default AV: quote-piloten svarer MANUAL_REVIEW uten katalogtreff. */
+  /** Kun eksplisitt \"true\" slår på — aldri implisitt, aldri i produksjon uten eier-OK. */
   ALL_GLASS_KANDIDATER_ENABLED?: string;
   /** Feature-flags for evidence-flyten (default false i production inntil staging-verifisert). */
   EVIDENCE_UPLOAD_ENABLED?: string;
@@ -39,10 +37,7 @@ export interface Env {
   /** Meta/Facebook Login. */
   FACEBOOK_APP_ID?: string;
   FACEBOOK_APP_SECRET?: string;
-  /**
-   * Kommaseparert liste over sosial innlogging som faktisk er slått på,
-   * f.eks. «google». Secrets alene aktiverer ingenting.
-   */
+  /** Kommaseparert liste over sosial innlogging som faktisk er slått på, f.eks. «google». Secrets alene aktiverer ingenting. */
   OAUTH_ENABLED_PROVIDERS?: string;
   /** Cloudflare Access: team-domene (f.eks. tomarnejensen.cloudflareaccess.com) og appens AUD-tag. */
   ACCESS_TEAM_DOMAIN?: string;
@@ -58,6 +53,25 @@ export interface Env {
   FINNBILGLASS_LOCAL_AUTH?: D1Database;
   /** Staging D1 for autentiseringslagring (KUN staging). */
   FINNBILGLASS_STAGING_AUTH?: D1Database;
-  /** inquiries_enabled: "true" aktiverer kundeforespørsler i staging. */
+  /** E-postsynkronisering og driftsenter-meldingshistorikk. */
+  /** inquiries_enabled: \"true\" aktiverer kundeforespørsler i staging. */
   inquiries_enabled?: string;
+  /** Ops dashboard and inbox address for support. */
+  OPS_INBOUND_ADDRESS?: string;
+  /** Resend webhook signing secret (from Resend dashboard → Webhooks → Signing Secret). */
+  /** Gmail OAuth refresh token for syncing sent/received emails. */
+  GMAIL_REFRESH_TOKEN?: string;
+  GMAIL_SYNC_ENABLED?: string;
+  /** Google Cloud Pub/Sub topic name for Gmail push notifications (e.g., projects/xxx/topics/yyy). */
+  GMAIL_PUBSUB_TOPIC?: string;
+  /** Stripe secret key for Checkout and webhook verification */
+  STRIPE_SECRET_KEY?: string;
+  /** Stripe webhook secret */
+  STRIPE_WEBHOOK_SECRET?: string;
+  /** Explicit kill switch; defaults off and production stays disabled until reviewed. */
+  STRIPE_CHECKOUT_ENABLED?: string;
+  /** Customer-facing return origin for hosted Checkout, never the Operations hostname. */
+  STRIPE_RETURN_ORIGIN?: string;
+  /** Optional Stripe Dashboard payment-method configuration for Checkout. */
+  STRIPE_PAYMENT_METHOD_CONFIGURATION?: string;
 }

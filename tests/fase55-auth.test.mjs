@@ -101,6 +101,23 @@ test('Auth: Verifiser gyldig OTP-kode', async () => {
   assert.equal(result.user.email, email);
 });
 
+test('Auth: OTP godtar en aktiv medarbeiderinvitasjon og setter D1-rollen', async () => {
+  await resetState();
+  const { getStorage } = await import('../src/auth.ts');
+  const email = 'invited-reviewer@test.no';
+  const now = Date.now();
+  const storage = getStorage();
+  await storage.staffInviteSet({
+    email, role: 'REVIEWER', status: 'INVITED', invitedBy: 'admin@test.no',
+    createdAt: now, updatedAt: now, providerMessageId: 'msg-test', lastErrorCode: null,
+  });
+  const { code } = await auth.generateOtp(email);
+  const result = await auth.verifyOtp({ email, code });
+  assert.equal(result.success, true);
+  assert.equal(result.user.role, 'REVIEWER');
+  assert.equal((await storage.staffInviteGet(email)).status, 'ACCEPTED');
+});
+
 test('Auth: Verifiser feil OTP-kode', async () => {
   await resetState();
   const email = 'otp-fail@test.no';

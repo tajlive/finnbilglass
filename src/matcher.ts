@@ -1,5 +1,5 @@
 import { glassBodyRejection, isBodyIdentityWord } from './glass-body-compatibility';
-import { estimertKundeprisInklMva } from './pricing/nok-prising';
+import { estimertFrontruteKundeprisInklMva } from './pricing/nok-prising';
 /** Frontrute-matcher — kjernen i Finnbilglass.
  *  Kjede: bil {merke, modell, aar, profil} → D1-kandidater (katalogkode-utvidelse)
  *         → eurokode-dekoder + årstall → score → riktig glass.
@@ -224,11 +224,11 @@ export function modelTokensAv(modell: string, merke: string): string[] {
 /**
  * @deprecated 2026-11-04 — den gamle 0,60-faktoren med faste trinn viste feil
  * kundepris og sendte varianter over høyeste trinn til «Pris på forespørsel».
- * Kundeprisen regnes nå av estimertKundeprisInklMva() (XLS-pris eks. mva × 0,25
+ * Kundeprisen regnes nå av estimertFrontruteKundeprisInklMva() (XLS-pris eks. mva × 0,40
  * × 1,25). Beholdt som alias så eldre kall ikke krasjer, men gir samme regel.
  */
 export function tierPris(listepris: number | null): number | null {
-  return estimertKundeprisInklMva(listepris);
+  return estimertFrontruteKundeprisInklMva(listepris);
 }
 
 /** Hovedmatcher: bil → sortert kandidatliste + anbefaling. */

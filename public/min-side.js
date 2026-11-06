@@ -67,6 +67,45 @@
     return '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + i.farge + ';margin-right:6px;"></span>';
   }
 
+  const PAYMENT_STATUS = {
+    ACCEPTED: 'Betalingslenke klargjøres', PAYMENT_LINK_SENT: 'Betalingslenke sendt på e-post',
+    PAID: 'Betalt', PAYMENT_FAILED: 'Betalingen kunne ikke fullføres', REFUND_PENDING: 'Refusjon behandles',
+    PARTIALLY_REFUNDED: 'Delvis refundert', REFUNDED: 'Refundert', CANCELLED: 'Avbrutt', EXPIRED: 'Betalingslenken er utløpt',
+  };
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+  async function loadPaymentOrders() {
+    const list = document.getElementById('payment-orders-list');
+    if (!list) return;
+    try {
+      const r = await fetch('/api/customer/payment-orders', { credentials: 'include' });
+      if (!r.ok) throw new Error('Kunne ikke laste betalinger');
+      const data = await r.json();
+      const orders = Array.isArray(data.orders) ? data.orders : [];
+      if (!orders.length) {
+        list.innerHTML = '<div class="empty-state"><h3>Ingen betalingsordrer</h3><p>Ordrene dine vises her etter at du har godtatt et tilbud.</p></div>';
+        return;
+      }
+      list.innerHTML = orders.map(order => {
+        const status = PAYMENT_STATUS[order.status] || 'Status oppdateres';
+        const date = order.paidAt || order.paymentLinkSentAt || order.createdAt;
+        const dateText = date ? new Date(date).toLocaleDateString('nb-NO') : '';
+        const amount = new Intl.NumberFormat('nb-NO', { style: 'currency', currency: order.currency || 'NOK' }).format(order.amountNok);
+        const invoice = order.invoiceAvailable
+          ? '<a class="btn-secondary" target="_blank" rel="noopener noreferrer" href="/api/customer/payment-orders/' + encodeURIComponent(order.id) + '/invoice">Åpne faktura</a>'
+          : (order.status === 'PAID' ? '<p style="color:#64748B;font-size:14px;margin:10px 0 0;">Fakturaen er ikke tilgjengelig i portalen ennå. Kontakt kundestøtte hvis du trenger dokumentet.</p>' : '');
+        return '<div class="quote-card"><div class="quote-info">' +
+          '<div class="quote-name">' + escapeHtml(order.reference) + '</div>' +
+          '<div class="quote-status">' + escapeHtml(status) + '</div>' +
+          '<div class="quote-status">' + escapeHtml(amount) + (dateText ? ' · ' + escapeHtml(dateText) : '') + '</div>' + invoice +
+          '</div></div>';
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="empty-state"><h3>Kunne ikke laste betalinger</h3><p>Prøv igjen senere.</p></div>';
+    }
+  }
+
   async function visSakdetaljer(id) {
     const boks = document.getElementById('sak-detaljer');
     if (!boks) return;
@@ -109,6 +148,7 @@
       }
       const data = await response.json();
       const inquiries = data.inquiries || [];
+      loadPaymentOrders();
 
       // Load cars (inquiries as car cards)
       const carsList = document.getElementById('cars-list');

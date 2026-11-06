@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="/styles.css?v=20261105-kundesider">
-<link rel="stylesheet" href="/min-side.css?v=20261105-kundesider">
+<link rel="stylesheet" href="/min-side.css?v=20261106-betalinger">
 </head>
 <body>
 <div class="portal-container">
@@ -28,6 +28,7 @@
   <div class="nav-tabs" role="tablist" aria-label="Min side">
     <button type="button" class="nav-tab active" id="tab-button-cars" role="tab" aria-selected="true" aria-controls="tab-cars" data-tab="cars">Forespørsler</button>
     <button type="button" class="nav-tab" id="tab-button-quotes" role="tab" aria-selected="false" aria-controls="tab-quotes" data-tab="quotes" tabindex="-1">Saker og tilbud</button>
+    <button type="button" class="nav-tab" id="tab-button-payments" role="tab" aria-selected="false" aria-controls="tab-payments" data-tab="payments" tabindex="-1">Betalinger og fakturaer</button>
     <button type="button" class="nav-tab" id="tab-button-documents" role="tab" aria-selected="false" aria-controls="tab-documents" data-tab="documents" tabindex="-1">Dokumentasjon</button>
     <button type="button" class="nav-tab" id="tab-button-settings" role="tab" aria-selected="false" aria-controls="tab-settings" data-tab="settings" tabindex="-1">Innstillinger</button>
   </div>
@@ -54,6 +55,14 @@
       <div id="quotes-list">
         <!-- Tilbudskort legges til dynamisk -->
       </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-payments" role="tabpanel" aria-labelledby="tab-button-payments" tabindex="0">
+    <div class="section">
+      <div class="section-title"><span aria-hidden="true">💳</span> Betalinger og fakturaer</div>
+      <p style="color:#64748B;font-size:14px;">Betalingslenken sendes på e-post. Når betalingen er registrert, vises status og tilgjengelig faktura her.</p>
+      <div id="payment-orders-list" aria-live="polite"><div class="empty-state"><p>Laster betalinger …</p></div></div>
     </div>
   </div>
 
@@ -97,6 +106,6 @@
   </div>
 </div>
 
-<script src="/min-side.js?v=20261105-kundesider" defer></script>
+<script src="/min-side.js?v=20261106-betalinger" defer></script>
 </body>
 </html>

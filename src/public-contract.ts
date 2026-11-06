@@ -17,7 +17,7 @@
  * kompatibilitet eller pris.
  */
 
-import { beregnPris } from './pricing/nok-prising';
+import { estimertFrontruteKundeprisInklMva, mvaFraInkl } from './pricing/nok-prising';
 import type { Kandidat, DiscoveryResult } from './discovery';
 
 /** Felt som aldri skal ut i et offentlig svar. */
@@ -71,11 +71,12 @@ export interface OffentligGlassSvar {
 export function offentligPris(listepris: number | null | undefined): OffentligPris | null {
   if (typeof listepris !== 'number' || !Number.isFinite(listepris) || listepris <= 0) return null;
   try {
-    const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: listepris });
+    const kundePris = estimertFrontruteKundeprisInklMva(listepris);
     // XLS-prisen gir et ESTIMAT (Tom 2026-10-29). Estimatet kan vises, men alltid
     // merket som estimat — aldri som bekreftet pris.
-    if (r.kundePris == null || r.mva == null || r.prisEksMva == null) return null;
-    return { kundePris: r.kundePris, mva: r.mva, prisEksMva: r.prisEksMva, sikkerhet: r.sikkerhet };
+    if (kundePris == null) return null;
+    const { mva, eksMva } = mvaFraInkl(kundePris);
+    return { kundePris, mva, prisEksMva: eksMva, sikkerhet: 'ESTIMERT' };
   } catch {
     return null;
   }

@@ -13,6 +13,7 @@ import type { Env } from '../types';
 import { sendMail } from '../mail';
 import { canTransitionInquiry, isInquiryStatus } from '../inquiry-workflow';
 import { fraTypekode, type TypekodePosisjon } from '../glass-posisjon';
+import { customerTotalForOffer } from '../payment-domain';
 
 type Rad = Record<string, unknown>;
 
@@ -462,7 +463,7 @@ async function eksaktErDokumentert(
 
 type TilbudKropp = {
   varenr?: string; eurokode?: string; oe?: string; beskrivelse?: string;
-  pris?: number; prisType?: string; leveringstid?: string; tillegg?: string;
+  pris?: number; totalPris?: number; prisType?: string; leveringstid?: string; tillegg?: string;
   gyldigTil?: string; begrunnelse?: string; av?: string; send?: boolean;
 };
 
@@ -492,6 +493,9 @@ export async function handleTilbud(request: Request, env: Env, inquiryId: number
   if (!av || !begrunnelse) return json({ ok: false, error: 'ANSVARLIG_OG_BEGRUNNELSE_PAKREVD' }, 400);
   if (!(pris > 0)) return json({ ok: false, error: 'PRIS_MA_VERE_POSITIV' }, 400);
   if (!['VEILEDENDE', 'BEKREFTET'].includes(prisType)) return json({ ok: false, error: 'PRIS_TYPE_PAKREVD' }, 400);
+  let totalPris: number | null;
+  try { totalPris = customerTotalForOffer({ glassNok: pris, totalNok: b.totalPris, priceType: prisType, send: !!b.send }); }
+  catch (e) { return json({ ok: false, error: e instanceof Error ? e.message : 'TOTALPRIS_UGYLDIG' }, 400); }
 
   const sak = await db.prepare('SELECT id, navn, kontakt, regnr, status FROM beta_inquiries WHERE id = ?')
     .bind(inquiryId).first<{ id: number; navn: string; kontakt: string; regnr: string | null; status: string }>();
@@ -504,16 +508,16 @@ export async function handleTilbud(request: Request, env: Env, inquiryId: number
   const naa = Date.now();
 
   await db.prepare(
-    `INSERT INTO glass_quotes (inquiry_id, versjon, varenr, eurokode, oe_nummer, beskrivelse, pris_kr, pris_type,
+    `INSERT INTO glass_quotes (inquiry_id, versjon, varenr, eurokode, oe_nummer, beskrivelse, pris_kr, total_kr, pris_type,
        leveringstid, tillegg_json, gyldig_til, begrunnelse, opprettet_av, opprettet_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
     inquiryId, versjon,
     String(b.varenr || '').slice(0, 40) || null,
     String(b.eurokode || '').slice(0, 40) || null,
     String(b.oe || '').slice(0, 60) || null,
     String(b.beskrivelse || '').slice(0, 200) || null,
-    pris, prisType,
+    pris, totalPris, prisType,
     String(b.leveringstid || '').slice(0, 80) || null,
     String(b.tillegg || '').slice(0, 400) || null,
     String(b.gyldigTil || '').slice(0, 20) || null,
@@ -526,7 +530,7 @@ export async function handleTilbud(request: Request, env: Env, inquiryId: number
   ).bind(
     `tilbud-${inquiryId}-${naa}`,
     inquiryId,
-    `Tilbud v${versjon}: ${pris} kr (${prisType})${b.varenr ? ' · ' + b.varenr : ''} · ${begrunnelse}`,
+    `Tilbud v${versjon}: glass ${pris} kr${totalPris ? `, total ${totalPris} kr` : ''} (${prisType})${b.varenr ? ' · ' + b.varenr : ''} · ${begrunnelse}`,
     naa, av,
   ).run();
 
@@ -536,8 +540,8 @@ export async function handleTilbud(request: Request, env: Env, inquiryId: number
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tilEpost)) {
     return json({ ok: true, versjon, sendt: false, advarsel: 'Kunden har ingen e-postadresse — tilbudet er lagret, men ikke sendt.' });
   }
-  const sending = await sendTilbudEpost(env, tilEpost, sak.navn, sak.regnr, {
-    versjon, pris, prisType, varenr: b.varenr, beskrivelse: b.beskrivelse,
+  const sending = await sendTilbudEpost(env, tilEpost, sak.navn, sak.regnr, inquiryId, {
+    versjon, pris, totalPris: totalPris ?? undefined, prisType, varenr: b.varenr, beskrivelse: b.beskrivelse,
     leveringstid: b.leveringstid, tillegg: b.tillegg, gyldigTil: b.gyldigTil,
   });
   if (!sending.ok) return json({ ok: true, versjon, sendt: false, advarsel: sending.error || 'Utsending feilet.' });
@@ -567,16 +571,19 @@ export async function handleTilbud(request: Request, env: Env, inquiryId: number
 
 async function sendTilbudEpost(
   env: Env, til: string, navn: string, regnr: string | null,
-  q: { versjon: number; pris: number; prisType: string; varenr?: string; beskrivelse?: string; leveringstid?: string; tillegg?: string; gyldigTil?: string },
+  inquiryId: number,
+  q: { versjon: number; pris: number; totalPris?: number; prisType: string; varenr?: string; beskrivelse?: string; leveringstid?: string; tillegg?: string; gyldigTil?: string },
 ): Promise<{ ok: boolean; error?: string }> {
   const esc = (s: string) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
 
   const linjer = [
     `<p>Hei ${esc(navn || '')},</p>`,
     `<p>Her er tilbudet vårt${regnr ? ' til ' + esc(regnr) : ''}:</p>`,
+    `<p><strong>Sak:</strong> #${inquiryId}</p>`,
     '<ul>',
-    q.varenr ? `<li><strong>Glass:</strong> ${esc(q.varenr)}${q.beskrivelse ? ' — ' + esc(q.beskrivelse) : ''}</li>` : '',
+    `<li><strong>Glass:</strong> ${esc(q.beskrivelse || 'Bilglass til bilen din')}</li>`,
     `<li><strong>Glasspris inkl. mva.:</strong> ${q.pris} kr ${q.prisType === 'BEKREFTET' ? '(bekreftet)' : '(veiledende)'}</li>`,
+    q.totalPris ? `<li><strong>Totalpris inkl. mva., frakt og oppførte tillegg:</strong> ${q.totalPris} kr</li>` : '',
     q.leveringstid ? `<li><strong>Leveringstid:</strong> ${esc(q.leveringstid)}</li>` : '',
     q.tillegg ? `<li><strong>Frakt og eventuelt tilbehør:</strong> ${esc(q.tillegg)}</li>` : '',
     q.gyldigTil ? `<li><strong>Gyldig til:</strong> ${esc(q.gyldigTil)}</li>` : '',
@@ -584,29 +591,33 @@ async function sendTilbudEpost(
     q.prisType === 'VEILEDENDE'
       ? '<p>Prisen er veiledende og bekreftes før endelig bestilling.</p>'
       : '<p>Prisen er bekreftet av oss.</p>',
-    '<p>Hvis frakt eller eventuelt tilbehør ikke står oppført, kontakt oss før du bestemmer deg, så avklarer vi om noe kommer i tillegg. Montering inngår ikke; den avtaler og betaler du direkte med verkstedet.</p>',
+    '<p>Totalprisen gjelder glass, frakt og eventuelle tillegg som står oppført ovenfor. Hvis noe nødvendig mangler, kontakt oss før du godtar tilbudet. Vi avklarer eventuelle tillegg og sender deg en oppdatert totalpris. Du betaler ikke tillegg du ikke har godkjent. Montering inngår ikke; den avtaler og betaler du direkte med verkstedet.</p>',
     '<p>Du bestemmer selv om du vil godta tilbudet.</p>',
+    `<p>Hvis du sendte forespørselen mens du var logget inn, kan du følge saksstatusen på <a href="https://finnbilglass.no/innlogging">Min side</a>. Selve tilbudet og totalprisen står i denne e-posten.</p>`,
     '<p>Spørsmål? Svar på denne e-posten eller skriv til ' + esc(env.SUPPORT_EPOST || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no') + '.</p>',
     '<p>— Finnbilglass</p>',
   ].filter(Boolean).join('');
 
   return sendMail(env, {
     to: til,
-    subject: `Pristilbud${regnr ? ' — ' + regnr : ''} (v${q.versjon})`,
+    subject: `Pristilbud – sak #${inquiryId}${regnr ? ' (' + regnr + ')' : ''} (v${q.versjon})`,
     html: linjer,
     text: [
       `Hei ${navn || ''},`,
       '',
       `Her er tilbudet vårt${regnr ? ' til ' + regnr : ''}:`,
-      q.varenr ? `Glass: ${q.varenr}${q.beskrivelse ? ' — ' + q.beskrivelse : ''}` : '',
+      `Sak: #${inquiryId}`,
+      `Glass: ${q.beskrivelse || 'Bilglass til bilen din'}`,
       `Glasspris inkl. mva.: ${q.pris} kr (${q.prisType === 'BEKREFTET' ? 'bekreftet' : 'veiledende'})`,
+      q.totalPris ? `Totalpris inkl. mva., frakt og oppførte tillegg: ${q.totalPris} kr` : '',
       q.leveringstid ? `Leveringstid: ${q.leveringstid}` : '',
       q.tillegg ? `Frakt og eventuelt tilbehør: ${q.tillegg}` : '',
       q.gyldigTil ? `Tilbudet gjelder til: ${q.gyldigTil}` : '',
       '',
       q.prisType === 'VEILEDENDE' ? 'Prisen er veiledende og bekreftes før endelig bestilling.' : 'Prisen er bekreftet av oss.',
-      'Hvis frakt eller eventuelt tilbehør ikke står oppført, kontakt oss før du bestemmer deg, så avklarer vi om noe kommer i tillegg. Montering inngår ikke; den avtaler og betaler du direkte med verkstedet.',
+      'Totalprisen gjelder glass, frakt og eventuelle tillegg som står oppført ovenfor. Hvis noe nødvendig mangler, kontakt oss før du godtar tilbudet. Vi avklarer eventuelle tillegg og sender deg en oppdatert totalpris. Du betaler ikke tillegg du ikke har godkjent. Montering inngår ikke; den avtaler og betaler du direkte med verkstedet.',
       'Du bestemmer selv om du vil godta tilbudet.',
+      `Hvis du sendte forespørselen mens du var logget inn, kan du følge saksstatusen på Min side: https://finnbilglass.no/innlogging. Selve tilbudet og totalprisen står i denne e-posten.`,
       `Spørsmål? Svar på denne e-posten eller skriv til ${env.SUPPORT_EPOST || env.SUPPORT_FROM_EMAIL || 'support@finnbilglass.no'}.`,
       '',
       '— Finnbilglass',
