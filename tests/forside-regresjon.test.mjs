@@ -39,7 +39,7 @@ function normalisertTekst(h) {
 const tekst = normalisertTekst(html);
 
 test('forside: godkjent hero-tekst finnes i normalisert DOM', () => {
-  assert.match(tekst, /Finn bilglass\. Få prisen avklart\./);
+  assert.match(tekst, /Vi utfordrer prisene på bilglass\./);
 });
 
 test('forside: gammel forside er ikke tilbake', () => {

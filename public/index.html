@@ -37,7 +37,7 @@
 }
 </script>
 
-<link rel="stylesheet" href="styles.css?v=20261105-kundesider">
+<link rel="stylesheet" href="styles.css?v=20261106-utfordrer-v2">
 <link rel="icon" type="image/svg+xml" href="ikon.svg?v=20261029-customer-design-v1">
 <meta property="og:image" content="https://finnbilglass.no/assets/og-finnbilglass-2026.png">
 <meta property="og:image:width" content="1200">
@@ -138,10 +138,11 @@
   <section id="screen-start" class="screen" aria-label="Søk etter frontrute">
     <div class="start-layout">
       <div class="start-intro">
-        <p class="start-kicker">Bilglass uten forsikring</p>
-        <h1>Finn bilglass.<br><span>Få prisen avklart.</span></h1>
-        <p class="sub hero-copy-desktop">Uten glassdekning – eller må ruten byttes på grunn av slitasje?<br>Finn mulige glassvarianter til bilen din. Vi tilbyr bilglass til svært gode priser. Søkeresultatet er et utgangspunkt; vi kontrollerer glassvalg, pris og frakt før tilbud.</p>
-        <p class="sub hero-copy-mobile">Må du betale glasset selv?<br>Finn mulige glass til bilen din til en svært god pris. Vi kontrollerer glassvalg, pris og frakt før tilbud.</p>
+        <p class="start-kicker">Vi utfordrer bilglassbransjen</p>
+        <h1>Vi utfordrer prisene på <span>bilglass.</span></h1>
+        <p class="sub hero-copy-desktop">Vi er en bilglassleverandør for deg som betaler selv. Mangler du glassdekning, er ruten slitt, eller må den byttes etter EU-kontroll? Vi leverer glasset du trenger.</p>
+        <p class="sub hero-copy-mobile">Vi leverer bilglass til deg som betaler selv – uten glassdekning, ved slitasje eller når ruten må byttes etter EU-kontroll.</p>
+        <p class="hero-positioning">Vi kontrollerer glassvarianten og sender deg et tilbud på glass og levering. Montering avtaler du med verkstedet.</p>
       </div>
 
       <div class="start-search">
@@ -163,15 +164,14 @@
                 autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="20" required>
             </div>
             <button type="submit">Finn bilen med VIN</button>
-            <p class="no-plate-help">VIN identifiserer bilen, ikke nødvendigvis riktig glass. Vi kontrollerer glasset før tilbud.</p>
-            <p class="no-plate-help">Mangler du også VIN? Oppgi bilmerke, modell og anslått årsmodell når du kontakter oss. Vi legger til et eget skjema for dette.</p>
+            <p class="no-plate-help">VIN hjelper oss å identifisere bilen, men bekrefter ikke alene riktig glass. Vi kontrollerer glassvarianten før vi sender tilbud.</p>
 
             <button type="button" id="btn-manual" class="no-plate-toggle"
               aria-controls="form-manual" aria-expanded="false">Har du heller ikke VIN? Send forespørsel</button>
 </form>
           <form id="form-manual" class="search no-plate-manual hidden" novalidate
             aria-label="Manuell forespørsel uten skilt og VIN">
-            <p class="no-plate-help">Oppgi det du vet om bilen. Vi kontrollerer glassvariant, pris og levering før bestilling.</p>
+            <p class="no-plate-help">Oppgi bilmerke, modell og anslått årsmodell. Vi undersøker hvilken glassvariant som kan passe, og avklarer pris og levering før du bestemmer deg.</p>
             <label class="search-label" for="manual-make">Bilmerke</label>
             <input id="manual-make" type="text" maxlength="50" autocomplete="off" placeholder="F.eks. Volvo" required>
             <label class="search-label" for="manual-model">Modell</label>
@@ -192,8 +192,8 @@
           </form>
 
         <p id="start-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
-        <p class="supplier-note">Vi leverer glasset. Montering avtaler du selv med et verksted.</p>
-      <p class="search-reassurance">Søket viser mulige glasskandidater. Vi kontrollerer glassvalg, pris og frakt før tilbud.</p>
+        <p class="supplier-note">Vi selger og leverer glass. Montering avtaler du direkte med verkstedet.</p>
+        <p class="search-reassurance">Søket viser mulige treff, ikke en bekreftelse på at glasset passer.</p>
         <p class="svv-badge"><svg class="ikon" aria-hidden="true"><use href="#ikon-skjold"/></svg>Bildata fra Statens vegvesen</p>
       </div>
     </div>
@@ -202,6 +202,23 @@
       <article><span class="highlight-icon">▱</span><div><h2>Et tilbud før du bestemmer deg</h2><p>Send en uforpliktende forespørsel. Du velger selv om du vil godta tilbudet.</p></div></article>
       <article><span class="highlight-icon">⌁</span><div><h2>Vi leverer – verkstedet monterer</h2><p>Finnbilglass utfører ikke glasskift. Du finner selv verksted og avtaler montering direkte.</p></div></article>
       <article><span class="highlight-icon">✓</span><div><h2>OEM-glass og godkjent sikkerhetsglass</h2><p>Vi tilbyr OEM-bilglass. Glasset som tilbys, er typegodkjent sikkerhetsglass. Vi kontrollerer likevel variant og utstyr mot bilen før tilbud.</p><p><a href="/bilglass/fakta-om-bilglass">Les om OEM, E-merking og glasstyper</a></p></div></article>
+    </section>
+
+    <section class="industry-challenge" aria-labelledby="industry-challenge-title">
+      <div class="industry-challenge-copy">
+        <p class="industry-challenge-kicker">Bilglass på dine premisser</p>
+        <h2 id="industry-challenge-title">Se hele prisen før du bestemmer deg.</h2>
+        <p>Uten glassdekning, høy egenandel eller en rute med stor slitasje? Også når EU-kontrollen viser at ruten må byttes, kan du be oss om et uforpliktende tilbud på bilglass.</p>
+        <p>Hos Finnbilglass kan du kjøpe bilglass selv til konkurransedyktige priser. Vi kontrollerer glassvarianten og sender deg et tilbud med totalpris før du bestemmer deg.</p>
+        <a class="industry-challenge-link" href="#input-regnr">Finn bilglass til bilen din <span aria-hidden="true">→</span></a>
+      </div>
+      <aside class="industry-challenge-aside" aria-labelledby="deductible-title">
+        <h3 id="deductible-title">Høy egenandel?</h3>
+        <p class="deductible-amount">3 000–10 000 <span>kr</span></p>
+        <p class="deductible-caption">Egenandelen varierer med forsikringsavtalen din.</p>
+        <p>Få et tilbud på bilglasset før du bestemmer deg.</p>
+        <p class="industry-challenge-small">Montering kommer i tillegg og avtales med verkstedet.</p>
+      </aside>
     </section>
 
     <section class="offer-steps" aria-labelledby="offer-steps-title">
@@ -351,7 +368,7 @@
     <div id="resultat-sporsmaal" class="sporsmaal-block hidden" aria-label="Spørsmål om bilens utstyr" aria-live="polite"></div>
     <button id="btn-resultat-hjelp" class="link hjelp-lenke" type="button">Finner du ikke ruten? Be om hjelp</button>
     <div class="prislinje" role="status" aria-live="polite">
-      <p class="prisforklaring">Prisen i søket er et estimat for glasset inkl. mva. Frakt og eventuelt tilbehør avklares separat. Vi kontrollerer glassvalg og sender totalpris i tilbudet før du bestemmer deg.</p>
+      <p class="prisforklaring">Prisen i søket er et estimat for selve glasset, inkludert mva. Vi kontrollerer glassvarianten og oppgir totalpris, frakt og eventuelt nødvendig tilbehør i tilbudet før du bestemmer deg.</p>
     </div>
     <div id="tilbehor-seksjon" class="tilbehor hidden" aria-label="Relevant tilbehør til glasset">
       <h3>Trenger du relevant tilbehør?</h3>
@@ -364,14 +381,14 @@
       <p id="tilbehor-verify" class="note hidden">Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet.</p>
       <p class="note note-tilbehor">Tilbehørspriser oppgis i tilbudet.</p>
     </div>
-    <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Vi leverer glasset, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte.</p>
+    <p class="note"><svg class="ikon ikon-inline" aria-hidden="true"><use href="#ikon-frakt"/></svg> Montering er ikke inkludert. Du velger verksted og avtaler monteringen direkte med dem.</p>
     <button id="btn-inquiry" class="prim" type="button">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-epost"/></svg>
       Be om uforpliktende tilbud
     </button>
     <div id="inquiry-form" class="inquiry hidden" aria-label="Forespørsel om tilbud">
       <h3>Be om tilbud</h3>
-      <p class="note">Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør og sender deg pris og levering før du bestiller. Vi leverer glass, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte.</p>
+      <p class="note">Send forespørselen, så kontrollerer vi glassvariant og avklarer totalpris og levering. Du får tilbudet før du bestemmer deg. Montering er ikke inkludert og avtales direkte med verkstedet.</p>
       <div id="inquiry-oppsummering" class="soknad-oppsummering" aria-label="Dette ber du om tilbud på"></div>
       <p id="inquiry-glass-summary" class="note hidden" aria-label="Valgt glasstype"></p>
       <label class="felt">
@@ -390,7 +407,7 @@
           <option value="begge">Telefon og e-post</option>
         </select>
       </label>
-      <p class="note">Velg e-post hvis du vil ha skriftlig kvittering med saksnummer.</p>
+      <p class="note">Velg e-post for å få tilbud og saksnummer skriftlig.</p>
       <label class="felt">
         <span id="inquiry-kontakt-label">Telefonnummer</span>
         <input id="inquiry-kontakt" type="tel" autocomplete="tel" inputmode="tel" maxlength="120" placeholder="F.eks. 900 00 000">
