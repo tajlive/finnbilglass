@@ -95,6 +95,7 @@
     "wrangler": "^4.122.0"
   },
   "dependencies": {
-    "csv-parse": "^7.0.3"
+    "csv-parse": "^7.0.3",
+    "stripe": "^16.0.0"
   }
 }
