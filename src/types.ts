@@ -56,4 +56,16 @@ export interface Env {
   FINNBILGLASS_STAGING_AUTH?: D1Database;
   /** inquiries_enabled: "true" aktiverer kundeforespørsler i staging. */
   inquiries_enabled?: string;
+  KUSTOM_API_USERNAME?: string;
+  KUSTOM_API_PASSWORD?: string;
+  KUSTOM_ENABLED?: string;
+  KUSTOM_OPS_ROUTE_ENABLED?: string;
+  KUSTOM_MONEY_MOVEMENTS_ENABLED?: string;
+  KUSTOM_PRODUCTION_APPROVED?: string;
+  KUSTOM_RETURN_ORIGIN?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_CHECKOUT_ENABLED?: string;
+  STRIPE_RETURN_ORIGIN?: string;
+  STRIPE_PAYMENT_METHOD_CONFIGURATION?: string;
 }

@@ -40,6 +40,11 @@ import { handleGoogleConfig, handleGoogleLogin } from './routes/google-auth';
 import { handleOAuthStart, handleOAuthCallback, handleLinkInfo, handleProviders } from './routes/oauth';
 import { handleCspReport, cspReportOnly, reportingEndpoints } from './routes/csp';
 import { handleR2Inventar } from './routes/r2-inventar';
+import { availableCheckoutMethods, handleCreatePaymentLink, handleStripeWebhook } from './routes/stripe-payments';
+import { handleRefundPaymentOrder } from './routes/stripe-payment-refunds';
+import { handleCreateKustomPaymentLink, handleKustomCallback } from './routes/kustom-ops';
+import { handleKustomPlaygroundDiagnostics } from './routes/kustom-playground-diagnostics';
+import { handleCustomerPaymentOrders } from './routes/customer-payment-orders';
 import { handleAdminRoute } from './routes/admin';
 import { setAuthStorage } from './auth';
 import { verifiserAccess } from './access-jwt';
@@ -817,6 +822,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     const isOpsHostname = hostname === 'ops-staging.finnbilglass.no' ||
                           hostname === 'ops.finnbilglass.no';
     const isAdminRoute = path.startsWith('/ops') || path.startsWith('/api/ops/');
+    if (path === '/api/ops/kustom-playground-diagnostics') return handleKustomPlaygroundDiagnostics(request, env);
     if (isAdminRoute && !isOpsHostname) {
       return json({ ok: false, error: 'Admin-ruten er ikke tilgjengelig fra dette domene' }, 403);
     }
@@ -879,6 +885,11 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       return handleAuthRoute(request, env);
     }
 
+    if (method === 'GET' && path === '/api/payment-methods') return json({ methods: env.KUSTOM_OPS_ROUTE_ENABLED === 'true' ? [] : availableCheckoutMethods(env) });
+    if (method === 'POST' && path === '/api/stripe/webhook') return handleStripeWebhook(request, env);
+    if (method === 'POST' && path === '/api/kustom/push') return handleKustomCallback(request, env, 'push');
+    if (method === 'POST' && path === '/api/kustom/status-update') return handleKustomCallback(request, env, 'status-update');
+
     // Admin-ruter (P0 Fase 5.5)
     if (path.startsWith('/api/admin/')) {
       return handleAdminRoute(request, env);
@@ -890,6 +901,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       if (!user) {
         return json({ ok: false, error: 'IKKE_AUTENTISERT' }, 401);
       }
+
+      if (path === '/api/customer/payment-orders' || /^\/api\/customer\/payment-orders\/[A-Za-z0-9_-]{8,100}\/invoice$/.test(path)) return handleCustomerPaymentOrders(request, env, getInquiryDb(env), user.userId);
 
       // GET /api/customer/inquiries — liste kundens forespørsler
       if (method === 'GET' && path === '/api/customer/inquiries') {
@@ -1680,6 +1693,16 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     if (tilbudMatch && (method === 'GET' || method === 'POST')) {
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       return handleTilbud(request, env, Number(tilbudMatch[1]), method);
+    }
+    const paymentLinkMatch = /^\/api\/ops\/inquiries\/(\d+)\/payment-link$/.exec(path);
+    if (method === 'POST' && paymentLinkMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return env.KUSTOM_OPS_ROUTE_ENABLED === 'true' ? handleCreateKustomPaymentLink(request, env, Number(paymentLinkMatch[1])) : handleCreatePaymentLink(request, env, Number(paymentLinkMatch[1]));
+    }
+    const refundMatch = /^\/api\/ops\/inquiries\/(\d+)\/payment-orders\/([A-Za-z0-9_-]{8,100})\/refund$/.exec(path);
+    if (method === 'POST' && refundMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleRefundPaymentOrder(request, env, getInquiryDb(env), Number(refundMatch[1]), refundMatch[2]);
     }
     const epostMatch = /^\/api\/ops\/inquiries\/(\d+)\/epost$/.exec(path);
     if (method === 'GET' && epostMatch) {

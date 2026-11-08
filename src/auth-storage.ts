@@ -10,7 +10,7 @@
  */
 
 import type { D1Database } from '@cloudflare/workers-types';
-import { D1Emulator, type SessionRow, type OtpRow, type RateLimitRow } from './auth-store';
+import { D1Emulator, type SessionRow, type OtpRow, type RateLimitRow, type StaffInviteRow } from './auth-store';
 
 // ── SQL-radetyper (snake_case fra D1) ──
 interface D1SessionRow {
@@ -101,6 +101,14 @@ export interface AuthStorage {
   userGet(userId: string): Promise<AuthUser | null>;
   userGetAll(): Promise<AuthUser[]>;
   userSet(user: AuthUser & { createdAt: number; updatedAt: number }): Promise<void>;
+
+  // ── Staff invites ──
+  staffInviteGet(email: string): Promise<StaffInviteRow | null>;
+  staffInviteGetAll(): Promise<StaffInviteRow[]>;
+  staffInviteSet(invite: StaffInviteRow): Promise<void>;
+  staffInviteDelete(email: string): Promise<void>;
+  staffInviteLock(lockKey: string, owner: string, ttlMs: number): Promise<boolean>;
+  staffInviteUnlock(lockKey: string): Promise<void>;
 
   // ── Cleanup ──
   cleanupExpired(now?: number): Promise<void>;
@@ -200,6 +208,40 @@ export class D1EmulatorAuthStorage implements AuthStorage {
       role: u.role as UserRole,
       name: u.name,
     }));
+  }
+
+  // ── Staff invites ──
+  async staffInviteGet(email: string): Promise<StaffInviteRow | null> {
+    return this.store.staffInviteGet(email);
+  }
+
+  async staffInviteGetAll(): Promise<StaffInviteRow[]> {
+    return (await this.store.staffInviteGetAll()).map((i) => ({
+      email: i.email,
+      role: i.role as UserRole,
+      status: i.status,
+      invitedBy: i.invitedBy,
+      createdAt: i.createdAt,
+      updatedAt: i.updatedAt,
+      providerMessageId: i.providerMessageId,
+      lastErrorCode: i.lastErrorCode,
+    }));
+  }
+
+  async staffInviteSet(invite: StaffInviteRow): Promise<void> {
+    await this.store.staffInviteSet(invite);
+  }
+
+  async staffInviteDelete(email: string): Promise<void> {
+    await this.store.staffInviteDelete(email);
+  }
+
+  async staffInviteLock(lockKey: string, owner: string, ttlMs: number): Promise<boolean> {
+    return await this.store.staffInviteLock(lockKey, owner, ttlMs);
+  }
+
+  async staffInviteUnlock(lockKey: string): Promise<void> {
+    await this.store.staffInviteUnlock(lockKey);
   }
 
   async userSet(user: AuthUser & { createdAt: number; updatedAt: number }): Promise<void> {
@@ -335,6 +377,64 @@ export class D1AuthStorage implements AuthStorage {
     await this.db.prepare(
       'INSERT OR REPLACE INTO auth_users (user_id, email, role, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
     ).bind(user.userId, user.email, user.role, user.name, user.createdAt, user.updatedAt).run();
+  }
+
+  // ── Staff invites ──
+  async staffInviteGet(email: string): Promise<StaffInviteRow | null> {
+    const row = await this.db.prepare(
+      'SELECT email, role, status, invited_by, created_at, updated_at, provider_message_id, last_error_code FROM staff_invites WHERE email = ?'
+    ).bind(email).first<{ email: string; role: string; status: string; invited_by: string; created_at: number; updated_at: number; provider_message_id: string | null; last_error_code: string | null }>();
+    if (!row) return null;
+    return {
+      email: row.email,
+      role: row.role as 'ADMIN' | 'REVIEWER' | 'OPERATOR' | 'CUSTOMER',
+      status: row.status as 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'INVITED',
+      invitedBy: row.invited_by,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      providerMessageId: row.provider_message_id,
+      lastErrorCode: row.last_error_code,
+    };
+  }
+
+  async staffInviteGetAll(): Promise<StaffInviteRow[]> {
+    const rows = await this.db.prepare(
+      'SELECT email, role, status, invited_by, created_at, updated_at, provider_message_id, last_error_code FROM staff_invites'
+    ).all<{ email: string; role: string; status: string; invited_by: string; created_at: number; updated_at: number; provider_message_id: string | null; last_error_code: string | null }>();
+    return (rows.results ?? []).map((r) => ({
+      email: r.email,
+      role: r.role as 'ADMIN' | 'REVIEWER' | 'OPERATOR' | 'CUSTOMER',
+      status: r.status as 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'INVITED',
+      invitedBy: r.invited_by,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+      providerMessageId: r.provider_message_id,
+      lastErrorCode: r.last_error_code,
+    }));
+  }
+
+  async staffInviteSet(invite: StaffInviteRow): Promise<void> {
+    await this.db.prepare(
+      'INSERT OR REPLACE INTO staff_invites (email, role, status, invited_by, created_at, updated_at, provider_message_id, last_error_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).bind(invite.email, invite.role, invite.status, invite.invitedBy, invite.createdAt, invite.updatedAt, invite.providerMessageId, invite.lastErrorCode).run();
+  }
+
+  async staffInviteDelete(email: string): Promise<void> {
+    await this.db.prepare('DELETE FROM staff_invites WHERE email = ?').bind(email).run();
+  }
+
+  async staffInviteLock(lockKey: string, owner: string, ttlMs: number): Promise<boolean> {
+    const now = Date.now();
+    const acquired = await this.db.prepare(
+      `INSERT INTO staff_invite_locks (lock_key, owner, expires_at) VALUES (?, ?, ?)
+       ON CONFLICT(lock_key) DO UPDATE SET owner = excluded.owner, expires_at = excluded.expires_at
+       WHERE staff_invite_locks.expires_at <= ? RETURNING lock_key`
+    ).bind(lockKey, owner, now + ttlMs, now).first<{ lock_key: string }>();
+    return acquired?.lock_key === lockKey;
+  }
+
+  async staffInviteUnlock(lockKey: string): Promise<void> {
+    await this.db.prepare('DELETE FROM staff_invite_locks WHERE lock_key = ?').bind(lockKey).run();
   }
 
   // ── Cleanup ──

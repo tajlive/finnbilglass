@@ -27,6 +27,7 @@ database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
 binding = "FINNBILGLASS_STAGING_AUTH"
 database_name = "finnbilglass-staging-auth"
 database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
+migrations_dir = "migrations/staging-auth"
 
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
@@ -34,6 +35,10 @@ bucket_name = "finnbilglass-opplaering-staging"
 
 [vars]
 ENVIRONMENT = "staging"
+# Ops Access kontrolleres både av Cloudflare Access og Workerens JWT-verifisering.
+ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
+ACCESS_AUD = "8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb"
+ADMIN_EMAILS = "tomarnejensen@gmail.com"
 # Evidence-flyt feature-flags — staging verifiserer opplasting FØR prod.
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
@@ -44,6 +49,10 @@ ALL_GLASS_KANDIDATER_ENABLED = "true"
 # Tilbudsmottak må være åpent i staging for å kunne teste hele kundereisen
 # (samme flagg som prod bruker; prod styres av sin egen [vars]).
 inquiries_enabled = "true"
+# Kustom Playground er eksplisitt kun aktivert for staging.
+KUSTOM_ENABLED = "true"
+KUSTOM_OPS_ROUTE_ENABLED = "true"
+KUSTOM_MONEY_MOVEMENTS_ENABLED = "false"
 
 # ── Observability: Workers Logs-lagring AV, invocation_logs PÅ (konsistens med prod) ──
 [observability.logs]
