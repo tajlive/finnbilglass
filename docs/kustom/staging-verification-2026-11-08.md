@@ -11,6 +11,7 @@
 - `npm run test:kustom`: 37/37 PASS, 0 skipped.
 - `npm run qa`: 648/648 PASS, 0 failed, 0 skipped.
 - Gjentatt kontroll på releasekandidat med eksplisitt staging-OAuth-flag (HEAD `acb95a7bbd668b2726a4cd6e8a8efa7cbddf2bc8`): typecheck PASS, Kustom 37/37 PASS, full `npm run qa` exit status 0.
+- Fersk kontroll på dokumentasjonsoppdatert HEAD `5eb34aba28449b6ed3e950b2cae3d4c88f9a9870`: `npm run qa` exit 0; Kustom 37/37 bestått, 0 hoppet over. `npm run test:vin-gt`: 17/17 bestått, 0 hoppet over; `ground-truth.jsonl`-fixture var til stede.
 - `git diff --check`: PASS.
 - `npm audit --omit=dev --audit-level=high`: 0 sårbarheter.
 - `npm audit --audit-level=high`: 0 sårbarheter i alle avhengigheter.
