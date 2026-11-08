@@ -12,6 +12,7 @@
 - `npm run qa`: 648/648 PASS, 0 failed, 0 skipped.
 - `git diff --check`: PASS.
 - `npm audit --omit=dev --audit-level=high`: 0 sårbarheter.
+- `npm audit --audit-level=high`: 0 sårbarheter i alle avhengigheter.
 - Wrangler staging dry-run: PASS. Bare staging D1/R2-bindinger ble vist; `KUSTOM_MONEY_MOVEMENTS_ENABLED=false`.
 - Gitleaks: fire klassifiserte funn. Tre er `ACCESS_AUD`-verdier i Wrangler-konfig (audience-identifikator, ikke hemmelighet); ett er ordet «Nøkkel» i en eksisterende rapport. Ingen credential-verdi funnet i endringene.
 
