@@ -118,6 +118,20 @@ body {
   border-radius: 999px;
 }
 
+/* Inngang til kundesiden — «Min side» i toppraden. */
+.topp-lenke {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-1);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+.topp-lenke:hover { border-color: var(--brand); color: var(--brand-text); }
+
 /* Beta-info er tilgjengelig uten å konkurrere med søket. */
 .beta-invitasjon {
   margin: 18px 0 0;
@@ -1713,4 +1727,286 @@ footer {
   .customer-site #screen-glass button.glassopt .glassopt-help {
     font-size: 12px;
   }
+}
+
+
+/* ── Frontrutesøk: kandidater, spørsmål og priser (2026-10-31) ─────────── */
+.varekort strong { display: block; font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.varekort .pris { font-size: 20px; font-weight: 800; color: var(--ink); margin: 4px 0 2px; }
+.alternativer { display: grid; gap: 0; margin: 8px 0 0; }
+.alt-rad {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  padding: 10px 0; border-top: 1px solid var(--border); font-size: var(--fs-sm);
+}
+.alt-rad .alt-pris { font-weight: 700; white-space: nowrap; }
+.sporsmaal-block {
+  margin: 14px 0 0; padding: 14px; border: 1px solid var(--border);
+  border-radius: 12px; background: var(--surface);
+}
+.sporsmaal-block h3 { margin: 0 0 6px; font-size: 16px; }
+.sporsmaal { margin: 12px 0 0; }
+.sporsmaal p { margin: 0 0 4px; }
+.sporsmaal .svar-rad { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.sporsmaal .svar-rad button {
+  flex: 1 1 140px; min-height: 44px; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--border-strong); background: var(--surface);
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.sporsmaal .svar-rad button[aria-pressed="true"] {
+  border-color: var(--brand); background: var(--brand-subtle); color: var(--brand-text);
+}
+.sporsmaal .svar-rad button:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+
+@media (max-width: 480px) {
+  .alt-rad { flex-direction: column; gap: 2px; }
+  .alt-rad .alt-pris { white-space: normal; }
+}
+
+/* ══ NORDISK KLARHET (2026-11-03) ══════════════════════════════════════════
+   Lys, rolig bakgrunn · mørk tekst · grønn hovedfarge. Ett tydelig
+   hovedvalg per steg, trykkflater ≥ 44 px, rolige kort med diskret ramme.
+   Gjelder kundeflaten; /ops og administrasjon beholder sitt eget uttrykk. */
+.customer-site {
+  --nk-bg: #f5f8f6;
+  --nk-ink: #12211c;
+  --nk-muted: #53655c;
+  --nk-green: #0e6b4f;
+  --nk-green-dark: #0a5540;
+  --nk-green-soft: #e6f2ec;
+  --nk-border: #dbe5e0;
+
+  --ink: var(--nk-ink);
+  --text-2: var(--nk-muted);
+  --text-3: #7b8b83;
+  --bg: var(--nk-bg);
+  --border: var(--nk-border);
+  --border-strong: #c3d4cc;
+  --brand: var(--nk-green);
+  --brand-dark: var(--nk-green-dark);
+  --brand-deep: var(--nk-green-dark);
+  --brand-subtle: var(--nk-green-soft);
+  --brand-text: var(--nk-green-dark);
+  --surface: #ffffff;
+  --card: #ffffff;
+  background: var(--nk-bg);
+  background-attachment: scroll;
+  color: var(--nk-ink);
+}
+
+/* Skjermflaten skal aldri kunne rulle sidelengs på mobil. */
+.customer-site .screen { min-width: 0; }
+.customer-site .screen * { min-width: 0; }
+/* Innholdsbilder skal aldri flyte over, men merkelogoene har fast størrelse. */
+.customer-site img:not(.bilkort-logo):not(.logo-ikon-bilde) { max-width: 100%; height: auto; }
+.customer-site .bilkort-logo { width: 40px; height: 40px; max-width: 40px; object-fit: contain; }
+
+.customer-site :is(button, a, input, textarea, select, summary):focus-visible {
+  outline: 3px solid var(--nk-green);
+  outline-offset: 3px;
+}
+
+.customer-site #screen-start .search button,
+.customer-site .prim {
+  background: var(--nk-green);
+  border: 1px solid var(--nk-green);
+  color: #fff;
+  box-shadow: 0 2px 0 rgba(10, 85, 64, .28);
+}
+.customer-site #screen-start .search button:hover,
+.customer-site .prim:hover {
+  background: var(--nk-green-dark);
+  transform: none;
+}
+.customer-site .sek {
+  border-color: #a9cfbe;
+  color: var(--nk-green-dark);
+  background: #fff;
+}
+.customer-site .sek:hover { border-color: var(--nk-green); background: var(--nk-green-soft); }
+
+/* Leverandørrollen skal stå der kunden bestemmer seg, ikke langt nede. */
+.supplier-note {
+  margin-top: 12px;
+  color: var(--nk-ink);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+/* Én vei videre når katalogen ikke strekker til. */
+.customer-site .hjelp-lenke {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0;
+  color: var(--nk-green-dark);
+  font-size: 15px;
+  font-weight: 650;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: 0;
+}
+.customer-site .hjelp-lenke:hover { color: var(--nk-green); }
+
+/* Valgsti: «Dørrute › Fremre dørrute › Venstre side» */
+.steg-sti {
+  margin-bottom: 10px;
+  color: var(--nk-muted);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* Ett spørsmål om gangen — store trykkflater, tydelig valgt tilstand. */
+.customer-site .valg-liste {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 14px 0 6px;
+}
+@media (min-width: 420px) {
+  .customer-site .valg-liste { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.customer-site .valg-knapp {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 56px;
+  padding: 14px 16px;
+  border: 1px solid var(--nk-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--nk-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.customer-site .valg-knapp:hover { border-color: var(--nk-green); background: var(--nk-green-soft); }
+.customer-site .valg-knapp[aria-pressed="true"],
+.customer-site .valg-knapp.valgt {
+  border-color: var(--nk-green);
+  box-shadow: 0 0 0 1px var(--nk-green) inset;
+  background: var(--nk-green-soft);
+}
+.customer-site .valg-tittel { font-size: 17px; font-weight: 700; line-height: 1.3; }
+.customer-site .valg-meta { color: var(--nk-muted); font-size: 13px; font-weight: 500; }
+.customer-site .valg-vetikke { background: #fbfdfc; }
+
+/* Kandidatkort: beskrivelse, egenskaper, forskjell, pris og ett valg. */
+.customer-site .kandidat-liste { display: grid; gap: 12px; margin-top: 4px; }
+.customer-site .kandidat-kort {
+  padding: 16px;
+  border: 1px solid var(--nk-border);
+  border-radius: 14px;
+  background: #fff;
+}
+.customer-site .kandidat-kort.valgt {
+  border-color: var(--nk-green);
+  box-shadow: 0 0 0 1px var(--nk-green) inset;
+  background: #fbfefc;
+}
+.customer-site .kandidat-kort h3 { margin: 0 0 4px; font-size: 17px; font-weight: 750; letter-spacing: -.01em; }
+.customer-site .kandidat-posisjon { margin: 0 0 8px; color: var(--nk-muted); font-size: 14px; }
+.customer-site .kandidat-egenskaper { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; padding: 0; list-style: none; }
+.customer-site .kandidat-egenskaper li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--nk-green-soft);
+  color: var(--nk-green-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
+.customer-site .kandidat-forskjell { margin: 0 0 8px; }
+.customer-site .kandidat-pris { margin: 6px 0 10px; font-size: 16px; font-weight: 750; }
+.customer-site .kandidat-pris span { color: var(--nk-muted); font-size: 14px; font-weight: 500; }
+.customer-site .kandidat-kort .velg-glass { width: 100%; min-height: 48px; }
+
+/* Oppsummering før kontaktfeltene — bil, rute, ønsket glass, hva vi sjekker. */
+.customer-site .resultat-oppsummering,
+.customer-site .soknad-oppsummering {
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--nk-border);
+  border-radius: 14px;
+  background: #fff;
+}
+.customer-site .resultat-oppsummering dl,
+.customer-site .soknad-oppsummering dl {
+  display: grid;
+  grid-template-columns: minmax(84px, auto) 1fr;
+  gap: 6px 14px;
+  margin: 0;
+}
+.customer-site .resultat-oppsummering dt,
+.customer-site .soknad-oppsummering dt { color: var(--nk-muted); font-size: 14px; font-weight: 650; }
+.customer-site .resultat-oppsummering dd,
+.customer-site .soknad-oppsummering dd { margin: 0; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+@media (max-width: 420px) {
+  .customer-site .resultat-oppsummering dl,
+  .customer-site .soknad-oppsummering dl { grid-template-columns: 1fr; gap: 2px; }
+  .customer-site .resultat-oppsummering dd,
+  .customer-site .soknad-oppsummering dd { margin-bottom: 8px; }
+}
+
+/* Bekreftelse: vises først når serveren faktisk har mottatt forespørselen. */
+.customer-site .svar-bekreftelse {
+  margin: 18px 0 0;
+  padding: 18px;
+  border: 1px solid #b9dccb;
+  border-left: 5px solid var(--nk-green);
+  border-radius: 14px;
+  background: #f2faf6;
+}
+.customer-site .svar-bekreftelse h3 { margin: 0 0 6px; font-size: 19px; font-weight: 750; }
+.customer-site .svar-bekreftelse p { margin: 0; color: var(--nk-ink); font-size: 15px; line-height: 1.6; }
+
+/* Statusmeldinger: fire tilstander skal se ulike ut. */
+.customer-site .note.status {
+  color: var(--nk-ink);
+  padding: 12px 14px;
+  border-left: 4px solid var(--nk-border);
+  border-radius: 10px;
+  background: #fff;
+  font-weight: 600;
+}
+.customer-site .note.status.verify { border-left-color: var(--nk-green); background: #f4faf7; }
+.customer-site .note.status.manual { border-left-color: #b5811f; background: #fdf9f0; }
+.customer-site .note.status.teknisk-feil { border-left-color: #b23c3c; background: #fdf3f3; }
+
+/* Rutetype-knappene arver den etablerte .glassopt-stilen, men holdes rolige. */
+.customer-site #screen-glass .glassvalg { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
+@media (min-width: 520px) {
+  .customer-site #screen-glass .glassvalg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 900px) {
+  .customer-site #screen-glass .glassvalg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.customer-site #screen-glass button.glassopt {
+  min-height: 62px;
+  padding: 14px 16px;
+  border: 1px solid var(--nk-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: none;
+  text-align: left;
+}
+.customer-site #screen-glass button.glassopt:hover:not(:disabled) { border-color: var(--nk-green); background: var(--nk-green-soft); }
+.customer-site #screen-glass button.glassopt.aktiv,
+.customer-site #screen-glass button.glassopt[aria-pressed="true"] {
+  border-color: var(--nk-green);
+  background: var(--nk-green-soft);
+  box-shadow: 0 0 0 1px var(--nk-green) inset;
+}
+
+/* Separate short hero copy for narrow screens. */
+.hero-copy-mobile { display: none; }
+@media (max-width: 559px) {
+  .hero-copy-desktop { display: none; }
+  .hero-copy-mobile { display: block; }
 }

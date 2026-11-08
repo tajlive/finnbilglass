@@ -5,9 +5,8 @@
  * migrations/staging/0002_apify_catalog_products.sql, and upserts into D1 with
  * idempotency guarantees.
  *
- * PRICE POLICY: Glavista publishes a suggested retail price in EUR. A EUR figure
- * is never written into `pris` (which is NOK-only). Source figures are kept in
- * pris_eur + pris_valuta + pris_kilde so nothing is invented.
+ * PRICE POLICY (Tom 2026-10-31): Glavista's EUR retail figure is not FinnBilGlass'
+ * sale price and is discarded. `pris` is retained only for confirmed NOK prices.
  *
  * IDENTITY POLICY: a catalog row is not tied to a vehicle, so vin_hash is '' for
  * every catalog product. A hash that only encodes the eurocode would look like a
@@ -140,9 +139,9 @@ export class ApifyCatalogAdapter {
         const now = new Date().toISOString();
         const eurocode = (product.eurokode || product.varenr || '').toUpperCase().trim();
 
-        const prisValuta = (product.pris_valuta || '').toUpperCase() || null;
+        const prisValuta = (product.pris_valuta || '').toUpperCase() === 'NOK' ? 'NOK' : null;
         const prisNok = prisValuta === 'NOK' ? num(product.pris) : null;
-        const prisEur = num(product.pris_eur);
+        const prisEur = null;
 
         return {
             probe_id: this.probeId,
@@ -156,7 +155,7 @@ export class ApifyCatalogAdapter {
             pris: prisNok,
             pris_eur: prisEur,
             pris_valuta: prisValuta,
-            pris_kilde: prisEur !== null || prisNok !== null ? (product.pris_kilde || 'glavista_suggested_retail') : null,
+            pris_kilde: prisNok !== null ? (product.pris_kilde || 'prisliste') : null,
             brand_title: product.brand_title || '',
             category: product.category_string || 'Windscreen',
             url: product.url || '',

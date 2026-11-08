@@ -94,9 +94,11 @@ const pl = harFixtures
   ? readFileSync(join(FIX, 'glass-prisliste.jsonl'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l))
   : [];
 
+// Alle prisrader per kode (varenr ELLER eurokode) — speiler prisKandidater():
+// ett varenr kan ha flere varianter, og L1 skal se dem alle (VERIFY, ikke gjett).
+const plRader = pl.filter((r) => r.rad_type === 'glass');
 const plMap = new Map();
-for (const r of pl) {
-  if (r.rad_type !== 'glass') continue;
+for (const r of plRader) {
   if (r.varenr != null && !plMap.has(String(r.varenr))) plMap.set(String(r.varenr), r);
   if (r.eurokode != null && !plMap.has(String(r.eurokode))) plMap.set(String(r.eurokode), r);
 }
@@ -108,27 +110,49 @@ for (const r of gt) {
   byKey.get(key).push(r);
 }
 
-async function tilKandidat(kode) {
-  const r = plMap.get(String(kode));
-  if (!r) return null;
-  const dek = dekodeEurokode(r.eurokode);
-  const att = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
-  if (dek.posisjon) {
-    att.sensor = dek.egenskaper.includes('sensor');
-    att.antenne = dek.egenskaper.includes('antenne');
-    att.coated = dek.egenskaper.includes('coated');
-    att.hud = dek.egenskaper.includes('oppvarmet');
-  }
-  return { varenr: r.varenr, varenavn: r.varenavn, pris: null, listepris: r.pris, eurokode: r.eurokode, attributter: att };
+async function tilKandidater(kode) {
+  const kode_ = String(kode);
+  const treff = plRader.filter((r) => String(r.varenr) === kode_ || String(r.eurokode ?? '') === kode_);
+  return treff.map((r) => {
+    const dek = dekodeEurokode(r.eurokode);
+    const att = { sensor: null, antenne: null, hud: null, kamera: null, adas: null, coated: null };
+    if (dek.posisjon) {
+      att.sensor = dek.egenskaper.includes('sensor');
+      att.antenne = dek.egenskaper.includes('antenne');
+      att.coated = dek.egenskaper.includes('coated');
+      att.hud = dek.egenskaper.includes('oppvarmet');
+    }
+    return { varenr: r.varenr, varenavn: r.varenavn, pris: null, listepris: r.pris, eurokode: r.eurokode, attributter: att };
+  });
 }
 
 test('fixtures: ground-truth.jsonl er til stede (dump-d1-fixtures.mjs)', { skip: !harFixtures }, () => {
-  // Prod-D1 ground_truth = 36 180 rader (2026-08-19): gt-generert.sql = 34 393
-  // (34 201 i DB etter deduplisering) + b2b-seed. Terskel 35 000 gir margin for
-  // fremtidig filtrering — bevisst IKKE ≥ 40 000: prod-D1 er ikke komplett, og
-  // kjente sekundærgap (ece_r43 = 1 testrad, vin_ktype_map = 0) løses ikke her.
-  assert.ok(gt.length > 35000, `forventet ≥ 35 000 GT-rader, fikk ${gt.length}`);
-  assert.ok(pl.length > 25000, `forventet ≥ 25 000 prisliste-rader, fikk ${pl.length}`);
+  // TALLET ER IKKE LENGER HARDKODET. dump-d1-fixtures.mjs skriver manifest.json
+  // med DB-ens egen COUNT(*) etter dumpen, så guarden fanger BÅDE stille
+  // data-tap og utdaterte terskler.
+  // Historikk: 2026-08-19 var prod 36 180 GT-rader og terskelen var fast 35 000.
+  // 2026-08-24 fjernet GT-guarden 3 873 side-/bak-/dørruter fra ground_truth
+  // (32 307 igjen). Den faste terskelen ble da en falsk rød test (målt
+  // 2026-11-04: forventet ≥ 35 000, fikk 32 307) — den målte et historisk tall,
+  // ikke dagens DB.
+  const manifestSti = join(FIX, 'manifest.json');
+  if (existsSync(manifestSti)) {
+    const m = JSON.parse(readFileSync(manifestSti, 'utf8'));
+    assert.equal(
+      gt.length,
+      m.ground_truth.dumpet,
+      `GT-dump (${gt.length}) ≠ manifest (${m.ground_truth.dumpet}) — stille data-tap eller manglende regenerering`
+    );
+    assert.equal(
+      pl.length,
+      m.glass_prisliste.dumpet,
+      `prisliste-dump (${pl.length}) ≠ manifest (${m.glass_prisliste.dumpet})`
+    );
+  } else {
+    // Uten manifest: grove gulv som bare fanger kollaps, ikke normal drift.
+    assert.ok(gt.length > 30000, `forventet > 30 000 GT-rader, fikk ${gt.length}`);
+    assert.ok(pl.length > 25000, `forventet > 25 000 prisliste-rader, fikk ${pl.length}`);
+  }
   // dump-d1-fixtures.mjs må fange også rest-radene utenfor 10-års-chunkene
   // (year < 1940 / >= 2030 — prod har 321, bl.a. dummy-år 1500 og 2060).
   // Denne guarden forhindrer at et stille data-tap (36 180 → 35 859) gjeninnføres.
@@ -201,7 +225,8 @@ test('GT-konsistens mot test-500-gt-detaljer: entydige sett må komme fra en mat
 
 test('L1-kandidater: VOLVO TRUCKS F16 blir salgbar PINPOINT-kandidat (1318GN)', { skip: !harFixtures }, async () => {
   const rader = [...(byKey.get('VOLVO TRUCKS|1984') ?? []), ...(byKey.get('VOLVO|1984') ?? [])];
-  const kand = await gtRaderKandidater(rader, 'VOLVO', 'F16', [1984], tilKandidat);
+  const kand = await gtRaderKandidater(rader, 'VOLVO', 'F16', [1984], tilKandidater);
+  // 1318GN har nøyaktig én prisraderad (8813AGN1A) → entydig kandidat.
   assert.equal(kand.length, 1);
   assert.equal(kand[0].varenr, '1318GN');
 });

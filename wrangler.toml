@@ -29,6 +29,8 @@ bucket_name = "finnbilglass-opplaering"
 
 [vars]
 ENVIRONMENT = "production"
+# Public payment functions remain off until a separately approved live release.
+PAYMENTS_ENABLED = "false"
 # Evidence-flyt feature-flags — avgrenset release (Tom 2026-08-19): kun opplasting åpen.
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
@@ -39,6 +41,46 @@ EVIDENCE_STATUS_CHANGE_ENABLED = "true"
 [observability.logs]
 enabled = false
 invocation_logs = true
+
+# Staging-miljø: holdes adskilt fra top-level produksjonsbindinger.
+[env.staging]
+workers_dev = true
+routes = []
+[env.staging.vars]
+ENVIRONMENT = "staging"
+PAYMENTS_ENABLED = "false"
+ALL_GLASS_KANDIDATER_ENABLED = "true"
+ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
+ACCESS_AUD = "8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb"
+ADMIN_EMAILS = "tomarnejensen@gmail.com"
+OAUTH_ENABLED_PROVIDERS = "google"
+EVIDENCE_UPLOAD_ENABLED = "true"
+EVIDENCE_REVIEW_ENABLED = "false"
+EVIDENCE_STATUS_CHANGE_ENABLED = "false"
+inquiries_enabled = "true"
+KUSTOM_ENABLED = "true"
+KUSTOM_OPS_ROUTE_ENABLED = "false"
+KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED = "false"
+KUSTOM_MONEY_MOVEMENTS_ENABLED = "false"
+
+[[env.staging.d1_databases]]
+binding = "FINNBILGLASS_DB"
+database_name = "finnbilglass-staging-catalog"
+database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
+migrations_dir = "migrations/staging"
+
+[[env.staging.d1_databases]]
+binding = "FINNBILGLASS_STAGING_AUTH"
+database_name = "finnbilglass-staging-auth"
+database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
+migrations_dir = "migrations/staging-auth"
+
+[[env.staging.r2_buckets]]
+binding = "OPPLAERING_BUCKET"
+bucket_name = "finnbilglass-opplaering-staging"
+
+[env.staging.ai]
+binding = "AI"
 
 # ── Statisk frontend (prototype public/) ──────────────────────
 [assets]

@@ -1,0 +1,37 @@
+/* Side-spesifikke stiler for min-side.html — flyttet ut for strengere CSP. */
+.portal-container { max-width: 1120px; margin: 0 auto; padding: 24px; }
+  .portal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .portal-header h1 { font-size: 28px; font-weight: 800; color: #0F172A; margin: 0; }
+  .portal-actions { display: flex; gap: 12px; }
+  .btn-primary { padding: 12px 24px; border-radius: 12px; background: #F59E0B; color: #FFFFFF; border: none; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-secondary { padding: 12px 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E2E8F0; color: #0F172A; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .btn-logout { padding: 12px 24px; border-radius: 12px; background: #F8FAFC; border: 1px solid #E2E8F0; color: #64748B; font-size: 15px; cursor: pointer; }
+  .section { margin-bottom: 32px; }
+  .section-title { font-size: 18px; font-weight: 800; color: #0F172A; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+  .card-title { font-size: 16px; font-weight: 700; color: #0F172A; margin-bottom: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .car-card { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 12px; }
+  .car-info { flex: 1; }
+  .car-name { font-size: 16px; font-weight: 700; color: #0F172A; }
+  .car-regnr { font-size: 14px; color: #64748B; font-family: monospace; letter-spacing: 0.5px; }
+  .car-status { font-size: 13px; color: #94A3B8; margin-top: 4px; }
+  .quote-card { display: flex; justify-content: space-between; align-items: center; padding: 16px; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 12px; }
+  .quote-info { flex: 1; }
+  .quote-name { font-size: 16px; font-weight: 700; color: #0F172A; }
+  .quote-price { font-size: 18px; font-weight: 800; color: #059669; font-family: monospace; }
+  .quote-status { font-size: 13px; color: #94A3B8; margin-top: 4px; }
+  .empty-state { text-align: center; padding: 48px 24px; color: #94A3B8; }
+  .empty-state h3 { font-size: 18px; font-weight: 700; color: #0F172A; margin-bottom: 8px; }
+  .file-upload { border: 2px dashed #E2E8F0; border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; }
+  .file-upload:hover { border-color: #F59E0B; }
+  .upload-icon { font-size: 32px; margin-bottom: 12px; }
+  .upload-text { font-size: 15px; color: #64748B; }
+  .alert-banner { background: #FFF7ED; border: 1px solid #FCD34D; border-radius: 12px; padding: 16px; margin-bottom: 24px; color: #92400E; font-size: 14px; }
+  .alert-banner strong { color: #B45309; }
+  .user-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: #F8FAFC; border: 1px solid #E2E8F0; font-size: 14px; color: #475569; }
+  .nav-tabs { display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid #E2E8F0; padding-bottom: 16px; }
+  .nav-tab { font-size: 15px; font-weight: 600; color: #94A3B8; cursor: pointer; border-bottom: 2px solid transparent; }
+  .nav-tab.active { color: #F59E0B; border-bottom-color: #F59E0B; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }

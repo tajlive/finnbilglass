@@ -134,12 +134,13 @@ test('forside: alle lokale assets som refereres finnes på disk', () => {
   const mangler = [];
   for (const r of refs) {
     if (ignorer(r)) continue;
-    const sti = join(ROOT, 'public', r.replace(/^\//, ''));
+    // Bilglassguider serveres av Worker-ruten /bilglass/:slug fra .html-filer.
+    const sti = join(ROOT, 'public', r.replace(/^\//, '') + (/^\/bilglass\/[a-z0-9-]+$/.test(r) ? '.html' : ''));
     if (!existsSync(sti) || statSync(sti).size === 0) mangler.push(r);
   }
   assert.deepEqual(mangler, [], `manglende assets: ${mangler.join(', ')}`);
 });
 
 function ignorer(r) {
-  return /^\/(api\/|logg-inn|min-side|ops$|bilglass-uten-forsikring$|om-oss$|personvern$)/.test(r);
+  return /^\/(api\/|logg-inn|login|innlogging|min-side|ops$|bilglass-uten-forsikring$|om-oss$|personvern$|personopplysninger$|betaling$)/.test(r);
 }

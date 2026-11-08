@@ -1,101 +1,83 @@
 #!/usr/bin/env node
 /**
- * Dump ground_truth + glass_prisliste fra prod-D1 (finnbilglass-db) til
- * data/fixtures/ som JSONL — lokale test-fixtures (kjøres uten nettverk).
- *
- * Korrekthet (2026-08-19):
- * - ground_truth dumpes i 10-års-chunks [1940,2030) PLUSS en eksplisitt
- *   rest-query (year IS NULL OR year < 1940 OR year >= 2030). Prod har 321
- *   slike rader (dummy-år 1500–1939 / 2030–2060) som ellers ville forsvunnet
- *   stille fra fixturen (36 180 → 35 859). Totalsjekk mot SELECT COUNT(*)
- *   feiler hvis noe faller ut.
- * - glass_prisliste dumpes i OFFSET-chunks (5000) med totalsjekk.
- * - Manifest skrives til data/fixtures/manifest.json (tid, DB, antall per
- *   del). data/fixtures/ er gitignored — kjør scriptet for å regenerere
- *   fixtures før npm test (7 GT-fixture-tester skippes uten dem).
- *
- * Bruk: node scripts/dump-d1-fixtures.mjs
- * Krever CLOUDFLARE_API_TOKEN (klarpakke/.env.local) + CLOUDFLARE_ACCOUNT_ID.
+ * Export the two approved catalog tables from FinnBilGlass staging D1 only.
+ * Wrangler uses the existing local Cloudflare OAuth context; this script never
+ * reads secrets from environment files or invokes the Cloudflare REST API.
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildPageQuery, buildWranglerArgs, parseReadOnlyD1Result } from './lib/staging-catalog-fixtures.mjs';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT = join(ROOT, 'data', 'fixtures');
-const ACCOUNT = process.env.CLOUDFLARE_ACCOUNT_ID ?? '80d5b1d56a3e907150ba7348b6182894';
-const DB = process.env.FINNBILGLASS_DB_UUID ?? 'ac35018c-0d43-4742-adf8-d881b7274684'; // prod
+const PAGE_SIZE = 10000;
 
-async function main() {
-  const fs = await import('node:fs');
-  let tok = process.env.CLOUDFLARE_API_TOKEN;
-  if (!tok) {
-    try {
-      const env = fs.readFileSync('/Users/taj/klarpakke/.env.local', 'utf8');
-      const m = env.match(/^CLOUDFLARE_API_TOKEN="?([^"\n]+)"?/m);
-      if (m) tok = m[1];
-    } catch { /* ignore */ }
+function runSelect(sql) {
+  let stdout;
+  try {
+    stdout = execFileSync('npx', ['wrangler', ...buildWranglerArgs(sql)], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      maxBuffer: 64 * 1024 * 1024,
+    });
+  } catch {
+    throw new Error('FinnBilGlass staging D1 SELECT feilet; sjekk Wrangler-innlogging og staging-binding. Ingen feildetaljer logges.');
   }
-  if (!tok) throw new Error('CLOUDFLARE_API_TOKEN mangler');
-  const H = { Authorization: `Bearer ${tok}`, 'Content-Type': 'application/json' };
-  mkdirSync(OUT, { recursive: true });
-
-  const q = async (sql) => {
-    const r = await (await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT}/d1/database/${DB}/query`, {
-      method: 'POST', headers: H, body: JSON.stringify({ sql }),
-    })).json();
-    if (!r.success) throw new Error('D1-query feilet: ' + JSON.stringify(r.errors) + ' — SQL: ' + sql.slice(0, 120));
-    return r.result?.[0]?.results ?? [];
-  };
-
-  // ── ground_truth: 10-års-chunks [1940,2030) + eksplisitt rest ─────────────
-  const gt = [];
-  const chunkTeller = {};
-  for (let y = 1940; y <= 2020; y += 10) {
-    const rader = await q(`SELECT make, model, year, frontrute_eurocode, confidence FROM ground_truth
-      WHERE year >= ${y} AND year < ${y + 10}`);
-    gt.push(...rader);
-    chunkTeller[`${y}-${y + 9}`] = rader.length;
-  }
-  const rest = await q(`SELECT make, model, year, frontrute_eurocode, confidence FROM ground_truth
-    WHERE year IS NULL OR year < 1940 OR year >= 2030`);
-  gt.push(...rest);
-
-  // Totalsjekk: chunks + rest må matche SELECT COUNT(*) — aldri stille tap.
-  const total = (await q('SELECT COUNT(*) AS n FROM ground_truth'))[0]?.n ?? -1;
-  if (gt.length !== total) {
-    throw new Error(`ground_truth-uttrekk ufullstendig: ${gt.length} rader dumpet, men ${total} i DB. Fiks dump-scriptet.`);
-  }
-
-  writeFileSync(join(OUT, 'ground-truth.jsonl'), gt.map((r) => JSON.stringify(r)).join('\n') + '\n');
-  console.log(`ground_truth: ${gt.length} rader (i DB: ${total}; rest utenfor 1940-2029: ${rest.length}) → ${join(OUT, 'ground-truth.jsonl')}`);
-
-  // ── glass_prisliste: OFFSET-chunks (5000) ────────────────────────────────
-  const pl = [];
-  for (let off = 0; ; off += 5000) {
-    const rader = await q(`SELECT varenr, varenavn, kommentar, pris, eurokode, rad_type FROM glass_prisliste LIMIT 5000 OFFSET ${off}`);
-    pl.push(...rader);
-    if (rader.length < 5000) break;
-  }
-  const plTotal = (await q('SELECT COUNT(*) AS n FROM glass_prisliste'))[0]?.n ?? -1;
-  if (pl.length !== plTotal) {
-    throw new Error(`glass_prisliste-uttrekk ufullstendig: ${pl.length} rader dumpet, men ${plTotal} i DB.`);
-  }
-  writeFileSync(join(OUT, 'glass-prisliste.jsonl'), pl.map((r) => JSON.stringify(r)).join('\n') + '\n');
-  console.log(`glass_prisliste: ${pl.length} rader → ${join(OUT, 'glass-prisliste.jsonl')}`);
-
-  // ── Manifest (sporbarhet) ────────────────────────────────────────────────
-  const manifest = {
-    dumpet: new Date().toISOString(),
-    db_uuid: DB,
-    db_navn: 'finnbilglass-db (prod)',
-    ground_truth: { i_db: total, dumpet: gt.length, aar_chunks: chunkTeller, rest_utenfor_1940_2029: rest.length },
-    glass_prisliste: { i_db: plTotal, dumpet: pl.length },
-  };
-  writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n');
-
-  console.log(`ferdig. Størrelse: ${(fs.statSync(join(OUT, 'ground-truth.jsonl')).size + fs.statSync(join(OUT, 'glass-prisliste.jsonl')).size) / 1e6} MB`);
-  console.log(`manifest: ${join(OUT, 'manifest.json')}`);
+  return parseReadOnlyD1Result(stdout);
 }
 
-main().catch((e) => { console.error('FEIL:', e.message); process.exit(1); });
+function readTable(table) {
+  const totalRows = Number(runSelect(`SELECT COUNT(*) AS n FROM ${table}`)[0]?.n);
+  if (!Number.isSafeInteger(totalRows) || totalRows < 0) throw new Error(`ugyldig radantall for ${table}`);
+  const rows = [];
+  for (let offset = 0; offset < totalRows; offset += PAGE_SIZE) {
+    rows.push(...runSelect(buildPageQuery(table, PAGE_SIZE, offset)));
+  }
+  if (rows.length !== totalRows) throw new Error(`radantall stemmer ikke for ${table}: ${rows.length} av ${totalRows}`);
+  return rows;
+}
+
+function encode(rows) {
+  return `${rows.map((row) => JSON.stringify(row)).join('\n')}\n`;
+}
+
+function writePrivate(path, content) {
+  writeFileSync(path, content, { mode: 0o600 });
+  chmodSync(path, 0o600);
+}
+
+function main() {
+  mkdirSync(OUT, { recursive: true, mode: 0o700 });
+  chmodSync(OUT, 0o700);
+
+  const gt = encode(readTable('ground_truth'));
+  const priceList = encode(readTable('glass_prisliste'));
+  const gtPath = join(OUT, 'ground-truth.jsonl');
+  const pricePath = join(OUT, 'glass-prisliste.jsonl');
+  writePrivate(gtPath, gt);
+  writePrivate(pricePath, priceList);
+
+  const manifest = {
+    dumpet: new Date().toISOString(),
+    source: 'FinnBilGlass staging D1 via Wrangler OAuth',
+    ground_truth: {
+      dumpet: gt.trimEnd().split('\n').length,
+      sha256: createHash('sha256').update(gt).digest('hex'),
+    },
+    glass_prisliste: {
+      dumpet: priceList.trimEnd().split('\n').length,
+      sha256: createHash('sha256').update(priceList).digest('hex'),
+    },
+  };
+  writePrivate(join(OUT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(`Staging-fixtures oppdatert: ground_truth=${manifest.ground_truth.dumpet}, glass_prisliste=${manifest.glass_prisliste.dumpet}; SHA-256 skrevet i lokal gitignored manifest.`);
+}
+
+try { main(); } catch (error) {
+  console.error(`FEIL: ${error.message}`);
+  process.exitCode = 1;
+}
