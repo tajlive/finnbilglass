@@ -10,6 +10,7 @@
 - `npm run typecheck`: PASS.
 - `npm run test:kustom`: 37/37 PASS, 0 skipped.
 - `npm run qa`: 648/648 PASS, 0 failed, 0 skipped.
+- Gjentatt kontroll på kandidat-HEAD `5256c4fa43548cb2c5b0af68cdd90e4a464cf15e`: typecheck PASS, Kustom 37/37 PASS, full `npm run qa` exit status 0.
 - `git diff --check`: PASS.
 - `npm audit --omit=dev --audit-level=high`: 0 sårbarheter.
 - `npm audit --audit-level=high`: 0 sårbarheter i alle avhengigheter.
@@ -34,7 +35,10 @@ Kustoms dokumentasjon sier at API-username normalt er `<MID>-<randomsuffix>`, me
 - Korrigert ADMIN-allowlist-diagnostikk: `6116da08-63b9-4496-a7b0-3cf715b81b0c`.
 - Etter credential-scope-avvik ble staging-worker rullet tilbake til `0bed424b-b66a-41ed-9f5a-1f0e6cd3854f` (100%).
 - Chrome viste deretter `Siden finnes ikke` for diagnostikk-URL-en. Diagnostikkruten er ikke aktiv i staging.
+- Ny kontroll etter at credentials kunne ha blitt oppdatert: midlertidig versjon `400730b8-9ab7-4a08-94a4-8cde93773d40` ga samme HTTP 409 og samme scope-mismatch, uten Kustom-kall. Rullet straks tilbake til `0bed424b-b66a-41ed-9f5a-1f0e6cd3854f` på 100%; Chrome-innlasting etter tilbakeføring viste `Siden finnes ikke`.
 - Ingen D1-migrering ble kjørt. Produksjons-worker og produksjonsbindinger ble ikke endret.
+
+Wrangler dry-run viser også en uavklart konfigurasjonsadvarsel: `OAUTH_ENABLED_PROVIDERS` er satt på toppnivå, men ikke under `env.staging.vars`. Google OAuth i staging må derfor kontrolleres før full innloggings-/administrasjons-E2E; verdien ble ikke endret.
 
 ## Gjenstående leverandørblokkering
 
