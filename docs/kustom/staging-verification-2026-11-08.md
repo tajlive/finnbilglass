@@ -7,6 +7,7 @@
 ## Releasekandidat og QA
 
 - Arbeidsgren: `release/fbg-kustom-staging-20261108`, basert på `c371624aeb34d630e3b232eb45aa4831b5fb1284`.
+- Releasekandidat-commit: `6a457ba7c27e5cded3ab59e9e315495dbb33f35e`; draft PR [#29](https://github.com/tajlive/finnbilglass/pull/29) er åpen. GitHub Actions-run `42482293742`: Typecheck, Testsuite og skanning etter secrets-filer PASS. PR er ikke merget og dette er ikke en produksjonsrelease.
 - `npm run typecheck`: PASS.
 - `npm run test:kustom`: 37/37 PASS, 0 skipped.
 - `npm run qa`: 648/648 PASS, 0 failed, 0 skipped.
