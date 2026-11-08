@@ -8,6 +8,7 @@
 
 - Arbeidsgren: `release/fbg-kustom-staging-20261108`, basert på `c371624aeb34d630e3b232eb45aa4831b5fb1284`.
 - Kustom-kodecommit: `6a457ba7c27e5cded3ab59e9e315495dbb33f35e`. Siste dokumentasjonsoppdatering / kandidat-HEAD: `ecf2ca9d`; draft PR [#29](https://github.com/tajlive/finnbilglass/pull/29) er åpen. GitHub Actions-run `42482470005`: Typecheck, Testsuite og skanning etter secrets-filer PASS. PR er ikke merget og dette er ikke en produksjonsrelease.
+- Nyeste kontrollerte kandidat-HEAD før dette rapporttillegget: `5d0a17b606c90be1331d0ffb0f9145484643f768`. Draft PR #29 er fortsatt åpen; gjeldende PR-verifisering `42482555511` PASS.
 - `npm run typecheck`: PASS.
 - `npm run test:kustom`: 37/37 PASS, 0 skipped.
 - `npm run qa`: 648/648 PASS, 0 failed, 0 skipped.
@@ -19,6 +20,7 @@
 - Wrangler staging dry-run: PASS. Bare staging D1/R2-bindinger ble vist; `KUSTOM_MONEY_MOVEMENTS_ENABLED=false`.
 - Gitleaks: fire klassifiserte funn. Tre er `ACCESS_AUD`-verdier i Wrangler-konfig (audience-identifikator, ikke hemmelighet); ett er ordet «Nøkkel» i en eksisterende rapport. Ingen credential-verdi funnet i endringene.
 - Denne arbeidskopiens `npm run qa`: 648/648 PASS, 0 hoppet over. Etterpå ble `npm run test:kustom` kjørt på siste kode: 37/37 PASS, 0 hoppet over; `npm run typecheck`, `git diff --check`, staging dry-run og `npm audit --omit=dev --audit-level=high` PASS.
+- Ny fersk kjøring på HEAD `5d0a17b606c90be1331d0ffb0f9145484643f768`: `npm run qa` avsluttet med exit 0; `npm audit --omit=dev --audit-level=high` rapporterte 0 sårbarheter; worktree var ren og `git diff --check` PASS. Dette er lokal QA, ikke staging- eller Chrome E2E.
 
 ## Playground-tilgang
 
@@ -51,6 +53,12 @@ Kustoms dokumentasjon sier at API-username normalt er `<MID>-<randomsuffix>`, og
 - Ny, korrigert Playground-MID-diagnostikk ble midlertidig deployet som versjon `0c0d1896-99c2-44f9-9773-0ffe888a9bd1`, deretter flere transportdiagnostikkversjoner og til slutt `290b605c-9950-46b4-add5-0b5aade6357e`. Den siste ga vellykkede GET-resultater over. Umiddelbart etterpå ble staging rullet tilbake til `0bed424b-b66a-41ed-9f5a-1f0e6cd3854f` (100%). Chrome viste `Siden finnes ikke`; diagnostikkruten er deaktivert.
 - Ingen D1-migrering ble kjørt. Produksjons-worker og produksjonsbindinger ble ikke endret.
 
+### Siste skrivebeskyttede Cloudflare-kontroll
+
+- `wrangler deployments list --name finnbilglass-frontrute-staging` viser staging-worker `finnbilglass-frontrute-staging` med versjon `0bed424b-b66a-41ed-9f5a-1f0e6cd3854f` på 100% etter rollback. Ingen ny versjon ble publisert i denne kontrollen.
+- Wrangler-konfigurasjonene for staging peker på konto-ID `80d5b1d56a3e907150ba7348b6182894`; `wrangler whoami` viser visningsnavnet `KLARPAKKE` for denne kontoen. Dette er kontovisningsnavnet, ikke FinnBilGlass-stagingens URL. Chrome viste kun FinnBilGlass på `finnbilglass-frontrute-staging.tomarnejensen.workers.dev`; `klarpakke.no` eller Kustoms produksjonsportal ble ikke åpnet. Konto-/eierskapskoblingen må eksplisitt avklares før flere stagingpubliseringer, for å sikre at FinnBilGlass staging skal ligge i denne kontoen.
+- Den eksisterende staging-workerens offentlige visning er FinnBilGlass. Den lokale diagnostikkruten er ikke publisert, og Kustom-konfigurasjonen har ikke endret seg.
+
 Wrangler viste først at `OAUTH_ENABLED_PROVIDERS` manglet under `env.staging.vars`. Jeg la inn `google` eksplisitt i releasekandidaten; secret-navnene for Google OAuth finnes i Cloudflare staging (verdiene ble ikke lest). Etter endringen passerer staging dry-run uten denne advarselen. Den aktive staging Worker ble rullet tilbake til versjonen før diagnostikk og har ennå ikke fått denne kandidatendringen; OAuth-innlogging og admin-E2E gjenstår.
 
 ## Elements- og Chrome-funn
@@ -78,4 +86,5 @@ Wrangler viste først at `OAUTH_ENABLED_PROVIDERS` manglet under `env.staging.va
 - Playground Merchant ID: **PM00730041**. Produksjons-ID `M00808102` ble ikke bekreftet i Playground og fikk ikke samme MID i konfigurasjonssvarene.
 - Staging-origin må tillates i Elements-klienten før staging Elements kan fungere. Det må gjøres kun etter at Kustom har bekreftet at endringen er kostnadsfri og i riktig Playground-klient; denne oppgaven endret ikke Kustom-innstillinger.
 - En syntetisk Playground HPP-ordre og individuell Visa/Mastercard/Vipps-verifisering gjenstår. Ingen ekte penger, capture eller refund.
+- Etter den siste QA-kontrollen ble det ikke opprettet syntetisk ordre eller HPP-session. Stagingkontoens Cloudflare-eierskap er uavklart, så det er ikke trygt å publisere ny midlertidig diagnostikk før den koblingen er bekreftet.
 - Katalog-D1 migration tracking er uavklart (`0001`–`0048c` ser ventende ut), admin/OAuth-E2E og full desktop/mobil kundereise gjenstår. Produksjonsrelease: **NO-GO**.
