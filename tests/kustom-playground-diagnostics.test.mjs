@@ -5,7 +5,7 @@ import { handleKustomPlaygroundDiagnostics } from '../src/routes/kustom-playgrou
 const admin = { epost: 'admin@example.com' };
 const env = {
   ENVIRONMENT: 'staging', ADMIN_EMAILS: 'admin@example.com',
-  KUSTOM_API_USERNAME: 'M00808102-key', KUSTOM_API_PASSWORD: 'kco_test_api_test',
+  KUSTOM_API_USERNAME: 'PM00730041-key', KUSTOM_API_PASSWORD: 'kco_test_api_test',
 };
 function request({ host = 'ops-staging.finnbilglass.no', method = 'GET', path = '/api/ops/kustom-playground-diagnostics', headers = {} } = {}) {
   return new Request(`https://${host}${path}`, { method, headers });
@@ -60,7 +60,7 @@ test('authenticated diagnostic queries fixed Playground GET endpoints and projec
       return Response.json({ merchantId: 'M00808102', country: 'NO', revision: 10,
         expressCheckoutPaymentMethods: [{ method: 'klarna', enabled: false }, { method: 'googlePay', enabled: true }], updatedBy: 'drop-me' });
     }
-    return Response.json([{ id: 'playground_af2f89ec-92ca-4e8c-949f-0854a62d90ee', merchant_id: 'M00808102',
+  return Response.json([{ id: 'playground_af2f89ec-92ca-4e8c-949f-0854a62d90ee', merchant_id: 'PM00730041',
       allowed_origins: ['https://preview.finnbilglass.no'], placements: [{ key: 'primary', content: [{ type: 'PAYMENT_METHOD' }] }], credentials: 'drop-me' }]);
   };
   const res = await handleKustomPlaygroundDiagnostics(request(), env, deps({ fetcher }));
@@ -72,7 +72,7 @@ test('authenticated diagnostic queries fixed Playground GET endpoints and projec
   assert.deepEqual(body.expressCheckoutPaymentMethods.allCountries.configuration[0].expressCheckoutPaymentMethods, [{ method: 'applePay', enabled: true }]);
   assert.deepEqual(body.expressCheckoutPaymentMethods.norway.configuration[0].expressCheckoutPaymentMethods,
     [{ method: 'klarna', enabled: false }, { method: 'googlePay', enabled: true }]);
-  assert.equal(body.elements.clients[0].merchantMatches, true);
+  assert.equal(body.elements.clients[0].merchantMatchesPlaygroundPortal, true);
   assert.equal(body.elements.clients[0].publicKeyMatchesStagingPreview, true);
   assert.deepEqual(body.elements.clients[0].allowedOrigins, ['https://preview.finnbilglass.no']);
   assert.equal(bodyText.includes('drop-me'), false);
@@ -81,5 +81,7 @@ test('authenticated diagnostic queries fixed Playground GET endpoints and projec
   assert.ok(seen.every(({ url, init }) => url.startsWith('https://api.playground.kustom.co/') && init.method === 'GET'));
   const configCalls = seen.filter(({ url }) => url.includes('/config/'));
   assert.ok(configCalls.every(({ init }) => init.headers['X-merchant-id'] === 'M00808102'));
-  assert.ok(seen.every(({ init }) => init.redirect === 'error'));
+  const elementsCall = seen.find(({ url }) => url.includes('/elements/v1/clients/'));
+  assert.equal(elementsCall.init.headers['X-merchant-id'], 'PM00730041');
+  assert.ok(seen.every(({ init }) => init.redirect === 'manual'));
 });

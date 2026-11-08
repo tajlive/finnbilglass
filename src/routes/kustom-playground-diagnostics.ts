@@ -1,7 +1,11 @@
 import type { Env } from '../types';
 import { verifiserAccess, type AccessIdentitet } from '../access-jwt';
 
-const MERCHANT_ID = 'M00808102';
+// Playground and production can have different Merchant IDs. This is the ID
+// shown for FinnBilglass in portal.playground.kustom.co; M00808102 remains the
+// owner-provided production MID we explicitly probe through the config API.
+const PLAYGROUND_MERCHANT_ID = 'PM00730041';
+const REQUESTED_MERCHANT_ID = 'M00808102';
 const PLAYGROUND_API = 'https://api.playground.kustom.co';
 const ELEMENTS_PUBLIC_KEY = 'playground_af2f89ec-92ca-4e8c-949f-0854a62d90ee';
 const METHODS = new Set(['amazonPay', 'applePay', 'googlePay', 'klarna', 'paypal']);
@@ -46,7 +50,7 @@ function projectElements(value: unknown): unknown[] {
     const id = typeof client.id === 'string' ? client.id : null;
     const placements = Array.isArray(client.placements) ? client.placements : [];
     return {
-      merchantMatches: client.merchant_id === MERCHANT_ID,
+      merchantMatchesPlaygroundPortal: client.merchant_id === PLAYGROUND_MERCHANT_ID,
       allowedOrigins: Array.isArray(client.allowed_origins)
         ? client.allowed_origins.filter((origin): origin is string => typeof origin === 'string')
         : [],
@@ -69,17 +73,20 @@ async function getJson(
   fetcher: typeof fetch,
   path: string,
   authorization: string,
-  merchantHeader: boolean,
-): Promise<{ status: number | null; value: unknown }> {
+  merchantHeader?: string,
+): Promise<{ status: number | null; value: unknown; errorType?: string; errorCode?: string | null }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const res = await fetcher(`${PLAYGROUND_API}${path}`, {
       method: 'GET',
-      redirect: 'error',
-      signal: AbortSignal.timeout(8000),
+      // Never forward Authorization to a redirect destination; report its status instead.
+      redirect: 'manual',
+      signal: controller.signal,
       headers: {
         Authorization: authorization,
         Accept: 'application/json',
-        ...(merchantHeader ? { 'X-merchant-id': MERCHANT_ID } : {}),
+        ...(merchantHeader ? { 'X-merchant-id': merchantHeader } : {}),
       },
     });
     let value: unknown = null;
@@ -87,8 +94,21 @@ async function getJson(
       try { value = await res.json(); } catch { value = null; }
     }
     return { status: res.status, value };
-  } catch {
-    return { status: null, value: null };
+  } catch (error) {
+    const cause = error instanceof Error ? error.cause : undefined;
+    const rawCode = cause && typeof cause === 'object' && 'code' in cause
+      ? (cause as { code?: unknown }).code
+      : undefined;
+    const safeCode = typeof rawCode === 'string' && /^[A-Z0-9_]{1,32}$/.test(rawCode) ? rawCode : null;
+    return {
+      status: null,
+      value: null,
+      // Expose no exception text or request details.
+      errorType: error instanceof Error && error.name === 'AbortError' ? 'TIMEOUT' : 'REQUEST_FAILED',
+      errorCode: safeCode,
+    };
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -120,12 +140,13 @@ export async function handleKustomPlaygroundDiagnostics(
   const username = env.KUSTOM_API_USERNAME || '';
   const password = env.KUSTOM_API_PASSWORD || '';
   if (!username || !password) return response({ ok: false, error: 'PLAYGROUND_CREDENTIALS_MISSING' }, 503);
-  const merchantMatches = username.startsWith(`${MERCHANT_ID}-`);
+  const merchantMatches = username.startsWith(`${PLAYGROUND_MERCHANT_ID}-`);
   const playgroundCredential = password.startsWith('kco_test_api_');
   if (!merchantMatches || !playgroundCredential) {
     return response({
       ok: false,
-      merchantId: MERCHANT_ID,
+      merchantId: REQUESTED_MERCHANT_ID,
+      playgroundPortalMerchantId: PLAYGROUND_MERCHANT_ID,
       credentialMerchantMatches: merchantMatches,
       credentialIsPlayground: playgroundCredential,
       error: 'CREDENTIAL_SCOPE_MISMATCH',
@@ -134,23 +155,26 @@ export async function handleKustomPlaygroundDiagnostics(
 
   const authorization = `Basic ${btoa(`${username}:${password}`)}`;
   const [checkout, allConfig, noConfig, elements] = await Promise.all([
-    getJson(deps.fetch, '/checkout/v3/orders/does-not-exist', authorization, false),
-    getJson(deps.fetch, '/config/checkout/v1/config/expressCheckoutPaymentMethods', authorization, true),
-    getJson(deps.fetch, '/config/checkout/v1/config/country/NO/expressCheckoutPaymentMethods', authorization, true),
-    getJson(deps.fetch, '/elements/v1/clients/', authorization, true),
+    getJson(deps.fetch, '/checkout/v3/orders/does-not-exist', authorization, undefined),
+    getJson(deps.fetch, '/config/checkout/v1/config/expressCheckoutPaymentMethods', authorization, REQUESTED_MERCHANT_ID),
+    getJson(deps.fetch, '/config/checkout/v1/config/country/NO/expressCheckoutPaymentMethods', authorization, REQUESTED_MERCHANT_ID),
+    getJson(deps.fetch, '/elements/v1/clients/', authorization, PLAYGROUND_MERCHANT_ID),
   ]);
 
   return response({
     ok: checkout.status === 404,
-    merchantId: MERCHANT_ID,
+    merchantId: REQUESTED_MERCHANT_ID,
+    playgroundPortalMerchantId: PLAYGROUND_MERCHANT_ID,
     credentials: { merchantMatches, environment: 'playground' },
     checkoutAuthentication: { httpStatus: checkout.status, accepted: checkout.status === 404 },
     expressCheckoutPaymentMethods: {
-      allCountries: { httpStatus: allConfig.status, configuration: allConfig.status === 200 ? projectConfig(allConfig.value) : null },
-      norway: { httpStatus: noConfig.status, configuration: noConfig.status === 200 ? projectConfig(noConfig.value) : null },
+      allCountries: { httpStatus: allConfig.status, errorType: allConfig.errorType ?? null, errorCode: allConfig.errorCode ?? null, configuration: allConfig.status === 200 ? projectConfig(allConfig.value) : null },
+      norway: { httpStatus: noConfig.status, errorType: noConfig.errorType ?? null, errorCode: noConfig.errorCode ?? null, configuration: noConfig.status === 200 ? projectConfig(noConfig.value) : null },
     },
     elements: {
       clientsHttpStatus: elements.status,
+      clientsErrorType: elements.errorType ?? null,
+      clientsErrorCode: elements.errorCode ?? null,
       clients: elements.status === 200 ? projectElements(elements.value) : null,
     },
   });
