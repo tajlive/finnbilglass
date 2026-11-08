@@ -9,6 +9,7 @@
 - Arbeidsgren: `release/fbg-kustom-staging-20261108`, basert på `c371624aeb34d630e3b232eb45aa4831b5fb1284`.
 - Kustom-kodecommit: `6a457ba7c27e5cded3ab59e9e315495dbb33f35e`. Siste dokumentasjonsoppdatering / kandidat-HEAD: `ecf2ca9d`; draft PR [#29](https://github.com/tajlive/finnbilglass/pull/29) er åpen. GitHub Actions-run `42482470005`: Typecheck, Testsuite og skanning etter secrets-filer PASS. PR er ikke merget og dette er ikke en produksjonsrelease.
 - Nyeste kontrollerte kandidat-HEAD før dette rapporttillegget: `5d0a17b606c90be1331d0ffb0f9145484643f768`. Draft PR #29 er fortsatt åpen; gjeldende PR-verifisering `42482555511` PASS.
+- HPP-rollbackrapporten ble pushet i commit `524e3d767ffcb178b0c6c8107b3e15f6b06edf0e`; PR-verifisering `42484119286` PASS (typecheck, test suite, skanning etter hemmelighetsfiler).
 - `npm run typecheck`: PASS.
 - `npm run test:kustom`: 37/37 PASS, 0 skipped.
 - `npm run qa`: 648/648 PASS, 0 failed, 0 skipped.
@@ -21,6 +22,7 @@
 - Gitleaks: fire klassifiserte funn. Tre er `ACCESS_AUD`-verdier i Wrangler-konfig (audience-identifikator, ikke hemmelighet); ett er ordet «Nøkkel» i en eksisterende rapport. Ingen credential-verdi funnet i endringene.
 - Denne arbeidskopiens `npm run qa`: 648/648 PASS, 0 hoppet over. Etterpå ble `npm run test:kustom` kjørt på siste kode: 37/37 PASS, 0 hoppet over; `npm run typecheck`, `git diff --check`, staging dry-run og `npm audit --omit=dev --audit-level=high` PASS.
 - Ny fersk kjøring på HEAD `5d0a17b606c90be1331d0ffb0f9145484643f768`: `npm run qa` avsluttet med exit 0; `npm audit --omit=dev --audit-level=high` rapporterte 0 sårbarheter; worktree var ren og `git diff --check` PASS. Dette er lokal QA, ikke staging- eller Chrome E2E.
+- Etter at den kortvarige HPP-probekoden/-testen ble fjernet, kjørte `npm run qa` igjen med exit 0 på FinnBilGlass-kandidatkoden; dette er den endelige lokale QA-kjøringen i denne runden.
 
 ## Playground-tilgang
 
@@ -59,6 +61,7 @@ Kustoms dokumentasjon sier at API-username normalt er `<MID>-<randomsuffix>`, og
 - Wrangler-konfigurasjonene peker på konto-ID `80d5b1d56a3e907150ba7348b6182894`; `wrangler whoami` viser kontovisningsnavnet `KLARPAKKE`. Dette er ikke FinnBilGlass-stagingens URL. Begge Worker-navnene er FinnBilGlass (`finnbilglass-frontrute` og `finnbilglass-frontrute-staging`); staging bruker `workers_dev=true`, `routes=[]`, egne D1- og R2-bindinger, og `KUSTOM_MONEY_MOVEMENTS_ENABLED=false`. `klarpakke.no` ble ikke åpnet eller brukt. Ingen produksjonsversjon eller produksjonsbinding ble endret.
 - Stagingens offentlige visning er FinnBilGlass på `finnbilglass-frontrute-staging.tomarnejensen.workers.dev`. Kustoms API-kall ble bare gjort mot Playground. Kontoens visningsnavn er et administrativt Cloudflare-kontonavn og ikke en indikasjon på at et annet nettsted ble brukt.
 - Midlertidig HPP-probeversjon `3f950a07-c4b4-44b6-8cce-931defcf7a44` ble lastet opp til FinnBilGlass staging med `auto_capture=false` og uten capture-/refund-kall. Chrome/Computer Use-vinduet forsvant før POST-kallet kunne sendes; derfor ble ingen Checkout-ordre eller HPP-session opprettet. Umiddelbar rollback opprettet deploy `4800e24d-7d8a-4ba2-86f8-916c94671883`, og `0bed424b-b66a-41ed-9f5a-1f0e6cd3854f` står igjen på 100%. Proberuten og dens testfil er fjernet fra arbeidskopien. Ingen D1-migrering ble kjørt.
+- Like før HPP-forsøket viste Playground-portalen for FinnBilglass `PM00730041` «Ingen resultater funnet» / `0 Resultater` i ordrehistorikken. Browser automation returnerte `cgWindowNotFound` både før POST-et og etter CUA-reset; HPP-endepunktet ble aldri kalt. Det finnes derfor ingen ny Kustom-ordre-ID å rapportere.
 
 Wrangler viste først at `OAUTH_ENABLED_PROVIDERS` manglet under `env.staging.vars`. Jeg la inn `google` eksplisitt i releasekandidaten; secret-navnene for Google OAuth finnes i Cloudflare staging (verdiene ble ikke lest). Etter endringen passerer staging dry-run uten denne advarselen. Den aktive staging Worker ble rullet tilbake til versjonen før diagnostikk og har ennå ikke fått denne kandidatendringen; OAuth-innlogging og admin-E2E gjenstår.
 
