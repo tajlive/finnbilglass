@@ -42,7 +42,8 @@ Wrangler viste først at `OAUTH_ENABLED_PROVIDERS` manglet under `env.staging.va
 
 ## Elements- og Chrome-funn
 
-- Chrome i 390 px responsive viewport lastet den aktive stagingversjonens forside. Glassflyten i desktop ble tidligere kontrollert fram til variantvalg uten å sende forespørsel; full kundereise og mobilinteraksjoner er ikke bestått.
+- Chrome i 390 px responsive viewport lastet den aktive stagingversjonens glassflyt for testskilt `SU18018` (VW Transporter 2005) og nådde resultatlisten for frontrute. UI-et viste flere mulige varianter, utstyrsspørsmål og at glassvalg/pris kontrolleres manuelt før tilbud. Ingen glassvariant ble valgt, og ingen tilbudsforespørsel eller ordre ble sendt. Dette er en avgrenset mobilkontroll, ikke full mobil-E2E.
+- Desktop-kontrollen ble tidligere stoppet ved variantvalg uten å sende forespørsel; full kundereise er ikke bestått.
 - Den aktive, eldre stagingversjonen serverer et Payment Method Display med `locale="nb-NO"` og uten `include`, og laster Playground-CDN-script direkte. Kustoms offentlige nøkkel og tilhørende Merchant ID kan ikke verifiseres før API-tilgangen fungerer; staging-origin er heller ikke bekreftet i Kustom Elements-klientlisten.
 - Chrome Console viste en CSP report-only-advarsel for `https://js.playground.kustom.co/kustom-elements/v1/pre-load.js` og feilen `Cannot read properties of undefined (reading '_internal')` i `pre-load.js`. Derfor er komponenten **ikke funksjonell**; skjermen viste kun overskriften «Betalingsmetoder», ingen metoder eller logoer.
 - Kustoms oppdaterte installasjonsveiledning krever Portal-snippeten med initialisering av `window.kustomElements`; det serverte staging-scriptet injiserer bare CDN-scriptet. Denne eldre implementasjonen er ikke med i releasekandidaten. Kandidaten viser ingen betalingsmetoder før Merchant ID, public key og origin er verifisert.
