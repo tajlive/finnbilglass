@@ -10,7 +10,7 @@
 - `npm run typecheck`: PASS.
 - `npm run test:kustom`: 37/37 PASS, 0 skipped.
 - `npm run qa`: 648/648 PASS, 0 failed, 0 skipped.
-- Gjentatt kontroll på kandidat-HEAD `5256c4fa43548cb2c5b0af68cdd90e4a464cf15e`: typecheck PASS, Kustom 37/37 PASS, full `npm run qa` exit status 0.
+- Gjentatt kontroll på releasekandidat med eksplisitt staging-OAuth-flag (HEAD `acb95a7bbd668b2726a4cd6e8a8efa7cbddf2bc8`): typecheck PASS, Kustom 37/37 PASS, full `npm run qa` exit status 0.
 - `git diff --check`: PASS.
 - `npm audit --omit=dev --audit-level=high`: 0 sårbarheter.
 - `npm audit --audit-level=high`: 0 sårbarheter i alle avhengigheter.
@@ -38,7 +38,7 @@ Kustoms dokumentasjon sier at API-username normalt er `<MID>-<randomsuffix>`, me
 - Ny kontroll etter at credentials kunne ha blitt oppdatert: midlertidig versjon `400730b8-9ab7-4a08-94a4-8cde93773d40` ga samme HTTP 409 og samme scope-mismatch, uten Kustom-kall. Rullet straks tilbake til `0bed424b-b66a-41ed-9f5a-1f0e6cd3854f` på 100%; Chrome-innlasting etter tilbakeføring viste `Siden finnes ikke`.
 - Ingen D1-migrering ble kjørt. Produksjons-worker og produksjonsbindinger ble ikke endret.
 
-Wrangler dry-run viser også en uavklart konfigurasjonsadvarsel: `OAUTH_ENABLED_PROVIDERS` er satt på toppnivå, men ikke under `env.staging.vars`. Google OAuth i staging må derfor kontrolleres før full innloggings-/administrasjons-E2E; verdien ble ikke endret.
+Wrangler viste først at `OAUTH_ENABLED_PROVIDERS` manglet under `env.staging.vars`. Jeg la inn `google` eksplisitt i releasekandidaten; secret-navnene for Google OAuth finnes i Cloudflare staging (verdiene ble ikke lest). Etter endringen passerer staging dry-run uten denne advarselen. Den aktive staging Worker ble rullet tilbake til versjonen før diagnostikk og har ennå ikke fått denne kandidatendringen; OAuth-innlogging og admin-E2E gjenstår.
 
 ## Gjenstående leverandørblokkering
 
