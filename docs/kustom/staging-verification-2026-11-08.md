@@ -48,6 +48,13 @@ Wrangler viste først at `OAUTH_ENABLED_PROVIDERS` manglet under `env.staging.va
 - Kustoms oppdaterte installasjonsveiledning krever Portal-snippeten med initialisering av `window.kustomElements`; det serverte staging-scriptet injiserer bare CDN-scriptet. Denne eldre implementasjonen er ikke med i releasekandidaten. Kandidaten viser ingen betalingsmetoder før Merchant ID, public key og origin er verifisert.
 - Staging-siden bruker `workers.dev`; det er ikke bevis for at denne origin er Kustom-registrert. Kustom docs krever at origin er tillatt i Elements-klienten.
 
+## Staging D1 og migreringer
+
+- Read-only `wrangler d1 migrations list finnbilglass-staging-auth --env staging --remote`: «No migrations to apply».
+- Read-only katalog-D1-kontroll viser eksisterende applikasjonstabeller, inkludert katalog/tilbud; Kustom-ledger-tabellene ligger i auth-D1. `SELECT name FROM d1_migrations` i `finnbilglass-staging-catalog` returnerte ingen rader.
+- Wrangler lister katalogmigrasjonene `0001`–`0048c` som ventende fordi katalogbindingen ikke angir en egen `migrations_dir`, mens historikktabellen er tom. Dette er ikke bevis for at skjemaet mangler; det viser at migration tracking ikke samsvarer med repoets migrasjonskø. Ingen migrering ble kjørt. Dette må avklares og sikkerhetskopieres før en migration-/releaseplan kan godkjennes.
+- Begge remote schema-forespørslene var `SELECT` og Cloudflare rapporterte `changed_db=false`, `rows_written=0`.
+
 ## Gjenstående leverandørblokkering
 
 Cloudflare-staging-secret `KUSTOM_API_USERNAME` må erstattes med en Playground API username som tilhører `M00808102`; passordet må forbli Playground-testcredential. Den eksisterende verdien skal kun oppdateres via godkjent secret-håndtering. Ikke kopier den til terminal, logg, Git eller rapport. Når dette er rettet, kjør diagnostikk igjen; kun etter verifisert autentisering kan betalingsmetoder eller Elements origins rapporteres.
