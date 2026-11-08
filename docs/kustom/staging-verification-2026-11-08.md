@@ -108,3 +108,16 @@ Dette oppdateringstillegget supersederer den eldre teksten over om katalogens fe
 - Kodeendringene ble commitet som `aa547d19` og pushet til PR #29; GitHub-run `42485590718` PASS (typecheck, testsuite, secret-file check). PR-en er fortsatt draft og ikke merget. En etterfølgende oppdatering av denne rapporten står i en separat commit.
 - Etter kontrollen står staging-worker fortsatt på rollback-versjonen `0bed424b-b66a-41ed-9f5a-1f0e6cd3854f` (100%). Read-only `GET /health` ga HTTP 200 (`service=finnbilglass-frontrute`, `katalogRader=30938`). Kandidaten er ikke deployet til staging; diagnostikkflagget av og migreringsmappen er derfor bare verifisert i kode/dry-run.
 - Ingen produksjonsdeploy eller produksjons-D1-skriving ble utført. Produksjonsrelease er **NO-GO**.
+
+## Staging API- og Chrome-kjøring etter oppfølgingen
+
+Kontrollene her er mot den aktive rollback-versjonen `0bed424b-b66a-41ed-9f5a-1f0e6cd3854f`, ikke mot PR-kandidaten, som fortsatt ikke er deployet.
+
+- `GET /health`: HTTP 200, `katalogRader=30938`.
+- `POST /api/regnr` for staging-testbilen SU18018 med `lookupOnly:true`: HTTP 200, `lagret=false`; identifiserte VW Transporter 2005 og resolver `VERIFY` med fem varianter som krever utstyrskontroll.
+- `POST /api/glass/valg`: HTTP 200; 39 katalogkandidater, fire glasskategorier og ni spørsmål; `fitmentAuthority` sier menneskelig bekreftelse kreves.
+- `POST /api/frontrute`: HTTP 200; `VERIFY`, fem kandidater og kontrollspørsmål.
+- `POST /api/glass/kandidater`: HTTP 200; fem kandidater og `fitmentAuthority` krever menneskelig bekreftelse. Ingen kandidat ble bestilt eller sendt som henvendelse.
+- Lokal Playwright med Chrome-kanalen kjørte `scripts/e2e-release-chrome.mjs` mot staging, med output under `/tmp`: **36 brukerreiser, 10 feil**. Mobil og desktop viste riktige testbil-/glassvisninger og verifiseringsspørsmål, men alle feilene var `Cannot read properties of undefined (reading '_internal')` i Kustoms eksterne `pre-load.js` (linje 9/49). Nettverksloggen viser staging-serverte `/kustom-betalingsmetoder.js`, som laster `https://js.playground.kustom.co/kustom-elements/v1/pre-load.js`. Betalingsboksen viste overskriften «Betalingsmetoder», men ingen metoder. Ingen syntetisk Checkout-ordre ble opprettet.
+- Denne feilen tilhører den aktive `Source: Unknown` staging-versjonen. Den lokale releasekandidaten har ikke samme Kustom Elements-kode; testen over kan derfor ikke brukes som resultat for kandidatens Chrome-runtime. Kandidaten må først isoleres, publiseres til staging og kjøres på nytt. Chrome-automatisering fungerte via lokal Playwright selv om den integrerte nettleserverten fortsatt var utilgjengelig.
+- Staging API-kontrollene over er lesende for dataflyten; registreringsnummerkallet sendte `lookupOnly:true` og svarte `lagret=false`. En separat D1-SELECT for opplæringshendelser knyttet til testbilene ga 0 rader (`changed_db=false`, 0 skrevne rader). Ingen reell henvendelse, HPP-session, checkout-ordre, capture eller refund ble opprettet.
