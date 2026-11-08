@@ -65,6 +65,8 @@ ALL_GLASS_KANDIDATER_ENABLED = "true"
 ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
 ACCESS_AUD = "8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb"
 ADMIN_EMAILS = "tomarnejensen@gmail.com"
+# Match the explicitly enabled staging OAuth provider; secrets are set in the staging Worker.
+OAUTH_ENABLED_PROVIDERS = "google"
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
 EVIDENCE_STATUS_CHANGE_ENABLED = "false"
