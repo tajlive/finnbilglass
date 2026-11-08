@@ -40,6 +40,14 @@ Kustoms dokumentasjon sier at API-username normalt er `<MID>-<randomsuffix>`, me
 
 Wrangler viste først at `OAUTH_ENABLED_PROVIDERS` manglet under `env.staging.vars`. Jeg la inn `google` eksplisitt i releasekandidaten; secret-navnene for Google OAuth finnes i Cloudflare staging (verdiene ble ikke lest). Etter endringen passerer staging dry-run uten denne advarselen. Den aktive staging Worker ble rullet tilbake til versjonen før diagnostikk og har ennå ikke fått denne kandidatendringen; OAuth-innlogging og admin-E2E gjenstår.
 
+## Elements- og Chrome-funn
+
+- Chrome i 390 px responsive viewport lastet den aktive stagingversjonens forside. Glassflyten i desktop ble tidligere kontrollert fram til variantvalg uten å sende forespørsel; full kundereise og mobilinteraksjoner er ikke bestått.
+- Den aktive, eldre stagingversjonen serverer et Payment Method Display med `locale="nb-NO"` og uten `include`, og laster Playground-CDN-script direkte. Kustoms offentlige nøkkel og tilhørende Merchant ID kan ikke verifiseres før API-tilgangen fungerer; staging-origin er heller ikke bekreftet i Kustom Elements-klientlisten.
+- Chrome Console viste en CSP report-only-advarsel for `https://js.playground.kustom.co/kustom-elements/v1/pre-load.js` og feilen `Cannot read properties of undefined (reading '_internal')` i `pre-load.js`. Derfor er komponenten **ikke funksjonell**; skjermen viste kun overskriften «Betalingsmetoder», ingen metoder eller logoer.
+- Kustoms oppdaterte installasjonsveiledning krever Portal-snippeten med initialisering av `window.kustomElements`; det serverte staging-scriptet injiserer bare CDN-scriptet. Denne eldre implementasjonen er ikke med i releasekandidaten. Kandidaten viser ingen betalingsmetoder før Merchant ID, public key og origin er verifisert.
+- Staging-siden bruker `workers.dev`; det er ikke bevis for at denne origin er Kustom-registrert. Kustom docs krever at origin er tillatt i Elements-klienten.
+
 ## Gjenstående leverandørblokkering
 
 Cloudflare-staging-secret `KUSTOM_API_USERNAME` må erstattes med en Playground API username som tilhører `M00808102`; passordet må forbli Playground-testcredential. Den eksisterende verdien skal kun oppdateres via godkjent secret-håndtering. Ikke kopier den til terminal, logg, Git eller rapport. Når dette er rettet, kjør diagnostikk igjen; kun etter verifisert autentisering kan betalingsmetoder eller Elements origins rapporteres.
