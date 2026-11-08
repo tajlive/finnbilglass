@@ -1,9 +1,8 @@
 -- Staging-only catalogue repair.
 --
--- The importer historically populated autoglass_prisliste while the public
--- Worker reads glass_prisliste. Keep the production table contract intact and
--- make a local staging copy from the already imported catalogue. This file is
--- deliberately stored outside the production migrations directory.
+-- The staging catalog database already has glass_prisliste, while the legacy
+-- autoglass_prisliste source table is absent. Keep this migration idempotent
+-- and scoped to staging; do not copy from a table that is not present.
 
 CREATE TABLE IF NOT EXISTS glass_prisliste (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,11 +14,5 @@ CREATE TABLE IF NOT EXISTS glass_prisliste (
   alias_av TEXT,
   rad_type TEXT NOT NULL DEFAULT 'glass',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(varenr, varenavn)
+  variant_id TEXT
 );
-
-INSERT OR IGNORE INTO glass_prisliste
-  (varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type, created_at)
-SELECT
-  varenr, varenavn, kommentar, pris, eurokode, alias_av, rad_type, created_at
-FROM autoglass_prisliste;

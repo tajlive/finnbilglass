@@ -19,6 +19,7 @@ binding = "AI"
 binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-staging-catalog"
 database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
+migrations_dir = "migrations/staging"
 
 # Henvendelser, auth og rate-limit ligger i egen staging-D1 (getInquiryDb).
 # Uten denne bindingen kaster staging STAGING_MISSING_D1_BINDING → 500 på
@@ -52,6 +53,7 @@ inquiries_enabled = "true"
 # Kustom Playground er eksplisitt kun aktivert for staging.
 KUSTOM_ENABLED = "true"
 KUSTOM_OPS_ROUTE_ENABLED = "true"
+KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED = "false"
 KUSTOM_MONEY_MOVEMENTS_ENABLED = "false"
 
 # ── Observability: Workers Logs-lagring AV, invocation_logs PÅ (konsistens med prod) ──

@@ -59,12 +59,17 @@ test('payment ledger enforces one order per quote and idempotent refund/event id
   db.close();
 });
 
-test('staging migrations are isolated from default catalogue migration queue', () => {
+test('staging migrations are isolated from production and use the staging queue', () => {
   const config = readFileSync('wrangler.toml', 'utf8');
   const stagingConfig = readFileSync('wrangler.staging.toml', 'utf8');
   const stagingAuthBinding = /binding = "FINNBILGLASS_STAGING_AUTH"[\s\S]*?migrations_dir = "migrations\/staging-auth"/;
+  const stagingCatalogBinding = /binding = "FINNBILGLASS_DB"[\s\S]*?database_name = "finnbilglass-staging-catalog"[\s\S]*?migrations_dir = "migrations\/staging"/;
   assert.match(config, stagingAuthBinding);
   assert.match(stagingConfig, stagingAuthBinding);
+  assert.match(config, stagingCatalogBinding);
+  assert.match(stagingConfig, stagingCatalogBinding);
+  const productionCatalogBinding = config.split('[env.staging]')[0];
+  assert.doesNotMatch(productionCatalogBinding, /migrations_dir\s*=/);
   assert.doesNotMatch(payment, /\b(?:ALTER|DROP)\s+TABLE\s+ordre\b/i);
   assert.doesNotMatch(payment, /payload_json|raw_payload/i);
 });

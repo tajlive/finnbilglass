@@ -94,3 +94,15 @@ Wrangler viste først at `OAUTH_ENABLED_PROVIDERS` manglet under `env.staging.va
 - En syntetisk Playground HPP-ordre og individuell Visa/Mastercard/Vipps-verifisering gjenstår. Ingen ekte penger, capture eller refund.
 - Etter den siste QA-kontrollen ble det ikke opprettet syntetisk ordre eller HPP-session. HPP-kallet gjenstår fordi nettleserautomatiseringen ikke kunne nå Chrome-vinduet før POST-et ble sendt; proberuten ble deretter fjernet og staging rullet tilbake.
 - Katalog-D1 migration tracking er uavklart (`0001`–`0048c` ser ventende ut), admin/OAuth-E2E og full desktop/mobil kundereise gjenstår. Produksjonsrelease: **NO-GO**.
+
+## Oppfølging 2026-11-08 — migreringsisolasjon og diagnostikkbryter
+
+Dette oppdateringstillegget supersederer den eldre teksten over om katalogens feilaktige migreringskø. Før endringen var aktiv arbeidskopi `584dd285a0e53efb05d4401b890434b77611925f`, PR #29 åpen som draft og GitHub-verifisering `42484804005` grønn. Endringene nedenfor er kun gjort på FinnBilGlass-grenen; ingen deploy, D1-migrering eller produksjonsendring er utført.
+
+- Begge staging-konfigurasjoner peker nå katalogbindingen eksplisitt til `migrations/staging`. Produksjonens toppnivåbinding har ingen `migrations_dir` og bruker derfor fortsatt standard produksjonsmappen.
+- Fjernet `0001_restore_catalogue_compatibility.sql` sin SELECT fra den manglende `autoglass_prisliste`-tabellen. Remote staging-skjema viser at `glass_prisliste` allerede finnes med `variant_id`; en lokal SQLite-kjøring av begge staging-migreringene beholdt fixture-raden og opprettet `apify_catalog_products` med 26 kolonner. Dette var en lokal simulering, ikke en D1-skriving.
+- Read-only køkontroll etter konfigurasjonsendringen: staging-katalog viser bare de to staging-migreringene som ventende; staging-auth har ingen ventende; produksjons-D1 viser fortsatt 11 rotmigreringer. Ingen migrering ble brukt på noen database.
+- Den midlertidige diagnostikkruten har nå eksplisitt `KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED=false` i begge staging-konfigurasjoner. Ruten svarer 404 før Kustom-nettverkskall når flagget er av. Test dekker avslag og konfigurasjonsflagget.
+- Endelig lokal verifikasjon etter disse kodeendringene: `npm run test:kustom` 39/39 PASS; `npm run qa` 650/650 PASS, 0 hoppet over; TypeScript er del av `qa`; `npm audit --omit=dev --audit-level=high` 0 sårbarheter; Wrangler staging dry-run PASS og viser bare FinnBilGlass staging D1/R2, `KUSTOM_MONEY_MOVEMENTS_ENABLED=false` og diagnostikkflagget `false`; `git diff --check` PASS.
+- Chrome er fortsatt blokkert fordi CUA melder `Browsers: The browser access host is unavailable`, selv om Chrome-appen kjører. Ingen nettleserhandling eller Checkout-ordre ble sendt. Full Chrome E2E, ny staging-deploy og HPP Checkout-test er derfor fortsatt uverifisert.
+- Endringene er ennå ikke commitet eller merget. Arbeidskandidat og PR #29 forblir under review; produksjonsstatus er **NO-GO**.

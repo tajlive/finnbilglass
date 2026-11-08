@@ -121,6 +121,7 @@ export async function handleKustomPlaygroundDiagnostics(
     fetch: globalThis.fetch.bind(globalThis),
   },
 ): Promise<Response> {
+  if (env.KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED !== 'true') return response({ ok: false, error: 'NOT_FOUND' }, 404);
   if (env.ENVIRONMENT !== 'staging') return response({ ok: false, error: 'NOT_FOUND' }, 404);
   if (new URL(request.url).hostname !== 'ops-staging.finnbilglass.no') {
     return response({ ok: false, error: 'STAGING_OPS_HOST_REQUIRED' }, 404);

@@ -1,10 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { handleKustomPlaygroundDiagnostics } from '../src/routes/kustom-playground-diagnostics.ts';
 
 const admin = { epost: 'admin@example.com' };
 const env = {
   ENVIRONMENT: 'staging', ADMIN_EMAILS: 'admin@example.com',
+  KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED: 'true',
   KUSTOM_API_USERNAME: 'PM00730041-key', KUSTOM_API_PASSWORD: 'kco_test_api_test',
 };
 function request({ host = 'ops-staging.finnbilglass.no', method = 'GET', path = '/api/ops/kustom-playground-diagnostics', headers = {} } = {}) {
@@ -22,6 +24,22 @@ test('Kustom diagnostics fail closed before network access without Access and AD
   const noAdminAllowlist = await handleKustomPlaygroundDiagnostics(request(), { ...env, ADMIN_EMAILS: 'other@example.com' }, deps({ fetcher }));
   assert.equal(noAdminAllowlist.status, 403);
   assert.equal(calls, 0);
+});
+
+test('Kustom diagnostics are disabled by default without contacting Playground', async () => {
+  let calls = 0;
+  const res = await handleKustomPlaygroundDiagnostics(request(), {
+    ...env, KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED: 'false',
+  }, deps({ fetch: async () => { calls++; return new Response('{}'); } }));
+  assert.equal(res.status, 404);
+  assert.equal(calls, 0);
+});
+
+test('staging candidate keeps the temporary Kustom diagnostics route switched off', () => {
+  const config = readFileSync('wrangler.toml', 'utf8');
+  const standaloneStagingConfig = readFileSync('wrangler.staging.toml', 'utf8');
+  assert.match(config, /KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED = "false"/);
+  assert.match(standaloneStagingConfig, /KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED = "false"/);
 });
 
 test('diagnostics are limited to staging ops host and clean GET requests', async () => {

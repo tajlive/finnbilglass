@@ -73,12 +73,14 @@ EVIDENCE_STATUS_CHANGE_ENABLED = "false"
 inquiries_enabled = "true"
 KUSTOM_ENABLED = "true"
 KUSTOM_OPS_ROUTE_ENABLED = "true"
+KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED = "false"
 KUSTOM_MONEY_MOVEMENTS_ENABLED = "false"
 
 [[env.staging.d1_databases]]
 binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-staging-catalog"
 database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
+migrations_dir = "migrations/staging"
 
 [[env.staging.d1_databases]]
 binding = "FINNBILGLASS_STAGING_AUTH"
