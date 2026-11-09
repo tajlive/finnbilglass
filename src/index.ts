@@ -522,7 +522,9 @@ export default {
       if (!/^[A-Z]{2}[0-9]{4,5}$/.test(norm)) {
         return json({ ok: false, error: 'Ugyldig registreringsnummer' }, 400);
       }
+      const lookupOnly = (body as Record<string, unknown>)?.lookupOnly === true;
       let lagret = false;
+      if (!lookupOnly) {
       try {
         await env.FINNBILGLASS_DB.prepare(
           'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
@@ -539,6 +541,7 @@ export default {
         ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
       } catch (e) {
         console.error('søkelogg feilet:', e);
+      }
       }
       // SVV-oppslag: kjennemerke → bil. Null ved feil/ukjent — frontend faller til manuell.
       let bil = null;
