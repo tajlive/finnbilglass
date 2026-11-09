@@ -43,7 +43,7 @@ try{
     regnrValue:await get('inquiry-regnr').inputValue(),
     glassSummary:((await get('inquiry-glass-summary').textContent())||'').slice(0,220)
   };
-  console.log('STAGING_UI_DIAGNOSTIC '+JSON.stringify({dependencies,before,after,inquiry,responses,exceptions}));
+  console.log('STAGING_UI_DIAGNOSTIC '+JSON.stringify({diagnostic:'v2-view-module',dependencies,before,after,inquiry,responses,exceptions}));
 }catch(e){
   console.log('STAGING_UI_DIAGNOSTIC_ERROR '+String(e.message).slice(0,240));
   console.log('STAGING_UI_LAST_RESPONSES '+JSON.stringify({responses,exceptions}));
