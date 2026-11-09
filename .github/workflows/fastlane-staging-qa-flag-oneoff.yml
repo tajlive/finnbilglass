@@ -1,0 +1,56 @@
+# One-off precision cleanup for a known synthetic customer test in STAGING only.
+# No production changes, no user profiles, no payments.
+name: Fast-track mark exact synthetic STAGING inquiry as test
+on:
+  push:
+    branches: ['release/fbg-main-fastlane-20261109']
+    paths: ['.github/workflows/fastlane-staging-qa-flag-oneoff.yml']
+permissions:
+  contents: read
+jobs:
+  mark-test:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Verify exact target staging database
+        run: |
+          node -e "const fs=require('fs');const t=fs.readFileSync('wrangler.toml','utf8');const x=t.split('[[env.staging.d1_databases]]').slice(1).find(z=>z.includes('FINNBILGLASS_STAGING_AUTH'));if(!x||!x.includes('finnbilglass-staging-auth')||!x.includes('0b024ab6-4e9c-4fda-ab19-439e11e631fb'))process.exit(2)"
+      - name: Confirm exact synthetic row is unique (read only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT COUNT(*) AS n,COALESCE(MAX(is_test),0) AS flagged FROM beta_inquiries WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no' AND REPLACE(UPPER(regnr),' ','')='CV80776' AND melding LIKE 'Syntetisk QA test i staging.%'" --json > "$RUNNER_TEMP/fbg-qa-inquiry-pre.json"
+          node scripts/maintenance/staging-synthetic-flag-verify.mjs "$RUNNER_TEMP/fbg-qa-inquiry-pre.json" pre
+      - name: Confirm staging Time Travel availability
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 time-travel info finnbilglass-staging-auth --env staging --json > "$RUNNER_TEMP/fbg-qa-time-travel.json"
+          node scripts/maintenance/d1-readonly-summary.mjs "$RUNNER_TEMP/fbg-qa-time-travel.json" timetravel
+      - name: Mark ONLY this exact synthetic staging row is_test=1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="UPDATE beta_inquiries SET is_test=1 WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no' AND REPLACE(UPPER(regnr),' ','')='CV80776' AND melding LIKE 'Syntetisk QA test i staging.%' AND is_test=0" --json > "$RUNNER_TEMP/fbg-qa-update-metrics.json"
+          echo "Staging-only QA flag submitted for exact synthetic record"
+      - name: Confirm one and only one flagged synthetic record
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT COUNT(*) AS n,COALESCE(MAX(is_test),0) AS flagged FROM beta_inquiries WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no' AND REPLACE(UPPER(regnr),' ','')='CV80776' AND melding LIKE 'Syntetisk QA test i staging.%'" --json > "$RUNNER_TEMP/fbg-qa-inquiry-post.json"
+          node scripts/maintenance/staging-synthetic-flag-verify.mjs "$RUNNER_TEMP/fbg-qa-inquiry-post.json" post
