@@ -304,41 +304,25 @@
       <p id="evidence-result" class="note hidden" role="status" aria-live="polite"></p>
     </section>
 
-    <!-- Glasstype-bokser -->
-    <div class="glassvalg" role="group" aria-label="Glasstype">
-      <button class="glassopt" data-type="front" type="button" aria-pressed="false">
-        <span class="glassopt-title">Frontrute</span>
-        <span class="glassopt-help">Vindskjerm foran</span>
-      </button>
-      <button class="glassopt" data-type="door" type="button" aria-pressed="false">
-        <span class="glassopt-title">Dørrute</span>
-        <span class="glassopt-help">Rute i bildøren</span>
-      </button>
-      <button class="glassopt" data-type="side" type="button" aria-pressed="false">
-        <span class="glassopt-title">Siderute</span>
-        <span class="glassopt-help">Sidefelt og småruter</span>
-      </button>
-      <button class="glassopt" data-type="rear" type="button" aria-pressed="false">
-        <span class="glassopt-title">Bakrute</span>
-        <span class="glassopt-help">Glass bak på bilen</span>
-      </button>
-      <button class="glassopt" data-type="roof" type="button" aria-pressed="false">
-        <span class="glassopt-title">Takglass</span>
-        <span class="glassopt-help">Panorama eller takluke</span>
-      </button>
-      <button class="glassopt" data-type="unknown" type="button" aria-pressed="false">
-        <span class="glassopt-title">Vet ikke</span>
-        <span class="glassopt-help">Vi hjelper deg</span>
-      </button>
-    </div>
+    <!-- Rutetype: bygges fra bilens dokumenterte glass (POST /api/glass/valg).
+         Knappene får klasse glassopt + data-type slik at eksisterende
+         smoke-/E2E-script fortsatt finner frontrute-valget. -->
+    <p id="glassvalg-status" class="note" role="status" aria-live="polite"></p>
+    <div id="glassvalg" class="glassvalg" role="group" aria-label="Rutetype"></div>
+
+    <!-- Ett spørsmål om gangen. Hvert steg bygges fra gjenværende kandidater,
+         så kombinasjoner uten katalogstøtte aldri kan velges. -->
     <section id="glass-placement" class="glass-placement hidden" aria-labelledby="glass-placement-title">
+      <nav id="glass-sti" class="steg-sti" aria-label="Valgt rute"></nav>
       <h3 id="glass-placement-title" tabindex="-1">Hvor sitter ruten?</h3>
-      <p id="glass-placement-help" class="note">Velg det du vet. «Vet ikke» sender opplysningen til manuell kontroll.</p>
-      <div id="glass-placement-fields"></div>
+      <p id="glass-placement-help" class="note"></p>
+      <div id="glass-placement-fields" class="valg-liste" role="group" aria-label="Svaralternativer"></div>
       <p id="glass-placement-error" class="note feil hidden" role="alert" aria-live="polite"></p>
-      <button id="btn-glass-search" class="prim" type="button">Fortsett</button>
-      <button id="btn-glass-cancel" class="link" type="button">Velg en annen glasstype</button>
+      <button id="btn-glass-back" class="link hidden" type="button">Tilbake</button>
+      <button id="btn-glass-cancel" class="link" type="button">Velg en annen rutetype</button>
     </section>
+
+    <button id="btn-glass-hjelp" class="link hjelp-lenke" type="button">Jeg finner ikke ruten min / trenger hjelp</button>
     <button class="link" type="button" data-tilbake="start">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Tilbake
@@ -362,10 +346,13 @@
     <div class="resultat-header">
       <h2>Vi hjelper deg med å finne riktig glass</h2>
     </div>
+    <div id="resultat-oppsummering" class="resultat-oppsummering hidden" aria-label="Valgt bil og rute"></div>
     <div id="resultat-status" class="note status hidden" role="status" aria-live="polite"></div>
     <div id="resultat-kort" class="varekort" role="region" aria-label="Glassdetaljer"></div>
     <div id="resultat-regnr" class="note regnr-note hidden" aria-label="Kjennemerke"></div>
     <div id="resultat-alt" class="alternativer" aria-label="Andre mulige varianter"></div>
+    <div id="resultat-sporsmaal" class="sporsmaal-block hidden" aria-label="Spørsmål om bilens utstyr" aria-live="polite"></div>
+    <button id="btn-resultat-hjelp" class="link hjelp-lenke" type="button">Finner du ikke ruten? Be om hjelp</button>
     <div class="prislinje" role="status" aria-live="polite">
       <p class="prisforklaring">Vi dobbeltsjekker riktig glass og sender deg et tilbud med pris og levering før du bestemmer deg.</p>
     </div>
@@ -388,6 +375,7 @@
     <div id="inquiry-form" class="inquiry hidden" aria-label="Forespørsel om tilbud">
       <h3>Be om tilbud</h3>
       <p class="note">Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør og sender deg pris og levering før du bestiller. Vi leverer glass, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte.</p>
+      <div id="inquiry-oppsummering" class="soknad-oppsummering" aria-label="Dette ber du om tilbud på"></div>
       <p id="inquiry-glass-summary" class="note hidden" aria-label="Valgt glasstype"></p>
       <label class="felt">
         <span>Registreringsnummer</span>
@@ -414,13 +402,17 @@
         <input id="inquiry-telefon-ekstra" type="tel" autocomplete="tel" inputmode="tel" maxlength="30" placeholder="F.eks. 40 40 82 41">
       </label>
       <label class="felt">
+        <span>Ønsket leveringssted (valgfritt)</span>
+        <input id="inquiry-leveringssted" type="text" maxlength="80" autocomplete="address-level2" placeholder="F.eks. Trondheim eller verkstedet du avtaler med">
+      </label>
+      <label class="felt">
         <span>Melding (valgfri)</span>
         <textarea id="inquiry-melding" rows="3" maxlength="500" placeholder="Eventuelle spørsmål eller kommentarer"></textarea>
       </label>
       <p id="inquiry-feil" class="note feil hidden" role="alert" aria-live="polite"></p>
       <button id="btn-inquiry-send" class="sek" type="button">Send forespørsel</button>
     </div>
-    <p id="inquiry-bekreftet" class="note status hidden" role="status" aria-live="polite"></p>
+    <div id="inquiry-bekreftet" class="note status hidden" role="status" aria-live="polite"><p id="inquiry-bekreftet-tekst"></p></div>
     <button class="link" type="button" data-tilbake="spm">
       <svg class="ikon" aria-hidden="true"><use href="#ikon-tilbake"/></svg>
       Nytt søk
