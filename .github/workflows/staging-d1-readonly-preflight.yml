@@ -47,7 +47,7 @@ jobs:
         run: |
           set -euo pipefail
           npx --no-install wrangler d1 execute finnbilglass-staging-auth --env staging --remote --file=scripts/sql/staging-kustom-readonly-preflight.sql --json > "$RUNNER_TEMP/fbg-schema.json"
-          node -e "const x=require(process.env.RUNNER_TEMP+'/fbg-schema.json');if(!Array.isArray(x)||!x.length)process.exit(6);console.log('Read-only D1 response batches: '+x.length); const s=JSON.stringify(x); for(const n of ['quote_payment_orders','kustom_payment_events','kustom_money_operations','kustom_reconcile_attempts','auth_users','auth_sessions'])console.log(n+': '+(s.includes(n)?'SCHEMA SEEN':'MISSING / NOT VISIBLE'))"
+          node scripts/maintenance/d1-readonly-summary.mjs "$RUNNER_TEMP/fbg-schema.json" schema
       - name: Time Travel available? (redact bookmark)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -55,4 +55,4 @@ jobs:
         run: |
           set -euo pipefail
           npx --no-install wrangler d1 time-travel info finnbilglass-staging-auth --env staging --json > "$RUNNER_TEMP/fbg-time-travel.json"
-          node -e "const x=require(process.env.RUNNER_TEMP+'/fbg-time-travel.json'); if(!x||typeof x!=='object')process.exit(7);console.log('Staging Time Travel info retrieved; bookmark hidden')"
+          node scripts/maintenance/d1-readonly-summary.mjs "$RUNNER_TEMP/fbg-time-travel.json" timetravel
