@@ -52,6 +52,9 @@ jobs:
           FBG_SEND_INQUIRY: '0'
         run: node scripts/betatest-e2e.mjs
 
+      - name: Syntax for cleanup-script
+        run: node --check scripts/selftest-rydd.mjs
+
       - name: Secret scan (blocking Gitleaks)
         uses: gitleaks/gitleaks-action@v3
         env:
