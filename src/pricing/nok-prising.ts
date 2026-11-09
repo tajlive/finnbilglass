@@ -3,60 +3,70 @@
  *
  * Prinsipp (Tom: "Alltid fakta"):
  *   En pris kan bare kalles BEKREFTET når den bygger på et NOK-grunnlag vi faktisk
- *   har. Glavistas veiledende pris er i EUR og er en RETAIL-referanse, ikke vår
- *   kostnad — den gir derfor alltid ESTIMERT og aldri en kundepris.
+ *   har. En pris som er beregnet fra veiledende listepris er et ESTIMAT som
+ *   kontrolleres manuelt før tilbud.
  *
- * Priskjeden (mva ligger INNI kundeprisen — trinnprisene 3 990/5 490/6 990/8 490
- * er det kunden ser, "inkl. mva"):
+ * Priskjeden (Tom-vedtatt 2026-10-29 for XLS-prislisten):
  *
- *   PRISTLISTE_NOK    listepris × 0,60 → rund ned til trinn   → BEKREFTET
- *   SUPPLIER_INVOICE  fakturakostnad × påslag → rund ned til trinn → BEKREFTET
- *   GLAVISTA_SRP_EUR  EUR-beløp × datert kurs                  → ESTIMERT (ingen kundepris)
+ *   PRISTLISTE_NOK    veiledende XLS-pris EKS. mva × 0,25 × 1,25  → ESTIMERT
+ *   SUPPLIER_INVOICE  fakturakostnad × påslag × 1,25              → BEKREFTET
+ *   GLAVISTA_SRP_EUR  EUR-beløp × datert kurs                     → ESTIMERT (ingen kundepris)
  *
- * MVA blir aldri lagt PÅ toppen: den brytes UT av kundeprisen (25 % → ×25/125).
+ * XLS-prisen i prislisten er EKS. mva. Kunden ser 75 % rabatt lagt til grunn,
+ * og mva (25 %) legges PÅ toppen:
+ *
+ *   estimert kundepris = listeprisEksMva × 0,25 × 1,25
+ *
+ * Det er INGEN avrunding til faste pristrinn: hver variant får sin egen pris,
+ * avrundet til nærmeste øre. Faste trinn (3 990/5 490/6 990/8 490) og
+ * 0,60-faktoren er fjernet (2026-11-04) fordi de ga feil pris og gjorde at
+ * varianter over høyeste trinn feilaktig havnet på «Pris på forespørsel».
  */
 
-/**
- * Hvor prisen kommer fra. Rekkefølgen er også styrke: faktura > prisliste > EUR-veiledning.
- */
 export type Prisgrunnlag = 'SUPPLIER_INVOICE' | 'PRISTLISTE_NOK' | 'GLAVISTA_SRP_EUR';
 
 /** Kan prisen vises som endelig kundepris, eller er den bare en orientering? */
 export type Prissikkerhet = 'BEKREFTET' | 'ESTIMERT';
 
-/** Tom-vedtatt rabatt mot veiledende listepris (2026-08-13). */
-export const PRISTLISTE_RABATT_FAKTOR = 0.6;
-
-/** Prisgruppene kunden ser (inkl. mva). */
-export const TRINN = [3990, 5490, 6990, 8490] as const;
+/** Rabatt mot veiledende XLS-pris (eks. mva): kunden får 75 % avslag (Tom 2026-10-29). */
+export const XLS_RABATT_FAKTOR = 0.25;
+/** Frontruterabatt: 60 % av veiledende listepris. Øvrig glass bruker XLS_RABATT_FAKTOR. */
+export const FRONTRUTE_RABATT_FAKTOR = 0.40;
 
 /**
- * Laveste listepris som kan gi en siterbar kundepris.
- * Under dette gulvet blir raa prisen lavere enn det billigste trinnet, og
- * beregnPris nekter aa runde opp — kunden skal ikke faa en pris vi ikke kan
- * staa inne for. Brukes til aa sortere siterbare produkter foerst.
+ * Minste listepris som gir en meningsfull pris. Med den nye regelen finnes det
+ * ingen øvre grense og ingen faste trinn — 1 kr er nok til å regne en pris.
+ * Brukes av discovery til å sortere rader uten pris bakerst.
  */
-export const LAVESTE_SITERBARE_LISTEPRIS = TRINN[0] / PRISTLISTE_RABATT_FAKTOR;
-
+export const MINSTE_GYLDIGE_LISTEPRIS = 1;
 /** Norsk merverdiavgift. Trinnprisene er inkl. mva, så satsen brukes til uttrekk. */
 export const MVA_SATS = 0.25;
 
 /** Hvor gammel en valutakurs kan være før den flagges. */
 export const MAKS_KURS_ALDER_DAGER = 7;
 
+/** Runder til nærmeste øre (norsk mynt). */
+export function rundTilOre(belop: number): number {
+    return Math.round(belop * 100) / 100;
+}
+
 /**
- * Runder NED til nærmeste trinnpris. `null` = utenfor trinn (under laveste eller
- * over høyeste) → «Spesial», som krever manuell pris.
+ * Estimert kundepris inkl. mva fra veiledende XLS-pris (eks. mva).
  *
- * Merk: dette er trinn-regelen ALENE. `tierPris()` i matcher gjør
- * `tilNaermesteTrinn(listepris × 0,60)` — den er ikke duplisert her fordi
- * fakturakostnad trenger trinn-runde uten prisliste-rabatten.
+ *   listeprisEksMva × 0,25 × 1,25
+ *
+ * Ingen trinn, ingen avrunding til faste priser — bare øre. `null` når
+ * grunnlaget mangler eller er ugyldig (da skal kunden få «Pris på forespørsel»).
  */
-export function tilNaermesteTrinn(pris: number): number | null {
-    if (!Number.isFinite(pris) || pris <= 0) return null;
-    if (pris > TRINN[TRINN.length - 1]) return null;
-    const treff = TRINN.filter((t) => t <= pris).pop();
-    return treff ?? null;
+export function estimertKundeprisInklMva(listeprisEksMva: number | null | undefined): number | null {
+    if (typeof listeprisEksMva !== 'number' || !Number.isFinite(listeprisEksMva) || listeprisEksMva <= 0) return null;
+    return rundTilOre(listeprisEksMva * XLS_RABATT_FAKTOR * (1 + MVA_SATS));
+}
+
+/** Estimat inkl. mva for frontrute: listepris eks. mva × 0,40 × 1,25. */
+export function estimertFrontruteKundeprisInklMva(listeprisEksMva: number | null | undefined): number | null {
+    if (typeof listeprisEksMva !== 'number' || !Number.isFinite(listeprisEksMva) || listeprisEksMva <= 0) return null;
+    return rundTilOre(listeprisEksMva * FRONTRUTE_RABATT_FAKTOR * (1 + MVA_SATS));
 }
 
 export interface Valutakurs {
@@ -177,29 +187,30 @@ export function beregnPris(input: PrisInput): Prisresultat {
         };
     }
 
-    // ── NOK-grunnlag: bekreftet ──
-    let faktor = 1;
+    // ── NOK-grunnlag ──
+    // XLS-prislisten er EKS. mva: kunden får 75 % rabatt og 25 % mva på toppen.
+    // Fakturakostnad er vår egen kostnad og gir en bekreftet pris (påslag + mva).
+    let raa: number;
+    let sikkerhet: Prissikkerhet = 'BEKREFTET';
     if (input.grunnlag === 'PRISTLISTE_NOK') {
-        faktor = PRISTLISTE_RABATT_FAKTOR;
-    } else if (input.grunnlag === 'SUPPLIER_INVOICE') {
-        faktor = Number.isFinite(input.paslagFaktor as number) ? (input.paslagFaktor as number) : 1;
-        if (faktor < 1) advarsler.push('PASLAG_UNDER_1_SELGER_MED_TAP');
+        const estimat = estimertKundeprisInklMva(input.belop);
+        if (estimat === null) {
+            advarsler.push('UGYLDIG_BELOP');
+            return tomt('ESTIMERT');
+        }
+        raa = input.belop * XLS_RABATT_FAKTOR * (1 + mvaSats);
+        sikkerhet = 'ESTIMERT';
+        advarsler.push('ESTIMAT_MANUAL_KONTROLL');
+    } else {
+        const paslag = Number.isFinite(input.paslagFaktor as number) ? (input.paslagFaktor as number) : 1;
+        if (paslag < 1) advarsler.push('PASLAG_UNDER_1_SELGER_MED_TAP');
+        raa = input.belop * paslag * (1 + mvaSats);
     }
 
-    const raa = input.belop * faktor;
-    const kundePris = tilNaermesteTrinn(raa);
-    if (kundePris === null) {
-        // Over høyeste trinn (eller under laveste) → «Spesial»: krever manuell pris.
-        advarsler.push('UTENFOR_TRINNSPRIS_SPESIAL');
-        return {
-            ...tomt('BEKREFTET'),
-            raaPris: Math.round(raa * 100) / 100,
-        };
-    }
-
+    const kundePris = rundTilOre(raa);
     const { mva, eksMva } = mvaFraInkl(kundePris, mvaSats);
     return {
-        sikkerhet: 'BEKREFTET',
+        sikkerhet,
         grunnlag: input.grunnlag,
         kundePris,
         mva,

@@ -1,0 +1,62 @@
+varenr,source_url,type_code,type_code_desc,glass_kind,position,door_position,physical_side,driver_passenger_side,steering_position,source,status,conflict_status,conflict_reason,fetched_at
+29730YP,https://auto-glass.no/varer/nettbutikk/autoglass/mazda/cx-5/2012-2017-i/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,CONFLICT,"CSV: front left (DFFV) vs eurokode 5179RYPR5RV: rear right (R=høyre, YPR5RV=rear ventil)",2026-05-XX
+30971GN,https://auto-glass.no/varer/nettbutikk/autoglass/jaguar/f-pace/2016-f-pace/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10031CL,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/ducato/1981-1994/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10031CL,https://auto-glass.no/varer/nettbutikk/autoglass/daihatsu/cuore/1996-2000/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10042GN,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes/gelandewagen/1981-2006/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10043GN,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes/gelandewagen/1981-2006/,DFB,"Dørrute bakre førerside",dor,rear,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10043YP,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes/gelandewagen/1981-2006/,DFB,"Dørrute bakre førerside",dor,rear,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10044GN,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes/gelandewagen/1981-2006/,SPB1,"Siderute bakre 1 passasjerside",side,rear,right,right,passenger,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10044GN2,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes/gelandewagen/1981-2006/,SPB1,"Siderute bakre 1 passasjerside",side,rear,right,right,passenger,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10044YP,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes/gelandewagen/1981-2006/,SPB1,"Siderute bakre 1 passasjerside",side,rear,right,right,passenger,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10058CL,https://auto-glass.no/varer/nettbutikk/autoglass/volvo-last/n10/1984-n10/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10058CL,https://auto-glass.no/varer/nettbutikk/autoglass/volvo-last/n12/1984-n12/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10058CL,https://auto-glass.no/varer/nettbutikk/autoglass/volvo-last/n7/1984-n7/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10059CL,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes-last/1013-2632-hyttenr-381/1973-1998/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10059CL,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes-last/1626-2644super-cab-hyttenr-389/1981-1626-2644super-cab-hyttenr-389/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10059CL,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes-last/l-507/1986/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10059CL,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes-last/ln-709-1317-serie-673/1982-ln-709-1317-serie-673/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10060CL,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes-last/1013-2632-hyttenr-381/1973-1998/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10060CL,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes-last/l-507/1986/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10060CL,https://auto-glass.no/varer/nettbutikk/autoglass/mercedes-last/ln-709-1317-serie-673/1982-ln-709-1317-serie-673/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10073CL,https://auto-glass.no/varer/nettbutikk/autoglass/ford-last/transit/transit-trans/,B,"Bakrute",bakrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10073CL,https://auto-glass.no/varer/nettbutikk/autoglass/ford-last/transit/transit-trans/,B,"Bakrute",bakrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018BZ,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-3-d-c-c/1979-1993/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018BZ,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-4-d-sedan/1981-199/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018BZ,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-5-d-c-c/1979-1993-/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018C,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-3-d-c-c/1979-1993/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018C,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-4-d-sedan/1981-199/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018C,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-5-d-c-c/1979-1993-/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018GB,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-3-d-c-c/1979-1993/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018GB,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-4-d-sedan/1981-199/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018GB,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-5-d-c-c/1979-1993-/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1027C,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/daily/daily-kassevogn/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1027C,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/daily/daily-lastevogn/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1027GB,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/daily/daily-kassevogn/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1027GB,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/daily/daily-lastevogn/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10030BZ,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/ducato/1981-1994/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10030CL,https://auto-glass.no/varer/nettbutikk/autoglass/daihatsu/cuore/1996-2000/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10030CL,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/ducato/1981-1994/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10030CL,https://auto-glass.no/varer/nettbutikk/autoglass/daimler/cuore/1996-2000/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10030CL,https://auto-glass.no/varer/nettbutikk/autoglass/daihatsu/cuore/1996-2000/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10030CL,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/ducato/1981-1994/,DFFV,"Ventil/siderute fremre førerside",ventil,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10041GN,https://auto-glass.no/varer/nettbutikk/autoglass/fiat/panda/1983-2003-i/,B,"Bakrute",bakrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10041YP,https://auto-glass.no/varer/nettbutikk/autoglass/fiat/panda/1983-2003-i/,B,"Bakrute",bakrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1004BL,https://auto-glass.no/varer/nettbutikk/autoglass/austin/a40/1951-1954/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10058CL,https://auto-glass.no/varer/nettbutikk/autoglass/volvo-last/n10/1984-n10/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10058CL,https://auto-glass.no/varer/nettbutikk/autoglass/volvo-last/n12/1984-n12/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10058CL,https://auto-glass.no/varer/nettbutikk/autoglass/volvo-last/n7/1984-n7/,DFF,"Dørrute fremre førerside",dor,front,left,left,driver,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+10073CL,https://auto-glass.no/varer/nettbutikk/autoglass/ford-last/transit/transit-trans/,B,"Bakrute",bakrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018BZ,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-3-d-c-c/1979-1993/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018BZ,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-4-d-sedan/1981-199/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018BZ,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-5-d-c-c/1979-1993-/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018C,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-3-d-c-c/1979-1993/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018C,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-4-d-sedan/1981-199/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018C,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-5-d-c-c/1979-1993-/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018GB,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-3-d-c-c/1979-1993/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018GB,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-4-d-sedan/1981-199/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1018GB,https://auto-glass.no/varer/nettbutikk/autoglass/saab/900/900-5-d-c-c/1979-1993-/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1027C,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/daily/daily-kassevogn/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1027C,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/daily/daily-lastevogn/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1027GB,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/daily/daily-kassevogn/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX
+1027GB,https://auto-glass.no/varer/nettbutikk/autoglass/fiat-last/daily/daily-lastevogn/,F,"Frontrute",frontrute,,,,,,CSV (mai 2026),UNVERIFIED,OK,,2026-05-XX

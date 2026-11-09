@@ -48,3 +48,14 @@ test('VIN-pos-10 «Z» (forbudt tegn) → null', () => {
 test('VIN-pos-10 «0» (ugyldig siffer) → null', () => {
   assert.equal(vinModelYear(vin('0'), 2020), null);
 });
+
+test('ZZ33141-regresjon: VIN-pos-10 «1» mot registreringsår 2021 gir 2021, ikke 2001', () => {
+  // Rotårsak 2026-11-05: siffer-grenen leste «1» som 2001 uten å sammenligne med
+  // registreringsåret. GLE Coupé 2021 ble dermed matchet mot en W203 Coupé 2001–02.
+  assert.equal(vinModelYear('W1N1673171A365845', 2021), 2021);
+});
+
+test('Siffer-år mer enn 10 år fra registreringsåret forkastes', () => {
+  assert.equal(vinModelYear(vin('1'), 2021), 2021); // 2001 er 20 år unna → forkastes
+  assert.equal(vinModelYear(vin('5'), 2006), 2005); // 1 år unna → beholdes
+});

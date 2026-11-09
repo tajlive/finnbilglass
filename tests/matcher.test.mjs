@@ -57,31 +57,28 @@ test('modelTokensAv: matcher.ts beholder effekt-tokens (vin-resolveren filtrerer
   assert.ok(t.includes('PRO'));
 });
 
-// ── tierPris (Tom 2026-08-13: listepris × 0,60 → rund NED til tier) ─────────
-test('tierPris: ×0,60 rundet ned til nærmeste tier', () => {
-  // 9980 × 0,60 = 5988 → tier 5490
-  assert.equal(tierPris(9980), 5490);
-  // 6650 × 0,60 = 3990 → tier 3990
-  assert.equal(tierPris(6650), 3990);
-  // 9150 × 0,60 = 5490 → tier 5490
-  assert.equal(tierPris(9150), 5490);
-  // 11650 × 0,60 = 6990 → tier 6990
-  assert.equal(tierPris(11650), 6990);
-  // 14150 × 0,60 = 8490 → tier 8490
-  assert.equal(tierPris(14150), 8490);
+// ── Kundepris (Tom 2026-10-29: XLS-pris eks. mva × 0,25 × 1,25) ────────────
+// Den gamle 0,60-faktoren med faste trinn (3 990/5 490/6 990/8 490) er fjernet
+// 2026-11-04: den viste 5 490 kr der riktig estimat er 3 357,81 kr, og sendte
+// varianter over høyeste trinn til «Pris på forespørsel».
+test('kundepris: listepris eks. mva × 0,25 × 1,25, avrundet til øre', () => {
+  assert.equal(tierPris(10745), 5372.5);   // frontrute
+  assert.equal(tierPris(19425), 9712.5);   // frontrute
+  assert.equal(tierPris(14860), 7430);     // frontrute
+  assert.equal(tierPris(9980), 4990);      // frontrute
+  assert.equal(tierPris(1000), 500);
 });
 
-test('tierPris: over høyeste tier → null (spesial/pris på forespørsel)', () => {
-  // 15000 × 0,60 = 9000 > 8490 → spesial (Tom: 5. prisgruppe «pris på forespørsel»)
-  assert.equal(tierPris(15000), null);
-  assert.equal(tierPris(20000), null); // 12000 → spesial
-  // Grensetilfelle: 14152 × 0,60 = 8491,2 > 8490 → spesial; 14150 × 0,60 = 8490 → tier 8490
-  assert.equal(tierPris(14152), null);
+test('kundepris: ingen øvre eller nedre prisgrense', () => {
+  // 20 000 × 0,25 × 1,25 = 6 250 — tidligere «Pris på forespørsel» (over 8 490).
+  assert.equal(tierPris(20000), 10000);
+  // 1 kr er nok til å regne en pris; gulvet er borte.
+  assert.equal(tierPris(1), 0.5);
 });
 
-test('tierPris: under laveste tier eller ugyldig → null', () => {
-  assert.equal(tierPris(6000), null); // 3600 < 3990
+test('kundepris: ugyldig grunnlag gir null', () => {
   assert.equal(tierPris(0), null);
   assert.equal(tierPris(null), null);
   assert.equal(tierPris(-5), null);
+  assert.equal(tierPris(Number.NaN), null);
 });

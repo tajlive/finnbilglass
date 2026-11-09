@@ -17,7 +17,7 @@
  * kompatibilitet eller pris.
  */
 
-import { beregnPris } from './pricing/nok-prising';
+import { estimertFrontruteKundeprisInklMva, mvaFraInkl } from './pricing/nok-prising';
 import type { Kandidat, DiscoveryResult } from './discovery';
 
 /** Felt som aldri skal ut i et offentlig svar. */
@@ -37,6 +37,9 @@ export interface OffentligPris {
   kundePris: number;
   mva: number;
   prisEksMva: number;
+  /** ESTIMERT = beregnet fra veiledende XLS-pris (75 % rabatt + mva), kontrolleres
+   *  manuelt før tilbud. BEKREFTET = bygger på fakturakostnad. */
+  sikkerhet: 'BEKREFTET' | 'ESTIMERT';
 }
 
 export interface OffentligKandidat {
@@ -51,8 +54,10 @@ export interface OffentligGlassSvar {
   /** OK kun når kompatibilitet er bekreftet OG pris finnes. Katalogtreff alene
    *  er alltid MANUAL_REVIEW — pris skal aldri gi OK på egen hånd. */
   status: 'OK' | 'MANUAL_REVIEW';
-  /** Hva prisen i kandidatene faktisk er. Uavhengig av kompatibilitet. */
-  prisStatus: 'BEKREFTET' | 'DELVIS' | 'INGEN';
+  /** Hva prisen i kandidatene faktisk er. Uavhengig av kompatibilitet.
+   *  ESTIMERT = alle kandidater har en beregnet XLS-pris (75 % rabatt + mva),
+   *  BEKREFTET = alle har fakturabasert pris, DELVIS = blandet, INGEN = ingen pris. */
+  prisStatus: 'BEKREFTET' | 'ESTIMERT' | 'DELVIS' | 'INGEN';
   candidates: OffentligKandidat[];
   totalAvailable: number;
   nextCursor?: string;
@@ -66,11 +71,12 @@ export interface OffentligGlassSvar {
 export function offentligPris(listepris: number | null | undefined): OffentligPris | null {
   if (typeof listepris !== 'number' || !Number.isFinite(listepris) || listepris <= 0) return null;
   try {
-    const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: listepris });
-    if (r.sikkerhet !== 'BEKREFTET' || r.kundePris == null || r.mva == null || r.prisEksMva == null) {
-      return null;
-    }
-    return { kundePris: r.kundePris, mva: r.mva, prisEksMva: r.prisEksMva };
+    const kundePris = estimertFrontruteKundeprisInklMva(listepris);
+    // XLS-prisen gir et ESTIMAT (Tom 2026-10-29). Estimatet kan vises, men alltid
+    // merket som estimat — aldri som bekreftet pris.
+    if (kundePris == null) return null;
+    const { mva, eksMva } = mvaFraInkl(kundePris);
+    return { kundePris, mva, prisEksMva: eksMva, sikkerhet: 'ESTIMERT' };
   } catch {
     return null;
   }
@@ -95,8 +101,13 @@ export function tilOffentligKandidat(k: Kandidat & { pris?: number | null }): Of
 export function tilOffentligSvar(r: DiscoveryResult): OffentligGlassSvar {
   const candidates = r.candidates.map((k) => tilOffentligKandidat(k));
   const medPris = candidates.filter((k) => k.pris !== null).length;
+  // Estimat er ikke «bekreftet pris»: statusen skiller derfor på om tallet er
+  // beregnet fra XLS (ESTIMERT) eller bygger på faktura (BEKREFTET).
+  const alleEstimert = candidates.filter((k) => k.pris).every((k) => k.pris!.sikkerhet === 'ESTIMERT');
   const prisStatus: OffentligGlassSvar['prisStatus'] =
-    medPris === 0 ? 'INGEN' : medPris === candidates.length ? 'BEKREFTET' : 'DELVIS';
+    medPris === 0 ? 'INGEN'
+      : medPris < candidates.length ? 'DELVIS'
+        : alleEstimert ? 'ESTIMERT' : 'BEKREFTET';
 
   // Kompatibilitet har høyere prioritet enn pris: et katalogtreff bekrefter
   // ikke at glasset passer bilen. Uten fitment-evidens er svaret MANUAL_REVIEW
@@ -127,4 +138,61 @@ export function lekkerInterneFelt(obj: unknown): string[] {
   };
   gaa(obj);
   return funnet;
+}
+
+
+/**
+ * Offentlig projeksjon av et resolver-svar (/api/frontrute).
+ *
+ * Resolveren returnerer interne felt (eurokode, listepris, confidence, grunn)
+ * fordi den også brukes server-side. Kunden skal se kandidatene og prisen,
+ * men aldri eurokoden eller listeprisen — samme kontrakt som /api/glass
+ * (Tom-beslutning 2026-10-31).
+ */
+export interface OffentligResolverKandidat {
+  varenr: string | null;
+  varenavn: string | null;
+  pris: number | null;
+  /** «varenr:FULL-EUROKODE» — identitet for valgt variant, ikke visningstekst.
+   *  Kunden skal aldri se eurokoden (Tom 2026-10-31), men valget må kunne
+   *  spores tilbake til nøyaktig samme variant i saken og i /ops. */
+  variantId: string | null;
+  attributter: Record<string, boolean | null>;
+}
+
+export function tilOffentligResolverKandidat(k: Record<string, unknown> | null | undefined): OffentligResolverKandidat {
+  const kilde = k ?? {};
+  const attributter: Record<string, boolean | null> = {};
+  const råAttr = (kilde.attributter ?? {}) as Record<string, unknown>;
+  for (const [nøkkel, verdi] of Object.entries(råAttr)) {
+    if (typeof verdi === 'boolean' || verdi === null) attributter[nøkkel] = verdi as boolean | null;
+  }
+  const pris = typeof kilde.pris === 'number' && Number.isFinite(kilde.pris) && kilde.pris > 0 ? kilde.pris : null;
+  // variantId = «varenr:FULL-EUROKODE». Den er nødvendig for at kundens valg skal
+  // peke på samme produktvariant gjennom hele flyten (ett varenr kan ha flere
+  // eurokoder med ulikt utstyr og pris). Koden er produktets egen betegnelse,
+  // ikke internpris — listepris og andre interne felt projiseres fortsatt bort.
+  const variantId = typeof kilde.variantId === 'string' && kilde.variantId.length <= 90 ? kilde.variantId : null;
+  return {
+    varenr: typeof kilde.varenr === 'string' ? kilde.varenr : null,
+    varenavn: typeof kilde.varenavn === 'string' ? kilde.varenavn : null,
+    pris,
+    variantId,
+    attributter,
+  };
+}
+
+export function tilOffentligResolverSvar(resolver: Record<string, unknown> | null | undefined) {
+  const r = resolver ?? {};
+  const kandidater = Array.isArray(r.kandidater) ? r.kandidater.map((k) => tilOffentligResolverKandidat(k as Record<string, unknown>)) : [];
+  const topp = kandidater[0] ?? null;
+  const utfall = typeof r.utfall === 'string' ? r.utfall : null;
+  return {
+    utfall,
+    totalAntall: typeof r.totalAntall === 'number' ? r.totalAntall : kandidater.length,
+    kandidater,
+    sporsmaal: Array.isArray(r.sporsmaal) ? r.sporsmaal.filter((s): s is string => typeof s === 'string') : [],
+    pinpoint: utfall === 'PINPOINT',
+    anbefaling: topp ? { varenr: topp.varenr, varenavn: topp.varenavn, pris: topp.pris } : null,
+  };
 }

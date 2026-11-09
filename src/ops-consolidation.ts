@@ -21,6 +21,8 @@ export interface InquiryRow {
   session_id: string | null;
   created_at: number | string;
   updated_at: number | null;
+  /** 1 = testsak: holdes utenfor ordinær NEW-kø og påminnelser, men bevares i historikken. */
+  is_test?: number;
 }
 
 export interface EvidenceCaseRow {
@@ -52,6 +54,8 @@ export interface KonsolidertSak {
   kandidatantall: number;
   /** Arbeids-prioritet: 0 = mest arbeid (FALLBACK), 3 = minst (PINPOINT/ukjent). */
   prioritet: number;
+  /** true = testsak. Skal ikke telles i NEW-kø eller påminnelser. */
+  erTest: boolean;
 }
 
 /** Normaliser kjennemerke for sammenligning (SVV-format: 2 bokstaver + 5 siffer). */
@@ -120,6 +124,7 @@ export function konsoliderSaker(
       resolverUtfall: snap.utfall,
       kandidatantall: snap.kandidater,
       prioritet: arbeidsPrioritet(snap.utfall, snap.kandidater, 'inquiry'),
+      erTest: i.is_test === 1,
     });
   }
 
@@ -158,6 +163,7 @@ export function konsoliderSaker(
       resolverUtfall: null,
       kandidatantall: 0,
       prioritet: 1,
+      erTest: false,
     });
   }
 

@@ -57,9 +57,9 @@ test('4. invitert kundeflyt erstatter beta-invitasjonen (godkjent forside)', () 
   // Den gamle personlige beta-invitasjonen (førsteperson) er fjernet.
   assert.doesNotMatch(html, /Kjenner du Tom Arne/);
   assert.doesNotMatch(html, /Da vil jeg gjerne ha din hjelp/);
-  // Skjemaet for tilbud finnes, og header viser beta-merket.
+  // Skjemaet finnes, mens dagens main viser korrekt status «Beta».
   assert.match(html, /id="inquiry-form"/);
-  assert.match(html, /class="beta"/);
+  assert.match(html, /class="beta" aria-label="Betaversjon">Beta</);
 });
 
 test('5. språkregel: aktiv kundereise bruker «vi»', () => {
@@ -69,9 +69,9 @@ test('5. språkregel: aktiv kundereise bruker «vi»', () => {
   assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet\./);
   assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør/);
   assert.match(html, /Vi fant ikke et trygt treff i katalogen\. Send oss en forespørsel/);
-  assert.match(html, /Vi dobbeltsjekker alle glassvalg og priser før bestilling\./);
+  assert.match(html, /Vi kontrollerer glass, pris og levering før tilbud\./);
   assert.match(js, /Vi har funnet en mulig kandidat ut fra bildataene dine\. Vi dobbeltsjekker valget manuelt før vi sender tilbud\./);
-  assert.match(js, /Takk! Vi har mottatt forespørselen/);
+  assert.match(js, /Takk, vi har mottatt forespørselen din/);
   assert.match(personvern, /Vi bruker skiltnummer til å hente bilopplysninger/);
 });
 
@@ -79,7 +79,9 @@ test('6. språkregel: «jeg/meg» finnes kun i godkjente unntak', () => {
   // Godkjente unntak
   assert.match(html, /Til meg<\/label>/); // kundens eget valg (levering til privatadresse)
   assert.match(buf, /når jeg betaler selv\?/); // kundens FAQ-spørsmål
-  assert.match(omoss, /Hei, jeg heter Tom Arne og står bak Finnbilglass\./); // Tom-presentasjon
+  // Om oss presenterer ikke lenger enkeltpersonen ved navn (endret 2026-11-04).
+  assert.match(omoss, /<h1>Om Finnbilglass<\/h1>/);
+  assert.doesNotMatch(omoss, /Tom Arne/);
 
   // Forbudt «jeg/meg»-kommunikasjon fra Finnbilglass i app.js
   const forbudtJs = [

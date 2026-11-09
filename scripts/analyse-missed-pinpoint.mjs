@@ -35,20 +35,22 @@ for (const r of pl) {
   if (r.eurokode != null && !plMap.has(String(r.eurokode))) plMap.set(String(r.eurokode), r);
 }
 
-// tilKandidat — samme logikk som prisKandidat (uten glass_catalog kamera/adas, påvirker ikke utfall)
-async function tilKandidat(kode) {
-  const r = plMap.get(String(kode));
-  if (!r) return null;
-  const dek = dekodeEurokode(r.eurokode);
-  if (!erFrontrute(r.varenavn, r.varenr, dek)) return null;
-  return {
-    varenr: r.varenr,
-    varenavn: r.varenavn,
-    pris: null,
-    listepris: r.pris,
-    eurokode: r.eurokode,
-    attributter: {},
-  };
+// tilKandidater — samme logikk som prisKandidater(): ALLE varianter for koden,
+// ikke bare første rad. Ett varenr kan ha flere dokumenterte eurokoder.
+const plRader = [...plMap.values()];
+async function tilKandidater(kode) {
+  const kode_ = String(kode);
+  const treff = plRader.filter((r) => String(r.varenr) === kode_ || String(r.eurokode ?? '') === kode_);
+  return treff
+    .filter((r) => erFrontrute(r.varenavn, r.varenr, dekodeEurokode(r.eurokode)))
+    .map((r) => ({
+      varenr: r.varenr,
+      varenavn: r.varenavn,
+      pris: null,
+      listepris: r.pris,
+      eurokode: r.eurokode,
+      attributter: {},
+    }));
 }
 
 const detaljer = readFileSync(join(ROOT, 'data', 'test-500-gt-detaljer.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
@@ -87,7 +89,7 @@ for (const d of detaljer) {
   if (sett.size > 1) { kat.multi_gt++; pushEks(eksempler, 'multi_gt', d, `GT-sett: ${[...sett].join(',')}`); continue; }
 
   // sett.size === 1: L1-kandidater?
-  const kandidater = await gtRaderKandidater(rader, make, model, aarList, tilKandidat);
+  const kandidater = await gtRaderKandidater(rader, make, model, aarList, tilKandidater);
   const enKode = [...sett][0];
   if (kandidater.length === 1 && kandidater[0].eurokode && String(kandidater[0].eurokode).toUpperCase().replace(/[^A-Z0-9]/g, '') === enKode) {
     kat.missed_pinpoint_l1++;

@@ -1,0 +1,41 @@
+{
+  "base": "https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev",
+  "tid": "2026-11-03T16:48:11.141Z",
+  "fil": "data/fasit-utvalg.csv",
+  "resultat": [
+    {
+      "regnr": "SU18018",
+      "klasse": "frontrute",
+      "kilde": "A",
+      "forventet": "2525GYA",
+      "http": 200,
+      "utfall": "VERIFY",
+      "antall": 5,
+      "kandidater": "2525CSGY 2525GY 2525GYAM 2525GYM 2525GYA",
+      "dom": "RIKTIG_BLANT_KANDIDATER"
+    },
+    {
+      "regnr": "AJ95429",
+      "klasse": "frontrute",
+      "kilde": "A",
+      "forventet": "",
+      "http": 200,
+      "utfall": "VERIFY",
+      "antall": 4,
+      "kandidater": "3172GNM2 3172GNCM 3172GNCA 3172GNCM",
+      "dom": "MANUELL_FORVENTET"
+    }
+  ],
+  "perKlasse": {
+    "frontrute": {
+      "RIKTIG_ENTYDIG": 0,
+      "RIKTIG_BLANT_KANDIDATER": 1,
+      "MANUELL_FORVENTET": 1,
+      "FEIL_FORSLAG": 0,
+      "MANGLENDE_TREFF": 0,
+      "AVVIK_FRA_FASIT": 0,
+      "TEKNISK_FEIL": 0,
+      "antall": 2
+    }
+  }
+}

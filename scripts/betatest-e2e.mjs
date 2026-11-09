@@ -1,6 +1,6 @@
 // Automatisk full betatest — finnbilglass.no (staging/prod).
-// Nåværende Release A: regnr → SVV → velg frontrute → MANUAL_REVIEW
-// → valider uforpliktende tilbud. Ingen ubekreftet glass, pris eller automatisk ordre.
+// Nåværende tilbudsflyt: regnr → SVV → dokumenterte kandidatvarianter
+// → manuell godkjenning av glass og pris → forespørsel. Ingen automatisk ordre.
 // Dette er en LIVE kundereisetest, ikke en fasittest for kandidat-resolveren.
 // Bruk kun FBG_SEND_INQUIRY=1 mot staging; normal smoke sender ingenting.
 // Exit: 0 = grønt · 1 = funn · 2 = teknisk krasj
@@ -64,28 +64,38 @@ async function kjorBil(browser, b) {
 
       await page.locator('.glassopt[data-type="front"]').click();
       await page.waitForSelector('#screen-resultat:not(.hidden)', { timeout: 15000 });
+      // The current candidate flow renders possible windshields and may show an
+      // estimated price; it must NEVER claim compatibility or final prices.
+      // Wait for the resolver to finish before checking results or quote fields.
+      await page.waitForFunction(() => {
+        const btn = document.getElementById('btn-inquiry');
+        return btn && !btn.disabled;
+      }, { timeout: 18000 });
       const kort = (await page.textContent('#resultat-kort') || '').trim();
       const status = (await page.textContent('#resultat-status') || '').trim();
-      const regnr = (await page.textContent('#resultat-regnr') || '').replace(/\s/g, '');
-      if (!/Frontrute/i.test(kort)) funnPush('FEIL', `${kontekst}: frontrutevalg mangler i resultatet`);
-      if (!/kontroller|dobbeltsjekker|manuelt/i.test(status)) {
-        funnPush('FEIL', `${kontekst}: mangler tydelig manuell kontrolltekst`);
+      const oppsummering = (await page.textContent('#resultat-oppsummering') || '').trim();
+      const info = [kort, status, oppsummering].join(' ');
+      const regnr = (await page.textContent('#resultat-regnr') || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+      if (!/frontrute/i.test(info)) funnPush('FEIL', `${kontekst}: frontrutevalg mangler i resultatet`);
+      if (!/kontroll|dobbeltsjekk|bekreft|manuell/i.test(info)) {
+        funnPush('FEIL', `${kontekst}: manuell kontroll og tilbudsverifisering mangler`);
+      }
+      if (/vi fikk ikke hentet|teknisk feil|prøv igjen om litt/i.test(status)) {
+        funnPush('FEIL', `${kontekst}: søket feilet og falt tilbake til teknisk feilmelding`);
+      }
+      if (/garantert riktig|bekreftet kompatibel|100 % sikkert/i.test(info)) {
+        funnPush('FEIL', `${kontekst}: ubekreftet glass fremstår som sikkert`);
       }
       if (!regnr.includes(b.regnr)) funnPush('FEIL', `${kontekst}: registreringsnummer mangler i resultatet`);
       if (await page.isVisible('#screen-spm')) {
-        funnPush('FEIL', `${kontekst}: gamle utstyrsspørsmål vises i manuell tilbudsflyt`);
+        funnPush('FEIL', `${kontekst}: gamle utstyrsspørsmål vises i tilbudsflyten`);
       }
-      // Release A har ingen bekreftet SKU eller pris. Sjekk at gammel kandidatvisning
-      // ikke feilaktig presenteres som sikkert treff.
-      if (await page.locator('#resultat-kort .name').count()) {
-        funnPush('FEIL', `${kontekst}: ubekreftet produktkort er synlig i manuell tilbudsflyt`);
-      }
-      if (await page.isVisible('#resultat-pris')) {
-        funnPush('FEIL', `${kontekst}: gammelt prisfelt er synlig uten priskontroll`);
+      if (/kr/i.test(kort) && !/estimert|bekreft|kontroll/i.test(info)) {
+        funnPush('FEIL', `${kontekst}: pris vises uten estimat eller manuell godkjenning`);
       }
       await page.click('#btn-inquiry');
       await page.waitForSelector('#inquiry-form:not(.hidden)', { timeout: 5000 });
-      const fyltRegnr = (await page.inputValue('#inquiry-regnr') || '').replace(/\s/g, '');
+      const fyltRegnr = (await page.inputValue('#inquiry-regnr') || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
       const glass = (await page.textContent('#inquiry-glass-summary') || '').trim();
       if (fyltRegnr !== b.regnr) funnPush('FEIL', `${kontekst}: feil forhåndsutfylt regnr`);
       if (!/frontrute/i.test(glass)) funnPush('FEIL', `${kontekst}: valgt glasstype mangler i skjema`);

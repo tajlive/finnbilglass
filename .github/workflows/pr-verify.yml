@@ -35,6 +35,12 @@ jobs:
 
       - run: npm ci
 
+      - name: Bundle staging Worker safely (dry-run, no credentials)
+        run: npx wrangler deploy --dry-run --env staging --outdir "$RUNNER_TEMP/fbg-staging-bundle"
+
+      - name: Bundle production Worker safely (dry-run, no credentials)
+        run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/fbg-production-bundle"
+
       - name: Typecheck
         run: npx tsc --noEmit
 

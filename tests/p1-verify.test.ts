@@ -79,10 +79,17 @@ test('P1: StopRuleResult includes errorTrigger field', () => {
 // gjenbruk av resolverens merke-alias gir søket 0 kandidater.
 test('P1: discovery gjenbruker merke-alias fra resolveren', () => {
   const src = readFileSync(join(import.meta.dirname, '..', 'src', 'discovery.ts'), 'utf8');
-  assert.match(src, /import\s*\{\s*normBrand\s*\}\s*from\s*'\.\/vin-resolver'/, 'må importere normBrand');
+  assert.match(
+    src,
+    /import\s*\{\s*normBrand[\s,}]/,
+    'må importere normBrand fra resolveren',
+  );
   assert.doesNotMatch(src, /merke\.toUpperCase\(\)/, 'skal ikke normalisere merke direkte');
-  // Både primær- og sekundærsøket må bruke den normaliserte verdien. Bruker
-  // seed-søket rå merke, gir «Volkswagen» 0 treff selv om primærfeltet er rett.
-  assert.doesNotMatch(src, /seedOrd\.unshift\(merke\)/, 'seed-søket må bruke normalisert merke');
-  assert.match(src, /seedOrd\.unshift\(merkeNorm\)/, 'seed-søket må bruke merkeNorm');
+  // Merket skal håndheves med AND (varenavn LIKE ?), aldri legges inn i
+  // OR-gruppa: da blir modell/år filtrende no-ops og søket returnerer feil
+  // biler (C-HR 2018 → COROLLA 97-01). Regresjonen fanges i
+  // tests/frontrute-search.test.mjs; her kontrolleres kilden.
+  assert.doesNotMatch(src, /seedOrd\.unshift\(merkeNorm\)/, 'merket skal ikke inn i OR-gruppa');
+  assert.doesNotMatch(src, /seedOrd\.unshift\(merke\)/, 'merket skal ikke inn i OR-gruppa');
+  assert.match(src, /normaliserMerke\(merke\)/, 'merket skal normaliseres via resolverens alias');
 });
