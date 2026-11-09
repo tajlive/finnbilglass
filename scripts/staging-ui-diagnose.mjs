@@ -1,5 +1,8 @@
 /** One-car, no-write UI trace for staging. Does not submit inquiries or call money endpoints. */
 import { chromium } from 'playwright';
+import { readFileSync } from 'node:fs';
+const expectedHtml=readFileSync(new URL('../public/index.html', import.meta.url),'utf8');
+const expectedScripts=[...expectedHtml.matchAll(/<script\s+src="([^"]+)"/g)].map(x=>x[1]);
 const base='https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev';
 const browser=await chromium.launch();
 const page=await browser.newPage({viewport:{width:393,height:852}});
@@ -9,7 +12,16 @@ page.on('response',r=>{const u=new URL(r.url());if(u.pathname.startsWith('/api/'
 await page.route('**/api/opplaering',route=>route.fulfill({status:204,body:''}));
 function get(id){return page.locator('#'+id)}
 try{
-  await page.goto(base,{waitUntil:'domcontentloaded'});
+  const remoteVariants=await Promise.all(['/', '/index.html', '/?fbg_check=20261109-v4', '/index.html?fbg_check=20261109-v4'].map(async path=>{
+    const response=await fetch(base+path,{headers:{'Cache-Control':'no-cache'}});
+    const html=await response.text();
+    return {path,http:response.status,cfCache:response.headers.get('cf-cache-status'),cache:response.headers.get('cache-control'),
+      hasViewScript:html.includes('src="frontrute-view.js?'),
+      hasCurrentApp:html.includes('app.js?v=20261109-fastlane-dom-v2'),
+      byteLength:html.length};
+  }));
+  console.log('STAGING_ROOT_FINGERPRINT '+JSON.stringify({expectedScripts,remoteVariants}));
+  await page.goto(base+'/?fbg_check=20261109-v4',{waitUntil:'domcontentloaded'});
   const dependencies=await page.evaluate(()=>({hasFBGView:!!window.FBGView,hasResultatStatus:typeof window.FBGView?.resultatStatus==='function',scripts:[...document.scripts].map(x=>x.getAttribute('src')).filter(Boolean)}));
   await get('input-regnr').fill('CV80776');
   await page.locator('#form-regnr button[type=submit]').click();
