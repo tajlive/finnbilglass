@@ -30,7 +30,7 @@ try {
   await page.waitForSelector('#inquiry-form:not(.hidden)',{timeout:7000});
   const reg=(await page.locator('#inquiry-regnr').inputValue()).replace(/[^A-Z0-9]/gi,'');
   assert.equal(reg,'CV80776');
-  await page.locator('#inquiry-navn').fill('Automatisk stagingtest');
+  await page.locator('#inquiry-navn').fill('Test Automatisk stagingtest');
   await page.locator('#inquiry-kontaktpreferanse').selectOption('epost');
   await page.locator('#inquiry-kontakt').fill('post@finnbilglass.no');
   await page.locator('#inquiry-melding').fill('Syntetisk QA test i staging. Ikke behandle som kundeordre.');
