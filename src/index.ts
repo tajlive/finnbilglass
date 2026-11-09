@@ -44,6 +44,7 @@ import { availableCheckoutMethods, handleCreatePaymentLink, handleStripeWebhook 
 import { handleRefundPaymentOrder } from './routes/stripe-payment-refunds';
 import { handleCreateKustomPaymentLink, handleKustomCallback } from './routes/kustom-ops';
 import { handleKustomPlaygroundDiagnostics } from './routes/kustom-playground-diagnostics';
+import { sweepStaleKustomPayments } from './payments/kustom-reconcile-sweep';
 import { handleCustomerPaymentOrders } from './routes/customer-payment-orders';
 import { handleAdminRoute } from './routes/admin';
 import { setAuthStorage } from './auth';
@@ -492,6 +493,23 @@ export default {
       h.set('Reporting-Endpoints', reportingEndpoints());
     }
     return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+  },
+
+  /**
+   * Every 15 minutes on staging only. Disabled by default even there.
+   * Production has no Cron trigger and cannot enter this handler's work.
+   */
+  async scheduled(controller: ScheduledController, env: Env): Promise<void> {
+    if (controller.cron !== '*/15 * * * *' ||
+        env.ENVIRONMENT !== 'staging' ||
+        env.KUSTOM_RECONCILIATION_ENABLED !== 'true') return;
+    if (!env.FINNBILGLASS_STAGING_AUTH) {
+      throw new Error('KUSTOM_SWEEP_STAGING_DB_MISSING');
+    }
+    const summary=await sweepStaleKustomPayments(env.FINNBILGLASS_STAGING_AUTH,env);
+    // Aggregate counts only: no customer PII, payment links or provider order IDs.
+    console.info('Kustom staging reconciliation:',JSON.stringify(summary));
+    if (summary.errors>0) throw new Error('KUSTOM_SWEEP_REQUIRES_RETRY');
   },
 };
 
