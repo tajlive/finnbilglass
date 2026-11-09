@@ -47,7 +47,7 @@ jobs:
         run: |
           set -euo pipefail
           npx --no-install wrangler d1 execute finnbilglass-staging-auth --env staging --remote --file=scripts/sql/staging-kustom-readonly-preflight.sql --json > "$RUNNER_TEMP/fbg-query-metrics.json"
-          npx --no-install wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT name,type FROM sqlite_master WHERE type IN (\'table\',\'view\')" --json > "$RUNNER_TEMP/fbg-schema.json"
+          npx --no-install wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT name,type FROM sqlite_master WHERE type IN ('table','view')" --json > "$RUNNER_TEMP/fbg-schema.json"
           node scripts/maintenance/d1-readonly-summary.mjs "$RUNNER_TEMP/fbg-schema.json" schema
       - name: Time Travel available? (redact bookmark)
         env:
