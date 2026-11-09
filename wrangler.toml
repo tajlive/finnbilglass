@@ -59,6 +59,10 @@ workers_dev = true
 # globale [[routes]]-oppføringene, og hver staging-deploy flytter
 # finnbilglass.no over til staging-konfigurasjonen (feil miljø, feil D1).
 routes = []
+# Staging cron only; handler itself is also feature-gated and disabled.
+[env.staging.triggers]
+crons = ["*/15 * * * *"]
+
 [env.staging.vars]
 ENVIRONMENT = "staging"
 ALL_GLASS_KANDIDATER_ENABLED = "true"
@@ -75,6 +79,7 @@ KUSTOM_ENABLED = "true"
 KUSTOM_OPS_ROUTE_ENABLED = "true"
 KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED = "false"
 KUSTOM_MONEY_MOVEMENTS_ENABLED = "false"
+KUSTOM_RECONCILIATION_ENABLED = "false"
 
 [[env.staging.d1_databases]]
 binding = "FINNBILGLASS_DB"
