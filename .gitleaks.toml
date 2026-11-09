@@ -16,3 +16,19 @@ condition = "AND"
 regexTarget = "line"
 paths = ['^public/index\.html$']
 regexes = ['^\s*data-public-api-key="[0-9a-f-]{36}"></script>\s*$']
+
+[[allowlists]]
+description = "Cloudflare Access AUD is a public application audience identifier, restricted to exact config assignment"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['^wrangler(?:\.staging)?\.toml$']
+regexes = ['^\s*ACCESS_AUD\s*=\s*"[a-fA-F0-9]{64}"\s*$']
+
+[[allowlists]]
+description = "Report names a Bitwarden Secrets Manager environment-variable NAME, not a credential value"
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['^reports/2026-11-04-dekning-avklart-616\.md$']
+regexes = ['^\s*-\s*\*\*Nøkkel:\*\*\s*Bitwarden Secrets Manager,\s*`[A-Z_][A-Z0-9_]{10,25}`\s*\(prosjekt Klarpakke\)\.\s*$']
