@@ -14,12 +14,15 @@
 | P0: dupliserte status-callbacks | SQLite-regresjon og retting | PR #46; 657 pass, 0 feil, 7 skip |
 | Tapt callback: provider-GET-basert avstemming | Ny modul, ikke automatisk i prod | PR #44; 649 pass, 0 feil, 7 skip |
 | Staging-cron + rettferdig utvalg | Kun staging; flagg er **false** | PR #47; 662 pass, 0 feil, 7 skip; migrasjon 0061 **ikke anvendt** |
-| Oppdatert samlet Kustom-gren | GitHub QA grønn | PR #29 HEAD `dd723b2b`, Actions `42702799139` |
+| Callback + polling: én audit-hendelse | Feil reprodusert (2 events) og rettet | PR #48; 663 pass, 0 feil, 7 skip |
+| Oppdatert samlet Kustom-gren | PR #29 integrerer #44–#48, beholdt som draft | Krever ny QA på HEAD etter dokumentasjonsoppdatering |
 | Prod Worker / D1-tilstand | Ikke bekreftet | Ingen production write eller nye pengeoperasjoner her |
 
 ## Viktig gren- og releaseavvik
 
 `main` per 09.11 er `c6e219f3`. GitHub sammenligning **main → release/fbg-kustom-staging-20261108** er **diverged**, rundt **215 commits foran / 7 bak** med merge-base `73f78712`. PR #29 er draft mot `copy/kvittering-20261103`, **ikke** `main`. En grønn CI her gir ikke GO for merge til `main` eller produksjonsdeploy.
+
+**Verifisert av GitHub-tre-sammenligning:** Dagens `main` har ikke `src/auth-storage.ts`, `src/auth.ts`, `src/routes/admin.ts`, `src/routes/kustom-ops.ts` eller `src/payments/kustom-core.ts` i det hele tatt. Disse må derfor integreres sammen med korrekte avhengigheter og migrasjonsplan før en produksjonsbuild kan bli grønn.
 
 **Krav:** Opprett kontrollert kandidat fra fersk `main`, integrer bare nødvendige, reviderte Kustom-/Operations Center-endringer og avhengigheter. Bevar alle nyere personvern-/Gitleaks-rettinger fra `main`. Unngå å slå sammen den store PR #29 direkte; dokumenter diff, migrasjonsrekkefølge og feature flags. Test ny SHA i CI og staging.
 
