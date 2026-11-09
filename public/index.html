@@ -40,6 +40,10 @@
 
 <link rel="stylesheet" href="styles.css?v=20261030-customer-flow-v4">
 <link rel="icon" type="image/svg+xml" href="ikon.svg?v=20261029-customer-design-v1">
+<!-- Kustom production payment method display for FinnBilglass (M00808102) -->
+<script async id="kustom-elements-script" type="text/javascript"
+  src="https://js.live.kustom.co/kustom-elements/v1/pre-load.js"
+  data-public-api-key="94b61f19-c4fd-4b57-ab30-da11bcfa7cff"></script>
 </head>
 <body class="customer-site">
 <div class="wrap">
@@ -434,6 +438,12 @@
     </button>
   </section>
 
+  <section class="payment-methods" aria-labelledby="payment-methods-title">
+    <h2 id="payment-methods-title">Betalingsmåter</h2>
+    <kustom-payment-method-display locale="nb-NO"></kustom-payment-method-display>
+    <p>Du får betalingslenke når tilbudet er godkjent.</p>
+  </section>
+
   <footer role="contentinfo">
     <div class="footer-kontakt">
       <h4>Spørsmål? Vi hjelper deg.</h4>
@@ -446,7 +456,7 @@
         <span>support@finnbilglass.no</span>
       </a>
     </div>
-    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling.html">Betaling kommer senere</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Vi dobbeltsjekker alle glassvalg og priser før bestilling.</p>
+    <p class="footer-bunn"><a href="/bilglass-uten-forsikring">Bilglass uten forsikring</a> · <a href="/betaling.html">Betalingsmåter</a> · <a href="/om-oss">Om oss</a> · <a href="/personvern">Personvern</a> · Finnbilglass er i testfase. Vi dobbeltsjekker alle glassvalg og priser før bestilling.</p>
   </footer>
 
 </div><!-- /.wrap -->
