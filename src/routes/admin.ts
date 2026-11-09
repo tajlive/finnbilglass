@@ -77,13 +77,9 @@ export async function handleAdminUserRole(request: Request, env: Env): Promise<R
   const storage = getStorage();
   const existing = await storage.userGet(userId) ?? await storage.userGetByEmail(userId);
   if (!existing) return json({ ok: false, error: 'BRUKER_FINNES_IKKE' }, 404);
-  await storage.userSet({
-    ...existing,
-    role: newRole,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  });
-  return json({ ok: true, userId, role: newRole });
+  const changed = await storage.userUpdateRoleAndRevoke(existing.userId, newRole, Date.now());
+  if (!changed) return json({ ok: false, error: 'BRUKER_FINNES_IKKE' }, 404);
+  return json({ ok: true, userId: existing.userId, role: newRole });
 }
 
 export async function handleAdminSessions(request: Request, env: Env): Promise<Response> {
@@ -101,13 +97,13 @@ export async function handleAdminRevokeSession(request: Request, env: Env): Prom
   const pathParts = url.pathname.split('/');
   const sessionId = pathParts.at(-2);
   if (!sessionId) return json({ ok: false, error: 'SESSION_ID_PÅKREVD' }, 400);
-  
+
   // Sjekk om sesjonen eksisterer før revoking - 404 hvis ikke
   const existingSession = await auth.getSession(sessionId);
   if (!existingSession) {
     return json({ ok: false, error: 'SESJON_FINNES_IKKE' }, 404);
   }
-  
+
   await auth.destroySession(sessionId);
   return json({ ok: true, sessionId, message: 'Sesjon avbrutt' });
 }

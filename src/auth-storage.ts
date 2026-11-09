@@ -101,6 +101,7 @@ export interface AuthStorage {
   userGet(userId: string): Promise<AuthUser | null>;
   userGetAll(): Promise<AuthUser[]>;
   userSet(user: AuthUser & { createdAt: number; updatedAt: number }): Promise<void>;
+  userUpdateRoleAndRevoke(userId: string, role: UserRole, updatedAt: number): Promise<boolean>;
 
   // ── Staff invites ──
   staffInviteGet(email: string): Promise<StaffInviteRow | null>;
@@ -255,6 +256,10 @@ export class D1EmulatorAuthStorage implements AuthStorage {
     });
   }
 
+  async userUpdateRoleAndRevoke(userId: string, role: UserRole, updatedAt: number): Promise<boolean> {
+    return this.store.userUpdateRoleAndRevoke(userId, role, updatedAt);
+  }
+
   async cleanupExpired(now?: number) { await this.store.cleanupExpired(now); }
   async clear() { await this.store.clear(); }
 }
@@ -377,6 +382,23 @@ export class D1AuthStorage implements AuthStorage {
     await this.db.prepare(
       'INSERT OR REPLACE INTO auth_users (user_id, email, role, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
     ).bind(user.userId, user.email, user.role, user.name, user.createdAt, user.updatedAt).run();
+  }
+
+  /**
+   * Eksisterende bruker: oppdater KUN rolle og tidsstempel og tilbakekall
+   * sesjoner i én D1-transaksjon. INSERT OR REPLACE må aldri brukes her:
+   * det nullstiller sosiale koblinger og kan trigge ON DELETE CASCADE.
+   */
+  async userUpdateRoleAndRevoke(userId: string, role: UserRole, updatedAt: number): Promise<boolean> {
+    const results = await this.db.batch([
+      this.db.prepare(
+        'UPDATE auth_users SET role = ?, updated_at = ? WHERE user_id = ?'
+      ).bind(role, updatedAt, userId),
+      this.db.prepare(
+        'DELETE FROM auth_sessions WHERE user_id = ?'
+      ).bind(userId),
+    ]);
+    return Number(results[0]?.meta?.changes ?? 0) > 0;
   }
 
   // ── Staff invites ──

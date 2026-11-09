@@ -125,6 +125,18 @@ class D1Emulator {
     this.users.set(user.userId, user);
   }
 
+  // Atomisk map-operasjon i emulatoren: ingen await mellom rolleendring
+  // og sletting av brukerens gamle sesjoner.
+  async userUpdateRoleAndRevoke(userId: string, role: UserRow['role'], updatedAt: number): Promise<boolean> {
+    const existing = this.users.get(userId);
+    if (!existing) return false;
+    this.users.set(userId, { ...existing, role, updatedAt });
+    for (const [sessionId, session] of this.sessions) {
+      if (session.userId === userId) this.sessions.delete(sessionId);
+    }
+    return true;
+  }
+
   async userGetAll(): Promise<UserRow[]> {
     return Array.from(this.users.values());
   }
