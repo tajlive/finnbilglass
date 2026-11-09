@@ -27,12 +27,13 @@ const BILER = [
 ];
 
 const funn = [];
+let stagingInquirySent = false;
 function funnPush(level, msg) { funn.push({ level, msg }); }
 
 async function apiRegnr(regnr) {
   const r = await fetch(`${BASE}/api/regnr`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ regnr }),
+    body: JSON.stringify({ regnr, lookupOnly: true }),
   });
   if (!r.ok) return { http: r.status };
   return await r.json();
@@ -76,7 +77,7 @@ async function kjorBil(browser, b) {
       if (await page.locator('#resultat-kort .name').count()) {
         funnPush('FEIL', `${kontekst}: ubekreftet produktkort er synlig i manuell tilbudsflyt`);
       }
-      if (await page.locator('#resultat-pris:not(.hidden)').count()) {
+      if (await page.isVisible('#resultat-pris')) {
         funnPush('FEIL', `${kontekst}: gammelt prisfelt er synlig uten priskontroll`);
       }
       await page.click('#btn-inquiry');
@@ -92,7 +93,7 @@ async function kjorBil(browser, b) {
       await page.waitForSelector('#inquiry-feil:not(.hidden)', { timeout: 5000 });
       const feil = (await page.textContent('#inquiry-feil') || '').trim();
       if (!/navn/i.test(feil)) funnPush('FEIL', `${kontekst}: ugyldig navn ble ikke avvist: ${feil}`);
-      if (SEND_INQUIRY) {
+      if (SEND_INQUIRY && !stagingInquirySent) {
         if (!/staging/i.test(BASE) || /^(https?:\/\/)?(www\.)?finnbilglass\.no\/?$/i.test(BASE)) {
           throw new Error('FBG_SEND_INQUIRY=1 er kun tillatt mot staging');
         }
@@ -100,6 +101,7 @@ async function kjorBil(browser, b) {
         await page.fill('#inquiry-kontakt', '90000000');
         await page.click('#btn-inquiry-send');
         await page.waitForSelector('#inquiry-bekreftet:not(.hidden)', { timeout: 8000 });
+        stagingInquirySent = true;
         console.log('  syntetisk stagingforespørsel sendt');
       }
       await page.screenshot({ path: `${UT}betatest-${b.navn}-${viewport.width}-resultat.png` });
