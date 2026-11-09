@@ -525,23 +525,23 @@ export default {
       const lookupOnly = (body as Record<string, unknown>)?.lookupOnly === true;
       let lagret = false;
       if (!lookupOnly) {
-      try {
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
-        ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
-        lagret = true;
-      } catch (e) {
-        console.error('regnr-lagring feilet:', e);
-      }
-      // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
-      try {
-        const g = geoAv(request);
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
-      } catch (e) {
-        console.error('søkelogg feilet:', e);
-      }
+        try {
+          await env.FINNBILGLASS_DB.prepare(
+            'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
+          ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
+          lagret = true;
+        } catch (e) {
+          console.error('regnr-lagring feilet:', e);
+        }
+        // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
+        try {
+          const g = geoAv(request);
+          await env.FINNBILGLASS_DB.prepare(
+            'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
+        } catch (e) {
+          console.error('søkelogg feilet:', e);
+        }
       }
       // SVV-oppslag: kjennemerke → bil. Null ved feil/ukjent — frontend faller til manuell.
       let bil = null;
