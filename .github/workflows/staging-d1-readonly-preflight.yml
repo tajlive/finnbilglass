@@ -1,0 +1,58 @@
+# One-time, strictly read-only D1 staging inventory.
+# Never deploy, migrate, restore, create an order or change Cloudflare flags.
+name: Fast-track STAGING D1 read-only preflight
+on:
+  push:
+    branches: ['release/fbg-main-fastlane-20261109']
+    paths: ['.github/workflows/staging-d1-readonly-preflight.yml']
+permissions:
+  contents: read
+concurrency:
+  group: fbg-staging-readonly-preflight
+  cancel-in-progress: false
+jobs:
+  schema:
+    name: Read-only staging D1
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install without project lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Enforce read-only SQL verbs
+        run: |
+          node -e "const fs=require('fs'); const p='scripts/sql/staging-kustom-readonly-preflight.sql'; const sql=fs.readFileSync(p,'utf8').replace(/^--.*$/gm,''); const commands=sql.split(';').map(s=>s.trim()).filter(Boolean); if(!commands.length||commands.some(c=>!/^(SELECT\\b|PRAGMA\\s+table_info\\s*\\()/i.test(c))){process.exit(2)}; console.log('Read-only D1 statements verified: '+commands.length)"
+      - name: Verify only intended staging database
+        run: |
+          node -e "const fs=require('fs'); const t=fs.readFileSync('wrangler.toml','utf8'); const b=t.split('[[env.staging.d1_databases]]').slice(1); const a=b.find(v=>/binding\\s*=\\s*\"FINNBILGLASS_STAGING_AUTH\"/.test(v)); if(!a||!/database_name\\s*=\\s*\"finnbilglass-staging-auth\"/.test(a)||!/database_id\\s*=\\s*\"0b024ab6-4e9c-4fda-ab19-439e11e631fb\"/.test(a))process.exit(3); console.log('Staging auth binding verified by explicit UUID')"
+      - name: Verify staging D1 metadata (no mutation)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo "::error::Staging API token missing"; exit 4; }
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}" || { echo "::error::Staging account ID missing"; exit 4; }
+          npx --no-install wrangler d1 info finnbilglass-staging-auth --env staging --json > "$RUNNER_TEMP/fbg-d1-info.json"
+          node -e "const x=require(process.env.RUNNER_TEMP+'/fbg-d1-info.json'); if(x.name&&x.name!=='finnbilglass-staging-auth')process.exit(5);console.log('Staging D1 metadata accessible; name: '+(x.name||'(not present)'))"
+      - name: Retrieve schema only from exact staging D1 (no customer rows)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --no-install wrangler d1 execute finnbilglass-staging-auth --env staging --remote --file=scripts/sql/staging-kustom-readonly-preflight.sql --json > "$RUNNER_TEMP/fbg-schema.json"
+          node -e "const x=require(process.env.RUNNER_TEMP+'/fbg-schema.json');if(!Array.isArray(x)||!x.length)process.exit(6);console.log('Read-only D1 response batches: '+x.length); const s=JSON.stringify(x); for(const n of ['quote_payment_orders','kustom_payment_events','kustom_money_operations','kustom_reconcile_attempts','auth_users','auth_sessions'])console.log(n+': '+(s.includes(n)?'SCHEMA SEEN':'MISSING / NOT VISIBLE'))"
+      - name: Time Travel available? (redact bookmark)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx --no-install wrangler d1 time-travel info finnbilglass-staging-auth --env staging --json > "$RUNNER_TEMP/fbg-time-travel.json"
+          node -e "const x=require(process.env.RUNNER_TEMP+'/fbg-time-travel.json'); if(!x||typeof x!=='object')process.exit(7);console.log('Staging Time Travel info retrieved; bookmark hidden')"
