@@ -44,6 +44,22 @@
 <script async id="kustom-elements-script" type="text/javascript"
   src="https://js.live.kustom.co/kustom-elements/v1/pre-load.js"
   data-public-api-key="94b61f19-c4fd-4b57-ab30-da11bcfa7cff"></script>
+<!-- Required by Kustom Elements; registers the async pre-load command queue.
+     Display of configured methods only — no checkout, payment, capture or refund. -->
+<script>
+(function (w) {
+  ((w.kustomElements = w.kustomElements || function (method, ...args) {
+    return new Promise(function (resolve, reject) {
+      w.kustomElements._internal.q.push({ method: method, args: args, resolve: resolve, reject: reject });
+    });
+  }),
+  (w.kustomElements._internal = w.kustomElements._internal || { q: [], snippetVersion: "1.0.0" }),
+  w.kustomElements.load || (w.kustomElements.load = new Promise(function (resolve, reject) {
+    w.kustomElements._internal.loadResolve = resolve;
+    w.kustomElements._internal.loadReject = reject;
+  })));
+})(window);
+</script>
 </head>
 <body class="customer-site">
 <div class="wrap">
