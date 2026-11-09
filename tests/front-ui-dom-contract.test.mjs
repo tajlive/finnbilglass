@@ -30,5 +30,10 @@ test('dynamic glass controls and offer feedback required by current app.js are m
   assert.ok(viewPos>=0 && appPos>viewPos,'FBGView must be loaded before app.js');
   assert.doesNotMatch(html,/id="btn-glass-search"/,'legacy inert search button must not remain');
   assert.match(html,/data-public-api-key=/,'approved public payment method display is retained');
+  const preload=html.indexOf('id="kustom-elements-script"');
+  const init=html.indexOf('w.kustomElements._internal = w.kustomElements._internal');
+  const display=html.indexOf('<kustom-payment-method-display');
+  assert.ok(preload >= 0 && init > preload && display > init,
+    'Kustom payment-method display requires official preload queue before the element');
   assert.match(html,/Riktig bilglass\.<br><span>En pris du forstår\./,'approved main homepage hero retained');
 });
