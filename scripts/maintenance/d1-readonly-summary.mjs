@@ -38,10 +38,27 @@ if (mode === 'timetravel') {
 } else {
   const batches = Array.isArray(json) ? json : [json];
   if (!batches.length || !Array.isArray(batches[0]?.results)) throw new Error('SCHEMA_RESPONSE_INVALID');
-  const tables = new Set(batches[0].results.filter(x => x?.type === 'table').map(x => x.name));
+  const tables = new Set();
+  function walk(value, depth = 0) {
+    if (depth > 12 || !value || typeof value !== 'object') return;
+    if (value.type === 'table' && typeof value.name === 'string') {
+      tables.add(value.name);
+    }
+    if (Array.isArray(value)) {
+      for (const v of value) walk(v, depth + 1);
+    } else {
+      for (const v of Object.values(value)) walk(v, depth + 1);
+    }
+  }
+  walk(json);
   const expected = ['quote_payment_orders','kustom_payment_events','kustom_money_operations',
     'kustom_reconcile_attempts','auth_users','auth_sessions'];
-  console.log('D1 schema batches: ' + batches.length);
+  console.log('D1 result structure:', JSON.stringify({
+    batches: batches.length,
+    firstKeys: Object.keys(batches[0]).sort().slice(0,12),
+    firstResultsCount: batches[0]?.results?.length ?? null,
+    firstResultKeys: Object.keys(batches[0]?.results?.[0] ?? {}).sort().slice(0,12)
+  }));
   for (const t of expected) console.log(t + ': ' + (tables.has(t) ? 'PRESENT' : 'MISSING'));
   if (!tables.has('quote_payment_orders') || !tables.has('auth_users')) {
     throw new Error('STAGING_CORE_SCHEMA_NOT_READY');
