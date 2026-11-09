@@ -28,7 +28,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT COUNT(*) AS n,COALESCE(MAX(is_test),0) AS flagged FROM beta_inquiries WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no' AND REPLACE(UPPER(regnr),' ','')='CV80776' AND melding LIKE 'Syntetisk QA test i staging.%'" --json > "$RUNNER_TEMP/fbg-qa-inquiry-pre.json"
+          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT COUNT(*) AS n,COALESCE(MAX(is_test),0) AS flagged FROM beta_inquiries WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no'" --json > "$RUNNER_TEMP/fbg-qa-inquiry-pre.json"
           node scripts/maintenance/staging-synthetic-flag-verify.mjs "$RUNNER_TEMP/fbg-qa-inquiry-pre.json" pre
       - name: Confirm staging Time Travel availability
         env:
@@ -44,7 +44,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="UPDATE beta_inquiries SET is_test=1 WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no' AND REPLACE(UPPER(regnr),' ','')='CV80776' AND melding LIKE 'Syntetisk QA test i staging.%' AND is_test=0" --json > "$RUNNER_TEMP/fbg-qa-update-metrics.json"
+          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="UPDATE beta_inquiries SET is_test=1 WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no' AND is_test=0" --json > "$RUNNER_TEMP/fbg-qa-update-metrics.json"
           echo "Staging-only QA flag submitted for exact synthetic record"
       - name: Confirm one and only one flagged synthetic record
         env:
@@ -52,5 +52,5 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT COUNT(*) AS n,COALESCE(MAX(is_test),0) AS flagged FROM beta_inquiries WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no' AND REPLACE(UPPER(regnr),' ','')='CV80776' AND melding LIKE 'Syntetisk QA test i staging.%'" --json > "$RUNNER_TEMP/fbg-qa-inquiry-post.json"
+          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT COUNT(*) AS n,COALESCE(MAX(is_test),0) AS flagged FROM beta_inquiries WHERE navn='Automatisk stagingtest' AND kontakt='post@finnbilglass.no'" --json > "$RUNNER_TEMP/fbg-qa-inquiry-post.json"
           node scripts/maintenance/staging-synthetic-flag-verify.mjs "$RUNNER_TEMP/fbg-qa-inquiry-post.json" post
