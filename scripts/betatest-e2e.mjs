@@ -1,12 +1,9 @@
 // Automatisk full betatest — finnbilglass.no (staging/prod).
-// Hele kundereisen per bil: regnr → SVV → bekreft → glassvalg → utstyrs-spørsmål
-// → resultat (pris) → henvendelsesskjema. Verifiserer Beta1-funn P1 (resolver-
-// drevne spørsmål: UI-spørsmål == API sporsmaal) og P2 (ingen duplisert merke).
-//
-// Bruk:   node scripts/betatest-e2e.mjs                 (prod)
-//         FBG_BASE=https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev node scripts/betatest-e2e.mjs
-//         FBG_SEND_INQUIRY=1 ...                        (send én test-henvendelse; kun staging)
-// Exit:   0 = alt grønt · 1 = betatest-funn (UI-avvik) · 2 = teknisk krasj
+// Nåværende Release A: regnr → SVV → velg frontrute → MANUAL_REVIEW
+// → valider uforpliktende tilbud. Ingen ubekreftet glass, pris eller automatisk ordre.
+// Dette er en LIVE kundereisetest, ikke en fasittest for kandidat-resolveren.
+// Bruk kun FBG_SEND_INQUIRY=1 mot staging; normal smoke sender ingenting.
+// Exit: 0 = grønt · 1 = funn · 2 = teknisk krasj
 import { createRequire } from 'module';
 import { mkdirSync, writeFileSync } from 'fs';
 let chromium;
@@ -30,122 +27,98 @@ const BILER = [
 ];
 
 const funn = [];
+let stagingInquirySent = false;
 function funnPush(level, msg) { funn.push({ level, msg }); }
 
 async function apiRegnr(regnr) {
   const r = await fetch(`${BASE}/api/regnr`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ regnr }),
+    body: JSON.stringify({ regnr, lookupOnly: true }),
   });
   if (!r.ok) return { http: r.status };
   return await r.json();
 }
 
 async function kjorBil(browser, b) {
-  const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
   const navn = `${b.navn} (${b.regnr})`;
-  try {
-    // Forventninger fra API (samme kilde frontenden bruker).
-    const api = await apiRegnr(b.regnr);
-    const forventetSpm = (api.resolver && Array.isArray(api.resolver.sporsmaal)) ? api.resolver.sporsmaal : null;
-    if (!api.ok || !api.bil) { funnPush('FEIL', `${navn}: /api/regnr svarte ikke ok (http=${api.http || '?'})`); return; }
-
-    await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 20000 });
-    await page.fill('#input-regnr', b.regnr);
-    await page.click('#form-regnr button[type=submit]');
-    // Flyt (Tom 2026-08-17/18): ingen bekreft-skjerm — direkte til glassvalg.
-    await page.waitForSelector('#screen-glass:not(.hidden)', { timeout: 15000 });
-    const bilnavn = (await page.textContent('#glass-bilnavn') || '').trim();
-    if (!/transporter|320|leaf|transp/i.test(bilnavn) && !/2016|2014|2013|2005/.test(bilnavn)) {
-      funnPush('ADVARSEL', `${navn}: glassvalg-skjerm uventet innhold: «${bilnavn}»`);
-    }
-    console.log(`  bil: ${bilnavn}`);
-
-    // Velg frontrute (forhåndsvalgt hvis .aktiv finnes).
-    const aktiv = await page.isVisible('.glassopt.aktiv');
-    await page.locator(aktiv ? '.glassopt.aktiv' : '.glassopt[data-type="front"]').click({ force: true });
-
-    // P1: antall UI-spørsmål skal være nøyaktig resolverens sporsmaal.
-    let uiAntall = 0;
-    const spmSynlig = await page.isVisible('#screen-spm');
-    if (spmSynlig) {
-      const teller = (await page.textContent('#spm-teller') || '').trim(); // «1/2»
-      uiAntall = parseInt((teller.split('/')[1] || '0'), 10);
-    }
-    if (forventetSpm) {
-      if (!spmSynlig && forventetSpm.length === 0) {
-        console.log(`  P1 ✓ PINPOINT/ingen skillende spørsmål → direkte resultat`);
-      } else if (spmSynlig && uiAntall === forventetSpm.length) {
-        console.log(`  P1 ✓ ${uiAntall} spørsmål == resolver.sporsmaal (${forventetSpm.join(', ')})`);
-      } else {
-        funnPush('P1', `${navn}: UI viser ${spmSynlig ? uiAntall : 0} spørsmål, resolver sier ${forventetSpm.length} (${forventetSpm.join(', ')}). Doktrinebrudd!`);
+  // Samme kundereise testes i mobil og desktop, uten ordre eller innsending.
+  for (const viewport of [{ width: 393, height: 852 }, { width: 1280, height: 800 }]) {
+    const page = await browser.newPage({ viewport });
+    // E2E på produksjonsdomene er uten skriveeffekter: /api/regnr bruker
+    // lookupOnly, og testnettleseren blokkerer opplærings-/hendelseslogg.
+    await page.route('**/api/opplaering', route => route.fulfill({ status: 204, body: '' }));
+    const kontekst = `${navn} ${viewport.width}px`;
+    try {
+      const api = await apiRegnr(b.regnr);
+      if (!api.ok || !api.bil) {
+        funnPush('FEIL', `${kontekst}: /api/regnr svarte ikke ok (http=${api.http || '?'})`);
+        continue;
       }
-    }
+      await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      await page.fill('#input-regnr', b.regnr);
+      await page.click('#form-regnr button[type=submit]');
+      await page.waitForSelector('#screen-glass:not(.hidden)', { timeout: 15000 });
+      const bilnavn = (await page.textContent('#glass-bilnavn') || '').trim();
+      if (!bilnavn) funnPush('FEIL', `${kontekst}: bilnavn mangler`);
+      console.log(`  ${viewport.width}px bil: ${bilnavn}`);
 
-    // Svar på spørsmålene («Vet ikke» = sikker sti), stopp ved resultat.
-    for (let i = 0; i < 5 && await page.isVisible('#screen-spm'); i++) {
-      const tittel = (await page.textContent('#spm-tittel') || '').trim();
-      const svar = (b.svar && b.svar[i]) || 'Vet ikke';
-      if (svar === 'Vet ikke') await page.click('#btn-vetikke');
-      else await page.locator('#spm-svar button.sek').filter({ hasText: svar }).first().click();
-      console.log(`  spm ${i + 1}: ${tittel} → ${svar}`);
-      try { await page.waitForSelector('#screen-resultat:not(.hidden)', { timeout: 3000 }); break; }
-      catch { /* neste spørsmål */ }
-    }
-    await page.waitForSelector('#screen-resultat:not(.hidden)', { timeout: 20000 });
+      await page.locator('.glassopt[data-type="front"]').click();
+      await page.waitForSelector('#screen-resultat:not(.hidden)', { timeout: 15000 });
+      const kort = (await page.textContent('#resultat-kort') || '').trim();
+      const status = (await page.textContent('#resultat-status') || '').trim();
+      const regnr = (await page.textContent('#resultat-regnr') || '').replace(/\s/g, '');
+      if (!/Frontrute/i.test(kort)) funnPush('FEIL', `${kontekst}: frontrutevalg mangler i resultatet`);
+      if (!/kontroller|dobbeltsjekker|manuelt/i.test(status)) {
+        funnPush('FEIL', `${kontekst}: mangler tydelig manuell kontrolltekst`);
+      }
+      if (!regnr.includes(b.regnr)) funnPush('FEIL', `${kontekst}: registreringsnummer mangler i resultatet`);
+      if (await page.isVisible('#screen-spm')) {
+        funnPush('FEIL', `${kontekst}: gamle utstyrsspørsmål vises i manuell tilbudsflyt`);
+      }
+      // Release A har ingen bekreftet SKU eller pris. Sjekk at gammel kandidatvisning
+      // ikke feilaktig presenteres som sikkert treff.
+      if (await page.locator('#resultat-kort .name').count()) {
+        funnPush('FEIL', `${kontekst}: ubekreftet produktkort er synlig i manuell tilbudsflyt`);
+      }
+      if (await page.isVisible('#resultat-pris')) {
+        funnPush('FEIL', `${kontekst}: gammelt prisfelt er synlig uten priskontroll`);
+      }
+      await page.click('#btn-inquiry');
+      await page.waitForSelector('#inquiry-form:not(.hidden)', { timeout: 5000 });
+      const fyltRegnr = (await page.inputValue('#inquiry-regnr') || '').replace(/\s/g, '');
+      const glass = (await page.textContent('#inquiry-glass-summary') || '').trim();
+      if (fyltRegnr !== b.regnr) funnPush('FEIL', `${kontekst}: feil forhåndsutfylt regnr`);
+      if (!/frontrute/i.test(glass)) funnPush('FEIL', `${kontekst}: valgt glasstype mangler i skjema`);
 
-    // Resultat: navn, pris.
-    const kortnavn = (await page.textContent('#resultat-kort .name') || '').trim();
-    const pris = (await page.textContent('#resultat-pris') || '').trim();
-    console.log(`  resultat: «${kortnavn}» — ${pris}`);
-
-    // P2: ingen duplisert merke («NISSAN NISSAN LEAF»).
-    const merke = (api.bil.merke || '').trim().toUpperCase();
-    const modell = (api.bil.modell || '').trim().toUpperCase();
-    const upperNavn = kortnavn.toUpperCase();
-    const merkene = merke.split(/\s+/).filter((x) => x.length > 2);
-    let duplisert = false;
-    if (modell.startsWith(merkene[0] || '_____')) {
-      duplisert = merkene.some((m) => (upperNavn.match(new RegExp(m, 'g')) || []).length > 1);
-    }
-    if (duplisert) funnPush('P2', `${navn}: duplisert merke i resultatkort: «${kortnavn}»`);
-    else console.log('  P2 ✓ ingen duplisert merke');
-
-    if (!pris || pris === '…' || pris.includes('undefined')) {
-      funnPush('FEIL', `${navn}: pris mangler/uventet: «${pris}»`);
-    }
-
-    // Henvendelsesskjema: åpner + validerer (sender kun ved FBG_SEND_INQUIRY=1).
-    await page.click('#btn-inquiry');
-    await page.waitForSelector('#inquiry-form:not(.hidden)', { timeout: 5000 });
-    const regnrFelt = (await page.inputValue('#inquiry-regnr')) || '';
-    if (!regnrFelt.replace(/\s/g, '')) funnPush('FEIL', `${navn}: inquiry-regnr ikke forhåndsutfylt`);
-    await page.fill('#inquiry-navn', 'X');
-    await page.click('#btn-inquiry-send');
-    await page.waitForSelector('#inquiry-feil:not(.hidden)', { timeout: 5000 });
-    const feil = (await page.textContent('#inquiry-feil') || '').trim();
-    if (!/navn/i.test(feil)) funnPush('ADVARSEL', `${navn}: validering ga uventet feil: «${feil}»`);
-    else console.log(`  inquiry ✓ validering: «${feil}»`);
-    if (SEND_INQUIRY) {
-      await page.fill('#inquiry-navn', 'Betatest automatisk');
-      await page.fill('#inquiry-kontakt', 'test@finnbilglass.no');
+      await page.fill('#inquiry-navn', 'X');
+      // Test kun klientsidevalidering. Ingen melding sendes i ordinær smoke.
       await page.click('#btn-inquiry-send');
-      await page.waitForSelector('#inquiry-bekreftet:not(.hidden)', { timeout: 8000 });
-      console.log('  inquiry ✓ sendt (test-henvendelse)');
-    } else {
-      await page.click('#btn-inquiry'); // lukk uten å sende
+      await page.waitForSelector('#inquiry-feil:not(.hidden)', { timeout: 5000 });
+      const feil = (await page.textContent('#inquiry-feil') || '').trim();
+      if (!/navn/i.test(feil)) funnPush('FEIL', `${kontekst}: ugyldig navn ble ikke avvist: ${feil}`);
+      if (SEND_INQUIRY && !stagingInquirySent) {
+        if (!/staging/i.test(BASE) || /^(https?:\/\/)?(www\.)?finnbilglass\.no\/?$/i.test(BASE)) {
+          throw new Error('FBG_SEND_INQUIRY=1 er kun tillatt mot staging');
+        }
+        await page.fill('#inquiry-navn', 'Automatisk stagingtest');
+        await page.fill('#inquiry-kontakt', '90000000');
+        await page.click('#btn-inquiry-send');
+        await page.waitForSelector('#inquiry-bekreftet:not(.hidden)', { timeout: 8000 });
+        stagingInquirySent = true;
+        console.log('  syntetisk stagingforespørsel sendt');
+      }
+      await page.screenshot({ path: `${UT}betatest-${b.navn}-${viewport.width}-resultat.png` });
+    } catch (e) {
+      funnPush('FEIL', `${kontekst}: krasj: ${e.message}`);
+    } finally {
+      await page.close();
     }
-
-    await page.screenshot({ path: `${UT}betatest-${b.navn}-resultat.png` });
-  } catch (e) {
-    funnPush('FEIL', `${navn}: krasj: ${e.message}`);
-  } finally {
-    await page.close();
   }
 }
 
 async function ukjentRegnr(browser) {
   const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  await page.route('**/api/opplaering', route => route.fulfill({ status: 204, body: '' }));
   try {
     await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 20000 });
     await page.fill('#input-regnr', 'ZZ99999');
