@@ -55,3 +55,21 @@ test('Kustom HTTP: ordre og HPP blir laget i riktig rekkefolge', async () => {
     assert.match(calls[1].body.payment_session_url,new RegExp(oid));
   } finally {globalThis.fetch=orig;}
 });
+
+test('cancelled/expired and contradictory Order Management states never become authorized or paid', () => {
+  const data = { captured_amount:0, refunded_amount:0,
+    original_order_amount:187375, purchase_currency:'NOK' };
+  for (const status of ['CANCELLED','EXPIRED','CAPTURED','PART_CAPTURED','CLOSED','UNKNOWN']) {
+    assert.equal(classifyKustomOrderManagement({ ...data, status },187375),
+      'NEEDS_RECONCILIATION', status);
+  }
+  assert.equal(classifyKustomOrderManagement({
+    ...data,status:'AUTHORIZED',captured_amount:187375
+  },187375),'NEEDS_RECONCILIATION');
+  assert.equal(classifyKustomOrderManagement({
+    ...data,status:'PART_CAPTURED',captured_amount:187375
+  },187375),'NEEDS_RECONCILIATION');
+  assert.equal(classifyKustomOrderManagement({
+    ...data,status:'CANCELLED',captured_amount:187375,refunded_amount:187375
+  },187375),'NEEDS_RECONCILIATION');
+});
