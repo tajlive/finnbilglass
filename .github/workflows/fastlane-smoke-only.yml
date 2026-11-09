@@ -1,0 +1,30 @@
+name: Fast-track public STAGING read-only smoke
+on:
+  push:
+    branches: ['release/fbg-main-fastlane-20261109']
+    paths:
+      - '.github/workflows/fastlane-smoke-only.yml'
+      - 'scripts/betatest-e2e.mjs'
+permissions:
+  contents: read
+concurrency:
+  group: fbg-fastlane-public-smoke
+  cancel-in-progress: true
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Verify safe candidate/offer journey without any submission
+        env:
+          FBG_BASE: https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev
+          FBG_SEND_INQUIRY: '0'
+          FBG_OUT: ${{ runner.temp }}/fbg-staging-smoke/
+        run: node scripts/betatest-e2e.mjs
