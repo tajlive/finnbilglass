@@ -49,7 +49,7 @@ test('3. P0.2-fotoopplevelse beholdt (kamera + bildebibliotek)', () => {
   assert.equal(bibMedCapture.length, 0, 'bildebibliotek-input skal ikke ha capture');
 });
 
-test('4. invitert kundeflyt erstatter beta-invitasjonen (godkjent forside)', () => {
+test('4. ordinær kundereise uten testinvitasjon (godkjent forside)', () => {
   // Godkjent kundeforside (288ae3a): hero, regnr-søk, VIN-søk og forespørselsskjema.
   assert.match(html, /Riktig bilglass\.<br><span>En pris du forstår\.<\/span>/);
   assert.match(html, /id="form-regnr"/);
@@ -57,9 +57,9 @@ test('4. invitert kundeflyt erstatter beta-invitasjonen (godkjent forside)', () 
   // Den gamle personlige beta-invitasjonen (førsteperson) er fjernet.
   assert.doesNotMatch(html, /Kjenner du Tom Arne/);
   assert.doesNotMatch(html, /Da vil jeg gjerne ha din hjelp/);
-  // Skjemaet for tilbud finnes, og header viser beta-merket.
+  // Skjemaet finnes, men kundene skal ikke se noen beta/pilot-merking.
   assert.match(html, /id="inquiry-form"/);
-  assert.match(html, /class="beta"/);
+  assert.doesNotMatch(html, /aria-label="Betaversjon"|<summary>Beta for inviterte testere<\/summary>|class="beta"/i);
 });
 
 test('5. språkregel: aktiv kundereise bruker «vi»', () => {
@@ -93,7 +93,7 @@ test('6. språkregel: «jeg/meg» finnes kun i godkjente unntak', () => {
     assert.doesNotMatch(js, re, `app.js inneholder forbudt «jeg»: ${re}`);
   }
 
-  // Forbudt i index.html (utenfor beta-invitasjonen og kundens valg)
+  // Forbudt i index.html (utenfor kundens egne valg)
   const forbudtHtml = [
     /Vil du at jeg skal dobbeltsjekke/, /Det hjelper meg å kontrollere/, /Send bilder til Tom Arne/,
     /Jeg har funnet et mulig glass/, /Jeg avklarer/, /Send meg forespørselen/,
