@@ -146,7 +146,7 @@ export async function pollKnownKustomOrder(
     ).bind(now, now, order.id, order.kustom_order_id, order.kustom_hpp_session_id, order.amount_minor);
 
   const eventId = [
-    'kustom_poll', order.kustom_order_id, state,
+    'kustom_state', order.kustom_order_id, state,
     managed.captured_amount, managed.refunded_amount
   ].join('_');
   const audit = db.prepare(
