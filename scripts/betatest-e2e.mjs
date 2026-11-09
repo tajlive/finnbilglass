@@ -44,6 +44,9 @@ async function kjorBil(browser, b) {
   // Samme kundereise testes i mobil og desktop, uten ordre eller innsending.
   for (const viewport of [{ width: 393, height: 852 }, { width: 1280, height: 800 }]) {
     const page = await browser.newPage({ viewport });
+    // E2E på produksjonsdomene er uten skriveeffekter: /api/regnr bruker
+    // lookupOnly, og testnettleseren blokkerer opplærings-/hendelseslogg.
+    await page.route('**/api/opplaering', route => route.fulfill({ status: 204, body: '' }));
     const kontekst = `${navn} ${viewport.width}px`;
     try {
       const api = await apiRegnr(b.regnr);
@@ -115,6 +118,7 @@ async function kjorBil(browser, b) {
 
 async function ukjentRegnr(browser) {
   const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  await page.route('**/api/opplaering', route => route.fulfill({ status: 204, body: '' }));
   try {
     await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 20000 });
     await page.fill('#input-regnr', 'ZZ99999');
