@@ -153,6 +153,7 @@ test('alle 11 rekonstruerte migrasjoner er oppført i statusfilen', () => {
         '0034_glass_catalog_multi.sql',
         '0035_inquiry_glass_request.sql',
         '0036_glass_search_snapshots.sql',
+        '0039_auth_tables.sql',
     ];
     const kjent = new Set(status.migrasjoner.map((m) => m.fil));
     const mangler = rekonstruert.filter((f) => !kjent.has(f));
@@ -162,5 +163,5 @@ test('alle 11 rekonstruerte migrasjoner er oppført i statusfilen', () => {
         const sti = join(ROOT, m.mappe ?? 'migrations', m.fil);
         assert.ok(existsSync(sti), `${m.fil} mangler på disk (${m.mappe ?? 'migrations'}/)`);
     }
-    assert.equal(status.migrasjoner.length, rekonstruert.length, 'Statusfilen har flere/ færre rader enn de 11');
+    assert.equal(status.migrasjoner.length, rekonstruert.length, 'Statusfilen har flere/ færre rader enn de 12');
 });

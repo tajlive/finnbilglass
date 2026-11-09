@@ -1,0 +1,2148 @@
+[
+ {
+  "fil": "2026-10-06_productprices_Skanbatt.no.xlsx",
+  "sti": "/Users/taj/Downloads/2026-10-06_productprices_Skanbatt.no.xlsx",
+  "format": "xlsx",
+  "bytes": 533456,
+  "endret": "2026-10-06",
+  "sha256": "94d80e58ce1e8aaa95e6c8703218c02fed0500bde6954e3333bd48850801e711",
+  "duplikater": [],
+  "ark": [
+   {
+    "navn": "Skandinavisk Batteriimport Norg",
+    "rader": 3073,
+    "kolonner": 24,
+    "skjult": false
+   }
+  ],
+  "headers": [
+   "Dato",
+   "Produktnr.",
+   "SB produkt nr.",
+   "Strekkode",
+   "Produktnavn",
+   "Prod.kl.",
+   "Enh.",
+   "Pakningsstørrelse",
+   "Pris eks. mva",
+   "Pris inkl. mva",
+   "Din rabatt",
+   "Netto pris",
+   "Hovedkategori",
+   "Brand",
+   "Erstattet av",
+   "Image URL",
+   "Category 1",
+   "Category 2",
+   "Category 3",
+   "Category 4",
+   "Høyde",
+   "Bredde",
+   "Lengde",
+   "Vekt (g)"
+  ],
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "prisdata"
+ },
+ {
+  "fil": "2026-10-19_productprices_Skanbatt.no.xlsx",
+  "sti": "/Users/taj/Downloads/2026-10-19_productprices_Skanbatt.no.xlsx",
+  "format": "xlsx",
+  "bytes": 533321,
+  "endret": "2026-10-19",
+  "sha256": "e6d0dc85101f66bd8a15139eade610696d805f77b557cb770d11ac719300fbe8",
+  "duplikater": [],
+  "ark": [
+   {
+    "navn": "Skandinavisk Batteriimport Norg",
+    "rader": 3070,
+    "kolonner": 24,
+    "skjult": false
+   }
+  ],
+  "headers": [
+   "Dato",
+   "Produktnr.",
+   "SB produkt nr.",
+   "Strekkode",
+   "Produktnavn",
+   "Prod.kl.",
+   "Enh.",
+   "Pakningsstørrelse",
+   "Pris eks. mva",
+   "Pris inkl. mva",
+   "Din rabatt",
+   "Netto pris",
+   "Hovedkategori",
+   "Brand",
+   "Erstattet av",
+   "Image URL",
+   "Category 1",
+   "Category 2",
+   "Category 3",
+   "Category 4",
+   "Høyde",
+   "Bredde",
+   "Lengde",
+   "Vekt (g)"
+  ],
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "prisdata"
+ },
+ {
+  "fil": "5724.xls",
+  "sti": "/Users/taj/Downloads/5724.xls",
+  "format": "xls",
+  "bytes": 13719,
+  "endret": "2026-10-27",
+  "sha256": "2cf0a705c14172b5b987c3790106724505ba8f72ca022d1c3e39720ef7927d9a",
+  "duplikater": [],
+  "ark": [
+   {
+    "navn": "Sheet1",
+    "rader": 43,
+    "kolonner": 17,
+    "skjult": false
+   }
+  ],
+  "headers": [
+   "",
+   "AUTOGLASS AS",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "",
+   "TILBUD nr",
+   "",
+   "",
+   "",
+   "5724.0",
+   ""
+  ],
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "Abdeckungsliste_CSC_V78_DIN_A3_EN (1).xlsx",
+  "sti": "/Users/taj/Downloads/Abdeckungsliste_CSC_V78_DIN_A3_EN (1).xlsx",
+  "format": "xlsx",
+  "bytes": 1026748,
+  "endret": "2026-05-27",
+  "sha256": "09eaa05c15da6999c693f26087dadb5ac4eca7f94b5cb77f311404261f820d76",
+  "duplikater": [
+   "/Users/taj/Downloads/Abdeckungsliste_CSC_V78_DIN_A3_EN.xlsx"
+  ],
+  "ark": [
+   {
+    "navn": "Table 1",
+    "rader": 1474,
+    "kolonner": 95,
+    "skjult": false
+   }
+  ],
+  "headers": [],
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "Chrome-passord.csv",
+  "sti": "/Users/taj/Downloads/Chrome-passord.csv",
+  "format": "csv",
+  "bytes": 85745,
+  "endret": "2026-08-08",
+  "sha256": "2753b9a68727ec531ccb60e1933e912ac104519430fddab0565f39097d53d2fb",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 865,
+    "kolonner": 5
+   }
+  ],
+  "headers": [
+   "name",
+   "url",
+   "username",
+   "password",
+   "note"
+  ],
+  "rader_lest": 865,
+  "rader_totalt": 865,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "name": 568,
+   "url": 711,
+   "username": 210,
+   "password": 251
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "SENSITIV — ekskluderes"
+ },
+ {
+  "fil": "PROSEKT API 16 MAI26 (1).xls",
+  "sti": "/Users/taj/Downloads/PROSEKT API 16 MAI26 (1).xls",
+  "format": "xls",
+  "bytes": 4074496,
+  "endret": "2026-08-13",
+  "sha256": "479d7971d65041dc98782b89facb20817a954530bb22dcce7a478e00310fa595",
+  "duplikater": [
+   "/Users/taj/Downloads/PROSEKT API 16 MAI26 (2).xls",
+   "/Users/taj/Downloads/PROSEKT API 16 MAI26.xls",
+   "/Users/taj/bilglass/PROSEKT API 16 MAI26.xls"
+  ],
+  "ark": [
+   {
+    "navn": "Sheet1",
+    "rader": 34800,
+    "kolonner": 7,
+    "skjult": false
+   }
+  ],
+  "headers": [
+   "Varenr",
+   "Varenavn",
+   "",
+   "Pris",
+   "",
+   "Eurokode",
+   ""
+  ],
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "glassrelevant"
+ },
+ {
+  "fil": "Regneark uten navn - Ark 1 (1).csv",
+  "sti": "/Users/taj/Downloads/Regneark uten navn - Ark 1 (1).csv",
+  "format": "csv",
+  "bytes": 5257,
+  "endret": "2026-10-01",
+  "sha256": "1344d3271fc91650e3d0ffe757e3dd6dc63e01bde8d42ac03665e8503f961eaa",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 19,
+    "kolonner": 1
+   }
+  ],
+  "headers": [
+   "Handle,Title,SEO Title,SEO Description"
+  ],
+  "rader_lest": 19,
+  "rader_totalt": 18,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Handle,Title,SEO Title,SEO Description": 19
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "Regneark uten navn - Ark 1 (2).csv",
+  "sti": "/Users/taj/Downloads/Regneark uten navn - Ark 1 (2).csv",
+  "format": "csv",
+  "bytes": 5269,
+  "endret": "2026-10-01",
+  "sha256": "22352dc159f95c998ab8f7911edad28399afbb837f1f7418d813a6ecafee3300",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 19,
+    "kolonner": 1
+   }
+  ],
+  "headers": [
+   "Referanse,Produkttittel,SEO-tittel,SEO-beskrivelse"
+  ],
+  "rader_lest": 19,
+  "rader_totalt": 18,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Referanse,Produkttittel,SEO-tittel,SEO-beskrivelse": 19
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "Regneark uten navn - Ark 1.csv",
+  "sti": "/Users/taj/Downloads/Regneark uten navn - Ark 1.csv",
+  "format": "csv",
+  "bytes": 3919,
+  "endret": "2026-10-01",
+  "sha256": "e7135dcf060b9f3dcee2015cd04a8a5b6a622630a70a56652a7851bdc76f1f09",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 19,
+    "kolonner": 1
+   }
+  ],
+  "headers": [
+   "Handle,Title,SEO Title,SEO Description"
+  ],
+  "rader_lest": 19,
+  "rader_totalt": 18,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Handle,Title,SEO Title,SEO Description": 19
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "SUPPLIES_04-2026.xlsx",
+  "sti": "/Users/taj/Downloads/SUPPLIES_04-2026.xlsx",
+  "format": "xlsx",
+  "bytes": 76441,
+  "endret": "2026-05-20",
+  "sha256": "f4a7a4753342a67e16cd75fc71a7a4589cb0d7311e4d7a5b42ff4bbbfd5b9649",
+  "duplikater": [],
+  "ark": [
+   {
+    "navn": "Аркуш1",
+    "rader": 0,
+    "kolonner": 0,
+    "skjult": false
+   }
+  ],
+  "headers": [
+   "DLNR_AS_INT",
+   "DLNR",
+   "MARKE",
+   "DATUM",
+   "PROVIDER_DATA",
+   "IS_NEW_BRAND [ YES / blank ]"
+  ],
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "glass_og_priser.csv",
+  "sti": "/Users/taj/Downloads/bilglass-lokalt/glass_og_priser.csv",
+  "format": "csv",
+  "bytes": 2922,
+  "endret": "2026-10-27",
+  "sha256": "c6ab11c4975c7b6139ed6e1614a44b0dcd7156801d4f9429e965ae95e5dad810",
+  "duplikater": [],
+  "skilletegn": ";",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 27,
+    "kolonner": 9
+   }
+  ],
+  "headers": [
+   "﻿Bil",
+   "Reg.nr",
+   "Årsmodell",
+   "VIN",
+   "Glass/del",
+   "Varenummer/OEM",
+   "Eurokode",
+   "Pris_NOK",
+   "Status/notat"
+  ],
+  "rader_lest": 27,
+  "rader_totalt": 27,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "﻿Bil": 6,
+   "Reg.nr": 6,
+   "Årsmodell": 5,
+   "VIN": 6,
+   "Glass/del": 19,
+   "Varenummer/OEM": 24,
+   "Pris_NOK": 22,
+   "Eurokode": 1
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "csvmap_med_status - Sheet1.csv",
+  "sti": "/Users/taj/Downloads/csvmap_med_status - Sheet1.csv",
+  "format": "csv",
+  "bytes": 2073316,
+  "endret": "2026-09-30",
+  "sha256": "764200428620e08316085f2bcfc65ee5aabd328a9b4f38c20779cde83a802f5b",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 2974,
+    "kolonner": 78
+   }
+  ],
+  "headers": [
+   "handleId",
+   "supplier",
+   "fieldType",
+   "name",
+   "Description",
+   "productImageUrl",
+   "productGroup",
+   "sku",
+   "ribbon",
+   "price",
+   "priceDate",
+   "price2",
+   "price2Date",
+   "price3",
+   "price3Date",
+   "surcharge",
+   "visible",
+   "discountMode",
+   "discountValue",
+   "inventory",
+   "weight",
+   "cost",
+   "costDate",
+   "cost2",
+   "cost2Date",
+   "cost3",
+   "cost3Date",
+   "sourceProductNo",
+   "barcode",
+   "unit",
+   "packagingSize",
+   "priceNoVat",
+   "supplierDiscountAmount",
+   "supplierDiscountPercentage",
+   "mainCategory",
+   "brand",
+   "substitutedBy",
+   "category1",
+   "category2",
+   "category3",
+   "category4",
+   "supplierDate",
+   "length",
+   "width",
+   "heigth",
+   "createdDate",
+   "updatedDate",
+   "productInfo",
+   "productTechInfo",
+   "internalNote",
+   "customTextField1",
+   "customTextCharLimit1",
+   "customTextMandatory1",
+   "customTextField2",
+   "customTextCharLimit2",
+   "customTextMandatory2",
+   "productOptionName1",
+   "productOptionType1",
+   "productOptionDescription1",
+   "productOptionName2",
+   "productOptionType2",
+   "productOptionDescription2",
+   "productOptionName3",
+   "productOptionType3",
+   "productOptionDescription3",
+   "additionalInfoTitle1",
+   "additionalInfoDescription1",
+   "additionalInfoTitle2",
+   "additionalInfoDescription2",
+   "additionalInfoTitle3",
+   "additionalInfoDescription3",
+   "additionalInfoTitle4",
+   "additionalInfoDescription4",
+   "additionalInfoTitle5",
+   "additionalInfoDescription5",
+   "additionalInfoTitle6",
+   "additionalInfoDescription6",
+   "Status"
+  ],
+  "rader_lest": 2974,
+  "rader_totalt": 2973,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "handleId": 2973,
+   "supplier": 1,
+   "fieldType": 1,
+   "name": 2973,
+   "Description": 2905,
+   "productImageUrl": 2973,
+   "productGroup": 30
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": false,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "data_behaviors.csv",
+  "sti": "/Users/taj/Downloads/data_behaviors.csv",
+  "format": "csv",
+  "bytes": 104,
+  "endret": "2026-03-16",
+  "sha256": "24a35ffdb50a2b00b4bb9286328421f9b611b2dd4a125a989747c41ccc1995cc",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 1,
+    "kolonner": 8
+   }
+  ],
+  "headers": [
+   "BROKEN",
+   "EPIC",
+   "FAILED",
+   "FEATURE",
+   "PASSED",
+   "SKIPPED",
+   "STORY",
+   "UNKNOWN"
+  ],
+  "rader_lest": 1,
+  "rader_totalt": 1,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "BROKEN": 1,
+   "FAILED": 1,
+   "PASSED": 1,
+   "SKIPPED": 1,
+   "UNKNOWN": 1
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "ikke relevant"
+ },
+ {
+  "fil": "elbattno381647_product_csv_export_20250905_132218_DOFpc - Worksheet.csv",
+  "sti": "/Users/taj/Downloads/elbattno381647_product_csv_export_20250905_132218_DOFpc - Worksheet.csv",
+  "format": "csv",
+  "bytes": 1740240,
+  "endret": "2026-09-30",
+  "sha256": "2475f39613c271a598b6c9c842a249a611446d3bc9a1c8334b1b26049233d7cd",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 1040,
+    "kolonner": 62
+   }
+  ],
+  "headers": [
+   "Produkt ID",
+   "Produkt Variant Kombinasjon",
+   "Artikkelnummer",
+   "Navn",
+   "Produktbeskrivelse",
+   "Innkjøpspris",
+   "Salgspris (eks. MVA)",
+   "Salgspris inkl. pristillegg (ekskl. mva.)",
+   "Tilbudspris (eks. MVA)",
+   "Tilbudsstatus",
+   "Tilbudet slutter",
+   "Produktets vekt (Gram)",
+   "Disponibelt lager",
+   "Fysisk lager",
+   "Merverdiavgift (MVA)",
+   "Kategori",
+   "Kategoribilde URL",
+   "Strekkode (GTIN)",
+   "Produsent",
+   "Bilde 1 URL",
+   "Bilde 2 URL",
+   "Bilde 3 URL",
+   "Bilde 4 URL",
+   "Bilde 5 URL",
+   "Bilde 6 URL",
+   "Bilde 7 URL",
+   "Bilde 8 URL",
+   "Synlighet",
+   "Sortering",
+   "Dato opprettet",
+   "Dato tilgjengelig",
+   "Enhet",
+   "Lagerlokasjon",
+   "Artnr leverandør",
+   "Notat",
+   "Produkt URL",
+   "Produkt Slug",
+   "Type knapp",
+   "Side-tittel/meta-tittel",
+   "Meta-beskrivelse",
+   "Meta-nøkkelord",
+   "Artikkelnummer (basisprodukt)",
+   "Produkt Variant 1 Navn",
+   "Produkt Variant 1 Verdi",
+   "Produkt Variant 1 Pristillegg",
+   "Produkt Variant 1 Vekt",
+   "Produkt Variant 1 Bilde",
+   "Produkt Variant 2 Navn",
+   "Produkt Variant 2 Verdi",
+   "Produkt Variant 2 Pristillegg",
+   "Produkt Variant 2 Vekt",
+   "Produkt Variant 2 Bilde",
+   "Produkt Variant 3 Navn",
+   "Produkt Variant 3 Verdi",
+   "Produkt Variant 3 Pristillegg",
+   "Produkt Variant 3 Vekt",
+   "Produkt Variant 3 Bilde",
+   "Produkt Variant Innkjøpspris",
+   "Produkt Tag [additionalProductInfo]",
+   "Synlig i Kassasystem",
+   "Leverandør",
+   "HS-kode"
+  ],
+  "rader_lest": 1040,
+  "rader_totalt": 19003,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Produkt ID": 1040,
+   "Artikkelnummer": 1039,
+   "Navn": 995,
+   "Innkjøpspris": 636,
+   "Salgspris (eks. MVA)": 510,
+   "Salgspris inkl. pristillegg (ekskl. mva.)": 510,
+   "Produktbeskrivelse": 788
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": false,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "inventory_export (1).csv",
+  "sti": "/Users/taj/Downloads/inventory_export (1).csv",
+  "format": "csv",
+  "bytes": 24132,
+  "endret": "2026-10-19",
+  "sha256": "2229ab029263293c1b522a4945824b3cd7868b5d5b5803cc37002a54d8a88204",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 100,
+    "kolonner": 23
+   }
+  ],
+  "headers": [
+   "Handle",
+   "Title",
+   "Option1 Name",
+   "Option1 Value",
+   "Option2 Name",
+   "Option2 Value",
+   "Option3 Name",
+   "Option3 Value",
+   "SKU",
+   "HS Code",
+   "COO",
+   "Location",
+   "Bin name",
+   "Incoming (not editable)",
+   "Unavailable (not editable)",
+   "Committed (not editable)",
+   "Available (not editable)",
+   "On hand (current)",
+   "On hand (new)",
+   "Variant Packed Length",
+   "Variant Packed Width",
+   "Variant Packed Height",
+   "Variant Packed Dimension Unit"
+  ],
+  "rader_lest": 100,
+  "rader_totalt": 100,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Handle": 46,
+   "Title": 46,
+   "Option1 Name": 1,
+   "Option1 Value": 1
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "glassrelevant"
+ },
+ {
+  "fil": "inventory_export (2).csv",
+  "sti": "/Users/taj/Downloads/inventory_export (2).csv",
+  "format": "csv",
+  "bytes": 24796,
+  "endret": "2026-10-19",
+  "sha256": "1a22a70eaa3cff01dc43c0fe61e064285bec91f866df506f1693ece168ee8bb6",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 100,
+    "kolonner": 23
+   }
+  ],
+  "headers": [
+   "Handle",
+   "Title",
+   "Option1 Name",
+   "Option1 Value",
+   "Option2 Name",
+   "Option2 Value",
+   "Option3 Name",
+   "Option3 Value",
+   "SKU",
+   "HS Code",
+   "COO",
+   "Location",
+   "Bin name",
+   "Incoming (not editable)",
+   "Unavailable (not editable)",
+   "Committed (not editable)",
+   "Available (not editable)",
+   "On hand (current)",
+   "On hand (new)",
+   "Variant Packed Length",
+   "Variant Packed Width",
+   "Variant Packed Height",
+   "Variant Packed Dimension Unit"
+  ],
+  "rader_lest": 100,
+  "rader_totalt": 100,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Handle": 44,
+   "Title": 44,
+   "Option1 Name": 1,
+   "Option1 Value": 1
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "glassrelevant"
+ },
+ {
+  "fil": "inventory_export.csv",
+  "sti": "/Users/taj/Downloads/inventory_export.csv",
+  "format": "csv",
+  "bytes": 10969,
+  "endret": "2026-10-19",
+  "sha256": "73299d0d66245eff75b9a5e23c745ae94ab7741f6b092b5ae908f6d1633dbaec",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 50,
+    "kolonner": 23
+   }
+  ],
+  "headers": [
+   "Handle",
+   "Title",
+   "Option1 Name",
+   "Option1 Value",
+   "Option2 Name",
+   "Option2 Value",
+   "Option3 Name",
+   "Option3 Value",
+   "SKU",
+   "HS Code",
+   "COO",
+   "Location",
+   "Bin name",
+   "Incoming (not editable)",
+   "Unavailable (not editable)",
+   "Committed (not editable)",
+   "Available (not editable)",
+   "On hand (current)",
+   "On hand (new)",
+   "Variant Packed Length",
+   "Variant Packed Width",
+   "Variant Packed Height",
+   "Variant Packed Dimension Unit"
+  ],
+  "rader_lest": 50,
+  "rader_totalt": 50,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Handle": 46,
+   "Title": 46,
+   "Option1 Name": 1,
+   "Option1 Value": 1
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "glassrelevant"
+ },
+ {
+  "fil": "klarpakke-log-export-2026-02-23T11-52-37.csv",
+  "sti": "/Users/taj/Downloads/klarpakke-log-export-2026-02-23T11-52-37.csv",
+  "format": "csv",
+  "bytes": 6942,
+  "endret": "2026-02-23",
+  "sha256": "b630a5625c277935718f54c63046a2f3a02dcab0a1242611601f946100b64095",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 17,
+    "kolonner": 28
+   }
+  ],
+  "headers": [
+   "TimeUTC",
+   "timestampInMs",
+   "requestPath",
+   "requestMethod",
+   "requestQueryString",
+   "responseStatusCode",
+   "requestId",
+   "requestUserAgent",
+   "level",
+   "environment",
+   "branch",
+   "vercelCache",
+   "type",
+   "function",
+   "host",
+   "deploymentDomain",
+   "deploymentId",
+   "durationMs",
+   "region",
+   "maxMemoryUsed",
+   "memorySize",
+   "message",
+   "projectId",
+   "traceId",
+   "sessionId",
+   "invocationId",
+   "instanceId",
+   "concurrency"
+  ],
+  "rader_lest": 17,
+  "rader_totalt": 17,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "TimeUTC": 7,
+   "timestampInMs": 17,
+   "requestPath": 5,
+   "requestMethod": 1,
+   "responseStatusCode": 1,
+   "requestId": 17,
+   "requestUserAgent": 3
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "ikke relevant"
+ },
+ {
+  "fil": "klarpakke_90day_plan.xlsx",
+  "sti": "/Users/taj/Downloads/klarpakke_90day_plan.xlsx",
+  "format": "xlsx",
+  "bytes": 22826,
+  "endret": "2026-02-03",
+  "sha256": "ccbcf8687b3bf8f9105ceca7cc78c7d91ca2256361ce224c49a4c9dac1ca3f94",
+  "duplikater": [],
+  "ark": [
+   {
+    "navn": "Executive Summary",
+    "rader": 20,
+    "kolonner": 7,
+    "skjult": false
+   },
+   {
+    "navn": "Ukeplan Detaljert",
+    "rader": 79,
+    "kolonner": 9,
+    "skjult": false
+   },
+   {
+    "navn": "Pricing Strategy",
+    "rader": 18,
+    "kolonner": 6,
+    "skjult": false
+   },
+   {
+    "navn": "Risk Matrix",
+    "rader": 11,
+    "kolonner": 7,
+    "skjult": false
+   },
+   {
+    "navn": "Budget",
+    "rader": 13,
+    "kolonner": 5,
+    "skjult": false
+   },
+   {
+    "navn": "Daily Actions",
+    "rader": 16,
+    "kolonner": 4,
+    "skjult": false
+   }
+  ],
+  "headers": [
+   "Fase",
+   "Uker",
+   "Fokus",
+   "Leveranse",
+   "Revenue Impact",
+   "Risk",
+   "Status"
+  ],
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "ikke relevant"
+ },
+ {
+  "fil": "products_export_1.csv",
+  "sti": "/Users/taj/Downloads/products_export_1.csv",
+  "format": "csv",
+  "bytes": 505346,
+  "endret": "2026-10-01",
+  "sha256": "e9b36200f359ce0df4561d19cbb5dd5651d51bf4151d25c701365cec0b916a91",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 251,
+    "kolonner": 47
+   }
+  ],
+  "headers": [
+   "Handle",
+   "Title",
+   "Body (HTML)",
+   "Vendor",
+   "Product Category",
+   "Type",
+   "Tags",
+   "Published",
+   "Option1 Name",
+   "Option1 Value",
+   "Option1 Linked To",
+   "Option2 Name",
+   "Option2 Value",
+   "Option2 Linked To",
+   "Option3 Name",
+   "Option3 Value",
+   "Option3 Linked To",
+   "Variant SKU",
+   "Variant Grams",
+   "Variant Inventory Tracker",
+   "Variant Inventory Qty",
+   "Variant Inventory Policy",
+   "Variant Fulfillment Service",
+   "Variant Price",
+   "Variant Compare At Price",
+   "Variant Requires Shipping",
+   "Variant Taxable",
+   "Unit Price Total Measure",
+   "Unit Price Total Measure Unit",
+   "Unit Price Base Measure",
+   "Unit Price Base Measure Unit",
+   "Variant Barcodes",
+   "Image Src",
+   "Image Position",
+   "Image Alt Text",
+   "Gift Card",
+   "SEO Title",
+   "SEO Description",
+   "Variant Image",
+   "Variant Weight Unit",
+   "Variant Tax Code",
+   "Cost per item",
+   "Status",
+   "Variant Packed Length",
+   "Variant Packed Width",
+   "Variant Packed Height",
+   "Variant Packed Dimension Unit"
+  ],
+  "rader_lest": 251,
+  "rader_totalt": 7457,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Handle": 235,
+   "Title": 234,
+   "Body (HTML)": 220,
+   "Vendor": 1,
+   "Product Category": 2,
+   "Type": 5,
+   "Tags": 5,
+   "Published": 1
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "products_export_1_seo_dimensions_shopify_import_ready.csv",
+  "sti": "/Users/taj/Downloads/products_export_1_seo_dimensions_shopify_import_ready.csv",
+  "format": "csv",
+  "bytes": 543959,
+  "endret": "2026-10-01",
+  "sha256": "d66499884b3afbf62409d74bd02499d597a0db35ee8737c5706fde1656565448",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 251,
+    "kolonner": 47
+   }
+  ],
+  "headers": [
+   "﻿Handle",
+   "Title",
+   "Body (HTML)",
+   "Vendor",
+   "Product Category",
+   "Type",
+   "Tags",
+   "Published",
+   "Option1 Name",
+   "Option1 Value",
+   "Option1 Linked To",
+   "Option2 Name",
+   "Option2 Value",
+   "Option2 Linked To",
+   "Option3 Name",
+   "Option3 Value",
+   "Option3 Linked To",
+   "Variant SKU",
+   "Variant Grams",
+   "Variant Inventory Tracker",
+   "Variant Inventory Qty",
+   "Variant Inventory Policy",
+   "Variant Fulfillment Service",
+   "Variant Price",
+   "Variant Compare At Price",
+   "Variant Requires Shipping",
+   "Variant Taxable",
+   "Unit Price Total Measure",
+   "Unit Price Total Measure Unit",
+   "Unit Price Base Measure",
+   "Unit Price Base Measure Unit",
+   "Variant Barcodes",
+   "Image Src",
+   "Image Position",
+   "Image Alt Text",
+   "Gift Card",
+   "SEO Title",
+   "SEO Description",
+   "Variant Image",
+   "Variant Weight Unit",
+   "Variant Tax Code",
+   "Cost per item",
+   "Status",
+   "Variant Packed Length",
+   "Variant Packed Width",
+   "Variant Packed Height",
+   "Variant Packed Dimension Unit"
+  ],
+  "rader_lest": 251,
+  "rader_totalt": 7457,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "﻿Handle": 235,
+   "Title": 234,
+   "Body (HTML)": 220,
+   "Vendor": 1,
+   "Product Category": 2,
+   "Type": 5,
+   "Tags": 5,
+   "Published": 1
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "varta_seo_titles_descriptions_dimensions.csv",
+  "sti": "/Users/taj/Downloads/varta_seo_titles_descriptions_dimensions.csv",
+  "format": "csv",
+  "bytes": 58577,
+  "endret": "2026-10-01",
+  "sha256": "02888e45abdf2cf00d1f5b57a67d2b0d1af2ee68a90e1b9a80fc2f8f18ef7616",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 251,
+    "kolonner": 7
+   }
+  ],
+  "headers": [
+   "﻿Handle",
+   "SEO Title",
+   "SEO Description",
+   "Variant Packed Length",
+   "Variant Packed Width",
+   "Variant Packed Height",
+   "Variant Packed Dimension Unit"
+  ],
+  "rader_lest": 251,
+  "rader_totalt": 251,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "﻿Handle": 235,
+   "SEO Title": 251,
+   "SEO Description": 203,
+   "Variant Packed Length": 60,
+   "Variant Packed Width": 38,
+   "Variant Packed Height": 54,
+   "Variant Packed Dimension Unit": 1
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "commercialvehicles.csv",
+  "sti": "/Users/taj/bilglass/commercialvehicles.csv",
+  "format": "csv",
+  "bytes": 1644126,
+  "endret": "2026-06-08",
+  "sha256": "3dc3c9a45d419bb34b9cb9f72f375bfd6c21952848763ae239bae8eb6c506373",
+  "duplikater": [
+   "/Users/taj/bilglass/data/tecdoc-import/commercialvehicles.csv"
+  ],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 8
+   }
+  ],
+  "headers": [
+   "16522",
+   "17207",
+   "11502",
+   "1989-01-01",
+   "0000-00-00",
+   "40",
+   "AEBI TT 40",
+   "1"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 21412,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "16522": 3000,
+   "17207": 3000,
+   "11502": 237,
+   "1989-01-01": 206,
+   "0000-00-00": 79,
+   "40": 2160,
+   "AEBI TT 40": 2476,
+   "1": 2
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "autoglass-katalog-kvalitet.csv",
+  "sti": "/Users/taj/bilglass/data/autoglass-katalog-kvalitet.csv",
+  "format": "csv",
+  "bytes": 4735684,
+  "endret": "2026-05-16",
+  "sha256": "43b54b486f8d9628b3ef9c0e0854b770edfab95e498264ccf0f09aed1ac72e2a",
+  "duplikater": [],
+  "skilletegn": ";",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 21
+   }
+  ],
+  "headers": [
+   "Eurokode",
+   "Varenummer",
+   "Merke",
+   "Modell",
+   "År_fra",
+   "År_til",
+   "Kategori",
+   "Leverandør",
+   "Pris",
+   "Lager",
+   "ADAS",
+   "Regnsensor",
+   "Oppvarmet",
+   "Akustisk",
+   "Antenne",
+   "HUD",
+   "Beskrivelse",
+   "Prefix4",
+   "Kilde",
+   "Kvalitet",
+   "Antall_flagg"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 26475,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "Eurokode": 3000,
+   "Varenummer": 3000,
+   "Merke": 185,
+   "Modell": 1685,
+   "År_fra": 29,
+   "År_til": 29,
+   "Kategori": 5,
+   "Leverandør": 1
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": true,
+   "utstyr": true,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "autoglass-katalog.csv",
+  "sti": "/Users/taj/bilglass/data/autoglass-katalog.csv",
+  "format": "csv",
+  "bytes": 4639243,
+  "endret": "2026-05-16",
+  "sha256": "ca546faaac01bf905e5a198234936b0c3dfd07c7cd17b12ba49af383fbc5eefc",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 19
+   }
+  ],
+  "headers": [
+   "eurocode",
+   "articleNumber",
+   "category",
+   "supplier",
+   "brand",
+   "model",
+   "yearFrom",
+   "yearTo",
+   "adas",
+   "rainSensor",
+   "heated",
+   "acoustic",
+   "antenna",
+   "hud",
+   "price",
+   "stockStatus",
+   "oemNumbers",
+   "description",
+   "prefix4"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 33214,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "eurocode": 3000,
+   "articleNumber": 3000,
+   "category": 4,
+   "supplier": 1,
+   "brand": 185,
+   "model": 1685,
+   "yearFrom": 27,
+   "yearTo": 27
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": false,
+   "utstyr": true,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "products-autoglass-no.csv",
+  "sti": "/Users/taj/bilglass/data/autoglass-scrape/products-autoglass-no.csv",
+  "format": "csv",
+  "bytes": 5928808,
+  "endret": "2026-05-27",
+  "sha256": "a0163e0723ae4ee8eecb496905d41f6d7c200bad6a6a81ac29283c0f3ad2a6f9",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 12
+   }
+  ],
+  "headers": [
+   "sku",
+   "title",
+   "brand",
+   "model",
+   "submodel",
+   "year_start",
+   "year_end",
+   "year_range",
+   "type_code",
+   "type_code_desc",
+   "price",
+   "source_url"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 27184,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "sku": 1865,
+   "title": 1624,
+   "brand": 57,
+   "model": 370,
+   "year_start": 39,
+   "year_end": 39,
+   "year_range": 279,
+   "submodel": 260
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "summary-by-brand-model.csv",
+  "sti": "/Users/taj/bilglass/data/autoglass-scrape/summary-by-brand-model.csv",
+  "format": "csv",
+  "bytes": 140012,
+  "endret": "2026-05-20",
+  "sha256": "bc97d2b82c85145aabe76e28ce9e6bc1047ee38a065d804d40af20f2996fcf18",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 5
+   }
+  ],
+  "headers": [
+   "brand",
+   "model",
+   "type_code",
+   "product_count",
+   "unique_skus"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 6078,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "brand": 68,
+   "model": 661,
+   "type_code": 19,
+   "product_count": 63,
+   "unique_skus": 55
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "passengercars.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-github/passengercars.csv",
+  "format": "csv",
+  "bytes": 6620645,
+  "endret": "2026-06-08",
+  "sha256": "a4a0929ecb13f1c8487b29d1316e10706e859d018e2bb831915cd7bb9a9e9f5f",
+  "duplikater": [
+   "/Users/taj/bilglass/data/tecdoc-import/passengercars.csv"
+  ],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 10
+   }
+  ],
+  "headers": [
+   "119512",
+   "65223",
+   "36454",
+   "ABARTH",
+   "3854",
+   "2016-03-01",
+   "0000-00-00",
+   "1.4",
+   "ABARTH 124 Spider (348_) 1.4",
+   "1"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 69870,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "119512": 3000,
+   "65223": 3000,
+   "36454": 459,
+   "ABARTH": 26,
+   "3854": 26,
+   "2016-03-01": 504,
+   "0000-00-00": 321,
+   "1.4": 756
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "articles_linkages.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-import/articles_linkages.csv",
+  "format": "csv",
+  "bytes": 638402,
+  "endret": "2026-05-30",
+  "sha256": "ef8280e24af101087ad8188d84e70e59f8f0906cdc562c1439900729e6ac944c",
+  "duplikater": [],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 7
+   }
+  ],
+  "headers": [
+   "1",
+   "20324",
+   "0",
+   "17",
+   "5354000336062",
+   "0",
+   ""
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 12834,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "1": 2,
+   "20324": 1,
+   "0": 1,
+   "17": 367,
+   "5354000336062": 2601,
+   "": 301
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "commercialvehicles_axles.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-import/commercialvehicles_axles.csv",
+  "format": "csv",
+  "bytes": 3264780,
+  "endret": "2026-05-30",
+  "sha256": "cdbea941d9986e978cd0dbb83ca3c4cc9071a6a23a44d4ff2ddf5c4dcc636d80",
+  "duplikater": [],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 8
+   }
+  ],
+  "headers": [
+   "19935",
+   "5799",
+   "General",
+   "_NotDefined",
+   "",
+   "2",
+   "DAF SR SR1344",
+   "2 - DAF SR SR1344"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 37732,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "19935": 914,
+   "5799": 111,
+   "General": 1,
+   "_NotDefined": 1,
+   "2": 5,
+   "DAF SR SR1344": 111,
+   "2 - DAF SR SR1344": 148
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "commercialvehicles_link_cvm.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-import/commercialvehicles_link_cvm.csv",
+  "format": "csv",
+  "bytes": 455143,
+  "endret": "2026-05-30",
+  "sha256": "fcc7654b280befeec0f78e3cd5054b0284eaa034210863c683816d239a08e4f5",
+  "duplikater": [],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 2
+   }
+  ],
+  "headers": [
+   "12422",
+   "24322"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 42086,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "12422": 180,
+   "24322": 2948
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "commercialvehicles_link_engines.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-import/commercialvehicles_link_engines.csv",
+  "format": "csv",
+  "bytes": 312368,
+  "endret": "2026-05-30",
+  "sha256": "ee15f661b84501e091d4e11e3ca3470453bcc57a94034814d5ed2773561b30ec",
+  "duplikater": [],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 2
+   }
+  ],
+  "headers": [
+   "16522",
+   "28174"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 27969,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "16522": 2685,
+   "28174": 485
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "manufacturers.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-import/manufacturers.csv",
+  "format": "csv",
+  "bytes": 192878,
+  "endret": "2026-05-30",
+  "sha256": "058e3622c1c65aa27610d777270fce1adcdc91d8585198239d86917dbd8a42a5",
+  "duplikater": [
+   "/Users/taj/bilglass/manufacturers.csv"
+  ],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 4759,
+    "kolonner": 12
+   }
+  ],
+  "headers": [
+   "2946",
+   "A P E",
+   "1",
+   "Auto Parts Europe",
+   "0",
+   "0",
+   "0",
+   "0",
+   "0",
+   "0",
+   "0",
+   "0"
+  ],
+  "rader_lest": 4759,
+  "rader_totalt": 4759,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "2946": 3000,
+   "A P E": 2953,
+   "1": 2,
+   "Auto Parts Europe": 2886,
+   "0": 2
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "glassrelevant"
+ },
+ {
+  "fil": "models.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-import/models.csv",
+  "format": "csv",
+  "bytes": 1045670,
+  "endret": "2026-05-30",
+  "sha256": "9750ee9be99d56eff3b76b8a03091a4cc07ab258b32596a7bd8bc4c47f618a69",
+  "duplikater": [
+   "/Users/taj/bilglass/models.csv"
+  ],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 15
+   }
+  ],
+  "headers": [
+   "36454",
+   "3854",
+   "2016-03-01",
+   "0000-00-00",
+   "124 Spider (348_)",
+   "1",
+   "1",
+   "0",
+   "0",
+   "0",
+   "0",
+   "0",
+   "0",
+   "1",
+   "1"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 15948,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "36454": 3000,
+   "3854": 152,
+   "2016-03-01": 553,
+   "0000-00-00": 365,
+   "124 Spider (348_)": 2533,
+   "1": 2,
+   "0": 2
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "motorbikes.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-import/motorbikes.csv",
+  "format": "csv",
+  "bytes": 1154393,
+  "endret": "2026-05-30",
+  "sha256": "5da72ed454382cb270b868fb13062223198284dce441b26fb2d5cf4f84c15385",
+  "duplikater": [
+   "/Users/taj/bilglass/motorbikes.csv"
+  ],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 10
+   }
+  ],
+  "headers": [
+   "131225",
+   "8596",
+   "38691",
+   "ADIVA",
+   "5063",
+   "2007-01-01",
+   "0000-00-00",
+   "AD 125",
+   "ADIVA MOTORCYCLES AD AD 125",
+   "1"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 10170,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "131225": 3000,
+   "8596": 3000,
+   "38691": 689,
+   "ADIVA": 50,
+   "5063": 50,
+   "2007-01-01": 230,
+   "0000-00-00": 124,
+   "AD 125": 2433
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": true,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "passengercars_link_engines.csv",
+  "sti": "/Users/taj/bilglass/data/tecdoc-import/passengercars_link_engines.csv",
+  "format": "csv",
+  "bytes": 772495,
+  "endret": "2026-05-30",
+  "sha256": "caa5312593f4646d7773e9d6b0542c0f9090154232719a28b940680d22f8ced7",
+  "duplikater": [],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 2
+   }
+  ],
+  "headers": [
+   "119512",
+   "33687"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 65295,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "119512": 2202,
+   "33687": 1010
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "engines.csv",
+  "sti": "/Users/taj/bilglass/engines.csv",
+  "format": "csv",
+  "bytes": 1346286,
+  "endret": "2026-06-08",
+  "sha256": "0bd24319d3a39ddb15a1ba794999df7b07a0af8e97267c6356f56a69f522a6d5",
+  "duplikater": [],
+  "skilletegn": "\t",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 5000,
+    "kolonner": 9
+   }
+  ],
+  "headers": [
+   "31899",
+   "25563",
+   "3854",
+   "",
+   "1",
+   "138 AR1.000",
+   "0000-00-00",
+   "0000-00-00",
+   "1"
+  ],
+  "rader_lest": 5000,
+  "rader_totalt": 26124,
+  "avkortet": true,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "31899": 3000,
+   "25563": 3000,
+   "3854": 83,
+   "1": 2,
+   "138 AR1.000": 2690,
+   "0000-00-00": 25,
+   "": 70
+  },
+  "klasser": {
+   "identitet": false,
+   "kjoretoy": false,
+   "posisjon": false,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "uklar"
+ },
+ {
+  "fil": "test-utvalg-100-corrected.csv",
+  "sti": "/Users/taj/finnbilglass/data/test-utvalg-100-corrected.csv",
+  "format": "csv",
+  "bytes": 983,
+  "endret": "2026-11-01",
+  "sha256": "d66dc6e84ccebfc07d7faf954c0a90264b0b51ba70bea63b9bf8bc03ac488650",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 3,
+    "kolonner": 14
+   }
+  ],
+  "headers": [
+   "sku",
+   "title",
+   "brand",
+   "model",
+   "submodel",
+   "year_start",
+   "year_end",
+   "year_range",
+   "type_code",
+   "type_code_desc",
+   "price",
+   "source_url",
+   "_typekode",
+   "correct_produkt_url"
+  ],
+  "rader_lest": 3,
+  "rader_totalt": 3,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "sku": 3,
+   "title": 3,
+   "brand": 2,
+   "model": 3,
+   "submodel": 1,
+   "year_start": 3,
+   "year_end": 3,
+   "year_range": 3
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "test-utvalg-100.csv",
+  "sti": "/Users/taj/finnbilglass/data/test-utvalg-100.csv",
+  "format": "csv",
+  "bytes": 22575,
+  "endret": "2026-11-01",
+  "sha256": "9396309ea9c80c52467851ffdc34855c08ef865f7d7b1db3243ba27f1b957998",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 100,
+    "kolonner": 13
+   }
+  ],
+  "headers": [
+   "sku",
+   "title",
+   "brand",
+   "model",
+   "submodel",
+   "year_start",
+   "year_end",
+   "year_range",
+   "type_code",
+   "type_code_desc",
+   "price",
+   "source_url",
+   "_typekode"
+  ],
+  "rader_lest": 100,
+  "rader_totalt": 99,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "sku": 100,
+   "title": 100,
+   "brand": 36,
+   "model": 79,
+   "submodel": 40,
+   "year_start": 40,
+   "year_end": 38,
+   "year_range": 84
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": true,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": true
+  },
+  "relevans": "kjernedata"
+ },
+ {
+  "fil": "url-manifest.csv",
+  "sti": "/Users/taj/finnbilglass/data/url-manifest.csv",
+  "format": "csv",
+  "bytes": 11037,
+  "endret": "2026-11-01",
+  "sha256": "95e1f648fcd36615a26ae361e618393dc1c298bce4491e940c30922a0692cbec",
+  "duplikater": [],
+  "skilletegn": ",",
+  "ark": [
+   {
+    "navn": "(eneste)",
+    "rader": 61,
+    "kolonner": 15
+   }
+  ],
+  "headers": [
+   "varenr",
+   "source_url",
+   "type_code",
+   "type_code_desc",
+   "glass_kind",
+   "position",
+   "door_position",
+   "physical_side",
+   "driver_passenger_side",
+   "steering_position",
+   "source",
+   "status",
+   "conflict_status",
+   "conflict_reason",
+   "fetched_at"
+  ],
+  "rader_lest": 61,
+  "rader_totalt": 60,
+  "avkortet": false,
+  "tomme_rader": 0,
+  "unike_eksempel": {
+   "varenr": 23,
+   "source_url": 12,
+   "type_code": 6,
+   "type_code_desc": 6,
+   "glass_kind": 5,
+   "position": 2,
+   "door_position": 2,
+   "physical_side": 2
+  },
+  "klasser": {
+   "identitet": true,
+   "kjoretoy": false,
+   "posisjon": true,
+   "utstyr": false,
+   "kommersielt": false
+  },
+  "relevans": "kjernedata"
+ }
+]

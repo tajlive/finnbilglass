@@ -1,0 +1,1029 @@
+{
+  "oppsummering": {
+    "snapshot": "/tmp/prod-rader.json",
+    "snapshotSha256": "c221fb6cb1198f16104a1e10ffc264a1ef338367899f53931e58663faf46dbc0",
+    "snapshotRader": 30937,
+    "manifest": "data/testgrunnlag/manifest-v2.json",
+    "manifestSha256": "89eabb0db5eb671381451f6c1db1d3458904815d19e19f7b18d29773881f4a98",
+    "bilerMedBilopplysninger": 117,
+    "medKandidater": 25,
+    "utenKandidater": 92,
+    "kandidaterTotalt": 467,
+    "lovTotalt": 140,
+    "feil": 0,
+    "feilPerRegel": {}
+  },
+  "feil": [],
+  "perBil": [
+    {
+      "test_id": "FBG-T-0012",
+      "bil": "Ford Granada 1983",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0025",
+      "bil": "Mitsubishi L200 1999",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0040",
+      "bil": "Toyota Camry 1999",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0077",
+      "bil": "Volkswagen Caravelle 2000",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0104",
+      "bil": "Volkswagen Touareg 2005",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0061",
+      "bil": "Toyota RAV4 2005",
+      "kandidater": 2,
+      "typer": 1,
+      "dekning": "TYNN",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0085",
+      "bil": "Volkswagen Golf V 2006",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0078",
+      "bil": "Volkswagen Caravelle 2006",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0082",
+      "bil": "Volkswagen Eos 2007",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0062",
+      "bil": "Toyota RAV4 2007",
+      "kandidater": 1,
+      "typer": 1,
+      "dekning": "TYNN",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0001",
+      "bil": "Audi A5 2008",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0049",
+      "bil": "Toyota Land Cruiser 2008",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0005",
+      "bil": "BMW E90 2008",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0004",
+      "bil": "BMW 320d 2008",
+      "kandidater": 42,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "coupe",
+        "sedan",
+        "estate",
+        "cabriolet"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0069",
+      "bil": "Volkswagen Caddy Maxi 2009",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0107",
+      "bil": "Volkswagen Transporter 2009",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0063",
+      "bil": "Toyota Yaris 2009",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0100",
+      "bil": "Volkswagen Passat 2009",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0108",
+      "bil": "Volkswagen Transporter 2009",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0064",
+      "bil": "Toyota Yaris 2009",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0027",
+      "bil": "Mitsubishi Outlander 2009",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0101",
+      "bil": "Volkswagen Passat 2010",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0067",
+      "bil": "Volkswagen Andre 2010",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0037",
+      "bil": "Toyota Aygo 2010",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0010",
+      "bil": "BMW X5 2011",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0083",
+      "bil": "Volkswagen Golf Plus 2011",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0024",
+      "bil": "Mitsubishi ASX 2011",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0031",
+      "bil": "Peugeot 207 2011",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0019",
+      "bil": "Land Rover Range Rover 2012",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0072",
+      "bil": "Volkswagen Caddy 2012",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0073",
+      "bil": "Volkswagen Caddy 2012",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0102",
+      "bil": "Volkswagen Passat 2012",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0112",
+      "bil": "Volvo V60 2013",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0028",
+      "bil": "Mitsubishi Pajero 2013",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0105",
+      "bil": "Volkswagen Touran 2013",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0103",
+      "bil": "Volkswagen Tiguan 2013",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0051",
+      "bil": "Toyota Prius+ 2013",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0026",
+      "bil": "MITSUBISHI MITSUBISHI OUTLANDER 2014",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0084",
+      "bil": "Volkswagen Golf Sportsvan 2014",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0022",
+      "bil": "Mazda CX-5 2014",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0016",
+      "bil": "Kia Ceed 2014",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0068",
+      "bil": "Volkswagen Andre 2015",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0114",
+      "bil": "Volvo XC60 2015",
+      "kandidater": 29,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0003",
+      "bil": "BMW 116i 2015",
+      "kandidater": 24,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "cabriolet",
+        "hatchback",
+        "coupe"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0117",
+      "bil": "VW TRANSPORTER 2016",
+      "kandidater": 6,
+      "typer": 2,
+      "dekning": "GOD",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0080",
+      "bil": "Volkswagen e-Golf VII 2016",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0115",
+      "bil": "Volvo XC60 2016",
+      "kandidater": 29,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0109",
+      "bil": "Volkswagen Transporter 2017",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0081",
+      "bil": "Volkswagen e-Golf VII 2017",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0006",
+      "bil": "BMW i3 2017",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0018",
+      "bil": "Kia Soul 2017",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0086",
+      "bil": "Volkswagen Golf VII 2017",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0106",
+      "bil": "Volkswagen Touran 2017",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0113",
+      "bil": "Volvo V60 2018",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0021",
+      "bil": "Mazda CX-3 2018",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0015",
+      "bil": "Jaguar XF 2018",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0110",
+      "bil": "Volkswagen Transporter 2018",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0066",
+      "bil": "Volkswagen Amarok 2018",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0079",
+      "bil": "Volkswagen Crafter 2018",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0074",
+      "bil": "Volkswagen Caddy 2018",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0070",
+      "bil": "Volkswagen Caddy Maxi 2020",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0002",
+      "bil": "Audi e-tron 2020",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0088",
+      "bil": "Volkswagen ID.3 2020",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0111",
+      "bil": "Volkswagen Transporter 2020",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0075",
+      "bil": "Volkswagen Caddy 2021",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0050",
+      "bil": "Toyota Land Cruiser 2021",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0052",
+      "bil": "Toyota Proace 2021",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0089",
+      "bil": "Volkswagen ID.3 2021",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0030",
+      "bil": "Nissan Leaf 2021",
+      "kandidater": 18,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "hatchback"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0014",
+      "bil": "Isuzu D-max 2021",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0039",
+      "bil": "Toyota C-HR 2021",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0033",
+      "bil": "Polestar 2 2022",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0035",
+      "bil": "Porsche Taycan 4 2022",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0017",
+      "bil": "Kia Niro 2022",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0009",
+      "bil": "BMW iX 2022",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0034",
+      "bil": "POLESTAR POLESTAR 2 2022",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0090",
+      "bil": "Volkswagen ID.4 GTX 2022",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0008",
+      "bil": "BMW I7 XDRIVE60 2022",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0011",
+      "bil": "Cupra Born 2022",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0046",
+      "bil": "Toyota Corolla 2023",
+      "kandidater": 27,
+      "typer": 3,
+      "dekning": "GOD",
+      "karosserier": [
+        "estate",
+        "hatchback",
+        "sedan",
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0047",
+      "bil": "Toyota Corolla 2023",
+      "kandidater": 27,
+      "typer": 3,
+      "dekning": "GOD",
+      "karosserier": [
+        "estate",
+        "hatchback",
+        "sedan",
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0076",
+      "bil": "Volkswagen Caddy 2023",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0036",
+      "bil": "TESLA MODEL Y 2023",
+      "kandidater": 10,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0096",
+      "bil": "Volkswagen ID.5 2023",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0093",
+      "bil": "Volkswagen ID.4 2023",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0097",
+      "bil": "Volkswagen ID.5 2023",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0054",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2023",
+      "kandidater": 9,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0071",
+      "bil": "Volkswagen Caddy Maxi 2023",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0091",
+      "bil": "Volkswagen ID.4 GTX 2023",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0065",
+      "bil": "Toyota Yaris 2024",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0055",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "kandidater": 9,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0094",
+      "bil": "Volkswagen ID.4 2024",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0013",
+      "bil": "Hyundai Kona 2024",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0092",
+      "bil": "Volkswagen ID.4 GTX 2024",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0041",
+      "bil": "Toyota Corolla Cross 2024",
+      "kandidater": 27,
+      "typer": 3,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv",
+        "estate",
+        "hatchback",
+        "sedan"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0057",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "kandidater": 9,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0042",
+      "bil": "Toyota Corolla Cross 2024",
+      "kandidater": 27,
+      "typer": 3,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv",
+        "estate",
+        "hatchback",
+        "sedan"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0043",
+      "bil": "Toyota Corolla Cross 2024",
+      "kandidater": 27,
+      "typer": 3,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv",
+        "estate",
+        "hatchback",
+        "sedan"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0044",
+      "bil": "Toyota Corolla Cross 2024",
+      "kandidater": 27,
+      "typer": 3,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv",
+        "estate",
+        "hatchback",
+        "sedan"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0045",
+      "bil": "Toyota Corolla Cross 2024",
+      "kandidater": 27,
+      "typer": 3,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv",
+        "estate",
+        "hatchback",
+        "sedan"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0058",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "kandidater": 9,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0059",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "kandidater": 9,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0060",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "kandidater": 9,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0032",
+      "bil": "Peugeot Expert 2025",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0053",
+      "bil": "Toyota Proace 2025",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0029",
+      "bil": "Nissan Ariya 2025",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0098",
+      "bil": "Volkswagen ID.7 2025",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0095",
+      "bil": "Volkswagen ID.4 2025",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0099",
+      "bil": "Volkswagen ID.7 2025",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0038",
+      "bil": "Toyota bZ4X 2025",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0048",
+      "bil": "Toyota HiLux 2025",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0020",
+      "bil": "Lotus Eletre 2026",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0087",
+      "bil": "Volkswagen ID. Buzz 2026",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0007",
+      "bil": "BMW i4 2026",
+      "kandidater": 0,
+      "typer": 1,
+      "dekning": "INGEN",
+      "karosserier": []
+    },
+    {
+      "test_id": "FBG-T-0116",
+      "bil": "VW TRANSPORTER 2005",
+      "kandidater": 39,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "cabriolet"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0023",
+      "bil": "MERCEDES CLA 200 D 4MATIC 2016",
+      "kandidater": 15,
+      "typer": 3,
+      "dekning": "GOD",
+      "karosserier": [
+        "coupe"
+      ]
+    },
+    {
+      "test_id": "FBG-T-0056",
+      "bil": "Toyota RAV4 Plug-in Hybrid 2024",
+      "kandidater": 9,
+      "typer": 4,
+      "dekning": "GOD",
+      "karosserier": [
+        "suv"
+      ]
+    }
+  ]
+}

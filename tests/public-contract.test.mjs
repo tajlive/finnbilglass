@@ -40,7 +40,7 @@ test('offentlig kandidat: eurokode og fingeravtrykk slipper ikke ut', () => {
 
 test('offentlig kandidat: bekreftet listepris gir kundepris med mva', () => {
   const ut = tilOffentligKandidat(INTERN);
-  assert.deepEqual(ut.pris, { kundePris: 5490, mva: 1098, prisEksMva: 4392 });
+  assert.deepEqual(ut.pris, { kundePris: 4990, mva: 998, prisEksMva: 3992, sikkerhet: 'ESTIMERT' });
 });
 
 test('offentlig pris: manglende eller ugyldig grunnlag gir null, ikke fabrikkert tall', () => {
@@ -60,7 +60,7 @@ test('pris alene gir MANUAL_REVIEW — kompatibilitet har høyere prioritet', ()
   // Katalogtreff bekrefter ikke at glasset passer. Prisen er bekreftet, men
   // status er MANUAL_REVIEW fordi kompatibiliteten ikke er det.
   assert.equal(medPris.status, 'MANUAL_REVIEW');
-  assert.equal(medPris.prisStatus, 'BEKREFTET');
+  assert.equal(medPris.prisStatus, 'ESTIMERT');
   assert.notEqual(medPris.candidates[0].pris, null, 'prisen skal fortsatt vises');
 
   const medKompatibilitet = tilOffentligSvar({
@@ -132,7 +132,7 @@ test('samme varenr med NULL-pris og gyldig pris: gyldig pris skal vinne', () => 
   // som gjorde at kunden fikk MANUAL_REVIEW på et produkt vi har pris på.
   const medPris = tilOffentligKandidat({ ...INTERN, pris: 9980 });
   const utenPris = tilOffentligKandidat({ ...INTERN, pris: null });
-  assert.deepEqual(medPris.pris, { kundePris: 5490, mva: 1098, prisEksMva: 4392 });
+  assert.deepEqual(medPris.pris, { kundePris: 4990, mva: 998, prisEksMva: 3992, sikkerhet: 'ESTIMERT' });
   assert.equal(utenPris.pris, null);
 });
 
@@ -146,17 +146,18 @@ test('flere varianter med ulik kompatibilitet: én bekreftet gir OK', () => {
     hasMore: false,
   });
   assert.equal(s.status, 'OK');
-  assert.equal(s.prisStatus, 'BEKREFTET');
+  assert.equal(s.prisStatus, 'ESTIMERT');
 });
 
-test('produkter under laveste siterbare listepris gir ingen pris', async () => {
-  const { LAVESTE_SITERBARE_LISTEPRIS } = await import('../src/pricing/nok-prising.ts');
-  assert.equal(LAVESTE_SITERBARE_LISTEPRIS, 6650, 'gulvet skal utledes fra TRINN/0.60');
-  assert.equal(offentligPris(LAVESTE_SITERBARE_LISTEPRIS - 1), null, 'under gulvet: ingen pris');
-  assert.notEqual(offentligPris(LAVESTE_SITERBARE_LISTEPRIS), null, 'på gulvet: pris');
+test('ingen prisgulv: enhver positiv listepris gir et estimat', async () => {
+  const { MINSTE_GYLDIGE_LISTEPRIS } = await import('../src/pricing/nok-prising.ts');
+  assert.equal(MINSTE_GYLDIGE_LISTEPRIS, 1, 'gulvet er borte — XLS-regelen har ingen trinn');
+  assert.equal(offentligPris(1000).kundePris, 500, 'frontrute: 1 000 kr gir estimat 500 inkl. mva');
+  assert.equal(offentligPris(0), null, '0 kr gir ingen pris');
+  assert.equal(offentligPris(null), null, 'manglende pris gir ingen pris');
 });
 
-test('prisStatus skiller INGEN, DELVIS og BEKREFTET', () => {
+test('prisStatus skiller INGEN, DELVIS og ESTIMERT', () => {
   const ingen = tilOffentligSvar({ candidates: [{ ...INTERN, pris: null }], totalAvailable: 1, hasMore: false });
   assert.equal(ingen.prisStatus, 'INGEN');
   const delvis = tilOffentligSvar({
@@ -170,7 +171,7 @@ test('prisStatus skiller INGEN, DELVIS og BEKREFTET', () => {
     totalAvailable: 2,
     hasMore: false,
   });
-  assert.equal(alle.prisStatus, 'BEKREFTET');
+  assert.equal(alle.prisStatus, 'ESTIMERT');
 });
 
 test('ugyldig prisgrunnlag gir null, aldri en oppdiktet pris', () => {
@@ -182,5 +183,5 @@ test('ugyldig prisgrunnlag gir null, aldri en oppdiktet pris', () => {
 test('sorteringen er deterministisk og legger NULL og under-gulv sist', () => {
   const src = readFileSync(join(import.meta.dirname, '..', 'src', 'discovery.ts'), 'utf8');
   assert.match(src, /ORDER BY \(pris IS NULL\), \(pris < \?\), pris/);
-  assert.match(src, /LAVESTE_SITERBARE_LISTEPRIS/);
+  assert.match(src, /MINSTE_GYLDIGE_LISTEPRIS/);
 });

@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-11-01T12:01:36.399Z",
+  "runId": "sarEkPbes0rjlcg3A",
+  "actorId": "1QF8RbAZ6ewBALyYj",
+  "status": "SUCCEEDED",
+  "durationSeconds": 97.96,
+  "cost": {
+    "computeUnits": 0.013605555555555555,
+    "estimatedCostUsd": 0.000009523888888888888
+  },
+  "input": {},
+  "results": {
+    "totalProducts": 5,
+    "uniqueSkus": 5,
+    "validation": {
+      "issues": [],
+      "warnings": [
+        "1 products have typeCodeConflict or sideConflict"
+      ],
+      "stats": {
+        "total": 5,
+        "withTypekode": 5,
+        "conflicts": 1
+      }
+    }
+  },
+  "recommendation": "GO"
+}

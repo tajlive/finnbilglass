@@ -25,7 +25,6 @@
     "test:tecdoc": "node --test tests/tecdoc-snapshot-import.test.mjs",
     "test:resolver": "node --import tsx --test tests/resolver-sporsmaal.test.mjs",
     "test:kill-switch": "node --import tsx --test tests/kill-switch.test.mjs",
-    "test:regnr-privacy": "node --import tsx --test tests/regnr-log-privacy.test.mjs",
     "test:fitment-v1": "node --import tsx --test tests/fitment-v1.test.ts",
     "test:conversation-v1": "node --import tsx --test tests/conversation-v1.test.ts",
     "test:learning-v1": "node --import tsx --test tests/learning-v1.test.ts",
@@ -55,11 +54,12 @@
     "test:ops-consolidation": "node --import tsx --test tests/ops-consolidation.test.mjs",
     "test:glavista": "node --import tsx --test tests/glavista-matcher.test.mjs",
     "test:dekningsrapport": "node --test tests/dekningsrapport.test.mjs",
+    "test:launch-gate": "node --import tsx --test tests/launch-gate.test.mjs",
     "test:migration-guard": "node --test tests/migration-guard.test.mjs",
     "rapport:dekning": "node scripts/dekningsrapport.mjs",
     "selftest:50:staging": "node scripts/e2e-self-test-50-cars.mjs",
     "test:ledger-backfill": "node --test tests/ledger-backfill.test.mjs",
-    "qa": "npm run typecheck && npm run test:regnr-privacy && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:forside-regresjon && npm run test:ops-consolidation && npm run test:glavista && npm run test:migration-guard && npm run test:ledger-backfill && npm run test:handling-c && npm run test:apify-adapter && npm run test:nok-prising && npm run test:p1-verify && npm run test:idempotens && npm run test:public-contract && npm run test:dekningsrapport",
+    "qa": "npm run typecheck && npm run test:regnr-privacy && npm run test:kustom && npm run test:serie && npm run test:pipeline && npm run test:tecdoc && npm run test:resolver && npm run test:kill-switch && npm run test:fasit-integritet && npm run test:gt-generator && npm run test:vin-aar && npm run test:svv && npm run test:matcher && npm run test:eurokode && npm run test:aar && npm run test:vin-gt && npm run test:evidence-capture && npm run test:fitment:golden && npm run test:challenge && npm run test:evidence-ledger && npm run test:glass-sku && npm run test:approval && npm run test:decisions && npm run test:evidence-features && npm run test:skillende-sporsmaal && npm run test:accessory-applicability && npm run test:evidence-capture-p02 && npm run test:kundetekster-p03 && npm run test:forside-regresjon && npm run test:ops-consolidation && npm run test:glavista && npm run test:launch-gate && npm run test:migration-guard && npm run test:ledger-backfill && npm run test:handling-c && npm run test:apify-adapter && npm run test:nok-prising && npm run test:p1-verify && npm run test:idempotens && npm run test:public-contract && npm run test:frontrute-search && npm run test:frontrute-view && npm run test:glass-posisjon && npm run test:glass-valg && npm run test:glass-kandidat-vurdering && npm run test:glass-variant-kontroll && npm run test:variant-kontroll-integrasjon && npm run test:dekningsrapport && npm run test:typekode && npm run test:readiness && npm run test:all-glass && npm run test:rav4 && npm run test:id-familie && npm run test:customer-ownership",
     "test:handling-c": "node --test tests/handling-c.test.mjs",
     "qa:d1": "node scripts/maintenance/d1-integritet.mjs",
     "test:apify-adapter": "node --import tsx --test tests/apify-catalog-adapter.test.mjs",
@@ -71,7 +71,25 @@
     "test:forside-regresjon": "node --test tests/forside-regresjon.test.mjs",
     "test:forside:visuell": "node scripts/forside-visuell.mjs",
     "test:forside:live": "node scripts/forside-live-sjekk.mjs",
-    "test:forside:oppgradering": "node scripts/forside-oppgraderingstest.mjs"
+    "test:forside:oppgradering": "node scripts/forside-oppgraderingstest.mjs",
+    "test:frontrute-search": "node --import tsx --test tests/frontrute-search.test.mjs",
+    "test:frontrute-view": "node --test tests/frontrute-view.test.mjs",
+    "test:glass-posisjon": "node --import tsx --test tests/glass-posisjon.test.mjs",
+    "test:glass-valg": "node --import tsx --test tests/glass-valg.test.mjs",
+    "katalog:klassifiser": "node --import tsx scripts/katalog-klassifisering.mjs",
+    "test:typekode": "node --import tsx --test tests/typekode-posisjon.test.mjs",
+    "test:readiness": "node --import tsx --test tests/glass-selection-contract.test.ts tests/all-glass-api.test.ts tests/exact-gate-safety.test.ts tests/quote-pilot-inquiry.test.ts",
+    "test:quote-browser": "node --import tsx --test tests/quote-pilot-browser.test.mjs",
+    "test:all-glass": "node --import tsx --test tests/all-glass-kandidater.test.mjs",
+    "test:rav4": "node --import tsx --test tests/rav4-modellnormalisering.test.mjs",
+    "test:id-familie": "node --import tsx --test tests/id-familie.test.mjs",
+    "test:customer-ownership": "node --test tests/customer-inquiry-ownership.test.mjs",
+    "test:glass-kandidat-vurdering": "node --import tsx --test tests/glass-kandidat-vurdering.test.mjs",
+    "test:glass-variant-kontroll": "node --import tsx --test tests/glass-variant-kontroll.test.mjs",
+    "test:variant-kontroll-integrasjon": "node --import tsx --test tests/variant-kontroll-integrasjon.test.mjs",
+    "test:kustom-ledger:sqlite": "node --import tsx --test tests/kustom-money-ledger.sqlite.test.mjs",
+    "test:kustom": "node --import tsx --test --test-concurrency=1 tests/kustom-*.test.mjs tests/staging-auth-payment-migration.test.mjs",
+    "test:regnr-privacy": "node --import tsx --test tests/regnr-log-privacy.test.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
@@ -79,5 +97,9 @@
     "tsx": "^4.23.12",
     "typescript": "^5.8.0",
     "wrangler": "^4.122.0"
+  },
+  "dependencies": {
+    "csv-parse": "^7.0.3",
+    "stripe": "^16.0.0"
   }
 }

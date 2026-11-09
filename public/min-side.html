@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Min side – FinnBilGlass</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="/min-side.css?v=20261102">
+</head>
+<body>
+<div class="portal-container">
+  <header class="portal-header">
+    <div>
+      <div style="display:flex;align-items:center;gap:2px;">
+        <span style="font-size:26px;font-weight:800;color:#0F172A;">finn</span>
+        <span style="font-size:26px;font-weight:800;color:#F59E0B;">bilglass</span>
+      </div>
+    </div>
+    <div class="portal-actions">
+      <button class="btn-logout" id="logout-btn">Logg ut</button>
+    </div>
+  </header>
+
+  <div class="user-badge" style="margin-bottom:24px;">
+    <span style="font-weight:700;" id="user-name">Laster...</span> <span style="font-weight:400;" id="user-email"></span>
+  </div>
+
+  <!-- Nav tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" data-tab="cars">Mine biler</div>
+    <div class="nav-tab" data-tab="quotes">Mine pristilbud</div>
+    <div class="nav-tab" data-tab="documents">Dokumentasjon</div>
+    <div class="nav-tab" data-tab="settings">Innstillinger</div>
+  </div>
+
+  <!-- Mine biler tab -->
+  <div class="tab-content active" id="tab-cars">
+    <div class="section">
+      <div class="section-title">
+        <span>🚗</span> Mine biler
+      </div>
+      <div id="cars-list">
+        <!-- Bilkort legges til dynamisk -->
+      </div>
+      <div id="sak-detaljer" style="display:none;margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <!-- Mine pristilbud tab -->
+  <div class="tab-content" id="tab-quotes">
+    <div class="section">
+      <div class="section-title">
+        <span>💰</span> Mine pristilbud
+      </div>
+      <div id="quotes-list">
+        <!-- Tilbudskort legges til dynamisk -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Dokumentasjon tab -->
+  <div class="tab-content" id="tab-documents">
+    <div class="section">
+      <div class="section-title">
+        <span>📎</span> Dokumentasjon
+      </div>
+      <div class="card">
+        <div class="card-title">Last opp bilder eller dokumenter</div>
+        <p style="color:#64748B;font-size:14px;margin-bottom:16px;">Last opp bilder av skiltnummeret eller glasset for å hjelpe oss med å finne riktig vare.</div>
+        <div class="file-upload" id="file-upload">
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">Velg filer eller dra dem hit</div>
+        </div>
+        <input type="file" id="file-input" multiple style="display:none;">
+      </div>
+    </div>
+  </div>
+
+  <!-- Innstillinger tab -->
+  <div class="tab-content" id="tab-settings">
+    <div class="section">
+      <div class="section-title">
+        <span>⚙️</span> Kontoinnstillinger
+      </div>
+      <div class="card">
+        <div class="card-title">Personvern</div>
+        <p style="color:#64748B;font-size:14px;">Dine personopplysninger behandles i samsvar med personopplysningsloven. Vi deler ikke data med tredjeparter uten ditt samtykke.</p>
+        <button class="btn-secondary" style="padding:10px 20px;">Vis personvernserklæring</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Sikkerhet</div>
+        <p style="color:#64748B;font-size:14px;">Engangskoder utløper etter 10 minutter. Sesjonen avsluttes automatisk etter inaktivitet.</p>
+        <button class="btn-secondary" style="padding:10px 20px;">Endre e-postadresse</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vises kun når pristilbudspiloten faktisk er stengt (serverbasert status) -->
+  <div class="alert-banner" id="pilot-note" style="margin-top:24px; display:none;">
+    <strong>Merk:</strong> Kundepiloten er for øyeblikket stengt. Du kan fortsatt se dine eksisterende forespørsler, men nye forespørsler kan ikke sendes før piloten åpnes igjen.
+  </div>
+</div>
+
+<script src="/min-side.js?v=20261102" defer></script>
+</body>
+</html>

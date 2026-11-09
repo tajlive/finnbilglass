@@ -1,0 +1,2132 @@
+{
+  "kilde": {
+    "produktlinjer": 30967,
+    "unike_varenr": 27759,
+    "unike_eurokoder": 26023,
+    "uten_eurokode": 4194
+  },
+  "db": {
+    "rader": 29627,
+    "unike_varenr": 27762,
+    "unike_eurokoder": 24753,
+    "radtyper": {
+      "glass": 25178,
+      "frakt": 59,
+      "emballasje": 8,
+      "tilbehor": 2961,
+      "alias": 1420,
+      "bakrute": 1
+    }
+  },
+  "import_simulering": {
+    "unike_varenr_navn": 29623,
+    "kollapset_av_unique_varenr_varenavn": 1344,
+    "kilde_minus_db": 1340,
+    "kilde_linjer_gjenfunnet_paa_varenr_navn": 30967
+  },
+  "tapte_varianter": {
+    "med_eurokode": 1275,
+    "uten_eurokode": 0,
+    "aarsaker": {
+      "A_unique_varenr_varenavn": 1275
+    },
+    "frontruter": 363,
+    "frontruter_med_pris": 276,
+    "frontruter_pris_null": 85,
+    "frontruter_pris_mangler": 2,
+    "frontruter_unike_varenr": 282,
+    "frontrute_eksempler": [
+      {
+        "excel_rad": 4201,
+        "varenr": "2180CSBL",
+        "eurokode": "8828ACCBLMW1R",
+        "varenavn": "VOLVO S80 4D SED 99-",
+        "merknad": "+++SENSOR PAD S21 49*37MM",
+        "pris": 8525.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5718,
+        "varenr": "2299CSBL",
+        "eurokode": "6290ACCBLM1B",
+        "varenavn": "OPEL CORSA C 3/5D CC 01-",
+        "merknad": "+++SENSOR PAD S21 49*37MM",
+        "pris": 7310.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5739,
+        "varenr": "2300ACDC",
+        "eurokode": "2300ACDCMUVZ2L",
+        "varenavn": "BMW iX 5D SUV 21- WS COATED LDW",
+        "merknad": "#-10%#  104",
+        "pris": 17395.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5741,
+        "varenr": "2300AGAC",
+        "eurokode": "2300AGACMUVZ2L",
+        "varenavn": "BMW iX 5D SUV 21- WS LDW SENSOR",
+        "merknad": "+++OPEN SENSOR AREA   104",
+        "pris": 13650.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5742,
+        "varenr": "2300AGAC",
+        "eurokode": "2300AGACMVZ",
+        "varenavn": "BMW iX 5D SUV 21- WS LDW SENSOR",
+        "merknad": "+++WIDE SENSOR/CAMERA",
+        "pris": 8600.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5772,
+        "varenr": "2301AGAC",
+        "eurokode": "2301AGACMUVZ1L",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+        "merknad": "LIGHT AND MOISTURE",
+        "pris": 10050.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5774,
+        "varenr": "2301AGAC",
+        "eurokode": "2301AGACMVZ1L",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+        "merknad": "LIGHT AND MOISTURE",
+        "pris": 9325.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5795,
+        "varenr": "2302AGAC",
+        "eurokode": "2302AGACMVZ1L",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- WS",
+        "merknad": "Forandring på kamera/feste och",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5796,
+        "varenr": "2302AGAC",
+        "eurokode": "2302AGACMVZ2L",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- WS",
+        "merknad": "Forandring på kamera/feste och",
+        "pris": 10505.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5829,
+        "varenr": "2303AGAC",
+        "eurokode": "2303AGACMUVZ1L",
+        "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+        "merknad": "NB! HUSK (BMWDEM) SPESIAL",
+        "pris": 12915.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5830,
+        "varenr": "2303AGAC",
+        "eurokode": "2303AGACMUVZ2L",
+        "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+        "merknad": "NB! HUSK (BMWDEM) SPESIAL",
+        "pris": 12410.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5831,
+        "varenr": "2303AGAC",
+        "eurokode": "2303AGACMVZ",
+        "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+        "merknad": "NB! HUSK (BMWDEM) SPESIAL",
+        "pris": 9550.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5849,
+        "varenr": "2304ACDC",
+        "eurokode": "2304ACDCMUVZ95",
+        "varenavn": "BMW i7 4D LIM 23-  WS SENSOR LDW",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5893,
+        "varenr": "2306AGAC",
+        "eurokode": "2306AGACMUVZ2L",
+        "varenavn": "BMW 5 4D SED + EST 23- WS LDW",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5894,
+        "varenr": "2306AGAC",
+        "eurokode": "2306AGACMVZ",
+        "varenavn": "BMW 5 4D SED + EST 23- WS LDW",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5973,
+        "varenr": "2308AGSC",
+        "eurokode": "2308AGSCMVZ1L",
+        "varenavn": "MINI COUNTRYMAN 5D CROSS 24- WS",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 6004,
+        "varenr": "2309AGNC",
+        "eurokode": "2309AGNCMVZ1L",
+        "varenavn": "MINI COOPER 3D HBK 24- WS SENSOR",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 6034,
+        "varenr": "2310AGNC",
+        "eurokode": "2310AGNCMVZ1L",
+        "varenavn": "MINI ACEMAN 5D SUV 24-",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 6074,
+        "varenr": "2311AGAC",
+        "eurokode": "2311AGACMUVZ02L",
+        "varenavn": "BMW X3 G45 5D SUV 25-  WS LDW",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 6075,
+        "varenr": "2311AGAC",
+        "eurokode": "2311AGACMVZ",
+        "varenavn": "BMW X3 G45 5D SUV 25-  WS LDW",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 6116,
+        "varenr": "2313AGAC",
+        "eurokode": "2313AGACMUVZ0X",
+        "varenavn": "BMW IX3 5D SUV 25-  WS LDW SENSOR",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 6690,
+        "varenr": "2364GNEL",
+        "eurokode": "4327AGSHMVW3P",
+        "varenavn": "JAGUAR X-TYPE 4D SEDAN 01-",
+        "merknad": "+++SENSORTAPE S1C 27MM",
+        "pris": 16800.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8008,
+        "varenr": "2472CSBL",
+        "eurokode": "8831ACCBLMVZ1R",
+        "varenavn": "VOLVO XC 90 5D SUV 02- FRONTRUTE",
+        "merknad": "EMB=101",
+        "pris": 10045.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8094,
+        "varenr": "2480AGAC",
+        "eurokode": "2480AGACMVZ",
+        "varenavn": "BMW X2 F39 5D SUV 18-  FR+AKU",
+        "merknad": "R100",
+        "pris": 7500.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8166,
+        "varenr": "2483AGSC",
+        "eurokode": "2483AGSCMVZ",
+        "varenavn": "MINI CLUBMAN F54 15-",
+        "merknad": null,
+        "pris": 6135.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8191,
+        "varenr": "2484AGSC",
+        "eurokode": "2484AGSCMVZ",
+        "varenavn": "MINI COUNTRYMAN 5D 17-",
+        "merknad": null,
+        "pris": 5360.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8213,
+        "varenr": "2485AGAC",
+        "eurokode": "2485AGACMUVZ2L",
+        "varenavn": "BMW 5  G30/31 4D SED+5D STV 20-",
+        "merknad": "+++SENSORPAD S20 31MM",
+        "pris": 15045.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8214,
+        "varenr": "2485AGAC",
+        "eurokode": "2485AGACMVZ",
+        "varenavn": "BMW 5  G30/31 4D SED+5D STV 17-",
+        "merknad": null,
+        "pris": 8370.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8215,
+        "varenr": "2485AGAC",
+        "eurokode": "2485AGACMVZ1L",
+        "varenavn": "BMW 5  G30/31 4D SED+5D STV 20-",
+        "merknad": "+++SENSORPAD S20 31MM",
+        "pris": 10495.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8216,
+        "varenr": "2485AGAC",
+        "eurokode": "2485AGACMVZ2L",
+        "varenavn": "BMW 5  G30/31 4D SED+5D STV 20-",
+        "merknad": "#-10%# #MAX60%#",
+        "pris": 10495.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8287,
+        "varenr": "2487AGAC",
+        "eurokode": "2487AGACMUVZ2L",
+        "varenavn": "BMW X3 G01 4D SUV 21-",
+        "merknad": null,
+        "pris": 13045.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8288,
+        "varenr": "2487AGAC",
+        "eurokode": "2487AGACMUVZ3L",
+        "varenavn": "BMW X3 G01 4D SUV 21-",
+        "merknad": "NB! HUSK (BMWDEM) SPESIAL",
+        "pris": 12970.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8290,
+        "varenr": "2487AGAC",
+        "eurokode": "2487AGACMVZ1L",
+        "varenavn": "BMW X3 G01 4D SUV 21-",
+        "merknad": null,
+        "pris": 8160.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8291,
+        "varenr": "2487AGAC",
+        "eurokode": "2487AGACMVZ2L",
+        "varenavn": "BMW X3 G01 4D SUV 21-",
+        "merknad": null,
+        "pris": 10760.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8333,
+        "varenr": "2488AGAC",
+        "eurokode": "2488AGACMVZ",
+        "varenavn": "BMW X4 G02 5D SUV JULI18-  FR",
+        "merknad": null,
+        "pris": 8800.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8373,
+        "varenr": "2489AGSC",
+        "eurokode": "2489AGSCMVZ",
+        "varenavn": "BMW Z4 G29 2D CAB 18- FR SENSOR",
+        "merknad": null,
+        "pris": 6480.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8396,
+        "varenr": "2490AGAC",
+        "eurokode": "2490AGACMVZ",
+        "varenavn": "3 SERIES 4D SAL G20 19- FR AKU SENS",
+        "merknad": "+++SENSORPAD S20 31MM",
+        "pris": 6695.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8464,
+        "varenr": "2492AGAC",
+        "eurokode": "2492AGACMVZ1L",
+        "varenavn": "BMW X5 5D SUV G05 19-",
+        "merknad": "+++EKSTREMT SJELDEN 99.9%",
+        "pris": 10100.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8498,
+        "varenr": "2493AGAC",
+        "eurokode": "2493AGACMVZ1L",
+        "varenavn": "BMW X7 (G07) 5D SUV 19- FR AKU",
+        "merknad": "3 Kamera",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 8521,
+        "varenr": "2494AGAC",
+        "eurokode": "2494AGACMVZ",
+        "varenavn": "BMW 2 -SERIE G42 2D CPE 22- WS ACO",
+        "merknad": null,
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      }
+    ],
+    "eksempler_med_eurokode": [
+      {
+        "excel_rad": 2354,
+        "varenr": "2049LYPR5",
+        "eurokode": "2049LYPR5RVZ",
+        "varenavn": "ALFA ROMEO STELVIO 5D SUV 17-",
+        "pris": 2865.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 2358,
+        "varenr": "2049RYPR5",
+        "eurokode": "2049RYPR5RVZ",
+        "varenavn": "ALFA ROMEO STELVIO 5D SUV 17-",
+        "pris": 3140.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 2386,
+        "varenr": "2050LYPR5",
+        "eurokode": "2050LYPR5RVZ",
+        "varenavn": "ALFA ROMEO TONALE 5D SUV 22- R",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 2390,
+        "varenr": "2050RYPR5",
+        "eurokode": "2050RYPR5RVZ",
+        "varenavn": "ALFA ROMEO TONALE 5D SUV 22- R",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 4201,
+        "varenr": "2180CSBL",
+        "eurokode": "8828ACCBLMW1R",
+        "varenavn": "VOLVO S80 4D SED 99-",
+        "pris": 8525.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5082,
+        "varenr": "2252LYPE5",
+        "eurokode": "2252LYPE5RVZ",
+        "varenavn": "MG5  5D EST 22- R DOORW LEFT",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5086,
+        "varenr": "2252RYPE5",
+        "eurokode": "2252RYPE5RVZ",
+        "varenavn": "MG5  5D EST 22- R DOORW RIGHT",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5157,
+        "varenr": "2257LGNR5",
+        "eurokode": "2257LGNR5RD",
+        "varenavn": "MG ZS 5D CROSS/SUV 25- DOORGLASS",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5160,
+        "varenr": "2257RGNR5",
+        "eurokode": "2257RGNR5RD",
+        "varenavn": "MG ZS 5D CROSS/SUV 25- DOORGLASS",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5225,
+        "varenr": "2261LGNR5",
+        "eurokode": "2261LGNR5RD",
+        "varenavn": "MG S5 EV 5D SUV 25- DOORGLASS",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5231,
+        "varenr": "2261RGNR5",
+        "eurokode": "2261RGNR5RD",
+        "varenavn": "MG S5 EV 5D SUV 25- DOORGLASS",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5707,
+        "varenr": "2298PYKIT",
+        "eurokode": "8323ASMRL1A+8323",
+        "varenavn": "TOYOTA RAV 4 5D 00-05 PYNTELIST",
+        "pris": 4325.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5718,
+        "varenr": "2299CSBL",
+        "eurokode": "6290ACCBLM1B",
+        "varenavn": "OPEL CORSA C 3/5D CC 01-",
+        "pris": 7310.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5739,
+        "varenr": "2300ACDC",
+        "eurokode": "2300ACDCMUVZ2L",
+        "varenavn": "BMW iX 5D SUV 21- WS COATED LDW",
+        "pris": 17395.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5741,
+        "varenr": "2300AGAC",
+        "eurokode": "2300AGACMUVZ2L",
+        "varenavn": "BMW iX 5D SUV 21- WS LDW SENSOR",
+        "pris": 13650.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5742,
+        "varenr": "2300AGAC",
+        "eurokode": "2300AGACMVZ",
+        "varenavn": "BMW iX 5D SUV 21- WS LDW SENSOR",
+        "pris": 8600.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5749,
+        "varenr": "2300LGSR5",
+        "eurokode": "2300LGSR5FVWZ",
+        "varenavn": "BMW iX 5D SUV 21- LEFT GN SOLAR",
+        "pris": 7505.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5772,
+        "varenr": "2301AGAC",
+        "eurokode": "2301AGACMUVZ1L",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+        "pris": 10050.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5774,
+        "varenr": "2301AGAC",
+        "eurokode": "2301AGACMVZ1L",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+        "pris": 9325.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5778,
+        "varenr": "2301BYPC",
+        "eurokode": "2301BYPCAB",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+        "pris": 9720.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5781,
+        "varenr": "2301LYPC4",
+        "eurokode": "2301LYPC4RQZ",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20- R",
+        "pris": 5650.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5784,
+        "varenr": "2301RYPC4",
+        "eurokode": "2301RYPC4RQZ",
+        "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20- R",
+        "pris": 5650.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5795,
+        "varenr": "2302AGAC",
+        "eurokode": "2302AGACMVZ1L",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- WS",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5796,
+        "varenr": "2302AGAC",
+        "eurokode": "2302AGACMVZ2L",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- WS",
+        "pris": 10505.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5801,
+        "varenr": "2302LGSM5",
+        "eurokode": "2302LGSM5FVWZ",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- F",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5803,
+        "varenr": "2302LYPM5",
+        "eurokode": "2302LYPM5RQZ1L",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5804,
+        "varenr": "2302LYPM5",
+        "eurokode": "2302LYPM5RQZ1M",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5806,
+        "varenr": "2302RGSM",
+        "eurokode": "2302RGSM5FVWZ",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- F",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5813,
+        "varenr": "2302RYPM",
+        "eurokode": "2302RYPM5RQZ1L",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5814,
+        "varenr": "2302RYPM",
+        "eurokode": "2302RYPM5RQZ1M",
+        "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5829,
+        "varenr": "2303AGAC",
+        "eurokode": "2303AGACMUVZ1L",
+        "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+        "pris": 12915.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5830,
+        "varenr": "2303AGAC",
+        "eurokode": "2303AGACMUVZ2L",
+        "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+        "pris": 12410.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5831,
+        "varenr": "2303AGAC",
+        "eurokode": "2303AGACMVZ",
+        "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+        "pris": 9550.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5849,
+        "varenr": "2304ACDC",
+        "eurokode": "2304ACDCMUVZ95",
+        "varenavn": "BMW i7 4D LIM 23-  WS SENSOR LDW",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5893,
+        "varenr": "2306AGAC",
+        "eurokode": "2306AGACMUVZ2L",
+        "varenavn": "BMW 5 4D SED + EST 23- WS LDW",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5894,
+        "varenr": "2306AGAC",
+        "eurokode": "2306AGACMVZ",
+        "varenavn": "BMW 5 4D SED + EST 23- WS LDW",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5973,
+        "varenr": "2308AGSC",
+        "eurokode": "2308AGSCMVZ1L",
+        "varenavn": "MINI COUNTRYMAN 5D CROSS 24- WS",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5984,
+        "varenr": "2308LYPR5",
+        "eurokode": "2308LYPR5RQAQZ",
+        "varenavn": "MINI COUNTRYMAN 5D CROSS 24-",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 5989,
+        "varenr": "2308RYPR5",
+        "eurokode": "2308RYPR5RQAQZ",
+        "varenavn": "MINI COUNTRYMAN 5D CROSS 24-",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      },
+      {
+        "excel_rad": 6004,
+        "varenr": "2309AGNC",
+        "eurokode": "2309AGNCMVZ1L",
+        "varenavn": "MINI COOPER 3D HBK 24- WS SENSOR",
+        "pris": 0.0,
+        "aarsak": "A_unique_varenr_varenavn"
+      }
+    ]
+  },
+  "varenr_familier_med_manglende_varianter": {
+    "antall": 1005,
+    "eksempler": [
+      {
+        "varenr": "6573LGSV3",
+        "kilde_eurokoder": [
+          "6573LGSV3FVWZ",
+          "6573LGSV3RD1J",
+          "6573LGSV3RDOZ",
+          "6573LGSV3RDZ",
+          "6573LGSV3RQW1J",
+          "6573LGSV3RVWZ"
+        ],
+        "db_eurokoder": [
+          "6573LGSV3FVWZ"
+        ],
+        "mangler": [
+          "6573LGSV3RD1J",
+          "6573LGSV3RDOZ",
+          "6573LGSV3RDZ",
+          "6573LGSV3RQW1J",
+          "6573LGSV3RVWZ"
+        ],
+        "antall_kilde": 6,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6573RGSV3",
+        "kilde_eurokoder": [
+          "6573RGSV3FVWZ",
+          "6573RGSV3RD1J",
+          "6573RGSV3RDOZ",
+          "6573RGSV3RDZ",
+          "6573RGSV3RQW1J",
+          "6573RGSV3RVWZ"
+        ],
+        "db_eurokoder": [
+          "6573RGSV3FVWZ"
+        ],
+        "mangler": [
+          "6573RGSV3RD1J",
+          "6573RGSV3RDOZ",
+          "6573RGSV3RDZ",
+          "6573RGSV3RQW1J",
+          "6573RGSV3RVWZ"
+        ],
+        "antall_kilde": 6,
+        "antall_db": 1
+      },
+      {
+        "varenr": "2485AGAC",
+        "kilde_eurokoder": [
+          "2485AGACMUVZ",
+          "2485AGACMUVZ1L",
+          "2485AGACMUVZ2L",
+          "2485AGACMVZ",
+          "2485AGACMVZ1L",
+          "2485AGACMVZ2L"
+        ],
+        "db_eurokoder": [
+          "2485AGACMUVZ",
+          "2485AGACMUVZ1L"
+        ],
+        "mangler": [
+          "2485AGACMUVZ2L",
+          "2485AGACMVZ",
+          "2485AGACMVZ1L",
+          "2485AGACMVZ2L"
+        ],
+        "antall_kilde": 6,
+        "antall_db": 2
+      },
+      {
+        "varenr": "2487AGAC",
+        "kilde_eurokoder": [
+          "2487AGACMUVZ",
+          "2487AGACMUVZ1L",
+          "2487AGACMUVZ2L",
+          "2487AGACMUVZ3L",
+          "2487AGACMVZ",
+          "2487AGACMVZ1L",
+          "2487AGACMVZ2L"
+        ],
+        "db_eurokoder": [
+          "2487AGACMUVZ",
+          "2487AGACMUVZ1L",
+          "2487AGACMVZ"
+        ],
+        "mangler": [
+          "2487AGACMUVZ2L",
+          "2487AGACMUVZ3L",
+          "2487AGACMVZ1L",
+          "2487AGACMVZ2L"
+        ],
+        "antall_kilde": 7,
+        "antall_db": 3
+      },
+      {
+        "varenr": "3785BGSVI",
+        "kilde_eurokoder": [
+          "3785BGSVI1H",
+          "3785BGSVIL",
+          "3785BGSVIL1H",
+          "3785BGSVIR",
+          "3785BGSVIR1H"
+        ],
+        "db_eurokoder": [
+          "3785BGSVI1H"
+        ],
+        "mangler": [
+          "3785BGSVIL",
+          "3785BGSVIL1H",
+          "3785BGSVIR",
+          "3785BGSVIR1H"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6741LYQH5",
+        "kilde_eurokoder": [
+          "6741LYQH5RDKW",
+          "6741LYQH5RDKW1J",
+          "6741LYQH5RQKZ",
+          "6741LYQH5RVKW1Z",
+          "6741LYQH5RVKWZ"
+        ],
+        "db_eurokoder": [
+          "6741LYQH5RDKW"
+        ],
+        "mangler": [
+          "6741LYQH5RDKW1J",
+          "6741LYQH5RQKZ",
+          "6741LYQH5RVKW1Z",
+          "6741LYQH5RVKWZ"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6741RYQH",
+        "kilde_eurokoder": [
+          "6741RYQH5RDKW",
+          "6741RYQH5RDKW1J",
+          "6741RYQH5RQKZ",
+          "6741RYQH5RVKW1Z",
+          "6741RYQH5RVKWZ"
+        ],
+        "db_eurokoder": [
+          "6741RYQH5RDKW"
+        ],
+        "mangler": [
+          "6741RYQH5RDKW1J",
+          "6741RYQH5RQKZ",
+          "6741RYQH5RVKW1Z",
+          "6741RYQH5RVKWZ"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "7943LGSH5",
+        "kilde_eurokoder": [
+          "7943LGSH5FDW",
+          "7943LGSH5FV",
+          "7943LGSH5RDW",
+          "7943LGSH5RQWZ",
+          "7943LGSH5RV"
+        ],
+        "db_eurokoder": [
+          "7943LGSH5FDW"
+        ],
+        "mangler": [
+          "7943LGSH5FV",
+          "7943LGSH5RDW",
+          "7943LGSH5RQWZ",
+          "7943LGSH5RV"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "7943RGSH5",
+        "kilde_eurokoder": [
+          "7943RGSH5FDW",
+          "7943RGSH5FV",
+          "7943RGSH5RDW",
+          "7943RGSH5RQWZ",
+          "7943RGSH5RV"
+        ],
+        "db_eurokoder": [
+          "7943RGSH5FDW"
+        ],
+        "mangler": [
+          "7943RGSH5FV",
+          "7943RGSH5RDW",
+          "7943RGSH5RQWZ",
+          "7943RGSH5RV"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "8104LGSS4",
+        "kilde_eurokoder": [
+          "8104LGSS4FDKW",
+          "8104LGSS4RD",
+          "8104LGSS4RQZ",
+          "8104LGSS4RQZ1D",
+          "TESLA MODEL 3 4D"
+        ],
+        "db_eurokoder": [
+          "TESLA MODEL 3 4D"
+        ],
+        "mangler": [
+          "8104LGSS4FDKW",
+          "8104LGSS4RD",
+          "8104LGSS4RQZ",
+          "8104LGSS4RQZ1D"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "8104RGSS4",
+        "kilde_eurokoder": [
+          "8104RGSS4FD",
+          "8104RGSS4RD",
+          "8104RGSS4RQZ",
+          "8104RGSS4RQZ1D",
+          "9789RGSS4FDKW"
+        ],
+        "db_eurokoder": [
+          "8104RGSS4FD"
+        ],
+        "mangler": [
+          "8104RGSS4RD",
+          "8104RGSS4RQZ",
+          "8104RGSS4RQZ1D",
+          "9789RGSS4FDKW"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "8430AGAC",
+        "kilde_eurokoder": [
+          "8430AGACHMUZ",
+          "8430AGACHMUZ1L",
+          "8430AGACHMZ",
+          "8430AGACHMZ1L",
+          "8430AGACHZ",
+          "8430AGACMUZ1L",
+          "8430AGACMVZ"
+        ],
+        "db_eurokoder": [
+          "8430AGACHMUZ",
+          "8430AGACHMUZ1L",
+          "8430AGACHMZ"
+        ],
+        "mangler": [
+          "8430AGACHMZ1L",
+          "8430AGACHZ",
+          "8430AGACMUZ1L",
+          "8430AGACMVZ"
+        ],
+        "antall_kilde": 7,
+        "antall_db": 3
+      },
+      {
+        "varenr": "8669LGSR5",
+        "kilde_eurokoder": [
+          "8669LGSR5FD",
+          "8669LGSR5FVZ",
+          "8669LGSR5RD",
+          "8669LGSR5RQZ",
+          "8669LGSR5RVZ"
+        ],
+        "db_eurokoder": [
+          "8669LGSR5FD"
+        ],
+        "mangler": [
+          "8669LGSR5FVZ",
+          "8669LGSR5RD",
+          "8669LGSR5RQZ",
+          "8669LGSR5RVZ"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "8669RGSR5",
+        "kilde_eurokoder": [
+          "8669RGSR5FD",
+          "8669RGSR5FVZ",
+          "8669RGSR5RD",
+          "8669RGSR5RQZ",
+          "8669RGSR5RVZ"
+        ],
+        "db_eurokoder": [
+          "8669RGSR5FD"
+        ],
+        "mangler": [
+          "8669RGSR5FVZ",
+          "8669RGSR5RD",
+          "8669RGSR5RQZ",
+          "8669RGSR5RVZ"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 1
+      },
+      {
+        "varenr": "8845AGCC",
+        "kilde_eurokoder": [
+          "8845AGCCGHMVZ1",
+          "8845AGCCGMUVZ1",
+          "8845AGCCGMVZ1M",
+          "8845AGCCHMVZ1L",
+          "8845AGCCMUVZ1L",
+          "8845AGCCMVZ1L"
+        ],
+        "db_eurokoder": [
+          "8845AGCCGHMVZ1",
+          "8845AGCCHMVZ1L"
+        ],
+        "mangler": [
+          "8845AGCCGMUVZ1",
+          "8845AGCCGMVZ1M",
+          "8845AGCCMUVZ1L",
+          "8845AGCCMVZ1L"
+        ],
+        "antall_kilde": 6,
+        "antall_db": 2
+      },
+      {
+        "varenr": "8846AGCC",
+        "kilde_eurokoder": [
+          "8846AGCCGHMVZ1",
+          "8846AGCCGMUVZ1",
+          "8846AGCCGMVZ1M",
+          "8846AGCCHMVZ1X",
+          "8846AGCCMUVZ1X",
+          "8846AGCCMVZ1X"
+        ],
+        "db_eurokoder": [
+          "8846AGCCGHMVZ1",
+          "8846AGCCHMVZ1X"
+        ],
+        "mangler": [
+          "8846AGCCGMUVZ1",
+          "8846AGCCGMVZ1M",
+          "8846AGCCMUVZ1X",
+          "8846AGCCMVZ1X"
+        ],
+        "antall_kilde": 6,
+        "antall_db": 2
+      },
+      {
+        "varenr": "2303AGAC",
+        "kilde_eurokoder": [
+          "2303AGACMUVZ",
+          "2303AGACMUVZ1L",
+          "2303AGACMUVZ2L",
+          "2303AGACMVZ"
+        ],
+        "db_eurokoder": [
+          "2303AGACMUVZ"
+        ],
+        "mangler": [
+          "2303AGACMUVZ1L",
+          "2303AGACMUVZ2L",
+          "2303AGACMVZ"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "2756LYDV5",
+        "kilde_eurokoder": [
+          "2756LYDV5RD",
+          "2756LYDV5RD1J",
+          "2756LYDV5RQ1J",
+          "2756LYDV5RQ2J"
+        ],
+        "db_eurokoder": [
+          "2756LYDV5RD"
+        ],
+        "mangler": [
+          "2756LYDV5RD1J",
+          "2756LYDV5RQ1J",
+          "2756LYDV5RQ2J"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "3202GNCE",
+        "kilde_eurokoder": [
+          "8410AGAACHMVW1",
+          "8410AGAACHMW3L",
+          "8410AGACHMW",
+          "8410AGACHMW1L",
+          "8410AGACHMW3L",
+          "8410AGACHMW6Q"
+        ],
+        "db_eurokoder": [
+          "8410AGAACHMVW1",
+          "8410AGAACHMW3L",
+          "8410AGACHMW"
+        ],
+        "mangler": [
+          "8410AGACHMW1L",
+          "8410AGACHMW3L",
+          "8410AGACHMW6Q"
+        ],
+        "antall_kilde": 6,
+        "antall_db": 3
+      },
+      {
+        "varenr": "4029ASMR",
+        "kilde_eurokoder": [
+          "4029ASMRB",
+          "4029ASMRL",
+          "4029ASMRR",
+          "4029ASMRT"
+        ],
+        "db_eurokoder": [
+          "4029ASMRB"
+        ],
+        "mangler": [
+          "4029ASMRL",
+          "4029ASMRR",
+          "4029ASMRT"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5399AGAC",
+        "kilde_eurokoder": [
+          "5399AGACMUVZ",
+          "5399AGACMVZ",
+          "5399AGACMVZ1L",
+          "5399AGACMVZ2L",
+          "5399AGACMVZ3L"
+        ],
+        "db_eurokoder": [
+          "5399AGACMUVZ",
+          "5399AGACMVZ2L"
+        ],
+        "mangler": [
+          "5399AGACMVZ",
+          "5399AGACMVZ1L",
+          "5399AGACMVZ3L"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 2
+      },
+      {
+        "varenr": "5439LYPV4",
+        "kilde_eurokoder": [
+          "5439LYPV4MQ",
+          "5439LYPV4RQ1J",
+          "5439LYPV4RQ2J",
+          "5439LYPV4RQ3J"
+        ],
+        "db_eurokoder": [
+          "5439LYPV4MQ"
+        ],
+        "mangler": [
+          "5439LYPV4RQ1J",
+          "5439LYPV4RQ2J",
+          "5439LYPV4RQ3J"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5439RYPV4",
+        "kilde_eurokoder": [
+          "5439RYPV4MQ",
+          "5439RYPV4RQ1J",
+          "5439RYPV4RQ2J",
+          "5439RYPV4RQ3J"
+        ],
+        "db_eurokoder": [
+          "5439RYPV4MQ"
+        ],
+        "mangler": [
+          "5439RYPV4RQ1J",
+          "5439RYPV4RQ2J",
+          "5439RYPV4RQ3J"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5502LGSH5",
+        "kilde_eurokoder": [
+          "5502LGSH5RD1M",
+          "5502LGSH5RQZ",
+          "5502LGSH5RQZ1D",
+          "5502LGSH5RQZ2D"
+        ],
+        "db_eurokoder": [
+          "5502LGSH5RD1M"
+        ],
+        "mangler": [
+          "5502LGSH5RQZ",
+          "5502LGSH5RQZ1D",
+          "5502LGSH5RQZ2D"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5502LYPH5",
+        "kilde_eurokoder": [
+          "5502LYPH5RD1M",
+          "5502LYPH5RQZ1D",
+          "5502LYPH5RQZ2D",
+          "5502LYPH5RQZ3D"
+        ],
+        "db_eurokoder": [
+          "5502LYPH5RD1M"
+        ],
+        "mangler": [
+          "5502LYPH5RQZ1D",
+          "5502LYPH5RQZ2D",
+          "5502LYPH5RQZ3D"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5502RGSH5",
+        "kilde_eurokoder": [
+          "5502RGSH5RD1M",
+          "5502RGSH5RQZ",
+          "5502RGSH5RQZ1D",
+          "5502RGSH5RQZ2D"
+        ],
+        "db_eurokoder": [
+          "5502RGSH5RD1M"
+        ],
+        "mangler": [
+          "5502RGSH5RQZ",
+          "5502RGSH5RQZ1D",
+          "5502RGSH5RQZ2D"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5502RGSR5",
+        "kilde_eurokoder": [
+          "5502RGSR5RQZ",
+          "5502RGSR5RQZ1D",
+          "5502RGSR5RQZ2D",
+          "5502RGSR5RQZ3D",
+          "5502RGSR5RVWZ1M"
+        ],
+        "db_eurokoder": [
+          "5502RGSR5RQZ",
+          "5502RGSR5RVWZ1M"
+        ],
+        "mangler": [
+          "5502RGSR5RQZ1D",
+          "5502RGSR5RQZ2D",
+          "5502RGSR5RQZ3D"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 2
+      },
+      {
+        "varenr": "5502RYPH5",
+        "kilde_eurokoder": [
+          "5502RYPH5RD1M",
+          "5502RYPH5RQZ1D",
+          "5502RYPH5RQZ2D",
+          "5502RYPH5RQZ3D"
+        ],
+        "db_eurokoder": [
+          "5502RYPH5RD1M"
+        ],
+        "mangler": [
+          "5502RYPH5RQZ1D",
+          "5502RYPH5RQZ2D",
+          "5502RYPH5RQZ3D"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5508AGAC",
+        "kilde_eurokoder": [
+          "5508AGACHMUVZ",
+          "5508AGACHMUVZ1L",
+          "5508AGACHMVZ",
+          "5508AGACHMVZ1L"
+        ],
+        "db_eurokoder": [
+          "5508AGACHMUVZ"
+        ],
+        "mangler": [
+          "5508AGACHMUVZ1L",
+          "5508AGACHMVZ",
+          "5508AGACHMVZ1L"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5517AGAC",
+        "kilde_eurokoder": [
+          "5517AGACMUVZ",
+          "5517AGACMUVZ1L",
+          "5517AGACMVZ",
+          "5517AGACMVZ1L"
+        ],
+        "db_eurokoder": [
+          "5517AGACMUVZ"
+        ],
+        "mangler": [
+          "5517AGACMUVZ1L",
+          "5517AGACMVZ",
+          "5517AGACMVZ1L"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5521LYPR5",
+        "kilde_eurokoder": [
+          "5521LYPR5RDW",
+          "5521LYPR5RQZ",
+          "5521LYPR5RQZ1D",
+          "5521LYPR5RVZ1M"
+        ],
+        "db_eurokoder": [
+          "5521LYPR5RDW"
+        ],
+        "mangler": [
+          "5521LYPR5RQZ",
+          "5521LYPR5RQZ1D",
+          "5521LYPR5RVZ1M"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "5521RYPR5",
+        "kilde_eurokoder": [
+          "5521RYPR5RDW",
+          "5521RYPR5RQZ",
+          "5521RYPR5RQZ1D",
+          "5521RYPR5RVZ1M"
+        ],
+        "db_eurokoder": [
+          "5521RYPR5RDW"
+        ],
+        "mangler": [
+          "5521RYPR5RQZ",
+          "5521RYPR5RQZ1D",
+          "5521RYPR5RVZ1M"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6345LGSR5",
+        "kilde_eurokoder": [
+          "6345LGSR5FD",
+          "6345LGSR5FVZ1G",
+          "6345LGSR5RD",
+          "6345LGSR5RQZ"
+        ],
+        "db_eurokoder": [
+          "6345LGSR5FD"
+        ],
+        "mangler": [
+          "6345LGSR5FVZ1G",
+          "6345LGSR5RD",
+          "6345LGSR5RQZ"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6345RGSR5",
+        "kilde_eurokoder": [
+          "6345RGSR5FD",
+          "6345RGSR5FVZ1G",
+          "6345RGSR5RD",
+          "6345RGSR5RQZ"
+        ],
+        "db_eurokoder": [
+          "6345RGSR5FD"
+        ],
+        "mangler": [
+          "6345RGSR5FVZ1G",
+          "6345RGSR5RD",
+          "6345RGSR5RQZ"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6552LGSV4",
+        "kilde_eurokoder": [
+          "6552LGSV4MQ1J",
+          "6552LGSV4MQ2J",
+          "6552LGSV4RQ",
+          "6552LGSV4RQ1J"
+        ],
+        "db_eurokoder": [
+          "6552LGSV4MQ1J"
+        ],
+        "mangler": [
+          "6552LGSV4MQ2J",
+          "6552LGSV4RQ",
+          "6552LGSV4RQ1J"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6552LYPV4",
+        "kilde_eurokoder": [
+          "6552LYPV4MQ1J",
+          "6552LYPV4MQ2J",
+          "6552LYPV4RQ",
+          "6552LYPV4RQ1J"
+        ],
+        "db_eurokoder": [
+          "6552LYPV4MQ1J"
+        ],
+        "mangler": [
+          "6552LYPV4MQ2J",
+          "6552LYPV4RQ",
+          "6552LYPV4RQ1J"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6573LYPV3",
+        "kilde_eurokoder": [
+          "6573LYPV3RD1J",
+          "6573LYPV3RQ",
+          "6573LYPV3RQ1J",
+          "6573LYPV3RVWZ"
+        ],
+        "db_eurokoder": [
+          "6573LYPV3RD1J"
+        ],
+        "mangler": [
+          "6573LYPV3RQ",
+          "6573LYPV3RQ1J",
+          "6573LYPV3RVWZ"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6573RYPV3",
+        "kilde_eurokoder": [
+          "6573RYPV3RD1J",
+          "6573RYPV3RQ",
+          "6573RYPV3RQ1J",
+          "6573RYPV3RVWZ"
+        ],
+        "db_eurokoder": [
+          "6573RYPV3RD1J"
+        ],
+        "mangler": [
+          "6573RYPV3RQ",
+          "6573RYPV3RQ1J",
+          "6573RYPV3RVWZ"
+        ],
+        "antall_kilde": 4,
+        "antall_db": 1
+      },
+      {
+        "varenr": "6728LCCH5",
+        "kilde_eurokoder": [
+          "6728LCCH5FDKW",
+          "6728LCCH5FVKZ",
+          "6728LCCH5RDKW",
+          "6728LCCH5RDKW1J",
+          "6728LCCH5RVKZ"
+        ],
+        "db_eurokoder": [
+          "6728LCCH5FDKW",
+          "6728LCCH5RDKW1J"
+        ],
+        "mangler": [
+          "6728LCCH5FVKZ",
+          "6728LCCH5RDKW",
+          "6728LCCH5RVKZ"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 2
+      },
+      {
+        "varenr": "6728RCCH5",
+        "kilde_eurokoder": [
+          "6728RCCH5FDKW",
+          "6728RCCH5FVKZ",
+          "6728RCCH5RDKW",
+          "6728RCCH5RDKW1J",
+          "6728RCCH5RVKZ"
+        ],
+        "db_eurokoder": [
+          "6728RCCH5FDKW",
+          "6728RCCH5RDKW1J"
+        ],
+        "mangler": [
+          "6728RCCH5FVKZ",
+          "6728RCCH5RDKW",
+          "6728RCCH5RVKZ"
+        ],
+        "antall_kilde": 5,
+        "antall_db": 2
+      }
+    ]
+  },
+  "kollaps_eksempler": [
+    {
+      "excel_rad": 2354,
+      "varenr": "2049LYPR5",
+      "eurokode": "2049LYPR5RVZ",
+      "varenavn": "ALFA ROMEO STELVIO 5D SUV 17-",
+      "pris": 2865.0,
+      "beholdt_eurokode": "2049LYPR5RD",
+      "beholdt_excel_rad": 2353
+    },
+    {
+      "excel_rad": 2358,
+      "varenr": "2049RYPR5",
+      "eurokode": "2049RYPR5RVZ",
+      "varenavn": "ALFA ROMEO STELVIO 5D SUV 17-",
+      "pris": 3140.0,
+      "beholdt_eurokode": "2049RYPR5RD",
+      "beholdt_excel_rad": 2357
+    },
+    {
+      "excel_rad": 2386,
+      "varenr": "2050LYPR5",
+      "eurokode": "2050LYPR5RVZ",
+      "varenavn": "ALFA ROMEO TONALE 5D SUV 22- R",
+      "pris": 0.0,
+      "beholdt_eurokode": "2050LYPR5RD",
+      "beholdt_excel_rad": 2385
+    },
+    {
+      "excel_rad": 2390,
+      "varenr": "2050RYPR5",
+      "eurokode": "2050RYPR5RVZ",
+      "varenavn": "ALFA ROMEO TONALE 5D SUV 22- R",
+      "pris": 0.0,
+      "beholdt_eurokode": "2050RYPR5RD",
+      "beholdt_excel_rad": 2389
+    },
+    {
+      "excel_rad": 4201,
+      "varenr": "2180CSBL",
+      "eurokode": "8828ACCBLMW1R",
+      "varenavn": "VOLVO S80 4D SED 99-",
+      "pris": 8525.0,
+      "beholdt_eurokode": "8828ACCBLW1M",
+      "beholdt_excel_rad": 4200
+    },
+    {
+      "excel_rad": 5082,
+      "varenr": "2252LYPE5",
+      "eurokode": "2252LYPE5RVZ",
+      "varenavn": "MG5  5D EST 22- R DOORW LEFT",
+      "pris": 0.0,
+      "beholdt_eurokode": "2252LYPE5RD",
+      "beholdt_excel_rad": 5080
+    },
+    {
+      "excel_rad": 5086,
+      "varenr": "2252RYPE5",
+      "eurokode": "2252RYPE5RVZ",
+      "varenavn": "MG5  5D EST 22- R DOORW RIGHT",
+      "pris": 0.0,
+      "beholdt_eurokode": "2252RYPE5RD",
+      "beholdt_excel_rad": 5084
+    },
+    {
+      "excel_rad": 5157,
+      "varenr": "2257LGNR5",
+      "eurokode": "2257LGNR5RD",
+      "varenavn": "MG ZS 5D CROSS/SUV 25- DOORGLASS",
+      "pris": 0.0,
+      "beholdt_eurokode": "2257LGNR5FD",
+      "beholdt_excel_rad": 5156
+    },
+    {
+      "excel_rad": 5160,
+      "varenr": "2257RGNR5",
+      "eurokode": "2257RGNR5RD",
+      "varenavn": "MG ZS 5D CROSS/SUV 25- DOORGLASS",
+      "pris": 0.0,
+      "beholdt_eurokode": "2257RGNR5FD",
+      "beholdt_excel_rad": 5159
+    },
+    {
+      "excel_rad": 5225,
+      "varenr": "2261LGNR5",
+      "eurokode": "2261LGNR5RD",
+      "varenavn": "MG S5 EV 5D SUV 25- DOORGLASS",
+      "pris": 0.0,
+      "beholdt_eurokode": "2261LGNR5FD",
+      "beholdt_excel_rad": 5224
+    },
+    {
+      "excel_rad": 5231,
+      "varenr": "2261RGNR5",
+      "eurokode": "2261RGNR5RD",
+      "varenavn": "MG S5 EV 5D SUV 25- DOORGLASS",
+      "pris": 0.0,
+      "beholdt_eurokode": "2261RGNR5FD",
+      "beholdt_excel_rad": 5230
+    },
+    {
+      "excel_rad": 5707,
+      "varenr": "2298PYKIT",
+      "eurokode": "8323ASMRL1A+8323",
+      "varenavn": "TOYOTA RAV 4 5D 00-05 PYNTELIST",
+      "pris": 4325.0,
+      "beholdt_eurokode": "8323ASGRL+8323AS",
+      "beholdt_excel_rad": 5705
+    },
+    {
+      "excel_rad": 5718,
+      "varenr": "2299CSBL",
+      "eurokode": "6290ACCBLM1B",
+      "varenavn": "OPEL CORSA C 3/5D CC 01-",
+      "pris": 7310.0,
+      "beholdt_eurokode": "6290ACCBL",
+      "beholdt_excel_rad": 5717
+    },
+    {
+      "excel_rad": 5739,
+      "varenr": "2300ACDC",
+      "eurokode": "2300ACDCMUVZ2L",
+      "varenavn": "BMW iX 5D SUV 21- WS COATED LDW",
+      "pris": 17395.0,
+      "beholdt_eurokode": "2300ACDCMUVZ1L",
+      "beholdt_excel_rad": 5738
+    },
+    {
+      "excel_rad": 5741,
+      "varenr": "2300AGAC",
+      "eurokode": "2300AGACMUVZ2L",
+      "varenavn": "BMW iX 5D SUV 21- WS LDW SENSOR",
+      "pris": 13650.0,
+      "beholdt_eurokode": "2300AGACMUVZ1L",
+      "beholdt_excel_rad": 5740
+    },
+    {
+      "excel_rad": 5742,
+      "varenr": "2300AGAC",
+      "eurokode": "2300AGACMVZ",
+      "varenavn": "BMW iX 5D SUV 21- WS LDW SENSOR",
+      "pris": 8600.0,
+      "beholdt_eurokode": "2300AGACMUVZ1L",
+      "beholdt_excel_rad": 5740
+    },
+    {
+      "excel_rad": 5749,
+      "varenr": "2300LGSR5",
+      "eurokode": "2300LGSR5FVWZ",
+      "varenavn": "BMW iX 5D SUV 21- LEFT GN SOLAR",
+      "pris": 7505.0,
+      "beholdt_eurokode": "2300LGSR5FD",
+      "beholdt_excel_rad": 5748
+    },
+    {
+      "excel_rad": 5772,
+      "varenr": "2301AGAC",
+      "eurokode": "2301AGACMUVZ1L",
+      "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+      "pris": 10050.0,
+      "beholdt_eurokode": "2301AGACMUVZ",
+      "beholdt_excel_rad": 5771
+    },
+    {
+      "excel_rad": 5774,
+      "varenr": "2301AGAC",
+      "eurokode": "2301AGACMVZ1L",
+      "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+      "pris": 9325.0,
+      "beholdt_eurokode": "2301AGACMUVZ",
+      "beholdt_excel_rad": 5771
+    },
+    {
+      "excel_rad": 5778,
+      "varenr": "2301BYPC",
+      "eurokode": "2301BYPCAB",
+      "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20-",
+      "pris": 9720.0,
+      "beholdt_eurokode": "2301BYPCA",
+      "beholdt_excel_rad": 5777
+    },
+    {
+      "excel_rad": 5781,
+      "varenr": "2301LYPC4",
+      "eurokode": "2301LYPC4RQZ",
+      "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20- R",
+      "pris": 5650.0,
+      "beholdt_eurokode": "2301LYPC4RD",
+      "beholdt_excel_rad": 5780
+    },
+    {
+      "excel_rad": 5784,
+      "varenr": "2301RYPC4",
+      "eurokode": "2301RYPC4RQZ",
+      "varenavn": "BMW 4 SERIES G26 4D GRAN CPE 20- R",
+      "pris": 5650.0,
+      "beholdt_eurokode": "2301RYPC4RD",
+      "beholdt_excel_rad": 5783
+    },
+    {
+      "excel_rad": 5795,
+      "varenr": "2302AGAC",
+      "eurokode": "2302AGACMVZ1L",
+      "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- WS",
+      "pris": 0.0,
+      "beholdt_eurokode": "2302AGACMVZ",
+      "beholdt_excel_rad": 5794
+    },
+    {
+      "excel_rad": 5796,
+      "varenr": "2302AGAC",
+      "eurokode": "2302AGACMVZ2L",
+      "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- WS",
+      "pris": 10505.0,
+      "beholdt_eurokode": "2302AGACMVZ",
+      "beholdt_excel_rad": 5794
+    },
+    {
+      "excel_rad": 5801,
+      "varenr": "2302LGSM5",
+      "eurokode": "2302LGSM5FVWZ",
+      "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- F",
+      "pris": 0.0,
+      "beholdt_eurokode": "2302LGSM5FD",
+      "beholdt_excel_rad": 5800
+    },
+    {
+      "excel_rad": 5803,
+      "varenr": "2302LYPM5",
+      "eurokode": "2302LYPM5RQZ1L",
+      "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+      "pris": 0.0,
+      "beholdt_eurokode": "2302LYPM5RD",
+      "beholdt_excel_rad": 5802
+    },
+    {
+      "excel_rad": 5804,
+      "varenr": "2302LYPM5",
+      "eurokode": "2302LYPM5RQZ1M",
+      "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+      "pris": 0.0,
+      "beholdt_eurokode": "2302LYPM5RD",
+      "beholdt_excel_rad": 5802
+    },
+    {
+      "excel_rad": 5806,
+      "varenr": "2302RGSM",
+      "eurokode": "2302RGSM5FVWZ",
+      "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- F",
+      "pris": 0.0,
+      "beholdt_eurokode": "2302RGSM5FD",
+      "beholdt_excel_rad": 5805
+    },
+    {
+      "excel_rad": 5813,
+      "varenr": "2302RYPM",
+      "eurokode": "2302RYPM5RQZ1L",
+      "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+      "pris": 0.0,
+      "beholdt_eurokode": "2302RYPM5RD",
+      "beholdt_excel_rad": 5812
+    },
+    {
+      "excel_rad": 5814,
+      "varenr": "2302RYPM",
+      "eurokode": "2302RYPM5RQZ1M",
+      "varenavn": "BMW 2 -SERIE ACTIVE TOURER 22- R",
+      "pris": 0.0,
+      "beholdt_eurokode": "2302RYPM5RD",
+      "beholdt_excel_rad": 5812
+    },
+    {
+      "excel_rad": 5829,
+      "varenr": "2303AGAC",
+      "eurokode": "2303AGACMUVZ1L",
+      "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+      "pris": 12915.0,
+      "beholdt_eurokode": "2303AGACMUVZ",
+      "beholdt_excel_rad": 5828
+    },
+    {
+      "excel_rad": 5830,
+      "varenr": "2303AGAC",
+      "eurokode": "2303AGACMUVZ2L",
+      "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+      "pris": 12410.0,
+      "beholdt_eurokode": "2303AGACMUVZ",
+      "beholdt_excel_rad": 5828
+    },
+    {
+      "excel_rad": 5831,
+      "varenr": "2303AGAC",
+      "eurokode": "2303AGACMVZ",
+      "varenavn": "BMW X1/IX1 5D SUV 22- WS ACO LDW",
+      "pris": 9550.0,
+      "beholdt_eurokode": "2303AGACMUVZ",
+      "beholdt_excel_rad": 5828
+    },
+    {
+      "excel_rad": 5849,
+      "varenr": "2304ACDC",
+      "eurokode": "2304ACDCMUVZ95",
+      "varenavn": "BMW i7 4D LIM 23-  WS SENSOR LDW",
+      "pris": 0.0,
+      "beholdt_eurokode": "2304ACDCMUVZ2L",
+      "beholdt_excel_rad": 5848
+    },
+    {
+      "excel_rad": 5893,
+      "varenr": "2306AGAC",
+      "eurokode": "2306AGACMUVZ2L",
+      "varenavn": "BMW 5 4D SED + EST 23- WS LDW",
+      "pris": 0.0,
+      "beholdt_eurokode": "2306AGACMUVZ1L",
+      "beholdt_excel_rad": 5892
+    },
+    {
+      "excel_rad": 5894,
+      "varenr": "2306AGAC",
+      "eurokode": "2306AGACMVZ",
+      "varenavn": "BMW 5 4D SED + EST 23- WS LDW",
+      "pris": 0.0,
+      "beholdt_eurokode": "2306AGACMUVZ1L",
+      "beholdt_excel_rad": 5892
+    },
+    {
+      "excel_rad": 5973,
+      "varenr": "2308AGSC",
+      "eurokode": "2308AGSCMVZ1L",
+      "varenavn": "MINI COUNTRYMAN 5D CROSS 24- WS",
+      "pris": 0.0,
+      "beholdt_eurokode": "2308AGSCMVZ",
+      "beholdt_excel_rad": 5972
+    },
+    {
+      "excel_rad": 5974,
+      "varenr": "2308AGSC",
+      "eurokode": "2308AGSCMVZ2L",
+      "varenavn": "MINI COUNTRYMAN 5D CROSS 24- WS",
+      "pris": 0.0,
+      "beholdt_eurokode": "2308AGSCMVZ",
+      "beholdt_excel_rad": 5972
+    },
+    {
+      "excel_rad": 5984,
+      "varenr": "2308LYPR5",
+      "eurokode": "2308LYPR5RQAQZ",
+      "varenavn": "MINI COUNTRYMAN 5D CROSS 24-",
+      "pris": 0.0,
+      "beholdt_eurokode": "2308LYPR5RD",
+      "beholdt_excel_rad": 5983
+    },
+    {
+      "excel_rad": 5989,
+      "varenr": "2308RYPR5",
+      "eurokode": "2308RYPR5RQAQZ",
+      "varenavn": "MINI COUNTRYMAN 5D CROSS 24-",
+      "pris": 0.0,
+      "beholdt_eurokode": "2308RYPR5RD",
+      "beholdt_excel_rad": 5988
+    }
+  ],
+  "gt": {
+    "antall_gt_rader": 32307,
+    "unike_gt_koder": 4283,
+    "gt_koder_som_er_varenr": 3778,
+    "gt_koder_med_manglende_varianter": 128,
+    "topp": [
+      {
+        "varenr": "8430AGAC",
+        "gt_rader": 4,
+        "mangler": [
+          "8430AGACHMZ1L",
+          "8430AGACHZ",
+          "8430AGACMUZ1L",
+          "8430AGACMVZ"
+        ]
+      },
+      {
+        "varenr": "8845AGCC",
+        "gt_rader": 11,
+        "mangler": [
+          "8845AGCCGMUVZ1",
+          "8845AGCCGMVZ1M",
+          "8845AGCCMUVZ1L",
+          "8845AGCCMVZ1L"
+        ]
+      },
+      {
+        "varenr": "8846AGCC",
+        "gt_rader": 10,
+        "mangler": [
+          "8846AGCCGMUVZ1",
+          "8846AGCCGMVZ1M",
+          "8846AGCCMUVZ1X",
+          "8846AGCCMVZ1X"
+        ]
+      },
+      {
+        "varenr": "3202GNCE",
+        "gt_rader": 6,
+        "mangler": [
+          "8410AGACHMW1L",
+          "8410AGACHMW3L",
+          "8410AGACHMW6Q"
+        ]
+      },
+      {
+        "varenr": "5399AGAC",
+        "gt_rader": 5,
+        "mangler": [
+          "5399AGACMVZ",
+          "5399AGACMVZ1L",
+          "5399AGACMVZ3L"
+        ]
+      },
+      {
+        "varenr": "5508AGAC",
+        "gt_rader": 7,
+        "mangler": [
+          "5508AGACHMUVZ1L",
+          "5508AGACHMVZ",
+          "5508AGACHMVZ1L"
+        ]
+      },
+      {
+        "varenr": "8433AGAB",
+        "gt_rader": 8,
+        "mangler": [
+          "8433AGABLCHMUV",
+          "8433AGABLCHMV",
+          "8433AGABLCHMV1E"
+        ]
+      },
+      {
+        "varenr": "8847AGAC",
+        "gt_rader": 10,
+        "mangler": [
+          "8847AGACMVZ1L",
+          "8847AGACMVZ1M",
+          "8847AGACMVZ2L"
+        ]
+      },
+      {
+        "varenr": "8848AGCC",
+        "gt_rader": 4,
+        "mangler": [
+          "8848AGCCGMUVZ",
+          "8848AGCCGMVZ",
+          "8848AGCCMVZ1X"
+        ]
+      },
+      {
+        "varenr": "2301AGAC",
+        "gt_rader": 1,
+        "mangler": [
+          "2301AGACMUVZ1L",
+          "2301AGACMVZ1L"
+        ]
+      },
+      {
+        "varenr": "2308AGSC",
+        "gt_rader": 3,
+        "mangler": [
+          "2308AGSCMVZ1L",
+          "2308AGSCMVZ2L"
+        ]
+      },
+      {
+        "varenr": "2311AGAC",
+        "gt_rader": 2,
+        "mangler": [
+          "2311AGACMUVZ02L",
+          "2311AGACMVZ"
+        ]
+      },
+      {
+        "varenr": "3188GNEL",
+        "gt_rader": 6,
+        "mangler": [
+          "3580AGAEHMVW2P",
+          "3580AGAHMVW2P"
+        ]
+      },
+      {
+        "varenr": "3191GNCM",
+        "gt_rader": 1,
+        "mangler": [
+          "8409AGAACMZ1L",
+          "8409AGACMZ1L"
+        ]
+      },
+      {
+        "varenr": "3200GNCE",
+        "gt_rader": 5,
+        "mangler": [
+          "3769AGSCHMVW1P",
+          "3769AGSCHMVW96"
+        ]
+      },
+      {
+        "varenr": "3220GNEEL",
+        "gt_rader": 4,
+        "mangler": [
+          "3770AGSEHMVZ1C",
+          "3770AGSEHVZ2C"
+        ]
+      },
+      {
+        "varenr": "3381GNCM",
+        "gt_rader": 2,
+        "mangler": [
+          "5395AGSACMUVZ1L",
+          "5395AGSACMVZ1L"
+        ]
+      },
+      {
+        "varenr": "4342ACDC",
+        "gt_rader": 6,
+        "mangler": [
+          "4342ACDCHMVZ",
+          "4342ACDCHMVZ1L"
+        ]
+      },
+      {
+        "varenr": "5187AGAC",
+        "gt_rader": 10,
+        "mangler": [
+          "5187AGACHMUVZ1L",
+          "5187AGACMUVZ"
+        ]
+      },
+      {
+        "varenr": "5396AGSA",
+        "gt_rader": 1,
+        "mangler": [
+          "5396AGSACJMVZ1L",
+          "5396AGSAMVZ"
+        ]
+      },
+      {
+        "varenr": "5519AGAC",
+        "gt_rader": 3,
+        "mangler": [
+          "5519AGACMVZ",
+          "5519AGACMVZ1L"
+        ]
+      },
+      {
+        "varenr": "6741AGAG",
+        "gt_rader": 2,
+        "mangler": [
+          "6741AGAGYCMVZ",
+          "6741AGAGYCMVZ1L"
+        ]
+      },
+      {
+        "varenr": "7822AGAC",
+        "gt_rader": 6,
+        "mangler": [
+          "7822AGACMVZ",
+          "7822AGACMVZ1L"
+        ]
+      },
+      {
+        "varenr": "8432AGAC",
+        "gt_rader": 4,
+        "mangler": [
+          "8432AGACHMV1E",
+          "8432AGACMV1L"
+        ]
+      },
+      {
+        "varenr": "8437AGAB",
+        "gt_rader": 9,
+        "mangler": [
+          "8437AGABLCM1L",
+          "8437AGABLCMUV"
+        ]
+      }
+    ]
+  }
+}

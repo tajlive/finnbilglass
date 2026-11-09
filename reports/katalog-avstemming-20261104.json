@@ -1,0 +1,258 @@
+{
+  "definisjoner": {
+    "variant": "varenr + full eurokode (uten eurokode: varenr + varenavn)",
+    "normalisering": "trim + store bokstaver; float-artefakt «.0» fjernet fra rene tallkoder; eurokode strippet for ikke-alfanumeriske tegn i nøkkelen",
+    "rad uten eurokode": "teller som variant bare via varenr+varenavn"
+  },
+  "tall": {
+    "kilde_produktlinjer": 30967,
+    "kilde_unike_varianter": 30919,
+    "kilde_duplikater": 48,
+    "kilde_unike_eurokoder": 26023,
+    "kilde_uten_eurokode": 4194,
+    "prod_rader": 29627,
+    "prod_unike_varianter": 29612,
+    "prod_duplikater": 15,
+    "prod_unike_eurokoder": 24753,
+    "bade_kilde_og_prod": 29609,
+    "bare_kilde": 1313,
+    "bare_prod": 3,
+    "eurokoder_bare_kilde": 1271,
+    "eurokoder_bare_prod": 1
+  },
+  "avstemming_eurokoder": {
+    "kilde_minus_prod": 1270,
+    "forklart_av_bare_kilde": 1271,
+    "forklart_av_bare_prod": 1,
+    "likning": "26023 − 24753 = 1270 = 1271 (bare kilde) − 1 (bare prod)"
+  },
+  "bare_kilde_aarsaker": {
+    "eurokode_finnes_ikke_i_prod": 1275,
+    "eurokode_finnes_under_annet_varenr": 29,
+    "uten_eurokode": 9
+  },
+  "bare_prod_eksempler": [
+    {
+      "varenr": "Prisliste sortert etter varenr",
+      "eurokode": null,
+      "varenavn": "",
+      "rad_type": "tilbehor"
+    },
+    {
+      "varenr": "AUTOGLASS AS",
+      "eurokode": null,
+      "varenavn": "",
+      "rad_type": "tilbehor"
+    },
+    {
+      "varenr": "Varenr",
+      "eurokode": "Eurokode",
+      "varenavn": "Varenavn",
+      "rad_type": "glass"
+    }
+  ],
+  "konflikter_samme_varenr_eurokode_ulikt_navn": {
+    "antall_grupper": 15,
+    "eksempler": [
+      {
+        "varenr": "2426GYEL",
+        "eurokode": "5346AGSGYAHJMV",
+        "navn": [
+          "BRUK 2426GYELAM",
+          "MERCEDES SL 2D CAB W230 01-03  NB-"
+        ],
+        "priser": [
+          15.0,
+          24340.0
+        ]
+      },
+      {
+        "varenr": "2873PYKIT",
+        "eurokode": "3574ASGRL+3574AS",
+        "navn": [
+          "FORD KUGA 07- PYNTELIST",
+          "FORD KUGA 07- PYNTELIST HOLDLIST"
+        ],
+        "priser": [
+          1185.0,
+          1255.0
+        ]
+      },
+      {
+        "varenr": "2999GNMU",
+        "eurokode": "8385AGAMUV1B",
+        "navn": [
+          "TOYOTA PRIUS 5D CC 09-12",
+          "TOYOTA PRIUS 5D CC 12-15"
+        ],
+        "priser": [
+          16635.0,
+          17320.0
+        ]
+      },
+      {
+        "varenr": "3067CSCM",
+        "eurokode": "8608ACDCMUVWZ1",
+        "navn": [
+          "AUDI A7 5D CC  06/12-",
+          "AUDI A7 5D CC  10-05/12"
+        ],
+        "priser": [
+          20390.0,
+          20690.0
+        ]
+      },
+      {
+        "varenr": "3067GNCM",
+        "eurokode": "8608AGACMUVWZ1",
+        "navn": [
+          "AUDI A7 5D CC  06/12-",
+          "AUDI A7 5D CC  10-05/12"
+        ],
+        "priser": [
+          21395.0,
+          22210.0
+        ]
+      },
+      {
+        "varenr": "3193GNCM",
+        "eurokode": "7619AGSCMVZ55",
+        "navn": [
+          "SEAT LEON 5D CC  12-15",
+          "SEAT LEON 5D CC  16-"
+        ],
+        "priser": [
+          7175.0,
+          7520.0
+        ]
+      },
+      {
+        "varenr": "3205GNCE",
+        "eurokode": "7816AGACHMVWZ1",
+        "navn": [
+          "SKODA OCTAVIA CC+STV 13-MAR16",
+          "SKODA OCTAVIA CC+STV APR16-"
+        ],
+        "priser": [
+          11615.0,
+          14330.0
+        ]
+      },
+      {
+        "varenr": "3205GNCM",
+        "eurokode": "7816AGACMVWZ1B",
+        "navn": [
+          "SKODA OCTAVIA 5D CC+STV 13-",
+          "SKODA OCTAVIA 5D CC+STV APRIL17-"
+        ],
+        "priser": [
+          10315.0,
+          10550.0
+        ]
+      },
+      {
+        "varenr": "3223GYAC",
+        "eurokode": "6734AGSGYACMVW",
+        "navn": [
+          "PORSCHE CAYMAN 2D CAB 13-15",
+          "PORSCHE CAYMAN 2D CAB 16-"
+        ],
+        "priser": [
+          15650.0,
+          15995.0
+        ]
+      },
+      {
+        "varenr": "3345GNCM",
+        "eurokode": "5382AGSACMZ1F",
+        "navn": [
+          "MERCEDES V-CLASS W447 20-23  FR",
+          "MERCEDES V-CLASS W447 24-  FR"
+        ],
+        "priser": [
+          14675.0
+        ]
+      },
+      {
+        "varenr": "7819BGSH",
+        "eurokode": "7819BGSHABIJZ6H",
+        "navn": [
+          "SKODA SUPERB 5D 15-  BAKR",
+          "SKODA SUPERB 5D HBK 15-  BAKR"
+        ],
+        "priser": [
+          0.0,
+          7000.0
+        ]
+      },
+      {
+        "varenr": "8104BGSG",
+        "eurokode": "8104BGSGYSABKTZ",
+        "navn": [
+          "TESLA MODEL 3 4D SED 21- BAKRUTE",
+          "USE 9789BGSGYSABKTZ"
+        ],
+        "priser": [
+          13690.0
+        ]
+      },
+      {
+        "varenr": "8596GZPR5",
+        "eurokode": "5689AGNMV1B",
+        "navn": [
+          "AUDI Q5  08- PAKNING SIDE SOLTAK",
+          "AUDI Q5 5D SUV  08-  SOLTAK",
+          "AUDI Q5 5D SUV 08- PAKNING SOLTAK"
+        ],
+        "priser": [
+          0.0
+        ]
+      },
+      {
+        "varenr": "9341AGNG",
+        "eurokode": "9341AGNGN1B",
+        "navn": [
+          "LOTUS ELISE  01-10  FRONTR+GNGN",
+          "LOTUS ELISE SERIES 2 2D ROADSTER"
+        ],
+        "priser": [
+          12945.0
+        ]
+      },
+      {
+        "varenr": "AF64AGAC",
+        "eurokode": "AF64GACHMVZ1E",
+        "navn": [
+          "FORD EXPLORER 5D SUV 20- FR",
+          "USE W2567GN WIPER HEATED"
+        ],
+        "priser": [
+          0.0,
+          41500.0
+        ]
+      }
+    ]
+  },
+  "sql": {
+    "prod_rader": "SELECT count(*) FROM glass_prisliste;",
+    "prod_unike_eurokoder": "SELECT count(DISTINCT upper(trim(eurokode))) FROM glass_prisliste WHERE eurokode IS NOT NULL AND trim(eurokode) <> '';",
+    "prod_unike_varenr_eurokode": "SELECT count(*) FROM (SELECT DISTINCT upper(trim(varenr)), upper(trim(eurokode)) FROM glass_prisliste WHERE eurokode IS NOT NULL AND trim(eurokode) <> '');",
+    "prod_uten_eurokode": "SELECT count(*) FROM glass_prisliste WHERE eurokode IS NULL OR trim(eurokode) = '';",
+    "prod_konflikter": "SELECT varenr, eurokode, count(DISTINCT varenavn) n FROM glass_prisliste GROUP BY 1,2 HAVING n > 1;",
+    "kilde_tall": "python3 scripts/katalog-uttrekk.py (SHA-256 + radklassifisering) → reports/katalog-uttrekk-<dato>.json"
+  },
+  "import": {
+    "staging_rader": 30937,
+    "staging_unike_varianter": 30937,
+    "nye_varianter_i_staging": 1325,
+    "uendret": 29612,
+    "kilde_varianter_som_fortsatt_mangler": 0,
+    "varianter_i_staging_som_ikke_er_i_kilde": 18,
+    "forklaring": {
+      "nye_med_eurokode": 1325,
+      "hvorav_eurokode_fantes_ikke_i_prod": 1275,
+      "hvorav_eurokode_fantes_under_annet_varenr": 29,
+      "hvorav_uten_eurokode": 9
+    }
+  }
+}

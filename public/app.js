@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  var state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null, currentGlassKind: null, glassRequest: null, clientRequestId: null, inquiryAttempted: false, preferredWindshieldCandidate: null, evidenceSent: false };
+  var state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null, currentGlassKind: null, glassRequest: null, clientRequestId: null, inquiryAttempted: false, preferredWindshieldCandidate: null, evidenceSent: false, frontruteKandidater: [] };
   var searchGeneration = 0;
   var spm = [
     { key: 'sensor',     tittel: 'Har bilen regnsensor?', hjelp: 'Da starter viskerne automatisk når det regner.' },
@@ -60,7 +60,7 @@
     document.querySelectorAll('.screen').forEach(function (s) { s.classList.add('hidden'); });
     if (id !== 'resultat') searchGeneration++;
     if (id === 'start') {
-      state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null, currentGlassKind: null, glassRequest: null, clientRequestId: null, inquiryAttempted: false, preferredWindshieldCandidate: null, evidenceSent: false };
+      state = { merke: '', modell: '', aar: null, profil: {}, info: {}, regnr: '', vin: null, forstegangsregistrert: null, import: false, importLand: null, resolver: null, currentGlassKind: null, glassRequest: null, clientRequestId: null, inquiryAttempted: false, preferredWindshieldCandidate: null, evidenceSent: false, frontruteKandidater: [] };
       $('start-feil').classList.add('hidden');
       $('inquiry-form').classList.add('hidden');
       $('inquiry-bekreftet').classList.add('hidden');
@@ -74,6 +74,14 @@
       $('inquiry-glass-summary').textContent = '';
       $('inquiry-glass-summary').classList.add('hidden');
       document.querySelectorAll('.glassopt[data-type]').forEach(function (button) { button.classList.remove('aktiv'); button.setAttribute('aria-pressed', 'false'); });
+      valgTre = null; valgType = null; valgSti = []; valgBak = []; valgteGlass = null;
+      if ($('glassvalg')) $('glassvalg').textContent = '';
+      if ($('glassvalg-status')) { $('glassvalg-status').textContent = ''; $('glassvalg-status').classList.add('hidden'); }
+      if ($('glass-placement')) $('glass-placement').classList.add('hidden');
+      if ($('btn-glass-hjelp')) $('btn-glass-hjelp').classList.add('hidden');
+      if ($('resultat-oppsummering')) { $('resultat-oppsummering').textContent = ''; $('resultat-oppsummering').classList.add('hidden'); }
+      if ($('inquiry-oppsummering')) $('inquiry-oppsummering').textContent = '';
+      if ($('inquiry-leveringssted')) $('inquiry-leveringssted').value = '';
     }
     var el = $('screen-' + id);
     if (el) el.classList.remove('hidden');
@@ -261,9 +269,9 @@
           throw error;
         }
         inquiryIdemKey = null;
-        show('Takk! Vi har mottatt forespørselen' +
-          (r.data.inquiryId != null ? ' (saksnummer ' + r.data.inquiryId + ')' : '') +
-          '. Vi kontrollerer bil og glass manuelt før tilbud. Ingen bestilling er gjennomført.');
+        show('Forespørselen er mottatt' +
+          (r.data.inquiryId != null ? ' – sak #' + r.data.inquiryId : '') +
+          '. Vi kontrollerer opplysningene og følger opp via kontaktmåten du valgte. Ingen bestilling er gjennomført. Du kan følge saken på Min side: finnbilglass.no/min-side');
         form.dataset.sent = 'true';
         form.querySelectorAll('input, textarea').forEach(function (field) { field.disabled = true; });
       })
@@ -521,6 +529,18 @@
     state.clientRequestId = null;
     state.inquiryAttempted = false;
     state.preferredWindshieldCandidate = null;
+    // Ny bil = nytt grunnlag. Uten dette ble gamle utstyrssvar, valgt variant og
+    // kandidatliste hengende igjen fra forrige søk (målt 2026-11-04).
+    frontruteSvar = {};
+    valgteGlass = null;
+    eksplisittVariantId = null;
+    state.frontruteKandidater = [];
+    state.frontruteSporsmaal = [];
+    state.profil = {};
+    $('inquiry-form').classList.add('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    $('resultat-sporsmaal').textContent = '';
+    $('resultat-sporsmaal').classList.add('hidden');
     $('glass-placement').classList.add('hidden');
     $('inquiry-glass-summary').classList.add('hidden');
     state.regnr = regnr ? formatRegnr(regnr) : '';
@@ -547,6 +567,7 @@
     var ev = document.querySelector('.evidence-capture');
     if (ev) ev.classList.add('hidden');
     show('glass');
+    hentGlassValg();
   }
 
   // Evidence Capture: supportdokumentasjon, separat fra beslutningsmotoren.
@@ -697,7 +718,7 @@
     if (state.vin) {
       var v = document.createElement('div');
       v.className = 'detlinje';
-      v.textContent = 'VIN-nummer: ' + state.vin;
+      v.textContent = 'Bildata hentet fra Statens vegvesen';
       det.appendChild(v);
     }
     if (state.import) {
@@ -710,7 +731,7 @@
   // Kjennemerke funnet ikke i SVV → ærlig melding + handoff til kontakt (ingen VIN/manuell — Tom 2026-08-17).
   function visKontaktHandoff(msg) {
     var el = $('start-feil');
-    el.innerHTML = msg + ' <a href="mailto:support@finnbilglass.no" class="link">Send oss en e-post</a> eller ring <a href="tel:+4740408241" class="link">40 40 82 41</a> — så hjelper vi deg.';
+    el.innerHTML = msg + ' <a href="mailto:support@finnbilglass.no" class="link">Send oss en e-post</a> — så hjelper vi deg.';
     el.classList.remove('hidden');
   }
 
@@ -718,207 +739,1047 @@
   //    skiltnummer (SVV) er eneste inngang; «Annet» → kontakt; «Tilbake»/«Nytt søk» → start.
 
 
-  function glassSideLabel(value) { return value === 'left' ? 'Venstre' : value === 'right' ? 'Høyre' : 'Vet ikke hvilken side'; }
-  function glassSelectionLabel(selection) {
-    if (!selection) return '';
-    if (selection.kind === 'windshield') return 'Frontrute';
-    if (selection.kind === 'door') return 'Dørrute · ' + glassSideLabel(selection.side) + ' · ' + ({front:'Foran',rear:'Bak',sliding:'Skyvedør',unknown:'Vet ikke hvilken dør'}[selection.door]);
-    if (selection.kind === 'side') return 'Siderute · ' + glassSideLabel(selection.side) + ' · ' + ({front_quarter:'Fremre trekantrute',rear_quarter:'Bakre trekantrute',cargo:'Lasterom',unknown:'Vet ikke plassering'}[selection.section]) + ' · ' + ({body:'Karosseri',door:'Dør',unknown:'Vet ikke'}[selection.mounting]);
-    if (selection.kind === 'rear') return 'Bakrute · ' + (selection.layout === 'single' ? 'Hel rute' : selection.layout === 'split' ? 'Delt rute · ' + glassSideLabel(selection.splitSide) : 'Vet ikke om ruten er delt');
-    if (selection.kind === 'roof') return 'Panoramatak / takglass · ' + ({fixed:'Fast',opening:'Åpningsbart',unknown:'Vet ikke'}[selection.system]) + ' · ' + ({whole:'Hele ruten',front:'Fremre panel',middle:'Midtre panel',rear:'Bakre panel',unknown:'Vet ikke panel'}[selection.panel]);
-    return 'Ukjent glasstype';
+  function glassSideLabel(value) {
+    return value === 'left' ? 'venstre side' : value === 'right' ? 'høyre side' : '';
   }
 
-  var GLASS_FIELDS = {
-    door: [
-      ['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],
-      ['door','Hvilken dør?',[['front','Foran'],['rear','Bak'],['sliding','Skyvedør'],['unknown','Vet ikke']]]
-    ],
-    side: [
-      ['side','Hvilken side?',[['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']]],
-      ['section','Hvor sitter sideruten?',[['front_quarter','Fremre trekantrute'],['rear_quarter','Bakre trekantrute'],['cargo','Lasterom'],['unknown','Vet ikke']]],
-      ['mounting','Hvor er ruten festet?',[['body','Karosseri'],['door','Dør'],['unknown','Vet ikke']]]
-    ],
-    rear: [['layout','Er bakruten hel eller delt?',[['single','Hel'],['split','Delt'],['unknown','Vet ikke']]]],
-    roof: [
-      ['system','Er takglasset fast eller åpningsbart?',[['fixed','Fast'],['opening','Åpningsbart'],['unknown','Vet ikke']]],
-      ['panel','Hvilket panel gjelder det?',[['whole','Hele ruten'],['front','Fremre panel'],['middle','Midtre panel'],['rear','Bakre panel'],['unknown','Vet ikke']]]
-    ]
+  var KROPP_NAVN = { sedan: 'sedan', estate: 'stasjonsvogn', hatchback: '5-dørs', coupe: 'coupé', cabriolet: 'cabriolet', van: 'varebil', suv: 'SUV' };
+
+  // Kort, ærlig plasseringstekst. Ukjente felt utelates i stedet for å skrives
+  // som «vet ikke» — oppsummeringen skal leses som et svar, ikke som et skjema.
+  function glassSelectionLabel(selection) {
+    if (!selection || !selection.kind) return 'Rute ikke valgt';
+    var deler = [];
+    var legg = function (verdi) { if (verdi) deler.push(verdi); };
+    var kropp = selection.body && selection.body !== 'unknown' ? KROPP_NAVN[selection.body] : '';
+    if (selection.kind === 'windshield') return 'Frontrute';
+    if (selection.kind === 'door') {
+      legg('Dørrute');
+      legg({ front: 'fremre dør', rear: 'bakre dør', sliding: 'skyvedør' }[selection.door]);
+      legg(glassSideLabel(selection.side));
+      legg(kropp);
+    } else if (selection.kind === 'side') {
+      legg('Siderute');
+      legg({ front_quarter: 'fremre trekantrute', rear_quarter: 'bakre trekantrute', cargo: 'lasterom' }[selection.section]);
+      legg(glassSideLabel(selection.side));
+      legg(kropp);
+    } else if (selection.kind === 'rear') {
+      legg('Bakrute');
+      legg(selection.layout === 'split' ? 'delt' : selection.layout === 'single' ? 'hel' : '');
+      legg(kropp);
+    } else if (selection.kind === 'ventil') {
+      legg('Ventilrute');
+      legg({ front: 'foran', rear: 'bak' }[selection.placement]);
+      legg(glassSideLabel(selection.side));
+      legg(kropp);
+    } else if (selection.kind === 'roof') {
+      legg('Takglass');
+      legg({ fixed: 'fast', opening: 'åpningsbart' }[selection.system]);
+      legg({ whole: 'hele ruten', front: 'fremre panel', middle: 'midtre panel', rear: 'bakre panel' }[selection.panel]);
+    } else {
+      return 'Rute ikke valgt';
+    }
+    if (!deler.length) return 'Rute ikke valgt';
+    // Første del er rutetypen (stor forbokstav), resten er presiseringer.
+    deler[0] = deler[0].charAt(0).toUpperCase() + deler[0].slice(1);
+    return deler.join(' · ');
+  }
+
+  // ── Datastyrte rutetype- og plasseringsvalg ───────────────────────────────
+  // Valgene kommer fra POST /api/glass/valg, som bygger et tre fra bilens
+  // dokumenterte kandidater. Frontend kan derfor ikke tilby en kombinasjon
+  // katalogen ikke har, og et steg med ett reelt alternativ hoppes over —
+  // men valget følger med i oppsummeringen.
+  var valgTre = null;
+  var valgType = null;
+  var valgSti = [];        // kundens valg: [{felt, verdi, tittel}]
+  var valgBak = [];        // sti-lengde før hvert kundesteg (for «Tilbake»)
+  var valgteGlass = null;  // valgt kandidat fra resultatlisten
+  // Kundens EKSPLISITTE valg («Velg dette glasset») når flere varianter vises.
+  // Auto-valg brukes bare når nøyaktig én kandidat gjenstår; et eksplisitt valg
+  // skal ikke overstyres så lenge varianten fortsatt er blant kandidatene.
+  var eksplisittVariantId = null;
+
+  var FELT_SPORSMAL = {
+    door: 'Hvilken dørrute gjelder det?',
+    side: 'Hvilken side av bilen?',
+    placement: 'Hvor sitter ventilruten?',
+    layout: 'Er bakruten hel eller delt?',
+    section: 'Hvor sitter sideruten?',
+    mounting: 'Hvor er ruten festet?',
+    system: 'Er takglasset fast eller åpningsbart?',
+    panel: 'Hvilket panel gjelder det?',
+    body: 'Hvilken karosseritype er bilen?'
   };
 
-  function renderGlassFields(kind) {
-    var fields = $('glass-placement-fields');
-    fields.textContent = '';
-    (GLASS_FIELDS[kind] || []).forEach(function (definition) {
-      var label = document.createElement('label');
-      label.className = 'felt glass-position-field';
-      var title = document.createElement('span');
-      title.textContent = definition[1];
-      var select = document.createElement('select');
-      select.name = definition[0];
-      select.setAttribute('aria-label', definition[1]);
-      var initial = document.createElement('option');
-      initial.value = '';
-      initial.textContent = 'Velg et alternativ';
-      select.appendChild(initial);
-      definition[2].forEach(function (option) {
-        var item = document.createElement('option');
-        item.value = option[0];
-        item.textContent = option[1];
-        select.appendChild(item);
-      });
-      label.appendChild(title);
-      label.appendChild(select);
-      fields.appendChild(label);
+  // Speiler feltrekkefølgen i kontrakten (src/glass-selection-contract.ts).
+  var VALG_FELTER = {
+    windshield: [],
+    door: ['side', 'door', 'body'],
+    side: ['side', 'section', 'mounting', 'body'],
+    rear: ['layout', 'splitSide', 'body'],
+    ventil: ['side', 'placement', 'body'],
+    roof: ['system', 'panel']
+  };
+
+  function byggSelection(kind, svar) {
+    var sel = { kind: kind };
+    (VALG_FELTER[kind] || []).forEach(function (felt) {
+      // Kontrakten avviser splitSide når layout ikke er «split».
+      if (felt === 'splitSide' && svar.layout !== 'split') return;
+      sel[felt] = svar[felt] || 'unknown';
     });
-    if (kind === 'rear') {
-      var splitLabel = document.createElement('label');
-      splitLabel.className = 'felt glass-position-field hidden';
-      splitLabel.id = 'glass-split-side-field';
-      var splitTitle = document.createElement('span');
-      splitTitle.textContent = 'Hvilken del er skadet?';
-      var split = document.createElement('select');
-      split.name = 'splitSide';
-      split.setAttribute('aria-label', splitTitle.textContent);
-      [['','Velg et alternativ'],['left','Venstre'],['right','Høyre'],['unknown','Vet ikke']].forEach(function (option) {
-        var item = document.createElement('option'); item.value = option[0]; item.textContent = option[1]; split.appendChild(item);
-      });
-      splitLabel.appendChild(splitTitle); splitLabel.appendChild(split); fields.appendChild(splitLabel);
-      fields.querySelector('[name="layout"]').addEventListener('change', function () {
-        splitLabel.classList.toggle('hidden', this.value !== 'split');
-        split.value = '';
-      });
-    }
+    return sel;
   }
 
-  function selectionFromFields(kind) {
-    var fields = $('glass-placement-fields');
-    var value = function (key) { var el = fields.querySelector('[name="' + key + '"]'); return el ? el.value : ''; };
-    var selection;
-    if (kind === 'door') selection = { kind: kind, side: value('side'), door: value('door') };
-    if (kind === 'side') selection = { kind: kind, side: value('side'), section: value('section'), mounting: value('mounting') };
-    if (kind === 'rear') {
-      var layout = value('layout');
-      selection = { kind: kind, layout: layout };
-      if (layout === 'split') selection.splitSide = value('splitSide');
+  // Henter bilens dokumenterte rutevalg. Kalles hver gang en bil er identifisert.
+  function hentGlassValg() {
+    var boks = $('glassvalg');
+    var status = $('glassvalg-status');
+    valgTre = null;
+    valgType = null;
+    valgSti = [];
+    valgBak = [];
+    if (boks) boks.textContent = '';
+    $('glass-placement').classList.add('hidden');
+    $('btn-glass-hjelp').classList.add('hidden');
+    if (!state.merke) return;
+    status.textContent = 'Henter hvilke ruter som er dokumentert for bilen …';
+    status.classList.remove('hidden');
+    var generation = searchGeneration;
+    fetch('/api/glass/valg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regnr: state.regnr, merke: state.merke, modell: state.modell, aar: state.aar })
+    })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (generation !== searchGeneration) return;
+        if (!data || data.ok !== true) {
+          visValgHjelp('Vi fikk ikke hentet rutevalgene akkurat nå. Send oss en forespørsel, så hjelper vi deg videre.');
+          return;
+        }
+        valgTre = data;
+        renderGlassTyper();
+      })
+      .catch(function () {
+        if (generation !== searchGeneration) return;
+        visValgHjelp('Vi fikk ikke hentet rutevalgene akkurat nå. Send oss en forespørsel, så hjelper vi deg videre.');
+      });
+  }
+
+  // Ingen data, teknisk feil eller tom katalog: kunden skal aldri møte en tom
+  // valgboks, men en forklaring og en vei videre.
+  function visValgHjelp(melding) {
+    var status = $('glassvalg-status');
+    status.textContent = melding;
+    status.classList.remove('hidden');
+    $('glassvalg').textContent = '';
+    $('glass-placement').classList.add('hidden');
+    $('btn-glass-hjelp').classList.remove('hidden');
+  }
+
+  function renderGlassTyper() {
+    var boks = $('glassvalg');
+    var status = $('glassvalg-status');
+    boks.textContent = '';
+    var typer = valgTre && Array.isArray(valgTre.typer) ? valgTre.typer : [];
+    if (!typer.length) {
+      visValgHjelp((valgTre && valgTre.melding) || 'Vi fant ingen mulige glassvarianter til denne bilen. Send oss en forespørsel, så undersøker vi videre.');
+      return;
     }
-    if (kind === 'roof') selection = { kind: kind, system: value('system'), panel: value('panel') };
-    var missing = Object.keys(selection || {}).filter(function (key) { return key !== 'kind' && !selection[key]; });
-    if (missing.length) {
-      $('glass-placement-error').textContent = 'Velg et svar for hvert felt, eller velg «Vet ikke».';
-      $('glass-placement-error').classList.remove('hidden');
-      var first = fields.querySelector('[name="' + missing[0] + '"]'); if (first) first.focus();
-      return null;
-    }
+    var antallGlass = Number(valgTre.antallKandidater || 0);
+    status.textContent = (valgTre.melding || 'Velg ruten det gjelder.')
+      + (antallGlass ? ' ' + antallGlass + ' mulige glassvarianter for denne bilen.' : '');
+    status.classList.remove('hidden');
+    typer.forEach(function (type) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'glassopt';
+      // data-type beholder de gamle verdiene (front/…) slik at smoke- og
+      // E2E-scriptene finner knappene; data-kind er API-ets rutetype.
+      b.setAttribute('data-type', type.kind === 'windshield' ? 'front' : type.kind);
+      b.setAttribute('data-kind', type.kind);
+      b.setAttribute('aria-pressed', 'false');
+      var tittel = document.createElement('span');
+      tittel.className = 'glassopt-title';
+      tittel.textContent = type.tittel;
+      var hjelp = document.createElement('span');
+      hjelp.className = 'glassopt-help';
+      hjelp.textContent = type.kind === 'windshield'
+        ? (!type.antall ? 'Vi søker i frontrutedataene' : type.antall === 1 ? '1 mulig frontrute' : type.antall + ' mulige frontruter')
+        : (!type.antall ? 'Vi kontrollerer denne ruten manuelt' : type.antall === 1 ? '1 mulig glassvariant' : type.antall + ' mulige glassvarianter');
+      b.appendChild(tittel);
+      b.appendChild(hjelp);
+      b.addEventListener('click', function () { velgRutetype(type); });
+      boks.appendChild(b);
+    });
+    $('btn-glass-hjelp').classList.remove('hidden');
+  }
+
+  function velgRutetype(type) {
+    valgType = type;
+    valgSti = [];
+    valgBak = [];
+    searchGeneration++;
+    document.querySelectorAll('.glassopt[data-type]').forEach(function (b) {
+      var aktiv = b.getAttribute('data-kind') === type.kind;
+      b.classList.toggle('aktiv', aktiv);
+      b.setAttribute('aria-pressed', aktiv ? 'true' : 'false');
+    });
     $('glass-placement-error').classList.add('hidden');
-    return selection;
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
+    $('btn-inquiry').disabled = true;
+    $('inquiry-form').classList.add('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    state.currentGlassKind = type.kind;
+    state.glassRequest = null;
+    state.clientRequestId = null;
+    // Tilbake skal være tilgjengelig også i frontrute-flyten, ikke bare i treet.
+    $('btn-glass-back').classList.remove('hidden');
+    loggHendelse('velg_rutetype', { kind: type.kind, antall: type.antall });
+    visValg();
   }
 
-  function visGlassResultat(request, data, generation) {
-    if (generation !== searchGeneration) return;
-    var candidates = Array.isArray(data.candidates) ? data.candidates : [];
-    var status = data.status;
-    if (status === 'CANDIDATES' && !candidates.length) status = 'MANUAL_REVIEW';
-    request.searchId = typeof data.searchId === 'string' ? data.searchId : undefined;
+  // Går gjennom kundens valg og hopper over steg der bare ett alternativ finnes.
+  function gaaGjennom(noder, sti) {
+    var auto = [];
+    for (var i = 0; i < sti.length; i++) {
+      var funnet = null;
+      for (var j = 0; j < noder.length; j++) {
+        if (noder[j].felt === sti[i].felt && noder[j].verdi === sti[i].verdi) { funnet = noder[j]; break; }
+      }
+      // «Vet ikke» finnes ikke som node — det er et gyldig sluttvalg uten filter.
+      if (!funnet) return { barn: [], auto: auto };
+      noder = funnet.barn || [];
+    }
+    while (noder.length === 1) {
+      auto.push(noder[0]);
+      noder = noder[0].barn || [];
+    }
+    return { barn: noder, auto: auto };
+  }
+
+  function visValg() {
+    if (!valgType) return;
+    var r = gaaGjennom(valgType.barn || [], valgSti);
+    if (!r.barn.length) { fullforValg(r.auto); return; }
+    renderValgSteg(r.barn, r.auto);
+  }
+
+  function stiTekst(auto) {
+    var deler = [];
+    if (valgType) deler.push(valgType.tittel);
+    valgSti.forEach(function (v) { deler.push(v.tittel); });
+    (auto || []).forEach(function (n) { deler.push(n.tittel); });
+    return deler.join(' › ');
+  }
+
+  function renderValgSteg(noder, auto) {
+    var sporsmaal = (valgTre && valgTre.sporsmaal) || FELT_SPORSMAL;
+    var felt = noder[0].felt;
+    $('glass-placement').classList.remove('hidden');
+    $('glass-sti').textContent = stiTekst(auto);
+    $('glass-placement-title').textContent = sporsmaal[felt] || 'Velg et alternativ';
+    var hjelp = felt === 'side' ? ((valgTre && valgTre.sidehjelp) || '') : '';
+    $('glass-placement-help').textContent = hjelp;
+    $('glass-placement-help').classList.toggle('hidden', !hjelp);
+
+    var boks = $('glass-placement-fields');
+    boks.textContent = '';
+    noder.forEach(function (node) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'valg-knapp';
+      b.setAttribute('data-verdi', node.verdi);
+      var tittel = document.createElement('span');
+      tittel.className = 'valg-tittel';
+      tittel.textContent = node.tittel;
+      var meta = document.createElement('span');
+      meta.className = 'valg-meta';
+      meta.textContent = node.antall === 1 ? '1 dokumentert glass' : node.antall + ' dokumenterte glass';
+      b.appendChild(tittel);
+      b.appendChild(meta);
+      b.addEventListener('click', function () { velgValgNode(node); });
+      boks.appendChild(b);
+    });
+    // Siden kan kunden faktisk være usikker på. «Vet ikke» filtrerer ingenting
+    // og sender begge sider videre til kontroll.
+    if (felt === 'side') {
+      var vetikke = document.createElement('button');
+      vetikke.type = 'button';
+      vetikke.className = 'valg-knapp valg-vetikke';
+      vetikke.setAttribute('data-verdi', 'unknown');
+      var t = document.createElement('span');
+      t.className = 'valg-tittel';
+      t.textContent = 'Vet ikke hvilken side';
+      var m = document.createElement('span');
+      m.className = 'valg-meta';
+      m.textContent = 'Vi kontrollerer begge sider';
+      vetikke.appendChild(t);
+      vetikke.appendChild(m);
+      vetikke.addEventListener('click', function () {
+        velgValgNode({ felt: 'side', verdi: 'unknown', tittel: 'Vet ikke hvilken side', barn: [], automatisk: {} });
+      });
+      boks.appendChild(vetikke);
+    }
+
+    $('btn-glass-back').classList.toggle('hidden', !valgBak.length);
+    $('glass-placement-title').focus();
+  }
+
+  function velgValgNode(node) {
+    valgBak.push(valgSti.length);
+    valgSti.push({ felt: node.felt, verdi: node.verdi, tittel: node.tittel });
+    loggHendelse('valg_plassering', { kind: valgType ? valgType.kind : null, felt: node.felt, verdi: node.verdi });
+    visValg();
+  }
+
+  function valgTilbake() {
+    if (valgBak.length) {
+      valgSti = valgSti.slice(0, valgBak.pop());
+      $('glass-placement-error').classList.add('hidden');
+      visValg();
+      return;
+    }
+    // Frontrute-flyten går via resolveren og har ingen valgsti. «Tilbake» skal
+    // da føre til rutevalget igjen. Svaret og en eventuell valgt variant
+    // nullstilles, slik at et gammelt valg aldri blir hengende på en ny rute.
+    if (!state.currentGlassKind) return;
+    searchGeneration++;
+    state.currentGlassKind = null;
+    state.glassRequest = null;
+    state.clientRequestId = null;
+    valgteGlass = null;
+    valgType = null;
+    valgSti = [];
+    valgBak = [];
+    $('glass-placement').classList.add('hidden');
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
+    // Svaret hører til ruten vi forlot og er ugyldig etter «Tilbake».
+    frontruteSvar = {};
+    if ($('resultat-sporsmaal')) { $('resultat-sporsmaal').textContent = ''; $('resultat-sporsmaal').classList.add('hidden'); }
+    if ($('resultat-oppsummering')) $('resultat-oppsummering').textContent = '';
+    $('btn-inquiry').disabled = true;
+    $('inquiry-form').classList.add('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    $('btn-glass-back').classList.add('hidden');
+    renderGlassTyper();
+  }
+
+  // Slår sammen automatiske valg, hoppede steg og kundens svar til ett
+  // selection-objekt. Felt katalogen ikke skiller på blir «unknown».
+  function fullforValg(auto) {
+    if (!valgType) return;
+    var svar = {};
+    if (valgType.automatisk) Object.keys(valgType.automatisk).forEach(function (k) { svar[k] = valgType.automatisk[k]; });
+    (auto || []).forEach(function (n) {
+      var a = n.automatisk || {};
+      Object.keys(a).forEach(function (k) { svar[k] = a[k]; });
+    });
+    valgSti.forEach(function (v) { svar[v.felt] = v.verdi; });
+    $('glass-placement').classList.add('hidden');
+    valgBak = [];
+    sokGlass(byggSelection(valgType.kind, svar));
+  }
+
+  // ── Resultat: oppsummering, hjelpetilstand og kandidatkort ────────────────
+
+  // Valgt bil og plassering vises øverst på resultatet. Uten dette må kunden
+  // huske hva hun valgte tre skjermer tilbake.
+  function visResultatOppsummering(selection) {
+    var el = $('resultat-oppsummering');
+    if (!el) return;
+    el.textContent = '';
+    // SVVs handelsbetegnelse inneholder ofte merket selv («TOYOTA RAV4»).
+    // Da skal merket ikke prependeres — ellers blir det «Toyota Toyota RAV4».
+    var merkePent = penSkrivemaate(state.merke);
+    var modellPent = penSkrivemaate(state.modell);
+    var modellHarMerke = modellPent.toUpperCase().indexOf(String(state.merke || '').toUpperCase().trim()) === 0;
+    var bil = [modellHarMerke ? '' : merkePent, modellPent, state.aar ? String(state.aar) : '']
+      .filter(Boolean).join(' ');
+    var dl = document.createElement('dl');
+    var rad = function (etikett, verdi) {
+      if (!verdi) return;
+      var dt = document.createElement('dt');
+      dt.textContent = etikett;
+      var dd = document.createElement('dd');
+      dd.textContent = verdi;
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    };
+    rad('Bil', bil ? bil + (state.regnr ? ' · ' + state.regnr : '') : state.regnr);
+    rad('Rute', glassSelectionLabel(selection));
+    rad('Vi kontrollerer', 'riktig variant, pris og levering før du får tilbud');
+    if (!dl.children.length) { el.classList.add('hidden'); return; }
+    el.appendChild(dl);
+    el.classList.remove('hidden');
+    // Kjennemerket står allerede i oppsummeringen.
+    if ($('resultat-regnr')) $('resultat-regnr').classList.add('hidden');
+  }
+
+  // Felles avslutning av et resultat: skjema og oppsummering skal alltid være
+  // i takt med det kunden faktisk har valgt.
+  function avsluttResultat(request) {
     state.glassRequest = request;
     state.clientRequestId = null;
-    $('glass-placement').classList.add('hidden');
-    $('screen-resultat').querySelector('h2').textContent = status === 'NEEDS_DETAILS' ? 'Vi trenger én opplysning til' : status === 'CANDIDATES' ? 'Mulige glass til bilen' : 'Vi kontrollerer ruten manuelt';
-    $('resultat-regnr').textContent = state.regnr ? 'Kjennemerke: ' + state.regnr : '';
-    $('resultat-regnr').classList.toggle('hidden', !state.regnr);
-    $('resultat-kort').textContent = glassSelectionLabel(request.selection);
-    $('tilbehor-seksjon').classList.add('hidden');
-    $('resultat-alt').textContent = '';
-    state.preferredWindshieldCandidate = null;
     state.evidenceSent = false;
-    var info = $('resultat-status');
-    info.textContent = data.message || 'Vi kontrollerer ruten og riktig glass før vi sender tilbud.';
-    info.className = 'note status ' + (status === 'CANDIDATES' ? 'verify' : '');
-    info.classList.remove('hidden');
-    // Release A ignores any product candidates in a response.
     $('inquiry-regnr').value = state.regnr || '';
-    $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
-    $('inquiry-glass-summary').classList.remove('hidden');
     $('inquiry-form').classList.add('hidden');
     $('inquiry-bekreftet').classList.add('hidden');
     $('btn-inquiry').disabled = false;
+    oppdaterSoknadOppsummering();
     show('resultat');
   }
 
+  // Hjelpetilstand: ingen data, «finner ikke ruten» eller teknisk feil.
+  // Kunden skal aldri måtte skrive inn bilen på nytt.
+  function visManuellHjelp(tittel) {
+    var request = { schemaVersion: 1, selection: { kind: 'unknown' }, answers: {} };
+    var h2 = $('screen-resultat').querySelector('h2');
+    var status = $('resultat-status');
+    h2.textContent = 'Vi hjelper deg videre';
+    status.textContent = 'Vi har ikke nok opplysninger til å peke på én rute. Send oss en forespørsel, så undersøker vi bilen manuelt — du trenger ikke skrive den inn på nytt.';
+    status.className = 'note status manual';
+    status.classList.remove('hidden');
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
+    $('resultat-sporsmaal').classList.add('hidden');
+    $('resultat-kort').classList.remove('hidden');
+    var note = document.createElement('p');
+    note.className = 'note';
+    note.textContent = tittel ? 'Du valgte: ' + tittel + '. Vi kontrollerer hvilken rute og hvilket glass bilen bruker.' : 'Vi kontrollerer hvilken rute og hvilket glass bilen bruker.';
+    $('resultat-kort').appendChild(note);
+    visResultatOppsummering(request.selection);
+    avsluttResultat(request);
+    $('inquiry-form').classList.remove('hidden');
+  }
+
+  // Forskjellene mellom alternativene er det kunden faktisk velger på.
+  function forskjellFra(k, alle) {
+    if (!alle || alle.length < 2) return '';
+    var mine = Array.isArray(k.egenskaper) ? k.egenskaper : [];
+    var mitt = {};
+    mine.forEach(function (e) { mitt[e] = true; });
+    var andres = {};
+    alle.forEach(function (x) { if (x !== k) (x.egenskaper || []).forEach(function (e) { andres[e] = true; }); });
+    var unike = mine.filter(function (e) { return !andres[e]; });
+    var andreForst = alle.filter(function (x) { return x !== k; })[0];
+    var mangler = ((andreForst && andreForst.egenskaper) || []).filter(function (e) { return !mitt[e]; });
+    var deler = [];
+    if (unike.length) deler.push('har ' + unike.join(' og ') + ' som de andre ikke har');
+    if (mangler.length) deler.push('mangler ' + mangler.join(' og ') + ' som et annet alternativ har');
+    return deler.length ? 'Skillende: ' + deler.join('; ') + '.' : 'Samme dokumenterte egenskaper som de andre alternativene.';
+  }
+
+  function kandidatKort(k, alle) {
+    var kort = document.createElement('article');
+    kort.className = 'kandidat-kort';
+    kort.setAttribute('data-varenr', k.varenr || '');
+
+    var navn = document.createElement('h3');
+    navn.textContent = k.varenavn || 'Glass';
+    kort.appendChild(navn);
+
+    var posisjon = document.createElement('p');
+    posisjon.className = 'kandidat-posisjon';
+    posisjon.textContent = String(k.posisjon || 'Plassering må avklares')
+      .replace(/\(type må avklares\)/i, '— vi avklarer hvilken type')
+      .replace(/^Plassering må avklares$/i, 'Vi avklarer hvilken rute dette er');
+    kort.appendChild(posisjon);
+
+    var eg = document.createElement('ul');
+    eg.className = 'kandidat-egenskaper';
+    var egenskaper = Array.isArray(k.egenskaper) && k.egenskaper.length
+      ? k.egenskaper
+      : ['Egenskaper er ikke dokumentert i katalogen'];
+    egenskaper.forEach(function (e) {
+      var li = document.createElement('li');
+      li.textContent = e;
+      eg.appendChild(li);
+    });
+    kort.appendChild(eg);
+
+    var forskjell = forskjellFra(k, alle);
+    if (forskjell) {
+      var f = document.createElement('p');
+      f.className = 'note kandidat-forskjell';
+      f.textContent = forskjell;
+      kort.appendChild(f);
+    }
+    if (k.varianter > 1) {
+      var v = document.createElement('p');
+      v.className = 'note kandidat-varianter';
+      v.textContent = k.varianter + ' varianter med samme dokumenterte egenskaper — vi avklarer hvilken som er riktig.';
+      kort.appendChild(v);
+    }
+
+    var pris = document.createElement('p');
+    pris.className = 'kandidat-pris';
+    pris.textContent = 'Pris på forespørsel';
+    var prisnote = document.createElement('span');
+    prisnote.textContent = ' Vi oppgir pris inkl. mva. og levering i tilbudet.';
+    pris.appendChild(prisnote);
+    kort.appendChild(pris);
+
+    var velg = document.createElement('button');
+    velg.type = 'button';
+    velg.className = 'sek velg-glass';
+    velg.textContent = 'Velg dette glasset';
+    velg.setAttribute('aria-pressed', 'false');
+    velg.addEventListener('click', function () {
+      // variantId følger valget: ett varenr kan ha flere dokumenterte eurokoder
+      // (målt 2026-11-04: 8432AGAC har åtte). Uten den ville «samme glass» kunne
+      // peke på en annen variant i innsendingen enn den kunden så.
+      valgteGlass = { varenr: k.varenr || '', varenavn: k.varenavn || '', posisjon: k.posisjon || '',
+        variantId: k.variantId || null, eurokode: k.eurokode || null };
+      document.querySelectorAll('.kandidat-kort').forEach(function (kortEl) {
+        var aktiv = kortEl === kort;
+        kortEl.classList.toggle('valgt', aktiv);
+        var knapp = kortEl.querySelector('.velg-glass');
+        if (knapp) {
+          knapp.setAttribute('aria-pressed', aktiv ? 'true' : 'false');
+          knapp.textContent = aktiv ? 'Valgt' : 'Velg dette glasset';
+        }
+      });
+      loggHendelse('velg_glass', { varenr: k.varenr || null, posisjon: k.posisjon || null });
+      oppdaterSoknadOppsummering();
+    });
+    kort.appendChild(velg);
+    return kort;
+  }
+
   function sokGlass(selection) {
+    var generation = ++searchGeneration;
+
+    // «Vet ikke hvilken rute» er ikke et katalogsøk uten filter — det er en
+    // hjelpeforespørsel. Uten dette ville kunden fått alle bilens glass uten
+    // plasseringssammenheng.
+    if (selection && selection.kind === 'unknown') {
+      visManuellHjelp('Vet ikke hvilken rute');
+      return;
+    }
+
     var request = {
       schemaVersion: 1,
       selection: selection,
       answers: {}
     };
 
-    var generation = ++searchGeneration;
+    // 3. ALL_GLASS_CANDIDATES: Oppdatert API-flyt for ALLE glassklasser (V6.6.0-C).
+    if (selection && selection.kind === 'windshield') {
+      sokFrontrute(request, generation);
+      return;
+    }
 
-    // Release A gir manuelt kontrollert tilbud.
-    // Ikke blokker kunden på /api/glass eller en ubekreftet SKU.
-    visGlassResultat(request, {
-      status: 'MANUAL_REVIEW',
-      candidates: [],
-      message: 'Vi har registrert hvilken rute du trenger. Vi kontrollerer riktig glass, pris og levering før vi sender tilbud.'
-    }, generation);
+    // C6.0-C: Utvidet søk for andre glasstyper (dør, side, bak, ventil, tak).
+    // Bruker nå samme sikre backend-flyt som frontrute.
+    sokGlasskategori(request, generation);
   }
 
-  // 4. Glasstype. Frontruten beholder den eksisterende, dokumenterte flyten.
-  document.querySelectorAll('.glassopt[data-type]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      if (b.disabled) return;
-      var kind = b.dataset.type;
-      searchGeneration++;
-      document.querySelectorAll('.glassopt[data-type]').forEach(function (button) { button.classList.toggle('aktiv', button === b); button.setAttribute('aria-pressed', button === b ? 'true' : 'false'); });
-      $('glass-placement-error').classList.add('hidden');
-      $('resultat-kort').textContent = '';
-      $('resultat-alt').textContent = '';
-      $('btn-inquiry').disabled = true;
-      $('inquiry-form').classList.add('hidden');
-      $('inquiry-bekreftet').classList.add('hidden');
-      state.glassRequest = null;
-      state.clientRequestId = null;
-      if (kind === 'front') {
-        // Release A: Bruk samme sikre forespørselsflyt som øvrige glasstyper.
-        // Ikke vis ubekreftede produktkandidater eller priser.
-        state.currentGlassKind = 'windshield';
-        $('glass-placement').classList.add('hidden');
-        loggHendelse('velg_frontrute', {
-          merke: state.merke,
-          modell: state.modell,
-          regnr: state.regnr
-        });
-        sokGlass({ kind: 'windshield' });
-        return;
-      }
+  // Ny kategorisøk-funksjon (lik sokFrontrute, men for alle klasser)
+  function sokGlasskategori(request, generation) {
+    var V = window.FBGView;
+    state.glassRequest = request;
+    state.clientRequestId = null;
 
-      state.currentGlassKind = kind;
-      if (kind === 'unknown') { $('glass-placement').classList.add('hidden'); sokGlass({ kind: 'unknown' }); return; }
-      $('glass-placement-title').textContent = kind === 'door' ? 'Hvilken dørrute?' : kind === 'side' ? 'Hvilken siderute?' : kind === 'rear' ? 'Hvilken bakrute?' : 'Hvilket takglass?';
-      renderGlassFields(kind);
-      $('glass-placement').classList.remove('hidden');
-      $('glass-placement-title').focus();
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
+    $('resultat-sporsmaal').classList.add('hidden');
+    $('btn-inquiry').disabled = true;
+    $('inquiry-form').classList.add('hidden');
+    $('screen-resultat').querySelector('h2').textContent = 'Søker etter glass…';
+    var info = $('resultat-status');
+    info.textContent = 'Vi henter glasskandidater til bilen din.';
+    info.className = 'note status';
+    info.classList.remove('hidden');
+    show('resultat');
+
+    fetch('/api/glass/kandidater', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        // Bilen er allerede identifisert i kundereisen. Send merke/modell/år i
+        // tillegg til regnr, så svaret ikke avhenger av et nytt SVV-oppslag.
+        regnr: state.regnr,
+        merke: state.merke,
+        modell: state.modell,
+        aar: state.aar,
+        schemaVersion: request.schemaVersion,
+        selection: request.selection,
+        answers: request.answers || {}
+      })
+    })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (generation !== searchGeneration) return;
+      renderGlassResultat(request, data, generation);
+    })
+    .catch(function () {
+      if (generation !== searchGeneration) return;
+      $('screen-resultat').querySelector('h2').textContent = 'Vi fikk ikke hentet glasset akkurat nå';
+      info.textContent = 'Dette er en teknisk feil hos oss, ikke en beskjed om at glasset mangler. Prøv igjen om litt, eller send oss en forespørsel — vi kontrollerer gjerne bilen manuelt.';
+      info.className = 'note status teknisk-feil';
+      info.classList.remove('hidden');
+      $('btn-inquiry').disabled = false;
+      avsluttResultat(request);
     });
-  });
+  }
+
+  function renderGlassResultat(request, data, generation) {
+    if (generation !== searchGeneration) return;
+    var h2 = $('screen-resultat').querySelector('h2');
+    var status = $('resultat-status');
+    valgteGlass = null;
+    $('resultat-kort').textContent = '';
+    $('resultat-kort').classList.remove('hidden');
+    $('resultat-alt').textContent = '';
+    $('resultat-sporsmaal').classList.add('hidden');
+    $('tilbehor-seksjon').classList.add('hidden');
+    visResultatOppsummering(request.selection);
+
+    // Fire tilstander skal se ulike ut: ingen treff, flere mulige, manglende
+    // opplysninger og teknisk feil. En felles «noe gikk galt» skjuler forskjellen.
+    if (!data || typeof data !== 'object' || data.ok === false) {
+      h2.textContent = 'Vi fikk ikke hentet glasset akkurat nå';
+      status.textContent = 'Prøv igjen om litt, eller send oss en forespørsel. Vi kontrollerer gjerne bilen manuelt.';
+      status.className = 'note status teknisk-feil';
+      status.classList.remove('hidden');
+      avsluttResultat(request);
+      return;
+    }
+
+    var kandidater = Array.isArray(data.kandidater) ? data.kandidater : [];
+    if (!kandidater.length) {
+      h2.textContent = 'Vi kontrollerer ruten manuelt';
+      status.textContent = data.message || 'Vi må kontrollere hvilken rute bilen bruker før vi kan bekrefte riktig glass.';
+      status.className = 'note status manual';
+      status.classList.remove('hidden');
+      var hjelp = document.createElement('p');
+      hjelp.className = 'note';
+      hjelp.textContent = 'Du trenger ikke skrive inn bilen på nytt. Send forespørselen, så undersøker vi videre.';
+      $('resultat-kort').appendChild(hjelp);
+      avsluttResultat(request);
+      return;
+    }
+
+    // Kandidater vises bare når serveren faktisk har dem (ALL_GLASS_KANDIDATER_ENABLED).
+    // Katalogen bekrefter ikke fysisk kompatibilitet: hvert kort merkes «må kontrolleres»,
+    // og eurokode/leverandørdata vises aldri (public-contract.ts).
+    h2.textContent = 'Mulige glass til bilen din';
+    status.textContent = data.message || 'Vi har funnet mulige glass. Riktig variant avhenger av bilens utstyr — vi kontrollerer valget før du får pris og levering.';
+    status.className = 'note status verify';
+    status.classList.remove('hidden');
+
+    var maks = 6;
+    var liste = document.createElement('div');
+    liste.className = 'kandidat-liste';
+    kandidater.slice(0, maks).forEach(function (k) {
+      liste.appendChild(kandidatKort(k, kandidater));
+    });
+    $('resultat-kort').appendChild(liste);
+
+    if (kandidater.length > maks) {
+      var mer = document.createElement('p');
+      mer.className = 'note';
+      mer.textContent = 'Viser ' + maks + ' av ' + kandidater.length + ' mulige glass. Vi kontrollerer hvilke av dem som er riktig for bilen din.';
+      $('resultat-kort').appendChild(mer);
+    }
+    var merknad = document.createElement('p');
+    merknad.className = 'note';
+    merknad.textContent = 'Krever kontroll før bestilling — katalogen bekrefter ikke at glasset passer bilen.';
+    $('resultat-kort').appendChild(merknad);
+
+    avsluttResultat(request);
+  }
 
 
+  // ── Frontrutesøk mot /api/frontrute (P0 2026-10-31) ─────────────────────
+  // Kandidater vises, men katalogen bekrefter aldri fysisk kompatibilitet:
+  // PINPOINT = én identifisert variant, VERIFY = flere varianter som skilles av
+  // utstyrsspørsmål, MANUAL_REVIEW = vi kan ikke peke på én.
+  var frontruteSvar = {};
 
-  // Glassplassering: fullfør valgt rutetype.
-  $('btn-glass-search').addEventListener('click', function () {
-    var kind = state.currentGlassKind;
+  function sokFrontrute(request, generation) {
+    var V = window.FBGView;
+    frontruteSvar = {};
+    state.frontruteKandidater = [];
+    request.answers = {};
+    state.glassRequest = request;
+    state.clientRequestId = null;
 
-    if (!['door', 'side', 'rear', 'roof'].includes(kind)) return;
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
+    $('resultat-sporsmaal').classList.add('hidden');
+    $('resultat-sporsmaal').textContent = '';
+    $('tilbehor-seksjon').classList.add('hidden');
+    $('btn-inquiry').disabled = true;
+    $('inquiry-form').classList.add('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    $('screen-resultat').querySelector('h2').textContent = 'Søker etter frontrute…';
+    $('resultat-regnr').textContent = state.regnr ? 'Kjennemerke: ' + state.regnr : '';
+    $('resultat-regnr').classList.toggle('hidden', !state.regnr);
+    var info = $('resultat-status');
+    info.textContent = 'Vi henter frontruter til bilen din.';
+    info.className = 'note status';
+    info.classList.remove('hidden');
+    show('resultat');
 
-    var selection = selectionFromFields(kind);
-    if (!selection) return;
+    fetch('/api/frontrute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        merke: state.merke,
+        modell: state.modell,
+        aar: state.aar,
+        vin: state.vin,
+        profil: state.profil
+      })
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        if (generation !== searchGeneration) return;
+        renderFrontrute(request, data, generation);
+      })
+      .catch(function () {
+        if (generation !== searchGeneration) return;
+        var V2 = window.FBGView;
+        $('screen-resultat').querySelector('h2').textContent = 'Vi fikk ikke hentet frontruten akkurat nå';
+        var feil = $('resultat-status');
+        feil.textContent = 'Prøv igjen om litt, eller send oss en e-post. Vi kontrollerer gjerne bilen manuelt.';
+        feil.className = 'note status';
+        feil.classList.remove('hidden');
+        $('btn-inquiry').disabled = false;
+        state.frontruteKandidater = [];
+        void V2;
+      });
+  }
 
-    sokGlass(selection);
-  });
+  function renderFrontrute(request, data, generation) {
+    if (generation !== searchGeneration) return;
+    var V = window.FBGView;
+    // Sikker mot null/undefined data fra API-et
+    if (!data || typeof data !== 'object') {
+      data = { kandidater: [], utfall: null, message: 'Ugyldig svar fra serveren.' };
+    }
+    var kandidater = Array.isArray(data.kandidater) ? data.kandidater : [];
+    var utfall = typeof data.utfall === 'string' ? data.utfall : null;
+    // Uavhengig evidens (OE/bilde/montør) kommer fra API-et; default false
+    // per C9-doktrinen: katalog alene gir aldri EXACT.
+    var harUavhengigEvidens = typeof data.harUavhengigEvidens === 'boolean' ? data.harUavhengigEvidens : false;
+    var status = V.resultatStatus(utfall, kandidater.length, harUavhengigEvidens);
+
+    state.frontruteKandidater = kandidater;
+    state.glassRequest = request;
+    $('screen-resultat').querySelector('h2').textContent = status.tittel;
+    var info = $('resultat-status');
+    info.textContent = data.message || status.melding;
+    info.className = 'note status' + (status.kode === 'AMBIGUOUS' ? ' verify' : status.kode === 'EXACT' ? ' exact' : '');
+    info.classList.remove('hidden');
+
+    // Pristilbud og manuell kontroll skal ALLTID være tilgjengelig,
+    // uavhengig av glassstatus (EXACT, PROVISIONAL, AMBIGUOUS, MANUAL_REVIEW).
+    // Ingen kunde skal bli nektet manuell forespørsel fordi glasset er usikkert.
+    // Direkt kjøp (canCheckout) krever ytterligere server-side kontroller og
+    // er IKTE knyttet til dette UI-feltet alene.
+    var inquiryBtn = $('btn-inquiry');
+    if (inquiryBtn) inquiryBtn.disabled = false;
+
+    $('resultat-kort').textContent = '';
+    $('resultat-alt').textContent = '';
+
+    if (!kandidater.length) {
+      $('btn-inquiry').disabled = false;
+      $('resultat-sporsmaal').classList.add('hidden');
+      $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
+      $('inquiry-glass-summary').classList.remove('hidden');
+      $('inquiry-regnr').value = state.regnr || '';
+      return;
+    }
+
+    var vist = V.filtrerPaaSvar(kandidater, frontruteSvar);
+    var liste = vist.kandidater;
+    // Kundens valg: eksplisitt «Velg dette glasset» vinner så lenge varianten
+    // fortsatt er blant de synlige kandidatene. Gjenstår bare én kandidat, er
+    // den valgt automatisk. Endres kandidatlisten slik at et eksplisitt valg
+    // ikke lenger er gyldig, nullstilles det (ingen skjult gammel variant).
+    state.frontruteSporsmaal = Array.isArray(data && data.sporsmaal) ? data.sporsmaal : (state.frontruteSporsmaal || []);
+    var valgt = null;
+    if (eksplisittVariantId) {
+      valgt = liste.filter(function (k) { return (k.variantId || '') === eksplisittVariantId; })[0] || null;
+      if (!valgt) eksplisittVariantId = null;
+    }
+    if (!valgt && liste.length === 1) valgt = liste[0];
+    valgteGlass = valgt ? {
+      varenr: valgt.varenr || '',
+      varenavn: valgt.varenavn || '',
+      // Eurokoden vises aldri til kunden (Tom 2026-10-31); den utledes bare
+      // internt fra variantId for sporing i saken.
+      eurokode: (valgt.variantId || '').indexOf(':') > 0 ? String(valgt.variantId).split(':').slice(1).join(':') : null,
+      variantId: valgt.variantId || null,
+      posisjon: (valgt.posisjon && valgt.posisjon.glassklasse) || ''
+    } : null;
+
+    // Ekstra sikring: aldri kall kandidatKort på en tom liste.
+    if (!liste || !liste.length) {
+      $('resultat-sporsmaal').classList.add('hidden');
+      $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
+      $('inquiry-glass-summary').classList.remove('hidden');
+      $('inquiry-regnr').value = state.regnr || '';
+      return;
+    }
+
+    // Hovedkort: første kandidat.
+    var hoved = V.kandidatKort(liste[0]);
+    $('resultat-kort').textContent = '';
+
+    // Status-basert merking av hovedkortet.
+    if (status.kode === 'PROVISIONAL') {
+      var midlertidig = document.createElement('p');
+      midlertidig.className = 'note provisional';
+      midlertidig.textContent = 'Midlertidig treff — mangler uavhengig bekreftelse før bestilling.';
+      $('resultat-kort').append(midlertidig);
+    } else if (status.kode === 'AMBIGUOUS') {
+      var tvetydig = document.createElement('p');
+      tvetydig.className = 'note ambiguous';
+      tvetydig.textContent = 'Flere mulige varianter — velg utstyr nedenfor for å avgrense.';
+      $('resultat-kort').append(tvetydig);
+    } else if (status.kode === 'MANUAL_REVIEW') {
+      var manuell = document.createElement('p');
+      manuell.className = 'note manual';
+      manuell.textContent = 'Vi kontrollerer ruten manuelt før vi kan bekrefte riktig glass.';
+      $('resultat-kort').append(manuell);
+    }
+
+    var tittel = document.createElement('strong');
+    tittel.textContent = hoved.navn;
+    $('resultat-kort').append(tittel);
+    var pris = document.createElement('p');
+    pris.className = 'pris';
+    pris.textContent = hoved.pris.tekst;
+    $('resultat-kort').append(pris);
+    if (hoved.pris.detalj) {
+      var detalj = document.createElement('p');
+      detalj.className = 'muted';
+      detalj.textContent = hoved.pris.detalj;
+      $('resultat-kort').append(detalj);
+    }
+    if (hoved.egenskaper.length) {
+      var egen = document.createElement('p');
+      egen.className = 'muted';
+      egen.textContent = 'Utstyr: ' + hoved.egenskaper.join(', ');
+      $('resultat-kort').append(egen);
+    }
+    // Eksplisitt valg også når flere varianter vises: kunden kan peke på den
+    // ruten hun mener bilen har. Valget valideres server-side mot bilens
+    // kandidatsett før saken lagres.
+    leggTilVelgKnapp($('resultat-kort'), liste[0]);
+
+    // Øvrige kandidater
+    if (liste.length > 1) {
+      var altTittel = document.createElement('p');
+      altTittel.className = 'muted';
+      altTittel.textContent = 'Andre mulige varianter:';
+      $('resultat-alt').append(altTittel);
+      for (var i = 1; i < liste.length; i++) {
+        var k = V.kandidatKort(liste[i]);
+        var rad = document.createElement('div');
+        rad.className = 'alt-rad';
+        rad.setAttribute('data-variant', liste[i].variantId || '');
+        var navn = document.createElement('span');
+        navn.textContent = k.navn + (k.egenskaper.length ? ' · ' + k.egenskaper.join(', ') : '');
+        var p = document.createElement('span');
+        p.className = 'alt-pris';
+        p.textContent = k.pris.tekst;
+        rad.append(navn, p);
+        var velgAlt = document.createElement('button');
+        velgAlt.type = 'button';
+        velgAlt.className = 'sek velg-glass small' + ((liste[i].variantId || '') === eksplisittVariantId ? ' valgt' : '');
+        velgAlt.textContent = (liste[i].variantId || '') === eksplisittVariantId ? 'Valgt' : 'Velg dette glasset';
+        velgAlt.setAttribute('aria-pressed', (liste[i].variantId || '') === eksplisittVariantId ? 'true' : 'false');
+        (function (valgtKandidat) {
+          velgAlt.addEventListener('click', function () { velgFrontruteKandidat(valgtKandidat); });
+        })(liste[i]);
+        rad.append(velgAlt);
+        $('resultat-alt').append(rad);
+      }
+    }
+
+    // Totalantall vises bare når den etablerte grensen (6) faktisk kappet listen —
+    // ellers ville «Viser 1 av 2» sett ut som filtrering/paginering.
+    var totalt = Number(data.totalAntall || kandidater.length);
+    var antall = totalt > 6 ? V.antallTekst(Math.min(liste.length, 6), totalt) : null;
+    if (antall) {
+      var a = document.createElement('p');
+      a.className = 'muted';
+      a.textContent = antall;
+      $('resultat-alt').append(a);
+    }
+
+    // Utstyrsspørsmål — bare de som faktisk skiller kandidatene.
+    renderFrontruteSporsmaal(Array.isArray(data.sporsmaal) ? data.sporsmaal : []);
+
+    $('inquiry-regnr').value = state.regnr || '';
+    $('inquiry-glass-summary').textContent = glassSelectionLabel(request.selection);
+    $('inquiry-glass-summary').classList.remove('hidden');
+    $('btn-inquiry').disabled = false;
+    visResultatOppsummering(request.selection);
+    oppdaterSoknadOppsummering();
+  }
+
+  function svartekstFor(felt) {
+    var verdi = frontruteSvar[felt];
+    var alt = window.FBGView.svarAlternativer(felt).filter(function (a) { return a.verdi === verdi; })[0];
+    return alt ? alt.tekst : String(verdi || '');
+  }
+
+  /** «Velg dette glasset» på frontrute-kandidatene. Setter kundens eksplisitte
+   *  valg, oppdaterer oppsummeringen og merker kortet — uten å endre svarene. */
+  function velgFrontruteKandidat(kandidat) {
+    if (!kandidat) return;
+    eksplisittVariantId = kandidat.variantId || null;
+    renderFrontrute(state.glassRequest, {
+      kandidater: state.frontruteKandidater,
+      utfall: state.frontruteKandidater.length === 1 ? 'PINPOINT' : 'VERIFY',
+      sporsmaal: state.frontruteSporsmaal || []
+    }, searchGeneration);
+  }
+
+  /** Legger «Velg dette glasset»-knapp på et kandidatkort. */
+  function leggTilVelgKnapp(container, kandidat) {
+    if (!container || !kandidat || !kandidat.variantId) return;
+    var erValgt = (kandidat.variantId || '') === eksplisittVariantId
+      || ((state.frontruteKandidater || []).length === 1 && !eksplisittVariantId);
+    var knapp = document.createElement('button');
+    knapp.type = 'button';
+    knapp.className = 'sek velg-glass' + (erValgt ? ' valgt' : '');
+    knapp.textContent = erValgt ? 'Valgt' : 'Velg dette glasset';
+    knapp.setAttribute('aria-pressed', erValgt ? 'true' : 'false');
+    knapp.addEventListener('click', function () {
+      if (erValgt) return;
+      velgFrontruteKandidat(kandidat);
+    });
+    container.append(knapp);
+  }
+
+  function renderFrontruteSporsmaal(felter) {
+    var V = window.FBGView;
+    var boks = $('resultat-sporsmaal');
+    boks.textContent = '';
+    // Spørsmålene gjelder kandidatene som fortsatt er mulige ETTER kundens svar.
+    // Tidligere ble de beregnet på hele settet, så et besvart spørsmål ble stående
+    // selv når bare én variant gjenstod (målt 2026-11-04: RAV4 2024 viste
+    // «Har bilen oppvarmet frontrute?» på nytt etter at kunden svarte «Nei»).
+    var gjenstaar = V.filtrerPaaSvar(state.frontruteKandidater || [], frontruteSvar).kandidater || [];
+    var relevante = felter.filter(function (f) {
+      // HUD kan ikke leses av glasset: spør bare når minst to kandidater faktisk
+      // har ulik kjent verdi for feltet.
+      var kjente = gjenstaar
+        .map(function (k) { return (k.attributter || {})[f]; })
+        .filter(function (v) { return typeof v === 'boolean'; });
+      return new Set(kjente).size > 1;
+    });
+    var besvart = Object.keys(frontruteSvar);
+    if (!relevante.length) {
+      // Ingenting mer å skille: kunden skal videre til tilbud, ikke svare på nytt.
+      // Har kunden svart, vises svaret med en «Endre svar»-knapp i stedet.
+      if (besvart.length) {
+        var wrapSvar = document.createElement('div');
+        wrapSvar.className = 'sporsmaal';
+        var oppsum = document.createElement('p');
+        oppsum.className = 'note';
+        oppsum.textContent = 'Du svarte: ' + besvart.map(function (f) {
+          return V.sporsmaalstekst(f) + ' – ' + svartekstFor(f).toLowerCase();
+        }).join(' · ') + '. Vi kontrollerer valget før tilbud.';
+        var endre = document.createElement('button');
+        endre.type = 'button';
+        endre.className = 'secondary';
+        endre.textContent = 'Endre svar';
+        endre.addEventListener('click', function () {
+          frontruteSvar = {};
+          if (state.glassRequest) state.glassRequest.answers = {};
+          renderFrontrute(state.glassRequest, {
+            kandidater: state.frontruteKandidater,
+            utfall: 'VERIFY',
+            sporsmaal: felter
+          }, searchGeneration);
+        });
+        wrapSvar.append(oppsum);
+        wrapSvar.append(endre);
+        boks.append(wrapSvar);
+        boks.classList.remove('hidden');
+      } else {
+        boks.classList.add('hidden');
+      }
+      return;
+    }
+    var tittel = document.createElement('h3');
+    tittel.textContent = 'Én opplysning til, så blir det riktig';
+    boks.append(tittel);
+
+    relevante.forEach(function (felt) {
+      var wrap = document.createElement('div');
+      wrap.className = 'sporsmaal';
+      var q = document.createElement('p');
+      q.textContent = V.sporsmaalstekst(felt);
+      wrap.append(q);
+      var hjelp = V.sporsmaalHjelp(felt);
+      if (hjelp) {
+        var h = document.createElement('p');
+        h.className = 'muted';
+        h.textContent = hjelp;
+        wrap.append(h);
+      }
+      var rad = document.createElement('div');
+      rad.className = 'svar-rad';
+      V.svarAlternativer(felt).forEach(function (alt) {
+        var knapp = document.createElement('button');
+        knapp.type = 'button';
+        knapp.className = 'secondary';
+        knapp.textContent = alt.tekst;
+        knapp.setAttribute('aria-pressed', frontruteSvar[felt] === alt.verdi ? 'true' : 'false');
+        knapp.addEventListener('click', function () {
+          frontruteSvar[felt] = alt.verdi;
+          // Et nytt svar endrer grunnlaget: et tidligere eksplisitt valg kan ikke
+          // lenger antas gyldig, så det nullstilles og må velges på nytt.
+          eksplisittVariantId = null;
+          state.glassRequest = state.glassRequest || {};
+          state.glassRequest.answers = frontruteSvar;
+          var data = {
+            kandidater: state.frontruteKandidater,
+            utfall: state.frontruteKandidater.length === 1 ? 'PINPOINT' : 'VERIFY',
+            // Hele lista: renderFrontruteSporsmaal regner selv ut hvilke spørsmål
+            // som fortsatt skiller de gjenstående kandidatene.
+            sporsmaal: felter
+          };
+          renderFrontrute(state.glassRequest, data, searchGeneration);
+        });
+        rad.append(knapp);
+      });
+      wrap.append(rad);
+      boks.append(wrap);
+    });
+    boks.classList.remove('hidden');
+  }
+
+  // 4. Rutetype: knappene bygges fra bilens data i renderGlassTyper().
+  //    Her bindes bare kontrollene rundt valgflyten.
+
+  // Ett spørsmål om gangen: «Tilbake» går til forrige reelle valg.
+  $('btn-glass-back').addEventListener('click', valgTilbake);
 
   $('btn-glass-cancel').addEventListener('click', function () {
     searchGeneration++;
     state.currentGlassKind = null;
     state.glassRequest = null;
+    valgType = null;
+    valgSti = [];
+    valgBak = [];
 
     $('glass-placement').classList.add('hidden');
     $('glass-placement-error').classList.add('hidden');
@@ -929,7 +1790,14 @@
     });
 
     var heading = $('screen-glass').querySelector('h2');
-    if (heading) heading.focus();
+    if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus(); }
+  });
+
+  // «Jeg finner ikke ruten min / trenger hjelp» — egen inngang, uavhengig av
+  // om katalogen har data for bilen.
+  $('btn-glass-hjelp').addEventListener('click', function () {
+    loggHendelse('trenger_hjelp', { merke: state.merke, modell: state.modell, aar: state.aar });
+    visManuellHjelp('Jeg finner ikke ruten min');
   });
 
   // 5. Utstyrs-spørsmål — KUN funksjoner som faktisk skiller kandidatene stilles.
@@ -1276,17 +2144,61 @@
 
   // Tilbehørsvalg bindes dynamisk i renderTilbehor (P0.1) — ingen statiske bokser.
 
+  // Oppsummering FØR kontaktfeltene: kunden skal se hva hun ber om tilbud på.
+  function oppdaterSoknadOppsummering() {
+    var el = $('inquiry-oppsummering');
+    var selection = state.glassRequest ? state.glassRequest.selection : null;
+    var rute = glassSelectionLabel(selection);
+    // SVVs handelsbetegnelse inneholder ofte merket selv («TOYOTA RAV4»).
+    // Da skal merket ikke prependeres — ellers blir det «Toyota Toyota RAV4».
+    var merkePent = penSkrivemaate(state.merke);
+    var modellPent = penSkrivemaate(state.modell);
+    var modellHarMerke = modellPent.toUpperCase().indexOf(String(state.merke || '').toUpperCase().trim()) === 0;
+    var bil = [modellHarMerke ? '' : merkePent, modellPent, state.aar ? String(state.aar) : '']
+      .filter(Boolean).join(' ');
+    var legacy = $('inquiry-glass-summary');
+    if (legacy) {
+      legacy.textContent = rute || '';
+      legacy.classList.toggle('hidden', !rute);
+    }
+    if (!el) return;
+    el.textContent = '';
+    var dl = document.createElement('dl');
+    var rad = function (etikett, verdi) {
+      if (!verdi) return;
+      var dt = document.createElement('dt');
+      dt.textContent = etikett;
+      var dd = document.createElement('dd');
+      dd.textContent = verdi;
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    };
+    rad('Bil', bil ? bil + (state.regnr ? ' · ' + state.regnr : '') : state.regnr);
+    rad('Rute', rute || 'Ikke valgt — vi finner riktig rute');
+    rad('Ønsket glass', valgteGlass
+      ? (valgteGlass.varenavn || 'Valgt glass') + ' (' + valgteGlass.varenr + ')'
+      : 'Vi foreslår riktig variant');
+    rad('Må kontrolleres', 'at glasset passer bilen, pris og levering');
+    if (dl.children.length) el.appendChild(dl);
+  }
+
   // Beta-henvendelse: knapp → skjema → validering → POST → bekreftelse.
   $('btn-inquiry').addEventListener('click', function () {
+    $('btn-inquiry').classList.remove('hidden');
     $('inquiry-form').classList.remove('hidden');
     $('inquiry-bekreftet').classList.add('hidden');
     $('inquiry-feil').classList.add('hidden');
-    if (state.glassRequest) {
-      $('inquiry-glass-summary').textContent = glassSelectionLabel(state.glassRequest.selection);
-      $('inquiry-glass-summary').classList.remove('hidden');
-    } else {
-      $('inquiry-glass-summary').classList.add('hidden');
-    }
+    oppdaterSoknadOppsummering();
+    $('inquiry-navn').focus();
+  });
+
+  // «Finner du ikke ruten?» — åpner forespørselen med bilen og valget beholdt.
+  $('btn-resultat-hjelp').addEventListener('click', function () {
+    loggHendelse('resultat_trenger_hjelp');
+    $('inquiry-form').classList.remove('hidden');
+    $('inquiry-bekreftet').classList.add('hidden');
+    $('inquiry-feil').classList.add('hidden');
+    oppdaterSoknadOppsummering();
     $('inquiry-navn').focus();
   });
 
@@ -1352,7 +2264,7 @@
     hoved.type = valg === 'telefon' ? 'tel' : 'email';
     hoved.autocomplete = valg === 'telefon' ? 'tel' : 'email';
     hoved.inputMode = valg === 'telefon' ? 'tel' : 'email';
-    hoved.placeholder = valg === 'telefon' ? 'F.eks. 40 40 82 41' : 'F.eks. navn@epost.no';
+    hoved.placeholder = valg === 'telefon' ? 'F.eks. 900 00 000' : 'F.eks. navn@epost.no';
   }
   $('inquiry-kontaktpreferanse').addEventListener('change', oppdaterKontaktfelt);
 
@@ -1381,7 +2293,7 @@
   // og 429 ved abuse-rate-limit. 409 betyr at samme Idempotency-Key pågår eller
   // er brukt med annet innhold. Vis kundetekst i stedet for rå API-feil.
   function fortolkInquiryFeil(status, melding) {
-    if (status === 503) return 'Vi tar ikke imot nye forespørsler akkurat nå. Prøv igjen senere, eller ring oss på 40 40 82 41.';
+    if (status === 503) return 'Vi tar ikke imot nye forespørsler akkurat nå. Prøv igjen senere, eller send oss en e-post.';
     if (status === 429) return 'For mange forespørsler fra denne nettleseren. Prøv igjen om noen minutter.';
     if (status === 409) return 'Forespørselen behandles allerede. Vent litt og prøv igjen.';
     return melding || 'Kunne ikke sende forespørselen. Prøv igjen.';
@@ -1416,7 +2328,12 @@
       var v = state.info[par[0]];
       if (v === true || v === false || v === 'unknown') utstyrSvar.push(par[1] + ': ' + (v === 'unknown' ? 'vet ikke' : v ? 'ja' : 'nei'));
     });
-    melding = 'Kontaktmåte: ' + kontaktEtikett + (utstyrSvar.length ? '\nKundens utstyrssvar: ' + utstyrSvar.join(', ') : '') + (melding ? '\n' + melding : '');
+    var leveringsstedEl = $('inquiry-leveringssted');
+    var leveringssted = leveringsstedEl ? leveringsstedEl.value.trim() : '';
+    melding = 'Kontaktmåte: ' + kontaktEtikett
+      + (valgteGlass ? '\nØnsket glass: ' + (valgteGlass.varenr || '') + ' ' + (valgteGlass.varenavn || '') : '')
+      + (utstyrSvar.length ? '\nKundens utstyrssvar: ' + utstyrSvar.join(', ') : '')
+      + (melding ? '\n' + melding : '');
     if (melding.length > 500) { inquiryFeil('Meldingen er for lang (maks 500 tegn).'); return; }
     var foretrukket = state.preferredWindshieldCandidate;
     if (!navn || navn.length < 2) { inquiryFeil('Skriv inn navnet ditt (minst 2 tegn).'); return; }
@@ -1439,10 +2356,12 @@
       method: 'POST',
       headers: inquiryHeaders(),
       body: JSON.stringify({
-        regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId,
+        regnr: regnr, navn: navn, kontakt: kontakt, melding: melding, sessionId: sessionId, leveringssted: leveringssted || undefined,
         contactPreference: kontaktpreferanse,
         ...(kontaktpreferanse === 'begge' ? { contactPhone: kontaktTelefon } : {}),
-        ...(state.glassRequest ? { glassRequest: state.glassRequest, clientRequestId: clientRequestId } : {})
+        ...(state.glassRequest ? { glassRequest: state.glassRequest, clientRequestId: clientRequestId } : {}),
+        ...(valgteGlass && valgteGlass.variantId ? { variantId: valgteGlass.variantId } : {}),
+        ...(state.merke ? { bil: { merke: state.merke, modell: state.modell, aar: state.aar } } : {})
       })
     })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, status: r.status, data: d }; }); })
@@ -1451,11 +2370,19 @@
         if (!r.ok || !r.data.ok) { var error = new Error(r.data.error || 'Kunne ikke sende forespørselen.'); error.status = r.status; throw error; }
         inquiryIdemKey = null;
         $('inquiry-form').classList.add('hidden');
+        $('btn-inquiry').disabled = true;
+        $('btn-inquiry').classList.add('hidden');
         var b = $('inquiry-bekreftet');
+        var bTekst = $('inquiry-bekreftet-tekst') || b;
         var id = r.data.inquiryId;
         var routeSummary = state.glassRequest ? ' Valgt rute: ' + glassSelectionLabel(state.glassRequest.selection) + '.' : '';
-        b.textContent = 'Takk! Vi har mottatt forespørselen' + (id != null ? ' (saksnummer ' + id + ')' : '') + '.' + routeSummary + ' Vi dobbeltsjekker glasset og sender deg pris og levering før du bestemmer deg. Finnbilglass leverer glass, men utfører ikke montering. Du finner selv verksted og avtaler eventuell montering direkte. Partnerverksteder kommer senere.';
-        b.className = 'note status pinpoint';
+        var glassSummary = valgteGlass ? ' Ønsket glass: ' + (valgteGlass.varenavn || '') + '.' : '';
+        var svarKanal = kontaktpreferanse === 'epost' ? 'på e-post'
+          : kontaktpreferanse === 'begge' ? 'på telefon og e-post'
+          : 'på telefon';
+        bTekst.textContent = 'Takk, vi har mottatt forespørselen din' + (id != null ? ' (sak #' + id + ')' : '') + '.' + routeSummary + glassSummary
+          + ' Vi kontrollerer bilen og glasset før vi sender deg et tilbud. Vi følger opp gjennom kontaktmåten du valgte (' + svarKanal + '). Ingen bestilling er gjennomført. Finnbilglass leverer glasset; du avtaler eventuell montering direkte med verkstedet.';
+        b.className = 'svar-bekreftelse';
         b.classList.remove('hidden');
       })
       .catch(function (e) {

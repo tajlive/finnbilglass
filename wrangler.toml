@@ -2,7 +2,7 @@ name = "finnbilglass-frontrute"
 main = "src/index.ts"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
-workers_dev = true
+workers_dev = false
 # Tvinger prod-konto (80d5b1d5) — hindrer at wrangler velger feil konto når
 # OAuth-login (som ser flere kontoer) er aktivt uten CLOUDFLARE_ACCOUNT_ID.
 account_id = "80d5b1d56a3e907150ba7348b6182894"
@@ -17,6 +17,10 @@ binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db"
 database_id = "ac35018c-0d43-4742-adf8-d881b7274684"
 
+# Test-auth-DB-er (FINNBILGLASS_LOCAL_AUTH / FINNBILGLASS_STAGING_AUTH) er
+# bevisst IKKE bundet her: toppnivå = produksjon. De finnes kun under
+# [env.staging] og i lokal utvikling via egen dev-konfig.
+
 # ── R2 (opplæringsbilder: skilt-foto + 43R-foto, ALDRI slettet uten avtale) ──
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
@@ -29,6 +33,13 @@ bucket_name = "finnbilglass-opplaering"
 
 [vars]
 ENVIRONMENT = "production"
+# Sosial innlogging: kun leverandører som står her er aktive. Secrets alene
+# aktiverer ingenting — Microsoft/Facebook er bevisst utsatt.
+OAUTH_ENABLED_PROVIDERS = "google"
+# Cloudflare Access: Workeren verifiserer Access-JWT-en på serversiden.
+ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
+ACCESS_AUD = "c4db2f749f5262849a8bf3f96963e608e8a9345970c51255176423ae7b21790e"
+ADMIN_EMAILS = "tomarnejensen@gmail.com"
 # Evidence-flyt feature-flags — avgrenset release (Tom 2026-08-19): kun opplasting åpen.
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
@@ -40,25 +51,67 @@ EVIDENCE_STATUS_CHANGE_ENABLED = "true"
 enabled = false
 invocation_logs = true
 
+# Staging-miljø
+[env.staging]
+# Staging beholder workers.dev-URL (prod har den av).
+workers_dev = true
+# Staging skal ALDRI eie produksjonsdomenene. Uten denne arver staging de
+# globale [[routes]]-oppføringene, og hver staging-deploy flytter
+# finnbilglass.no over til staging-konfigurasjonen (feil miljø, feil D1).
+routes = []
+# Staging cron only; handler itself is also feature-gated and disabled.
+[env.staging.triggers]
+crons = ["*/15 * * * *"]
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+ALL_GLASS_KANDIDATER_ENABLED = "true"
+ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
+ACCESS_AUD = "8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb"
+ADMIN_EMAILS = "tomarnejensen@gmail.com"
+# Match the explicitly enabled staging OAuth provider; secrets are set in the staging Worker.
+OAUTH_ENABLED_PROVIDERS = "google"
+EVIDENCE_UPLOAD_ENABLED = "true"
+EVIDENCE_REVIEW_ENABLED = "false"
+EVIDENCE_STATUS_CHANGE_ENABLED = "false"
+inquiries_enabled = "true"
+KUSTOM_ENABLED = "true"
+KUSTOM_OPS_ROUTE_ENABLED = "true"
+KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED = "false"
+KUSTOM_MONEY_MOVEMENTS_ENABLED = "false"
+KUSTOM_RECONCILIATION_ENABLED = "false"
+
+[[env.staging.d1_databases]]
+binding = "FINNBILGLASS_DB"
+database_name = "finnbilglass-staging-catalog"
+database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
+migrations_dir = "migrations/staging"
+
+[[env.staging.d1_databases]]
+binding = "FINNBILGLASS_STAGING_AUTH"
+database_name = "finnbilglass-staging-auth"
+database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
+migrations_dir = "migrations/staging-auth"
+
+# Bindings som ikke arves automatisk må gjentas per miljø, ellers nekter
+# wrangler å kjøre (gjelder blant annet AI).
+[[env.staging.r2_buckets]]
+binding = "OPPLAERING_BUCKET"
+bucket_name = "finnbilglass-opplaering-staging"
+
+[env.staging.ai]
+binding = "AI"
+
 # ── Statisk frontend (prototype public/) ──────────────────────
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/", "/support/evidence", "/ops"]
+run_worker_first = ["/", "/support/evidence", "/ops", "/min-side", "/logg-inn", "/login", "/personvern", "/personvern.html"]
 
-# ── Custom domains (opprettes av wrangler ved deploy) ──────────
-# apex + www serverer landingsside inntil Pages-frontenden tar over; api = matcher
-[[routes]]
-pattern = "finnbilglass.no"
-custom_domain = true
-zone_name = "finnbilglass.no"
-
-[[routes]]
-pattern = "www.finnbilglass.no"
-custom_domain = true
-zone_name = "finnbilglass.no"
-
-[[routes]]
-pattern = "api.finnbilglass.no"
-custom_domain = true
-zone_name = "finnbilglass.no"
+# ── Custom domains ────────────────────────────────────────────
+# finnbilglass.no / www / api er knyttet til denne Workeren via Workers
+# Domains-API-et (accounts/{acct}/workers/domains), IKKE via [[routes]].
+# De er bevisst fjernet herfra: CI-tokenet har ikke workers/routes-skriving,
+# og en [[routes]]-deklarasjon får wrangler til å forsøke å synkronisere
+# domenene på hver deploy (feiler med «No access to the specified resource»).
+# Domenene forblir tilknyttet Workeren uendret ved deploy.

@@ -11,7 +11,9 @@ import {
     beregnPris,
     mvaFraInkl,
     MAKS_KURS_ALDER_DAGER,
-    PRISTLISTE_RABATT_FAKTOR,
+    XLS_RABATT_FAKTOR,
+    estimertKundeprisInklMva,
+    estimertFrontruteKundeprisInklMva,
     type Valutakurs,
 } from '../src/pricing/nok-prising.ts';
 import { parseNorgesBankSdmx } from '../src/pricing/valutakurs.ts';
@@ -28,53 +30,56 @@ const KURS: Valutakurs = {
 
 // ── Prisregelen ────────────────────────────────────────────────
 
-test('prisliste 9 875 → trinn 5 490 (9 875 × 0,60 = 5 925)', () => {
+test('prisliste 9 875 → estimat 3 085,94 (9 875 × 0,25 × 1,25)', () => {
     const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: 9875, idag: IDAG });
-    assert.equal(r.sikkerhet, 'BEKREFTET');
-    assert.equal(r.raaPris, 5925);
-    assert.equal(r.kundePris, 5490);
+    assert.equal(r.sikkerhet, 'ESTIMERT');
+    assert.equal(r.raaPris, 3085.94);
+    assert.equal(r.kundePris, 3085.94);
 });
 
-test('beregnPris er ekvivalent med matcher.tierPris for prisliste-grunnlag', () => {
-    // Regresjonsvern: prismodulen må ikke drive fra den etablerte prisregelen.
-    for (const listepris of [5000, 6650, 8000, 9875, 9980, 11495, 14000, 50000]) {
-        const fraModul = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: listepris, idag: IDAG }).kundePris;
-        assert.equal(fraModul, tierPris(listepris), `avvik for listepris ${listepris}`);
+test('frontrute matcher bruker frontrutefaktor, mens generell prisregel står separat', () => {
+    for (const listepris of [1000, 5000, 6650, 9875, 9980, 10745, 14860, 19425, 50000]) {
+        assert.equal(estimertFrontruteKundeprisInklMva(listepris), tierPris(listepris), `avvik for listepris ${listepris}`);
     }
 });
 
-test('rabattfaktoren er 0,60 (Tom-vedtatt)', () => {
-    assert.equal(PRISTLISTE_RABATT_FAKTOR, 0.6);
+test('rabattfaktoren er 0,25 — XLS-pris er eks. mva (Tom 2026-10-29)', () => {
+    assert.equal(XLS_RABATT_FAKTOR, 0.25);
+    assert.equal(estimertKundeprisInklMva(10745), 3357.81);
 });
 
-test('prisliste 9 980 (VW T5) → trinn 5 490', () => {
+test('frontrute får 60 % rabatt inkl. 25 % mva mens øvrig glass beholder 75 %', () => {
+    assert.equal(estimertFrontruteKundeprisInklMva(10745), 5372.5);
+    assert.equal(estimertKundeprisInklMva(10745), 3357.81);
+});
+
+test('prisliste 9 980 (VW T5) → estimat 3 118,75', () => {
     const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: 9980, idag: IDAG });
-    assert.equal(r.kundePris, 5490);
+    assert.equal(r.kundePris, 3118.75);
 });
 
-test('pris over høyeste trinn → «Spesial», ingen kundepris', () => {
+test('høy listepris gir fortsatt pris — ingen øvre trinn-grense', () => {
     const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: 20000, idag: IDAG });
-    assert.equal(r.kundePris, null);
-    assert.ok(r.advarsler.includes('UTENFOR_TRINNSPRIS_SPESIAL'));
-    assert.equal(r.sikkerhet, 'BEKREFTET', 'grunnlaget er fortsatt bekreftet — bare ikke trinnpriset');
+    assert.equal(r.kundePris, 6250);
+    assert.equal(r.sikkerhet, 'ESTIMERT');
+    assert.ok(r.advarsler.includes('ESTIMAT_MANUAL_KONTROLL'));
 });
 
-test('pris under laveste trinn → «Spesial»', () => {
+test('lav listepris gir fortsatt estimat — ingen nedre trinn-grense', () => {
     const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: 4000, idag: IDAG });
-    // 4 000 × 0,60 = 2 400 → under 3 990
-    assert.equal(r.kundePris, null);
-    assert.ok(r.advarsler.includes('UTENFOR_TRINNSPRIS_SPESIAL'));
+    assert.equal(r.kundePris, 1250); // 4 000 × 0,25 × 1,25
+    assert.equal(r.sikkerhet, 'ESTIMERT');
 });
 
-test('fakturakostnad med påslag 1,5: 3 000 → 4 500 → trinn 3 990', () => {
+test('fakturakostnad med påslag 1,5 og mva: 3 000 → 5 625', () => {
     const r = beregnPris({
         grunnlag: 'SUPPLIER_INVOICE',
         belop: 3000,
         paslagFaktor: 1.5,
         idag: IDAG,
     });
-    assert.equal(r.raaPris, 4500);
-    assert.equal(r.kundePris, 3990);
+    assert.equal(r.raaPris, 5625);
+    assert.equal(r.kundePris, 5625);
     assert.equal(r.sikkerhet, 'BEKREFTET');
 });
 
@@ -105,12 +110,12 @@ test('mva brytes ut av trinnpris: 5 490 → 1 098 mva / 4 392 eks.', () => {
     assert.equal(mva + eksMva, 5490, 'mva + eks. mva skal være lik kundeprisen');
 });
 
-test('kundeprisen er ALDRI trinnpris × 1,25', () => {
-    const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: 9875, idag: IDAG });
-    assert.equal(r.kundePris, 5490);
-    assert.notEqual(r.kundePris, 5490 * 1.25);
-    assert.equal(r.mva, 1098);
-    assert.equal(r.prisEksMva, 4392);
+test('mva legges PÅ toppen: 10 745 → 3 357,81 inkl. mva', () => {
+    const r = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: 10745, idag: IDAG });
+    assert.equal(r.kundePris, 3357.81);
+    assert.equal(r.mva, 671.56);
+    assert.equal(r.prisEksMva, 2686.25);
+    assert.equal(Math.round((r.mva! + r.prisEksMva!) * 100) / 100, 3357.81);
 });
 
 // ── EUR-estimat er aldri en kundepris ──────────────────────────
