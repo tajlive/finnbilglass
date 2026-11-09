@@ -147,6 +147,9 @@ test('Admin API: ADMIN kan endre brukerrolle', async () => {
   assert.ok(changedUser, 'rolleendring skal bevare e-post og eksisterende bruker');
   assert.equal(changedUser.name, 'admin');
   assert.equal(changedUser.role, 'REVIEWER');
+  assert.equal(await auth.getSession(cookie), null, 'rolleendring må tilbakekalle gammel admin-sesjon');
+  const reauthenticated = await loginAs('admin@test.no', 'ADMIN');
+  assert.equal((await auth.getSession(reauthenticated))?.role, 'REVIEWER', 'ny innlogging skal få autoritativ rolle');
 
   const { status: demotedStatus } = await callRoute(
     handleAdminRoute,
@@ -157,6 +160,22 @@ test('Admin API: ADMIN kan endre brukerrolle', async () => {
     { Cookie: sessionCookieHeader(cookie) }
   );
   assertStatus(demotedStatus, 403, 'old admin session must honor current D1 role');
+});
+
+test('Admin API: ukjent rolle-mål returnerer 404 uten å opprette en ny bruker', async () => {
+  const cookie = await loginAs('admin@test.no', 'ADMIN');
+  const before = await auth.getUserByEmail('admin@test.no');
+  const { status, body } = await callRoute(
+    handleAdminRoute, 'POST',
+    'http://localhost/api/admin/users/ukjent-id/role',
+    env, { role: 'OPERATOR' },
+    { Cookie: sessionCookieHeader(cookie) }
+  );
+  assertStatus(status, 404, 'ukjent rolle-mål');
+  assertError(body, 'BRUKER_FINNES_IKKE', 'ukjent rolle-mål');
+  assert.equal(await auth.getUserByEmail('ukjent-id'), null);
+  assert.equal((await auth.getUserByEmail('admin@test.no'))?.userId, before.userId);
+  assert.ok(await auth.getSession(cookie), 'ukjent mål skal ikke tilbakekalle admins sesjon');
 });
 
 test('Admin API: REVIEWER kan IKKE endre brukerrolle', async () => {
