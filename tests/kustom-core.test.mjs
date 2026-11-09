@@ -4,6 +4,7 @@ import {
   SHIPPING_INCL_VAT_MINOR, buildLockedKustomOrder, nokToMinor, checkoutAuthorized,
   classifyKustomOrderManagement, apiBase, createKustomCheckout, createKustomHpp,
 } from '../src/payments/kustom-core.ts';
+import { reconcileKustomManagedOrder } from '../src/payments/kustom-management.ts';
 const env = { ENVIRONMENT: 'staging', KUSTOM_ENABLED: 'true', KUSTOM_API_USERNAME: 'FAKE', KUSTOM_API_PASSWORD: 'FAKE' };
 const input = { internalOrderId: 'ord_1234567890', amountMinor: 187375, shippingMinor: SHIPPING_INCL_VAT_MINOR, customerOrigin: 'https://finnbilglass.no', callbackToken: 'THIS_IS_AN_EXAMPLE_RANDOM_TOKEN_123456789012345' };
 test('eksakt 699 + 25% frakt og laast total', () => {
@@ -54,4 +55,48 @@ test('Kustom HTTP: ordre og HPP blir laget i riktig rekkefolge', async () => {
     assert.match(calls[1].url,/playground\.kustom\.co\/hpp\/v1\/sessions/);
     assert.match(calls[1].body.payment_session_url,new RegExp(oid));
   } finally {globalThis.fetch=orig;}
+});
+
+test('cancelled/expired and contradictory Order Management states never become authorized or paid', () => {
+  const data = { captured_amount:0, refunded_amount:0,
+    original_order_amount:187375, purchase_currency:'NOK' };
+  for (const status of ['CANCELLED','EXPIRED','CAPTURED','PART_CAPTURED','CLOSED','UNKNOWN']) {
+    assert.equal(classifyKustomOrderManagement({ ...data, status },187375),
+      'NEEDS_RECONCILIATION', status);
+  }
+  assert.equal(classifyKustomOrderManagement({
+    ...data,status:'AUTHORIZED',captured_amount:187375
+  },187375),'NEEDS_RECONCILIATION');
+  assert.equal(classifyKustomOrderManagement({
+    ...data,status:'PART_CAPTURED',captured_amount:187375
+  },187375),'NEEDS_RECONCILIATION');
+  assert.equal(classifyKustomOrderManagement({
+    ...data,status:'CANCELLED',captured_amount:187375,refunded_amount:187375
+  },187375),'NEEDS_RECONCILIATION');
+});
+
+test('management requires exact remaining authorization for provider AUTHORIZED/CAPTURED', () => {
+  const expected = { kustomOrderId: '48fa4f0f-b269-4b02-9e8c-71704199cc10', amountMinor: 187375 };
+  const managed = {
+    order_id: expected.kustomOrderId,
+    status: 'AUTHORIZED', fraud_status:'ACCEPTED',
+    order_amount: expected.amountMinor, original_order_amount: expected.amountMinor,
+    captured_amount:0, refunded_amount:0, remaining_authorized_amount:expected.amountMinor,
+    purchase_currency:'NOK'
+  };
+  assert.equal(reconcileKustomManagedOrder(managed,expected),'AUTHORIZED');
+  assert.equal(reconcileKustomManagedOrder({
+    ...managed,remaining_authorized_amount:0
+  },expected),'NEEDS_RECONCILIATION');
+  assert.equal(reconcileKustomManagedOrder({
+    ...managed,status:'CAPTURED',captured_amount:expected.amountMinor,
+    remaining_authorized_amount:expected.amountMinor
+  },expected),'NEEDS_RECONCILIATION');
+  assert.equal(reconcileKustomManagedOrder({
+    ...managed,status:'CAPTURED',captured_amount:expected.amountMinor,
+    remaining_authorized_amount:0
+  },expected),'PAID');
+  assert.equal(reconcileKustomManagedOrder({
+    ...managed,status:'CANCELLED'
+  },expected),'NEEDS_RECONCILIATION');
 });

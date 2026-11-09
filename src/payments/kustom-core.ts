@@ -214,11 +214,22 @@ export function checkoutAuthorized(input: {
 export function classifyKustomOrderManagement(input: {
   status: string; captured_amount: number; refunded_amount: number; original_order_amount: number; purchase_currency: string;
 }, expectedMinor: number): 'AUTHORIZED' | 'PAID' | 'REFUNDED' | 'NEEDS_RECONCILIATION' {
-  if (input.purchase_currency.toUpperCase() !== 'NOK' || input.original_order_amount !== expectedMinor ||
-    ![input.captured_amount, input.refunded_amount].every(Number.isSafeInteger)) return 'NEEDS_RECONCILIATION';
-  if (input.refunded_amount === expectedMinor && input.captured_amount === expectedMinor) return 'REFUNDED';
-  if (input.refunded_amount > 0) return 'NEEDS_RECONCILIATION';
-  if (input.captured_amount === expectedMinor) return 'PAID';
-  if (input.captured_amount === 0) return 'AUTHORIZED';
+  if (!Number.isSafeInteger(expectedMinor) || expectedMinor <= 0 ||
+    typeof input.status !== 'string' ||
+    input.purchase_currency.toUpperCase() !== 'NOK' ||
+    input.original_order_amount !== expectedMinor ||
+    ![input.captured_amount, input.refunded_amount].every(v => Number.isSafeInteger(v) && v >= 0) ||
+    input.refunded_amount > input.captured_amount) return 'NEEDS_RECONCILIATION';
+
+  // Money totals alone are not proof of authorization or capture:
+  // CANCELLED / EXPIRED with captured_amount=0 MUST NOT become AUTHORIZED.
+  // PART_CAPTURED / CLOSED / unknown statuses require explicit review.
+  const providerStatus = input.status.toUpperCase();
+  if (providerStatus === 'AUTHORIZED' &&
+      input.captured_amount === 0 && input.refunded_amount === 0) return 'AUTHORIZED';
+  if (providerStatus === 'CAPTURED' && input.captured_amount === expectedMinor) {
+    if (input.refunded_amount === expectedMinor) return 'REFUNDED';
+    if (input.refunded_amount === 0) return 'PAID';
+  }
   return 'NEEDS_RECONCILIATION';
 }
