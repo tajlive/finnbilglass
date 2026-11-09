@@ -39,6 +39,17 @@ jobs:
       - name: Testsuite
         run: npm test
 
+      - name: Installer Chromium for skrivebeskyttet smoke (PR #40)
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 40
+        run: npx playwright install --with-deps chromium
+
+      - name: Produksjons-smoke uten innsending (PR #40)
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 40
+        env:
+          FBG_BASE: https://finnbilglass.no
+          FBG_SEND_INQUIRY: '0'
+        run: node scripts/betatest-e2e.mjs
+
       - name: Ingen hemmelighetsfiler i git
         run: |
           LEAKS=$(git ls-files | grep -E '(^|/)(\.env(\.local)?|\.dev\.vars|wrangler\..*\.jsonc)$' || true)
