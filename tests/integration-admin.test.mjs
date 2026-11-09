@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { handleAdminRoute } from '../src/routes/admin.ts';
 import { handleAuthRoute } from '../src/routes/auth.ts';
-import { auth, reset, setUserRole, setAuthStorage } from '../src/auth.ts';
+import { auth, reset, setAuthStorage, getStorage } from '../src/auth.ts';
 import { D1EmulatorAuthStorage } from '../src/auth-storage.ts';
 import { D1Emulator } from '../src/auth-store.ts';
 import {
@@ -28,7 +28,16 @@ const env = createTestEnv();
 
 // Hjelpefunksjon: logg inn som en bestemt rolle og returner sesjonscookie
 async function loginAs(email, role) {
-  setUserRole(email, role);
+  // Auth bruker auth_users som autoritativ rollekilde. En test-only rolle-map
+  // er ikke nok: seed en EKTE registrert testbruker før OTP-verifisering.
+  const storage = getStorage();
+  if (!await storage.userGetByEmail(email)) {
+    const now = Date.now();
+    await storage.userSet({
+      userId: `test_${email}`, email, role, name: email.split('@')[0],
+      createdAt: now, updatedAt: now
+    });
+  }
 
   // Send OTP
   await callRoute(
@@ -147,6 +156,9 @@ test('Admin API: ADMIN kan endre brukerrolle', async () => {
   assert.ok(changedUser, 'rolleendring skal bevare e-post og eksisterende bruker');
   assert.equal(changedUser.name, 'admin');
   assert.equal(changedUser.role, 'REVIEWER');
+  assert.equal(await auth.getSession(cookie), null, 'rolleendring må tilbakekalle gammel admin-sesjon');
+  const reauthenticated = await loginAs('admin@test.no', 'ADMIN');
+  assert.equal((await auth.getSession(reauthenticated))?.role, 'REVIEWER', 'ny innlogging skal få autoritativ rolle');
 
   const { status: demotedStatus } = await callRoute(
     handleAdminRoute,
@@ -156,7 +168,23 @@ test('Admin API: ADMIN kan endre brukerrolle', async () => {
     undefined,
     { Cookie: sessionCookieHeader(cookie) }
   );
-  assertStatus(demotedStatus, 403, 'old admin session must honor current D1 role');
+  assertStatus(demotedStatus, 401, 'revoked old admin session must not authenticate');
+});
+
+test('Admin API: ukjent rolle-mål returnerer 404 uten å opprette en ny bruker', async () => {
+  const cookie = await loginAs('admin@test.no', 'ADMIN');
+  const before = await auth.getUserByEmail('admin@test.no');
+  const { status, body } = await callRoute(
+    handleAdminRoute, 'POST',
+    'http://localhost/api/admin/users/ukjent-id/role',
+    env, { role: 'OPERATOR' },
+    { Cookie: sessionCookieHeader(cookie) }
+  );
+  assertStatus(status, 404, 'ukjent rolle-mål');
+  assertError(body, 'BRUKER_FINNES_IKKE', 'ukjent rolle-mål');
+  assert.equal(await auth.getUserByEmail('ukjent-id'), null);
+  assert.equal((await auth.getUserByEmail('admin@test.no'))?.userId, before.userId);
+  assert.ok(await auth.getSession(cookie), 'ukjent mål skal ikke tilbakekalle admins sesjon');
 });
 
 test('Admin API: REVIEWER kan IKKE endre brukerrolle', async () => {

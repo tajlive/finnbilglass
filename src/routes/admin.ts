@@ -77,13 +77,9 @@ export async function handleAdminUserRole(request: Request, env: Env): Promise<R
   const storage = getStorage();
   const existing = await storage.userGet(userId) ?? await storage.userGetByEmail(userId);
   if (!existing) return json({ ok: false, error: 'BRUKER_FINNES_IKKE' }, 404);
-  await storage.userSet({
-    ...existing,
-    role: newRole,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  });
-  return json({ ok: true, userId, role: newRole });
+  const changed = await storage.userUpdateRoleAndRevoke(existing.userId, newRole, Date.now());
+  if (!changed) return json({ ok: false, error: 'BRUKER_FINNES_IKKE' }, 404);
+  return json({ ok: true, userId: existing.userId, role: newRole });
 }
 
 export async function handleAdminSessions(request: Request, env: Env): Promise<Response> {
