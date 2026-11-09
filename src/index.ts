@@ -517,23 +517,31 @@ export default {
       if (typeof regnr !== 'string' || !regnr.trim()) return json({ ok: false, error: 'regnr påkrevd' }, 400);
       const ren = regnr.trim();
       const norm = ren.toUpperCase().replace(/[\s\-–—.]+/g, '');
-      let lagret = false;
-      try {
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
-        ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
-        lagret = true;
-      } catch (e) {
-        console.error('regnr-lagring feilet:', e);
+      // Sikkerhetsport: norsk standardkjennemerke før NOEN D1-logg eller
+      // SVV-oppslag. Verhindrer at vilkårlig PII/IP fra søk lagres i D1.
+      if (!/^[A-Z]{2}[0-9]{4,5}$/.test(norm)) {
+        return json({ ok: false, error: 'Ugyldig registreringsnummer' }, 400);
       }
-      // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
-      try {
-        const g = geoAv(request);
-        await env.FINNBILGLASS_DB.prepare(
-          'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
-        ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
-      } catch (e) {
-        console.error('søkelogg feilet:', e);
+      const lookupOnly = (body as Record<string, unknown>)?.lookupOnly === true;
+      let lagret = false;
+      if (!lookupOnly) {
+        try {
+          await env.FINNBILGLASS_DB.prepare(
+            'INSERT OR IGNORE INTO regnr_logg (regnr, regnr_norm, ua) VALUES (?, ?, ?)'
+          ).bind(ren, norm, request.headers.get('User-Agent') ?? null).run();
+          lagret = true;
+        } catch (e) {
+          console.error('regnr-lagring feilet:', e);
+        }
+        // Søkelogg: hvert søk med IP + geolokalisering (land/by/ISP) — aldri blokkerende.
+        try {
+          const g = geoAv(request);
+          await env.FINNBILGLASS_DB.prepare(
+            'INSERT INTO sok_logg (regnr, regnr_norm, ip, land, by, asn, ua) VALUES (?, ?, ?, ?, ?, ?, ?)'
+          ).bind(ren, norm, g.ip, g.land, g.by, g.asn, request.headers.get('User-Agent') ?? null).run();
+        } catch (e) {
+          console.error('søkelogg feilet:', e);
+        }
       }
       // SVV-oppslag: kjennemerke → bil. Null ved feil/ukjent — frontend faller til manuell.
       let bil = null;
@@ -570,7 +578,7 @@ export default {
       const vin = (body as Record<string, unknown>)?.vin;
       if (typeof vin !== 'string' || !vin.trim()) return json({ ok: false, error: 'vin påkrevd' }, 400);
       const ren = vin.trim().toUpperCase().replace(/[\s\-–—.]+/g, '');
-      if (ren.length < 11 || ren.length > 17) return json({ ok: false, error: 'Ugyldig chassisnummer' }, 400);
+      if (!/^[A-HJ-NPR-Z0-9]{11,17}$/.test(ren)) return json({ ok: false, error: 'Ugyldig chassisnummer' }, 400);
       let bil = null;
       let resolver = null;
       try {
