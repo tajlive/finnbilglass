@@ -98,3 +98,15 @@ WHEN OLD.sku != NEW.sku OR OLD.total_minor != NEW.total_minor
 BEGIN
   SELECT RAISE(ABORT,'ORDER_TERMS_IMMUTABLE');
 END;
+
+-- Administrative status only moves forwards. Verified/cancelled records remain
+-- immutable; reissue a new payment link through a separately audited action.
+CREATE TRIGGER IF NOT EXISTS ops_manual_order_no_status_regression
+BEFORE UPDATE ON ops_manual_orders
+WHEN
+  (OLD.status = 'ORDER_CREATED' AND NEW.status NOT IN ('ORDER_CREATED','PAYMENT_LINK_SENT','CANCELLED'))
+  OR (OLD.status = 'PAYMENT_LINK_SENT' AND NEW.status NOT IN ('PAYMENT_LINK_SENT','PAYMENT_VERIFIED_MANUALLY','CANCELLED'))
+  OR OLD.status IN ('PAYMENT_VERIFIED_MANUALLY','CANCELLED')
+BEGIN
+  SELECT RAISE(ABORT,'MANUAL_ORDER_STATUS_REGRESSION');
+END;
