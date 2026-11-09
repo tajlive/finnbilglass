@@ -115,6 +115,17 @@ export function reconcileKustomManagedOrder(
     return 'NEEDS_RECONCILIATION';
   }
 
+  // Only the exact authorized/captured financial shape is eligible.
+  // Kustom status alone can lag, and money totals alone can be misleading.
+  const providerStatus = order.status.toUpperCase();
+  if ((providerStatus === 'AUTHORIZED' &&
+       (order.captured_amount !== 0 || order.refunded_amount !== 0 ||
+        order.remaining_authorized_amount !== amount)) ||
+      (providerStatus === 'CAPTURED' &&
+       (order.captured_amount !== amount || order.remaining_authorized_amount !== 0))) {
+    return 'NEEDS_RECONCILIATION';
+  }
+
   const fraud = order.fraud_status.toUpperCase();
 
   if (fraud === 'PENDING') return 'PENDING_REVIEW';
