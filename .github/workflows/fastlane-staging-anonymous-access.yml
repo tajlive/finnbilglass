@@ -1,0 +1,20 @@
+name: Fast-track STAGING anonymous access guard
+on:
+  push:
+    branches: ['release/fbg-main-fastlane-20261109']
+    paths:
+      - '.github/workflows/fastlane-staging-anonymous-access.yml'
+      - 'scripts/staging-anonymous-access-smoke.mjs'
+permissions:
+  contents: read
+jobs:
+  access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify no anonymous Ops and customer access (GET only)
+        run: node scripts/staging-anonymous-access-smoke.mjs
