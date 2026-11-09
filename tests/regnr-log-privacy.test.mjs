@@ -86,6 +86,21 @@ test('fire sifre er gyldig, ugyldig format stoppes uten skriv', async () => {
   } finally { fixture.db.close(); }
 });
 
+test('lookupOnly=true gir gyldig oppslag uten person- eller søkelogging', async () => {
+  const fixture = setup();
+  try {
+    const response = await call(fixture.env, '/api/regnr', {
+      regnr: 'SU18018', lookupOnly: true,
+    });
+    assert.equal(response.status, 200);
+    assert.equal(response.body.ok, true);
+    assert.equal(response.body.lagret, false, 'lookupOnly skal aldri rapportere DB-lagring');
+    assert.equal(fixture.db.prepare('SELECT COUNT(*) AS n FROM regnr_logg').get().n, 0);
+    assert.equal(fixture.db.prepare('SELECT COUNT(*) AS n FROM sok_logg').get().n, 0);
+    assert.equal(fixture.getWrites(), 0);
+  } finally { fixture.db.close(); }
+});
+
 test('ugyldige VIN-tegn avvises, gyldig 11–17 tegn gir normal 200-kontrakt', async () => {
   const fixture = setup();
   try {
