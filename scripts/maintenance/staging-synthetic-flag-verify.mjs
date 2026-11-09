@@ -25,6 +25,7 @@ const data=parse(),batch=Array.isArray(data)?data[0]:data;
 if(batch?.success===false||!Array.isArray(batch?.results)||batch.results.length!==1)
   throw new Error('D1_RESPONSE_UNEXPECTED');
 const {n,flagged}=batch.results[0];
+console.log('STAGING_SYNTHETIC_MATCH_COUNT '+JSON.stringify({stage,n,flagged}));
 if(n!==1||![0,1].includes(flagged))throw new Error('QA_RECORD_NOT_UNIQUE');
 if(stage==='post'&&flagged!==1)throw new Error('QA_RECORD_NOT_MARKED');
 console.log('STAGING_SYNTHETIC_FLAG '+JSON.stringify({stage,matched:n,isTest:flagged===1}));
