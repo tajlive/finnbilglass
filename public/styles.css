@@ -1714,3 +1714,30 @@ footer {
     font-size: 12px;
   }
 }
+
+/* Kustom configured payment methods on the customer homepage */
+.customer-site .payment-methods {
+  margin: 24px auto 28px;
+  padding: 20px 16px;
+  max-width: 720px;
+  text-align: center;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 16px);
+}
+.customer-site .payment-methods h2 {
+  margin: 0 0 12px;
+  color: var(--text-1);
+  font-size: 18px;
+  font-weight: 800;
+}
+.customer-site .payment-methods kustom-payment-method-display {
+  display: block;
+  min-height: 32px;
+}
+.customer-site .payment-methods p {
+  margin: 12px 0 0;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
