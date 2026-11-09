@@ -11,7 +11,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { handleAdminRoute } from '../src/routes/admin.ts';
 import { handleAuthRoute } from '../src/routes/auth.ts';
-import { auth, reset, setUserRole, setAuthStorage } from '../src/auth.ts';
+import { auth, reset, setAuthStorage, getStorage } from '../src/auth.ts';
 import { D1EmulatorAuthStorage } from '../src/auth-storage.ts';
 import { D1Emulator } from '../src/auth-store.ts';
 import {
@@ -28,7 +28,16 @@ const env = createTestEnv();
 
 // Hjelpefunksjon: logg inn som en bestemt rolle og returner sesjonscookie
 async function loginAs(email, role) {
-  setUserRole(email, role);
+  // Auth bruker auth_users som autoritativ rollekilde. En test-only rolle-map
+  // er ikke nok: seed en EKTE registrert testbruker før OTP-verifisering.
+  const storage = getStorage();
+  if (!await storage.userGetByEmail(email)) {
+    const now = Date.now();
+    await storage.userSet({
+      userId: `test_${email}`, email, role, name: email.split('@')[0],
+      createdAt: now, updatedAt: now
+    });
+  }
 
   // Send OTP
   await callRoute(
