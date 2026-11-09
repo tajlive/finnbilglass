@@ -24,7 +24,9 @@ jobs:
   security-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Ingen hemmelighetsfiler i git
         run: |
           LEAKS=$(git ls-files | grep -E '(^|/)(\.env(\.local)?|\.dev\.vars|wrangler\..*\.jsonc)$' || true)
@@ -32,14 +34,18 @@ jobs:
             echo "::error::Hemmelighetsfil committet:"; echo "$LEAKS"; exit 1
           fi
           echo "OK — ingen hemmelighetsfiler i git"
-      # Hentet fra origin/main (gitleaks-allowlist). Ikke-blokkerende til
-      # .gitleaks.toml er verifisert mot kjente falske treff (tabellnavn som
-      # «evidence_cases» matcher generic-api-key).
-      - name: Secret scan (allowlist via gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          args: --config=.gitleaks.toml --verbose
-        continue-on-error: true
+      # Blokker deploy hvis Gitleaks finner en reell hemmelighet.
+      # public/index.html har kun én smal unntaksregel for Kustom Elements
+      # sin dokumenterte, offentlige installasjonsnøkkel.
+      - name: Secret scan (blocking Gitleaks)
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_VERSION: '8.30.1'
+          GITLEAKS_ENABLE_COMMENTS: 'false'
+      - name: Scan checked-out tree (blocking)
+        run: /tmp/gitleaks-8.30.1/gitleaks dir . --config .gitleaks.toml --redact --verbose --exit-code 2
 
   deploy:
     needs: [test-gate, security-check]

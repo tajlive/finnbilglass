@@ -57,7 +57,11 @@ const J = `JOIN evidence_cases c ON t.case_id = c.case_id WHERE c.session_id LIK
 console.log(`\n=== Ryddeplan (${execute ? 'EXECUTE' : 'DRY-RUN'}) — runId ${runId} · db ${db} ===`);
 
 const saker = await d1(`SELECT case_id, session_id, status FROM evidence_cases WHERE session_id LIKE ?`, LIKE);
-const bilder = await d1(`SELECT t.case_id, t.image_id, t.image_type, t.r2_key, t.thumb_r2_key FROM evidence_case_images t ${J}`, LIKE);
+const bilder = await d1(
+  `SELECT t.case_id, t.image_id, t.image_type, t.r2_key,
+          t.thumb_r2_key FROM evidence_case_images t ${J}`,
+  LIKE,
+);
 const kvalitet = await d1(`SELECT t.event_id FROM evidence_case_image_quality_events t ${J}`, LIKE);
 const review = await d1(`SELECT t.event_id FROM evidence_case_review_events t ${J}`, LIKE);
 const status = await d1(`SELECT t.event_id FROM evidence_case_status_events t ${J}`, LIKE);
