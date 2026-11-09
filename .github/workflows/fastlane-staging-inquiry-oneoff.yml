@@ -1,0 +1,25 @@
+# One-off browser proof for a synthetic staging inquiry.
+# No production, no payment URL, no checkout, no credentials and no customer data.
+name: Fast-track one synthetic STAGING inquiry
+on:
+  push:
+    branches: ['release/fbg-main-fastlane-20261109']
+    paths: ['.github/workflows/fastlane-staging-inquiry-oneoff.yml']
+permissions:
+  contents: read
+jobs:
+  inquiry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Exactly one synthetic inquiry; no money movement
+        env:
+          FBG_STAGING_INQUIRY_TEST: '1'
+        run: node scripts/staging-synthetic-inquiry-e2e.mjs
