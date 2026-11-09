@@ -7,7 +7,7 @@ const base='https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev';
 const browser=await chromium.launch();
 const page=await browser.newPage({viewport:{width:393,height:852}});
 const exceptions=[],responses=[];
-page.on('pageerror',e=>exceptions.push(String(e.message).slice(0,160)));
+page.on('pageerror',e=>exceptions.push({message:String(e.message).slice(0,160),stack:String(e.stack||'').slice(0,500)}));
 page.on('response',r=>{const u=new URL(r.url());if(u.pathname.startsWith('/api/')||u.pathname.endsWith('.js'))responses.push({path:u.pathname,status:r.status()})});
 await page.route('**/api/opplaering',route=>route.fulfill({status:204,body:''}));
 function get(id){return page.locator('#'+id)}
@@ -22,7 +22,22 @@ try{
   }));
   console.log('STAGING_ROOT_FINGERPRINT '+JSON.stringify({expectedScripts,remoteVariants}));
   await page.goto(base+'/?fbg_check=20261109-v4',{waitUntil:'domcontentloaded'});
-  const dependencies=await page.evaluate(()=>({hasFBGView:!!window.FBGView,hasResultatStatus:typeof window.FBGView?.resultatStatus==='function',scripts:[...document.scripts].map(x=>x.getAttribute('src')).filter(Boolean)}));
+  await page.waitForTimeout(1300);
+  const dependencies=await page.evaluate(()=>{
+    const el=document.querySelector('kustom-payment-method-display');
+    const widget=el?.shadowRoot;
+    return {
+      hasFBGView:!!window.FBGView,
+      hasResultatStatus:typeof window.FBGView?.resultatStatus==='function',
+      scripts:[...document.scripts].map(x=>x.getAttribute('src')).filter(Boolean),
+      kustomLoader:typeof window.kustomElements,
+      kustomQueue:!!window.kustomElements?._internal,
+      kustomRegistered:!!customElements.get('kustom-payment-method-display'),
+      kustomElementPresent:!!el,
+      paymentDisplayRendered:!!el&&(el.childElementCount>0||!!widget?.children?.length),
+      paymentLogoImages:el?.querySelectorAll('img,svg').length ?? 0
+    };
+  });
   await get('input-regnr').fill('CV80776');
   await page.locator('#form-regnr button[type=submit]').click();
   await page.waitForSelector('#screen-glass:not(.hidden)',{timeout:17000});
@@ -55,7 +70,7 @@ try{
     regnrValue:await get('inquiry-regnr').inputValue(),
     glassSummary:((await get('inquiry-glass-summary').textContent())||'').slice(0,220)
   };
-  console.log('STAGING_UI_DIAGNOSTIC '+JSON.stringify({diagnostic:'v2-view-module',dependencies,before,after,inquiry,responses,exceptions}));
+  console.log('STAGING_UI_DIAGNOSTIC '+JSON.stringify({diagnostic:'v3-kustom-loader',dependencies,before,after,inquiry,responses,exceptions}));
 }catch(e){
   console.log('STAGING_UI_DIAGNOSTIC_ERROR '+String(e.message).slice(0,240));
   console.log('STAGING_UI_LAST_RESPONSES '+JSON.stringify({responses,exceptions}));
