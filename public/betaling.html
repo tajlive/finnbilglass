@@ -6,7 +6,7 @@
   <title>Pristilbud og betaling — Finnbilglass</title>
   <meta name="description" content="Betalingslenke sendes etter at du har akseptert det kontrollerte tilbudet fra FinnBilglass.">
   <meta name="theme-color" content="#edf8fc">
-  <link rel="stylesheet" href="styles.css?v=20261029-customer-design-v1">
+  <link rel="stylesheet" href="styles.css?v=20261110-manual-payment-v1">
   <link rel="icon" type="image/svg+xml" href="ikon.svg?v=20261029-customer-design-v1">
 </head>
 <body class="customer-site">
@@ -22,13 +22,13 @@
     <main class="screen">
       <p class="start-kicker">Betaling følger pristilbudet</p>
       <h1>Få tilbud før du betaler</h1>
-      <p class="sub">Vi bekrefter riktig glass, levering og totalpris. Betalingsopplysningene følger det skriftlige tilbudet. Du bestemmer selv om du vil godta det.</p>
+      <p class="sub">Du søker etter glass og sender en uforpliktende forespørsel. Våre ansatte kontrollerer riktig glass, pris og levering. Først når du aksepterer tilbudet, oppretter vi ordren og sender betalingslenke.</p>
 
       <div class="offer-steps" aria-label="Planlagt betalingsflyt">
         <ol>
           <li><span class="step-number">01</span><div><h3>Glass</h3><p>Riktig glass og variant kontrolleres først.</p></div></li>
           <li><span class="step-number">02</span><div><h3>Levering</h3><p>Du velger leveringsadresse eller avtalt verksted.</p></div></li>
-          <li><span class="step-number">03</span><div><h3>Betalingsopplysninger</h3><p>Følger pristilbudet. Nettbetaling kommer senere.</p></div></li>
+          <li><span class="step-number">03</span><div><h3>Godkjenn og betal</h3><p>Du godkjenner tilbudet før ansatte oppretter ordre og sender betalingslenke via Kustom.</p></div></li>
         </ol>
       </div>
 
@@ -39,9 +39,15 @@
         <p class="note">Montering avtaler du selv direkte med verksted. Finnbilglass er ikke part i monteringen.</p>
       </section>
 
-      <section class="inquiry" aria-label="Nettbetaling">
-        <h3>Betalingslenke etter godkjent tilbud</h3>
-        <p class="note">Vi håndterer tilbud og bestillinger manuelt. Når du har akseptert tilbudet, sender vi deg en betalingslenke. Betalingsmåtene som er tilgjengelige, vises i lenken.</p>
+      <section class="payment-methods" aria-labelledby="payment-page-methods-title">
+        <h2 id="payment-page-methods-title">Betalingsmåter</h2>
+        <ul class="payment-method-logos" aria-label="Tilgjengelige betalingsmåter">
+          <li><img src="/assets/betaling/vipps.svg" alt="Vipps" width="120" height="80" loading="lazy"></li>
+          <li><img src="/assets/betaling/klarna.svg" alt="Klarna" width="120" height="80" loading="lazy"></li>
+          <li><img src="/assets/betaling/visa.svg" alt="Visa" width="120" height="80" loading="lazy"></li>
+          <li><img src="/assets/betaling/mastercard.svg" alt="Mastercard" width="120" height="80" loading="lazy"></li>
+        </ul>
+        <p>Vi sender betalingslenken via Kustom etter at du har akseptert tilbudet. Du velger betalingsmåte på Kustoms betalingsside. Betaling opprettes ikke automatisk når du søker etter bilglass.</p>
       </section>
       <p class="note">Når du aksepterer et tilbud, gjelder våre <a href="/vilkar.html">salgsbetingelser</a>.</p>
       <a class="link" href="/">Tilbake til Finnbilglass</a>

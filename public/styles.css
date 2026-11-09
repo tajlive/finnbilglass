@@ -1715,29 +1715,68 @@ footer {
   }
 }
 
-/* Kustom configured payment methods on the customer homepage */
+/* Static payment acceptance marks — no network SDK, checkout or dynamic payment state. */
 .customer-site .payment-methods {
-  margin: 24px auto 28px;
-  padding: 20px 16px;
-  max-width: 720px;
-  text-align: center;
+  margin: 22px 0 12px;
+  padding: 17px 16px 16px;
+  width: 100%;
+  max-width: 560px;
+  text-align: left;
   background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md, 16px);
+  border: 1px solid #dce9ed;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(19, 53, 66, 0.04);
 }
 .customer-site .payment-methods h2 {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
+  font-size: clamp(15px, 1.5vw, 18px);
+  font-weight: 750;
   color: var(--text-1);
-  font-size: 18px;
-  font-weight: 800;
+  line-height: 1.25;
 }
-.customer-site .payment-methods kustom-payment-method-display {
+.customer-site .payment-method-logos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.customer-site .payment-method-logos li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 58px;
+  border: 1px solid #e5eaf0;
+  border-radius: 9px;
+  background: #fff;
+}
+.customer-site .payment-method-logos img {
   display: block;
-  min-height: 32px;
+  width: 100%;
+  max-width: 94px;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: contain;
 }
 .customer-site .payment-methods p {
   margin: 12px 0 0;
   color: var(--text-2);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
+}
+.customer-site .payment-methods > a {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--brand-deep);
+  font-size: 12px;
+  font-weight: 650;
+  text-underline-offset: 3px;
+}
+@media (max-width: 359px) {
+  .customer-site .payment-methods { padding: 13px 10px; }
+  .customer-site .payment-method-logos { gap: 5px; }
+  .customer-site .payment-method-logos li { min-height: 48px; }
 }
