@@ -14,6 +14,7 @@ export interface Mail {
   text: string;
   /** Kunden skal kunne svare til denne adressen. Utelates for interne varsler. */
   replyTo?: string;
+  idempotencyKey?: string;
 }
 
 /** Avsenderadressen. Domenet er verifisert hos Resend. */
@@ -30,6 +31,7 @@ export async function sendMail(env: Env, mail: Mail): Promise<{ ok: boolean; err
       headers: {
         Authorization: `Bearer ${env.RESEND_API_KEY}`,
         'Content-Type': 'application/json',
+        ...(mail.idempotencyKey ? { 'Idempotency-Key': mail.idempotencyKey } : {}),
       },
       body: JSON.stringify({
         from: `Finnbilglass <${avsenderEpost(env)}>`,

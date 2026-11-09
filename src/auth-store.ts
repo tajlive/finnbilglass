@@ -40,6 +40,23 @@ interface UserRow {
   updatedAt: number;
 }
 
+export interface StaffInviteRow {
+  email: string;
+  role: 'ADMIN' | 'REVIEWER' | 'OPERATOR' | 'CUSTOMER';
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'INVITED' | 'EMAIL_FAILED';
+  invitedBy: string;
+  createdAt: number;
+  updatedAt: number;
+  providerMessageId: string | null;
+  lastErrorCode: string | null;
+}
+
+interface StaffInviteLockRow {
+  lockKey: string;
+  owner: string;
+  expiresAt: number;
+}
+
 /**
  * In-memory D1-emulator. I produksjon erstattes dette av ekte D1-spørringer.
  * Samme API-konvensjon som D1: prepare(...).bind(...).run()/first()/all().
@@ -49,6 +66,8 @@ class D1Emulator {
   private otpCodes = new Map<string, OtpRow>();
   private rateLimits = new Map<string, RateLimitRow>();
   private users = new Map<string, UserRow>();
+  private staffInvites = new Map<string, StaffInviteRow>();
+  private inviteLocks = new Map<string, StaffInviteLockRow>();
 
   // ── Sessions ──
   async sessionGet(sessionId: string): Promise<SessionRow | null> {
@@ -110,8 +129,33 @@ class D1Emulator {
     return Array.from(this.users.values());
   }
 
-  async userDelete(userId: string): Promise<void> {
-    this.users.delete(userId);
+  // ── Staff invites ──
+  async staffInviteGet(email: string): Promise<StaffInviteRow | null> {
+    return this.staffInvites.get(email) ?? null;
+  }
+
+  async staffInviteGetAll(): Promise<StaffInviteRow[]> {
+    return Array.from(this.staffInvites.values());
+  }
+
+  async staffInviteSet(invite: StaffInviteRow): Promise<void> {
+    this.staffInvites.set(invite.email, invite);
+  }
+
+  async staffInviteDelete(email: string): Promise<void> {
+    this.staffInvites.delete(email);
+  }
+
+  async staffInviteLock(lockKey: string, owner: string, ttlMs: number): Promise<boolean> {
+    const now = Date.now();
+    const existing = this.inviteLocks.get(lockKey);
+    if (existing && now < existing.expiresAt) return false;
+    this.inviteLocks.set(lockKey, { lockKey, owner, expiresAt: now + ttlMs });
+    return true;
+  }
+
+  async staffInviteUnlock(lockKey: string): Promise<void> {
+    this.inviteLocks.delete(lockKey);
   }
 
   async cleanupExpired(now: number = Date.now()): Promise<void> {

@@ -59,27 +59,39 @@ workers_dev = true
 # globale [[routes]]-oppføringene, og hver staging-deploy flytter
 # finnbilglass.no over til staging-konfigurasjonen (feil miljø, feil D1).
 routes = []
+# Staging cron only; handler itself is also feature-gated and disabled.
+[env.staging.triggers]
+crons = ["*/15 * * * *"]
+
 [env.staging.vars]
 ENVIRONMENT = "staging"
 ALL_GLASS_KANDIDATER_ENABLED = "true"
-OAUTH_ENABLED_PROVIDERS = "google"
 ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
 ACCESS_AUD = "8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb"
 ADMIN_EMAILS = "tomarnejensen@gmail.com"
+# Match the explicitly enabled staging OAuth provider; secrets are set in the staging Worker.
+OAUTH_ENABLED_PROVIDERS = "google"
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
-EVIDENCE_STATUS_CHANGE_ENABLED = "true"
+EVIDENCE_STATUS_CHANGE_ENABLED = "false"
 inquiries_enabled = "true"
+KUSTOM_ENABLED = "true"
+KUSTOM_OPS_ROUTE_ENABLED = "true"
+KUSTOM_PLAYGROUND_DIAGNOSTICS_ENABLED = "false"
+KUSTOM_MONEY_MOVEMENTS_ENABLED = "false"
+KUSTOM_RECONCILIATION_ENABLED = "false"
 
 [[env.staging.d1_databases]]
 binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-staging-catalog"
 database_id = "79d63481-d54b-4522-9e74-80415e781b7a"
+migrations_dir = "migrations/staging"
 
 [[env.staging.d1_databases]]
 binding = "FINNBILGLASS_STAGING_AUTH"
 database_name = "finnbilglass-staging-auth"
 database_id = "0b024ab6-4e9c-4fda-ab19-439e11e631fb"
+migrations_dir = "migrations/staging-auth"
 
 # Bindings som ikke arves automatisk må gjentas per miljø, ellers nekter
 # wrangler å kjøre (gjelder blant annet AI).

@@ -40,7 +40,7 @@ test('offentlig kandidat: eurokode og fingeravtrykk slipper ikke ut', () => {
 
 test('offentlig kandidat: bekreftet listepris gir kundepris med mva', () => {
   const ut = tilOffentligKandidat(INTERN);
-  assert.deepEqual(ut.pris, { kundePris: 3118.75, mva: 623.75, prisEksMva: 2495, sikkerhet: 'ESTIMERT' });
+  assert.deepEqual(ut.pris, { kundePris: 4990, mva: 998, prisEksMva: 3992, sikkerhet: 'ESTIMERT' });
 });
 
 test('offentlig pris: manglende eller ugyldig grunnlag gir null, ikke fabrikkert tall', () => {
@@ -132,7 +132,7 @@ test('samme varenr med NULL-pris og gyldig pris: gyldig pris skal vinne', () => 
   // som gjorde at kunden fikk MANUAL_REVIEW på et produkt vi har pris på.
   const medPris = tilOffentligKandidat({ ...INTERN, pris: 9980 });
   const utenPris = tilOffentligKandidat({ ...INTERN, pris: null });
-  assert.deepEqual(medPris.pris, { kundePris: 3118.75, mva: 623.75, prisEksMva: 2495, sikkerhet: 'ESTIMERT' });
+  assert.deepEqual(medPris.pris, { kundePris: 4990, mva: 998, prisEksMva: 3992, sikkerhet: 'ESTIMERT' });
   assert.equal(utenPris.pris, null);
 });
 
@@ -152,7 +152,7 @@ test('flere varianter med ulik kompatibilitet: én bekreftet gir OK', () => {
 test('ingen prisgulv: enhver positiv listepris gir et estimat', async () => {
   const { MINSTE_GYLDIGE_LISTEPRIS } = await import('../src/pricing/nok-prising.ts');
   assert.equal(MINSTE_GYLDIGE_LISTEPRIS, 1, 'gulvet er borte — XLS-regelen har ingen trinn');
-  assert.notEqual(offentligPris(1000), null, '1 000 kr gir estimat 312,50');
+  assert.equal(offentligPris(1000).kundePris, 500, 'frontrute: 1 000 kr gir estimat 500 inkl. mva');
   assert.equal(offentligPris(0), null, '0 kr gir ingen pris');
   assert.equal(offentligPris(null), null, 'manglende pris gir ingen pris');
 });

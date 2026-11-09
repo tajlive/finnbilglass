@@ -134,7 +134,8 @@ test('forside: alle lokale assets som refereres finnes på disk', () => {
   const mangler = [];
   for (const r of refs) {
     if (ignorer(r)) continue;
-    const sti = join(ROOT, 'public', r.replace(/^\//, ''));
+    // Bilglassguider serveres av Worker-ruten /bilglass/:slug fra .html-filer.
+    const sti = join(ROOT, 'public', r.replace(/^\//, '') + (/^\/bilglass\/[a-z0-9-]+$/.test(r) ? '.html' : ''));
     if (!existsSync(sti) || statSync(sti).size === 0) mangler.push(r);
   }
   assert.deepEqual(mangler, [], `manglende assets: ${mangler.join(', ')}`);

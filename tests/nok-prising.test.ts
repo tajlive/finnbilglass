@@ -13,6 +13,7 @@ import {
     MAKS_KURS_ALDER_DAGER,
     XLS_RABATT_FAKTOR,
     estimertKundeprisInklMva,
+    estimertFrontruteKundeprisInklMva,
     type Valutakurs,
 } from '../src/pricing/nok-prising.ts';
 import { parseNorgesBankSdmx } from '../src/pricing/valutakurs.ts';
@@ -36,15 +37,19 @@ test('prisliste 9 875 → estimat 3 085,94 (9 875 × 0,25 × 1,25)', () => {
     assert.equal(r.kundePris, 3085.94);
 });
 
-test('beregnPris er ekvivalent med matcher-aliaset for prisliste-grunnlag', () => {
+test('frontrute matcher bruker frontrutefaktor, mens generell prisregel står separat', () => {
     for (const listepris of [1000, 5000, 6650, 9875, 9980, 10745, 14860, 19425, 50000]) {
-        const fraModul = beregnPris({ grunnlag: 'PRISTLISTE_NOK', belop: listepris, idag: IDAG }).kundePris;
-        assert.equal(fraModul, tierPris(listepris), `avvik for listepris ${listepris}`);
+        assert.equal(estimertFrontruteKundeprisInklMva(listepris), tierPris(listepris), `avvik for listepris ${listepris}`);
     }
 });
 
 test('rabattfaktoren er 0,25 — XLS-pris er eks. mva (Tom 2026-10-29)', () => {
     assert.equal(XLS_RABATT_FAKTOR, 0.25);
+    assert.equal(estimertKundeprisInklMva(10745), 3357.81);
+});
+
+test('frontrute får 60 % rabatt inkl. 25 % mva mens øvrig glass beholder 75 %', () => {
+    assert.equal(estimertFrontruteKundeprisInklMva(10745), 5372.5);
     assert.equal(estimertKundeprisInklMva(10745), 3357.81);
 });
 

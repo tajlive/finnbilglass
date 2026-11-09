@@ -62,18 +62,18 @@ test('modelTokensAv: matcher.ts beholder effekt-tokens (vin-resolveren filtrerer
 // 2026-11-04: den viste 5 490 kr der riktig estimat er 3 357,81 kr, og sendte
 // varianter over høyeste trinn til «Pris på forespørsel».
 test('kundepris: listepris eks. mva × 0,25 × 1,25, avrundet til øre', () => {
-  assert.equal(tierPris(10745), 3357.81);   // RAV4 8432AGACMV1L
-  assert.equal(tierPris(19425), 6070.31);   // RAV4 8432AGACHMV1L
-  assert.equal(tierPris(14860), 4643.75);   // RAV4 8432AGACHMV30
-  assert.equal(tierPris(9980), 3118.75);    // VW T5-gulvet
-  assert.equal(tierPris(1000), 312.5);
+  assert.equal(tierPris(10745), 5372.5);   // frontrute
+  assert.equal(tierPris(19425), 9712.5);   // frontrute
+  assert.equal(tierPris(14860), 7430);     // frontrute
+  assert.equal(tierPris(9980), 4990);      // frontrute
+  assert.equal(tierPris(1000), 500);
 });
 
 test('kundepris: ingen øvre eller nedre prisgrense', () => {
   // 20 000 × 0,25 × 1,25 = 6 250 — tidligere «Pris på forespørsel» (over 8 490).
-  assert.equal(tierPris(20000), 6250);
+  assert.equal(tierPris(20000), 10000);
   // 1 kr er nok til å regne en pris; gulvet er borte.
-  assert.equal(tierPris(1), 0.31);
+  assert.equal(tierPris(1), 0.5);
 });
 
 test('kundepris: ugyldig grunnlag gir null', () => {

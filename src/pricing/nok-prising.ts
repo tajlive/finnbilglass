@@ -30,6 +30,8 @@ export type Prissikkerhet = 'BEKREFTET' | 'ESTIMERT';
 
 /** Rabatt mot veiledende XLS-pris (eks. mva): kunden får 75 % avslag (Tom 2026-10-29). */
 export const XLS_RABATT_FAKTOR = 0.25;
+/** Frontruterabatt: 60 % av veiledende listepris. Øvrig glass bruker XLS_RABATT_FAKTOR. */
+export const FRONTRUTE_RABATT_FAKTOR = 0.40;
 
 /**
  * Minste listepris som gir en meningsfull pris. Med den nye regelen finnes det
@@ -59,6 +61,12 @@ export function rundTilOre(belop: number): number {
 export function estimertKundeprisInklMva(listeprisEksMva: number | null | undefined): number | null {
     if (typeof listeprisEksMva !== 'number' || !Number.isFinite(listeprisEksMva) || listeprisEksMva <= 0) return null;
     return rundTilOre(listeprisEksMva * XLS_RABATT_FAKTOR * (1 + MVA_SATS));
+}
+
+/** Estimat inkl. mva for frontrute: listepris eks. mva × 0,40 × 1,25. */
+export function estimertFrontruteKundeprisInklMva(listeprisEksMva: number | null | undefined): number | null {
+    if (typeof listeprisEksMva !== 'number' || !Number.isFinite(listeprisEksMva) || listeprisEksMva <= 0) return null;
+    return rundTilOre(listeprisEksMva * FRONTRUTE_RABATT_FAKTOR * (1 + MVA_SATS));
 }
 
 export interface Valutakurs {

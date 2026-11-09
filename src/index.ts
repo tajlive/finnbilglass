@@ -40,13 +40,19 @@ import { handleGoogleConfig, handleGoogleLogin } from './routes/google-auth';
 import { handleOAuthStart, handleOAuthCallback, handleLinkInfo, handleProviders } from './routes/oauth';
 import { handleCspReport, cspReportOnly, reportingEndpoints } from './routes/csp';
 import { handleR2Inventar } from './routes/r2-inventar';
+import { availableCheckoutMethods, handleCreatePaymentLink, handleStripeWebhook } from './routes/stripe-payments';
+import { handleRefundPaymentOrder } from './routes/stripe-payment-refunds';
+import { handleCreateKustomPaymentLink, handleKustomCallback } from './routes/kustom-ops';
+import { handleKustomPlaygroundDiagnostics } from './routes/kustom-playground-diagnostics';
+import { sweepStaleKustomPayments } from './payments/kustom-reconcile-sweep';
+import { handleCustomerPaymentOrders } from './routes/customer-payment-orders';
 import { handleAdminRoute } from './routes/admin';
 import { setAuthStorage } from './auth';
 import { verifiserAccess } from './access-jwt';
 import { D1AuthStorage } from './auth-storage';
 import { skalLoggeSok } from './sok-logg-policy';
 import { tilOffentligResolverSvar } from './public-contract';
-import { estimertKundeprisInklMva } from './pricing/nok-prising';
+import { estimertFrontruteKundeprisInklMva, estimertKundeprisInklMva } from './pricing/nok-prising';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -488,6 +494,23 @@ export default {
     }
     return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
   },
+
+  /**
+   * Every 15 minutes on staging only. Disabled by default even there.
+   * Production has no Cron trigger and cannot enter this handler's work.
+   */
+  async scheduled(controller: ScheduledController, env: Env): Promise<void> {
+    if (controller.cron !== '*/15 * * * *' ||
+        env.ENVIRONMENT !== 'staging' ||
+        env.KUSTOM_RECONCILIATION_ENABLED !== 'true') return;
+    if (!env.FINNBILGLASS_STAGING_AUTH) {
+      throw new Error('KUSTOM_SWEEP_STAGING_DB_MISSING');
+    }
+    const summary=await sweepStaleKustomPayments(env.FINNBILGLASS_STAGING_AUTH,env);
+    // Aggregate counts only: no customer PII, payment links or provider order IDs.
+    console.info('Kustom staging reconciliation:',JSON.stringify(summary));
+    if (summary.errors>0) throw new Error('KUSTOM_SWEEP_REQUIRES_RETRY');
+  },
 };
 
 /** Flat glassklasse fra klient → kundevalg (selection.kind). Én sannhet. */
@@ -817,6 +840,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     const isOpsHostname = hostname === 'ops-staging.finnbilglass.no' ||
                           hostname === 'ops.finnbilglass.no';
     const isAdminRoute = path.startsWith('/ops') || path.startsWith('/api/ops/');
+    if (path === '/api/ops/kustom-playground-diagnostics') return handleKustomPlaygroundDiagnostics(request, env);
     if (isAdminRoute && !isOpsHostname) {
       return json({ ok: false, error: 'Admin-ruten er ikke tilgjengelig fra dette domene' }, 403);
     }
@@ -879,6 +903,11 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       return handleAuthRoute(request, env);
     }
 
+    if (method === 'GET' && path === '/api/payment-methods') return json({ methods: env.KUSTOM_OPS_ROUTE_ENABLED === 'true' ? [] : availableCheckoutMethods(env) });
+    if (method === 'POST' && path === '/api/stripe/webhook') return handleStripeWebhook(request, env);
+    if (method === 'POST' && path === '/api/kustom/push') return handleKustomCallback(request, env, 'push');
+    if (method === 'POST' && path === '/api/kustom/status-update') return handleKustomCallback(request, env, 'status-update');
+
     // Admin-ruter (P0 Fase 5.5)
     if (path.startsWith('/api/admin/')) {
       return handleAdminRoute(request, env);
@@ -891,12 +920,14 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         return json({ ok: false, error: 'IKKE_AUTENTISERT' }, 401);
       }
 
+      if (path === '/api/customer/payment-orders' || /^\/api\/customer\/payment-orders\/[A-Za-z0-9_-]{8,100}\/invoice$/.test(path)) return handleCustomerPaymentOrders(request, env, getInquiryDb(env), user.userId);
+
       // GET /api/customer/inquiries — liste kundens forespørsler
       if (method === 'GET' && path === '/api/customer/inquiries') {
         try {
           const sessions = await getInquiryDb(env).prepare(
-            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE session_id = ? OR kontakt = ? ORDER BY created_at DESC LIMIT 100',
-          ).bind(user.userId, user.email).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE customer_id = ? ORDER BY created_at DESC LIMIT 100',
+          ).bind(user.userId).all<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
           return json({ ok: true, inquiries: sessions.results ?? [] });
         } catch (e) {
           // Tabellen finnes ikke ennå (migrasjon ikke anvendt) — returner tom liste
@@ -910,8 +941,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         try {
           const inquiryId = Number(inquiryMatch[1]);
           const inquiry = await getInquiryDb(env).prepare(
-            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE id = ? AND (session_id = ? OR kontakt = ?)',
-          ).bind(inquiryId, user.userId, user.email).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
+            'SELECT id, regnr, navn, kontakt, melding, status, created_at, updated_at FROM beta_inquiries WHERE id = ? AND customer_id = ?',
+          ).bind(inquiryId, user.userId).first<{ id: number; regnr: string | null; navn: string; kontakt: string; melding: string | null; status: string; created_at: string; updated_at: number | null }>();
           if (!inquiry) {
             return json({ ok: false, error: 'HENVENDELSE_FINNES_IKKE' }, 404);
           }
@@ -999,6 +1030,10 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       // Produksjon: FINNBILGLASS_DB er den eneste tilgjengelige D1.
       // Fail-closed på staging: kaster feil hvis FINNBILGLASS_STAGING_AUTH mangler.
       const inquiryDb: D1Database = getInquiryDb(env);
+      // Only attach ownership when the request carries a valid server-side auth
+      // session. Guest submissions remain available to staff, never by email guess.
+      const authenticatedCustomer = await requireAuth(request);
+      const customerId = authenticatedCustomer?.userId ?? null;
       // Pilotstopp: stopper nye henvendelser umiddelbart, uten å vente på
       // resolver-cachen. Sjekkes foran alt annet så ingen sak opprettes.
       if (!(await henvendelserTillatt(env))) {
@@ -1106,7 +1141,9 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
           // aldri lagres som bekreftet passform.
           if (dom.status === 'ukjent' && tilhorighet === 'bekreftet') tilhorighet = 'bekreftet_bil_ukjent_kontroll';
         }
-        const estimat = rad ? estimertKundeprisInklMva(rad.pris) : null;
+        const estimat = rad ? (valgtSelection?.kind === 'windshield'
+          ? estimertFrontruteKundeprisInklMva(rad.pris)
+          : estimertKundeprisInklMva(rad.pris)) : null;
         const enhet = rad ? salgsenhet(rad.varenavn, rad.varenr) : null;
         variantNote = 'Valgt variant: ' + variantIdRaa +
           (rad ? ' (' + rad.varenr + ' / ' + (rad.eurokode ?? 'uten eurokode') + ') «' + (rad.varenavn ?? '') + '» listepris '
@@ -1217,8 +1254,8 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
         const sesjon = sessionId(body, request);
         const resultater = await inquiryDb.batch([
           inquiryDb.prepare(
-            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test) VALUES (?, ?, ?, ?, ?, ?, ?)'
-          ).bind(regnr, navn, kontakt, melding, sesjon, vehicleJson, erTydeligTest(regnr, kontakt, sesjon, navn)),
+            'INSERT INTO beta_inquiries (regnr, navn, kontakt, melding, session_id, vehicle_json, is_test, customer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(regnr, navn, kontakt, melding, sesjon, vehicleJson, erTydeligTest(regnr, kontakt, sesjon, navn), customerId),
           inquiryDb.prepare(
             "INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by) SELECT ?, rowid, 'created', NULL, 'NEW', ?, ?, 'kunde' FROM beta_inquiries WHERE rowid = last_insert_rowid()"
           ).bind(`created-${crypto.randomUUID()}`, melding || null, naa),
@@ -1674,6 +1711,16 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     if (tilbudMatch && (method === 'GET' || method === 'POST')) {
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       return handleTilbud(request, env, Number(tilbudMatch[1]), method);
+    }
+    const paymentLinkMatch = /^\/api\/ops\/inquiries\/(\d+)\/payment-link$/.exec(path);
+    if (method === 'POST' && paymentLinkMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return env.KUSTOM_OPS_ROUTE_ENABLED === 'true' ? handleCreateKustomPaymentLink(request, env, Number(paymentLinkMatch[1])) : handleCreatePaymentLink(request, env, Number(paymentLinkMatch[1]));
+    }
+    const refundMatch = /^\/api\/ops\/inquiries\/(\d+)\/payment-orders\/([A-Za-z0-9_-]{8,100})\/refund$/.exec(path);
+    if (method === 'POST' && refundMatch) {
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      return handleRefundPaymentOrder(request, env, getInquiryDb(env), Number(refundMatch[1]), refundMatch[2]);
     }
     const epostMatch = /^\/api\/ops\/inquiries\/(\d+)\/epost$/.exec(path);
     if (method === 'GET' && epostMatch) {

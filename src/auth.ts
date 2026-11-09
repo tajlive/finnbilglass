@@ -125,10 +125,15 @@ const auth = {
       await store.sessionDelete(session.sessionId);
       return null;
     }
-    // Oppdater aktivitet
+    // Ikke skriv sesjonsraden på lesing: en parallell tilbakekalling kan ha
+    // slettet raden etter sessionGet(), og sessionSet() ville gjenopprettet den.
     session.lastActivity = Date.now();
-    await store.sessionSet(session);
     return sessionRowToSession(session);
+  },
+
+  /** Hent gjeldende bruker og rolle fra autoritativ D1-lagring. */
+  async getUserByEmail(email: string): Promise<AuthUser | null> {
+    return getStorage().userGetByEmail(email);
   },
 
   /**
@@ -227,10 +232,13 @@ const auth = {
       userRole = existingUser.role;
       userName = existingUser.name;
     } else {
-      // Ny bruker — opprett med CUSTOMER som default (aldri ADMIN som default)
-      // Fallback til in-memory userRoles for tester som bruker setUserRole()
+      // En engangs OTP bekrefter kontroll over e-postadressen. Bare en aktiv
+      // INVITED-rad kan gi medarbeiderrolle; alle andre nye kontoer er CUSTOMER.
+      const invite = await store.staffInviteGet(email);
       userId = `user_${generateSecureToken(16)}`;
-      userRole = await getUserRoleAsync(email);
+      userRole = invite?.status === 'INVITED' && invite.role !== 'CUSTOMER'
+        ? invite.role
+        : 'CUSTOMER';
       userName = email.split('@')[0];
 
       await store.userSet({
@@ -241,6 +249,10 @@ const auth = {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
+
+      if (invite?.status === 'INVITED') {
+        await store.staffInviteSet({ ...invite, status: 'ACCEPTED', updatedAt: Date.now() });
+      }
     }
 
     const user: AuthUser = {
