@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { handleKustomCallback } from '../src/routes/kustom-ops.ts';
+import { pollKnownKustomOrder } from '../src/payments/kustom-reconcile-poll.ts';
 
 const oid = '48fa4f0f-b269-4b02-9e8c-71704199cc10';
 const hppId = '1f45bd80-9091-4b41-814e-205f787f5500';
@@ -194,4 +195,22 @@ test('failed event insert rolls back PAID transition; no acknowledgement',async(
     assert.equal(calls.filter(c=>c.method==='POST').length,0);
     assert.equal(f.db.prepare('PRAGMA foreign_key_check').all().length,0);
   } finally { restore();f.db.close(); }
+});
+
+test('same provider state via callback and GET recovery has a single immutable audit event',async()=>{
+  const f=fixture(),calls=[],restore=provider({},calls);
+  try {
+    const first=await callback(f.env,'push');
+    assert.equal(first.status,200);
+    assert.equal(f.events(),1);
+    const after=await pollKnownKustomOrder(
+      f.env.FINNBILGLASS_STAGING_AUTH,
+      {...f.env,KUSTOM_RECONCILIATION_ENABLED:'true'},
+      localId
+    );
+    assert.equal(after.state,'AUTHORIZED');
+    assert.equal(after.updated,false);
+    assert.equal(f.events(),1,'one logical state transition must dedup across callback and polling');
+    assert.equal(calls.filter(x=>x.method==='POST').length,1);
+  }finally{restore();f.db.close();}
 });
