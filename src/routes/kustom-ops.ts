@@ -21,6 +21,7 @@ type StoredOrder = {
   acceptance_method: string; acceptance_note: string; accepted_by: string;
   kustom_checkout_create_started_at: number | null;
   kustom_notification_token_hash: string | null;
+  kustom_acknowledged_at: number | null;
   kustom_order_id: string | null; kustom_hpp_session_id: string | null;
   kustom_hpp_url: string | null; checkout_url: string | null;
   payment_link_sent_at: number | null;
@@ -210,7 +211,8 @@ export async function handleKustomCallback(request: Request,env: Env,kind:'push'
     const state=reconcileKustomManagedOrder(managed,{kustomOrderId:order.kustom_order_id,amountMinor:order.amount_minor});
     const now=Date.now();
     if(state==='NEEDS_RECONCILIATION'||state==='REJECTED') return json({ok:false,error:'KUSTOM_AVSTEMMING_KREVES'},409);
-    const eventId=`kustom_${kind}_${order.kustom_order_id}_${state}_${managed.captured_amount}_${managed.refunded_amount}`;
+    // A state transition is unique across push and HPP status-update callbacks.
+    const eventId=`kustom_state_${order.kustom_order_id}_${state}_${managed.captured_amount}_${managed.refunded_amount}`;
     const stateUpdate= state==='PAID'
       ? db.prepare(`UPDATE quote_payment_orders SET status='PAID',paid_at=COALESCE(paid_at,?),kustom_capture_state='PAID',updated_at=?
          WHERE id=? AND payment_provider='kustom' AND status IN ('ACCEPTED','PAYMENT_LINK_SENT','PAID')`).bind(now,now,order.id)
@@ -237,7 +239,20 @@ export async function handleKustomCallback(request: Request,env: Env,kind:'push'
     ));
     if(!persistedOK) throw new Error('KUSTOM_DB_AVSTEMMING_MANGLER');
     // Only acknowledge after the local state and immutable event are durably stored.
-    if(state==='AUTHORIZED'||state==='PAID'||state==='REFUNDED') await acknowledgeKustomManagedOrder(env,order.kustom_order_id);
+    // Provider acknowledgement terminates push retries. Persist it so duplicate
+    // push/HPP callbacks do not repeatedly POST once it succeeded.
+    if ((state==='AUTHORIZED'||state==='PAID'||state==='REFUNDED') &&
+        !order.kustom_acknowledged_at) {
+      await acknowledgeKustomManagedOrder(env,order.kustom_order_id);
+      await db.prepare(`UPDATE quote_payment_orders SET kustom_acknowledged_at=COALESCE(kustom_acknowledged_at,?)
+        WHERE id=? AND kustom_order_id=? AND payment_provider='kustom'`)
+        .bind(Date.now(),order.id,order.kustom_order_id).run();
+      const acknowledged=await db.prepare(`SELECT kustom_acknowledged_at FROM quote_payment_orders
+        WHERE id=? AND kustom_order_id=? AND payment_provider='kustom'`)
+        .bind(order.id,order.kustom_order_id)
+        .first<{kustom_acknowledged_at:number|null}>();
+      if (!acknowledged?.kustom_acknowledged_at) throw new Error('KUSTOM_ACK_NOT_PERSISTED');
+    }
     return json({ok:true});
   }catch(e){
     console.error('Kustom callback reconciliation failed',e instanceof Error?e.message:'unknown');
