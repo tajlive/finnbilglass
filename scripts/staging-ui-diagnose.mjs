@@ -5,11 +5,12 @@ const browser=await chromium.launch();
 const page=await browser.newPage({viewport:{width:393,height:852}});
 const exceptions=[],responses=[];
 page.on('pageerror',e=>exceptions.push(String(e.message).slice(0,160)));
-page.on('response',r=>{const u=new URL(r.url());if(u.pathname.startsWith('/api/'))responses.push({path:u.pathname,status:r.status()})});
+page.on('response',r=>{const u=new URL(r.url());if(u.pathname.startsWith('/api/')||u.pathname.endsWith('.js'))responses.push({path:u.pathname,status:r.status()})});
 await page.route('**/api/opplaering',route=>route.fulfill({status:204,body:''}));
 function get(id){return page.locator('#'+id)}
 try{
   await page.goto(base,{waitUntil:'domcontentloaded'});
+  const dependencies=await page.evaluate(()=>({hasFBGView:!!window.FBGView,hasResultatStatus:typeof window.FBGView?.resultatStatus==='function',scripts:[...document.scripts].map(x=>x.getAttribute('src')).filter(Boolean)}));
   await get('input-regnr').fill('CV80776');
   await page.locator('#form-regnr button[type=submit]').click();
   await page.waitForSelector('#screen-glass:not(.hidden)',{timeout:17000});
@@ -42,7 +43,7 @@ try{
     regnrValue:await get('inquiry-regnr').inputValue(),
     glassSummary:((await get('inquiry-glass-summary').textContent())||'').slice(0,220)
   };
-  console.log('STAGING_UI_DIAGNOSTIC '+JSON.stringify({before,after,inquiry,responses,exceptions}));
+  console.log('STAGING_UI_DIAGNOSTIC '+JSON.stringify({dependencies,before,after,inquiry,responses,exceptions}));
 }catch(e){
   console.log('STAGING_UI_DIAGNOSTIC_ERROR '+String(e.message).slice(0,240));
   console.log('STAGING_UI_LAST_RESPONSES '+JSON.stringify({responses,exceptions}));
