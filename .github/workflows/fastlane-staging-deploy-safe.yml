@@ -4,7 +4,7 @@ name: Fast-track safe STAGING deploy and Chrome smoke
 on:
   push:
     branches: ['release/fbg-main-fastlane-20261109']
-    paths: ['.github/workflows/fastlane-staging-deploy-safe.yml']
+    paths: ['.github/workflows/fastlane-staging-deploy-safe.yml', 'public/index.html', 'public/app.js', 'tests/front-ui-dom-contract.test.mjs']
 permissions:
   contents: read
 concurrency:
