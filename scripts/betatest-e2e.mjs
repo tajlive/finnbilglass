@@ -97,7 +97,7 @@ async function kjorBil(browser, b) {
           throw new Error('FBG_SEND_INQUIRY=1 er kun tillatt mot staging');
         }
         await page.fill('#inquiry-navn', 'Automatisk stagingtest');
-        await page.fill('#inquiry-kontakt', '40408241');
+        await page.fill('#inquiry-kontakt', '90000000');
         await page.click('#btn-inquiry-send');
         await page.waitForSelector('#inquiry-bekreftet:not(.hidden)', { timeout: 8000 });
         console.log('  syntetisk stagingforespørsel sendt');
