@@ -61,7 +61,7 @@ jobs:
           GITLEAKS_ENABLE_COMMENTS: 'false'
 
       - name: Sjekk hele gjeldende filtré (også Kustom public key)
-        run: /tmp/gitleaks-8.30.1/gitleaks dir . --config .gitleaks.toml --redact --exit-code 2
+        run: /tmp/gitleaks-8.30.1/gitleaks dir . --config .gitleaks.toml --redact --verbose --exit-code 2
 
       - name: Ingen hemmelighetsfiler i git
         run: |
