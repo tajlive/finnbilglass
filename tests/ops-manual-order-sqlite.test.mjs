@@ -88,7 +88,7 @@ test('manual payment link and verified status require separate auditable evidenc
     assert.throws(()=>f.db.prepare("UPDATE ops_manual_orders SET status='PAYMENT_LINK_SENT' WHERE order_id=?").run(orderId),
       /CHECK constraint failed/);
     assert.throws(()=>f.db.prepare("UPDATE ops_manual_orders SET status='PAYMENT_VERIFIED_MANUALLY' WHERE order_id=?").run(orderId),
-      /CHECK constraint failed/);
+      /MANUAL_ORDER_STATUS_REGRESSION/);
     f.db.prepare("UPDATE ops_manual_orders SET status='PAYMENT_LINK_SENT',payment_link_reference=?,payment_link_sent_at=? WHERE order_id=?")
       .run('portal-link-unique-001',3200,orderId);
     assert.throws(()=>f.db.prepare("UPDATE ops_manual_orders SET status='PAYMENT_VERIFIED_MANUALLY' WHERE order_id=?").run(orderId),
