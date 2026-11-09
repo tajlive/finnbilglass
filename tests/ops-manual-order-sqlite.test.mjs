@@ -96,6 +96,10 @@ test('manual payment link and verified status require separate auditable evidenc
     f.db.prepare("UPDATE ops_manual_orders SET status='PAYMENT_VERIFIED_MANUALLY',payment_verified_at=?,payment_verified_by=?,payment_verification_ref=? WHERE order_id=?")
       .run(3400,'operator','kustom-portal-case-001',orderId);
     assert.equal(f.db.prepare('SELECT status FROM ops_manual_orders').get().status,'PAYMENT_VERIFIED_MANUALLY');
+    assert.throws(()=>f.db.prepare("UPDATE ops_manual_orders SET status='PAYMENT_LINK_SENT' WHERE order_id=?").run(orderId),
+      /MANUAL_ORDER_STATUS_REGRESSION/);
+    assert.throws(()=>f.db.prepare("UPDATE ops_manual_orders SET payment_verification_ref='modified' WHERE order_id=?").run(orderId),
+      /MANUAL_ORDER_STATUS_REGRESSION/);
     assert.equal(f.db.prepare('PRAGMA foreign_key_check').all().length,0);
   }finally{f.db.close();}
 });
