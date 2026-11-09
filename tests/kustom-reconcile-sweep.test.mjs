@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
+import { readFileSync } from 'node:fs';
 import { sweepStaleKustomPayments } from '../src/payments/kustom-reconcile-sweep.ts';
 
 const now=1_000_000;
@@ -17,6 +18,7 @@ function setup() {
   db.exec('PRAGMA foreign_keys=ON');
   db.exec('CREATE TABLE quote_payment_orders (id TEXT PRIMARY KEY,payment_provider TEXT,' +
     'status TEXT,kustom_order_id TEXT,kustom_hpp_session_id TEXT,updated_at INTEGER,kustom_capture_state TEXT)');
+  db.exec(readFileSync(new URL('../migrations/staging-auth/0061_kustom_reconciliation_attempts.sql',import.meta.url),'utf8'));
   const insert=db.prepare('INSERT INTO quote_payment_orders VALUES(?,?,?,?,?,?,?)');
   const add=(id, updatedAt, status='PAYMENT_LINK_SENT', provider='kustom', session='valid',state=null) =>
     insert.run(id,provider,status,'48fa4f0f-b269-4b02-9e8c-71704199cc10',session,updatedAt,state);
@@ -31,7 +33,8 @@ function setup() {
       return {
         bind(...values) {
           return {
-            async all() { return { results:db.prepare(sql).all(...values) }; }
+            async all() { return { results:db.prepare(sql).all(...values) }; },
+            async run() { const r=db.prepare(sql).run(...values); return { meta:{changes:Number(r.changes)} }; }
           };
         }
       };
@@ -87,4 +90,46 @@ test('sweep reports PENDING/REVIEW/PAID/errors without retrying money operations
     assert.equal(summary.alreadyFinal,1);
     assert.equal(summary.errors,1);
   } finally { f.db.close(); }
+});
+
+test('fair retries: a sixth order is not starved by five older PENDING callbacks',async()=>{
+  const f=setup(),seen=[];
+  const pollOne=async (_db,_env,id)=>{
+    seen.push(id);
+    return {orderId:id,state:'PENDING',updated:false};
+  };
+  try {
+    const first=await sweepStaleKustomPayments(f.d1,env,{now,pollOne});
+    assert.equal(first.checked,5);
+    assert.deepEqual(seen,['ord_stale_0','ord_stale_1','ord_stale_2','ord_stale_3','ord_stale_4']);
+    assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM kustom_reconcile_attempts').get().n,5);
+    // Same minute: cooldown prevents repeated calls to the oldest five.
+    const second=await sweepStaleKustomPayments(f.d1,env,{now:now+10_000,pollOne});
+    assert.equal(second.checked,1);
+    assert.equal(seen[5],'ord_stale_5');
+    assert.equal(f.db.prepare('SELECT COUNT(*) AS n FROM kustom_reconcile_attempts').get().n,6);
+    const third=await sweepStaleKustomPayments(f.d1,env,{now:now+20_000,pollOne});
+    assert.equal(third.checked,0);
+    // Fifteen-minute cooldown permits another GET-only retry, not a money operation.
+    const later=await sweepStaleKustomPayments(f.d1,env,{now:now+901_000,pollOne});
+    assert.equal(later.checked,5);
+  } finally{f.db.close();}
+});
+
+test('provider failures get a durable outcome and do not suppress newer rows',async()=>{
+  const f=setup(),seen=[];
+  try {
+    const first=await sweepStaleKustomPayments(f.d1,env,{now,pollOne:async(_db,_env,id)=>{
+      seen.push(id);
+      throw new Error('synthetic provider GET failed');
+    }});
+    assert.equal(first.errors,5);
+    assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM kustom_reconcile_attempts WHERE outcome='ERROR' AND consecutive_errors=1").get().n,5);
+    const second=await sweepStaleKustomPayments(f.d1,env,{now:now+10_000,pollOne:async(_db,_env,id)=>{
+      seen.push(id);return {orderId:id,state:'PENDING',updated:false};
+    }});
+    assert.equal(second.checked,1);
+    assert.equal(seen[5],'ord_stale_5');
+    assert.equal(f.db.prepare('PRAGMA foreign_key_check').all().length,0);
+  }finally{f.db.close();}
 });
