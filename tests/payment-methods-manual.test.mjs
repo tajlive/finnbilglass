@@ -22,7 +22,7 @@ test('homepage displays four accepted payment logos near vehicle search, not an 
   }
   assert.equal((home.match(/id="payment-methods-title"/g)||[]).length,1);
   assert.match(home,/Når du har akseptert, oppretter vi ordren og sender en sikker betalingslenke/);
-  assert.match(page,/Når du har akseptert/);
+  assert.match(page,/etter at du har akseptert tilbudet/);
   assert.match(page,/sender betalingslenke via Kustom/);
 });
 
