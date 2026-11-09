@@ -4,7 +4,7 @@ name: Fast-track STAGING D1 read-only preflight
 on:
   push:
     branches: ['release/fbg-main-fastlane-20261109']
-    paths: ['.github/workflows/staging-d1-readonly-preflight.yml']
+    paths: ['.github/workflows/staging-d1-readonly-preflight.yml', 'scripts/maintenance/d1-readonly-summary.mjs']
 permissions:
   contents: read
 concurrency:
