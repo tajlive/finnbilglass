@@ -1,0 +1,22 @@
+# Read-only one-car staging diagnostic with no Cloudflare or Kustom credentials.
+name: Fast-track staging UI diagnostic
+on:
+  push:
+    branches: ['release/fbg-main-fastlane-20261109']
+    paths: ['.github/workflows/fastlane-staging-ui-diagnostic.yml', 'scripts/staging-ui-diagnose.mjs']
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Read-only staging journey with bounded diagnostic summary
+        run: node scripts/staging-ui-diagnose.mjs
