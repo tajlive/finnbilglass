@@ -517,6 +517,11 @@ export default {
       if (typeof regnr !== 'string' || !regnr.trim()) return json({ ok: false, error: 'regnr påkrevd' }, 400);
       const ren = regnr.trim();
       const norm = ren.toUpperCase().replace(/[\s\-–—.]+/g, '');
+      // Sikkerhetsport: norsk standardkjennemerke før NOEN D1-logg eller
+      // SVV-oppslag. Verhindrer at vilkårlig PII/IP fra søk lagres i D1.
+      if (!/^[A-Z]{2}[0-9]{4,5}$/.test(norm)) {
+        return json({ ok: false, error: 'Ugyldig registreringsnummer' }, 400);
+      }
       let lagret = false;
       try {
         await env.FINNBILGLASS_DB.prepare(
@@ -570,7 +575,7 @@ export default {
       const vin = (body as Record<string, unknown>)?.vin;
       if (typeof vin !== 'string' || !vin.trim()) return json({ ok: false, error: 'vin påkrevd' }, 400);
       const ren = vin.trim().toUpperCase().replace(/[\s\-–—.]+/g, '');
-      if (ren.length < 11 || ren.length > 17) return json({ ok: false, error: 'Ugyldig chassisnummer' }, 400);
+      if (!/^[A-HJ-NPR-Z0-9]{11,17}$/.test(ren)) return json({ ok: false, error: 'Ugyldig chassisnummer' }, 400);
       let bil = null;
       let resolver = null;
       try {
