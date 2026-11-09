@@ -1,0 +1,61 @@
+# Safe release-candidate staging validation only. NOT production.
+# Kustom route/payment/reconciliation flags MUST remain off during this deployment.
+name: Fast-track safe STAGING deploy and Chrome smoke
+on:
+  push:
+    branches: ['release/fbg-main-fastlane-20261109']
+    paths: ['.github/workflows/fastlane-staging-deploy-safe.yml']
+permissions:
+  contents: read
+concurrency:
+  group: finnbilglass-fastlane-staging-deploy
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Check exact staging flags before build
+        run: |
+          node -e "const fs=require('fs');const x=fs.readFileSync('wrangler.toml','utf8').split('[env.staging.vars]')[1]?.split('[[env.staging.d1_databases]]')[0];if(!x||!x.includes('KUSTOM_ENABLED = \"false\"')||!x.includes('KUSTOM_OPS_ROUTE_ENABLED = \"false\"')||!x.includes('KUSTOM_RECONCILIATION_ENABLED = \"false\"'))process.exit(1);console.log('Kustom route, checkout and reconciliation all disabled in staging')"
+      - run: npm ci
+      - run: npm run qa
+      - run: npx wrangler deploy --dry-run --env staging --outdir "$RUNNER_TEMP/fbg-safe-staging-bundle"
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify staging migration 0061 (read-only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT name FROM pragma_table_info('kustom_reconcile_attempts')" --json > "$RUNNER_TEMP/fbg-staging-0061-columns.json"
+          npx wrangler d1 execute finnbilglass-staging-auth --env staging --remote --command="SELECT name FROM sqlite_master WHERE type='index' AND name='idx_kustom_reconcile_attempts_checked'" --json > "$RUNNER_TEMP/fbg-staging-0061-index.json"
+          node scripts/maintenance/staging-0061-verify.mjs post "$RUNNER_TEMP/fbg-staging-0061-columns.json" "$RUNNER_TEMP/fbg-staging-0061-index.json"
+      - name: Deploy release candidate only to isolated staging Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --env staging
+      - name: Install Chromium (smoke is read-only)
+        run: npx playwright install --with-deps chromium
+      - name: Verify public staging search and manual inquiry UX (no submissions)
+        env:
+          FBG_BASE: https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev
+          FBG_SEND_INQUIRY: '0'
+          FBG_OUT: ${{ runner.temp }}/fbg-staging-smoke/
+        run: node scripts/betatest-e2e.mjs
