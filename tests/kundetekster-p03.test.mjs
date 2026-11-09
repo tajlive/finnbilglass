@@ -57,9 +57,9 @@ test('4. invitert kundeflyt erstatter beta-invitasjonen (godkjent forside)', () 
   // Den gamle personlige beta-invitasjonen (førsteperson) er fjernet.
   assert.doesNotMatch(html, /Kjenner du Tom Arne/);
   assert.doesNotMatch(html, /Da vil jeg gjerne ha din hjelp/);
-  // Skjemaet for tilbud finnes, og header viser beta-merket.
+  // Skjemaet finnes, mens dagens main viser korrekt status «Beta».
   assert.match(html, /id="inquiry-form"/);
-  assert.match(html, /class="beta" aria-label="Pilot">Pilot</);
+  assert.match(html, /class="beta" aria-label="Betaversjon">Beta</);
 });
 
 test('5. språkregel: aktiv kundereise bruker «vi»', () => {
@@ -69,7 +69,7 @@ test('5. språkregel: aktiv kundereise bruker «vi»', () => {
   assert.match(html, /Vi avklarer eventuelt nødvendig tilbehør før vi sender tilbudet\./);
   assert.match(html, /Send oss forespørselen, så dobbeltsjekker vi riktig glass og tilbehør/);
   assert.match(html, /Vi fant ikke et trygt treff i katalogen\. Send oss en forespørsel/);
-  assert.match(html, /Vi kontrollerer glassvalg, pris og frakt før du bestiller\./);
+  assert.match(html, /Vi kontrollerer glass, pris og levering før tilbud\./);
   assert.match(js, /Vi har funnet en mulig kandidat ut fra bildataene dine\. Vi dobbeltsjekker valget manuelt før vi sender tilbud\./);
   assert.match(js, /Takk, vi har mottatt forespørselen din/);
   assert.match(personvern, /Vi bruker skiltnummer til å hente bilopplysninger/);
