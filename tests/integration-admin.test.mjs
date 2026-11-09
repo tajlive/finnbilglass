@@ -168,7 +168,7 @@ test('Admin API: ADMIN kan endre brukerrolle', async () => {
     undefined,
     { Cookie: sessionCookieHeader(cookie) }
   );
-  assertStatus(demotedStatus, 403, 'old admin session must honor current D1 role');
+  assertStatus(demotedStatus, 401, 'revoked old admin session must not authenticate');
 });
 
 test('Admin API: ukjent rolle-mål returnerer 404 uten å opprette en ny bruker', async () => {
