@@ -3,6 +3,7 @@
  *  Never auto-sends mail, creates orders, or authorizes glass choices.
  */
 import type { Env } from '../types';
+import { workspaceConnectionStatus } from '../ops-workspace-oauth';
 import { getGmailTokens, extractEmailBody, startGmailPushWatch } from '../ops-workbench/gmail-sync';
 import { syncDb } from '../ops-workbench/mail-sync';
 import {
@@ -146,9 +147,14 @@ export async function syncGmailEmails(env: Env): Promise<GmailSyncResult> {
 export async function gmailSyncStatus(env: Env) {
   const db = syncDb(env);
   const row = await db.prepare('SELECT * FROM ops_mail_sync_state WHERE channel=?').bind(CHANNEL).first<Row>();
+  const workspace = await workspaceConnectionStatus(env);
+  const configured = env.OPS_WORKSPACE_OAUTH_ENABLED === 'true'
+    ? workspace.connected && !!(env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET)
+    : !!(env.GMAIL_REFRESH_TOKEN && env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET);
   return {
-    configured: !!(env.GMAIL_REFRESH_TOKEN && env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET),
+    configured,
     enabled: env.GMAIL_SYNC_ENABLED === 'true',
+    workspaceMailbox: workspace.connected ? workspace.mailbox : null,
     lastSync: row?.last_success ?? null,
     lastError: row?.last_error ?? null,
     gmailHistoryId: row?.history_id ?? null,
