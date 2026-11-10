@@ -9,7 +9,6 @@
 export interface ManualOpsAccessEnv {
   OPS_ACCESS_TEAM_DOMAIN?: string;
   OPS_ACCESS_AUD?: string;
-  OPS_MANUAL_STAFF_EMAILS?: string;
 }
 export interface VerifiedStaff {
   email: string;
@@ -51,7 +50,7 @@ async function accessKey(team: string, kid: string): Promise<AccessJwk | null> {
     typeof k.e === 'string') ?? null;
 }
 
-/** Returns null on ANY missing config, forged signature, expired token or disallowed staff. */
+/** Verifies Cloudflare Access identity; DB invitation/role is checked separately. */
 export async function verifyManualOpsStaff(
   request: Request,
   env: ManualOpsAccessEnv,
@@ -59,9 +58,7 @@ export async function verifyManualOpsStaff(
 ): Promise<VerifiedStaff | null> {
   const team = normaliseTeam(env.OPS_ACCESS_TEAM_DOMAIN);
   const audience = env.OPS_ACCESS_AUD?.trim();
-  const allow = new Set((env.OPS_MANUAL_STAFF_EMAILS ?? '').split(',')
-    .map(s => s.trim().toLowerCase()).filter(Boolean));
-  if (!team || !audience || audience.length < 20 || !allow.size) return null;
+  if (!team || !audience || audience.length < 20) return null;
   const bearer = request.headers.get('Cf-Access-Jwt-Assertion');
   if (!bearer || bearer.length > 12000) return null;
   const parts = bearer.split('.');
@@ -78,7 +75,7 @@ export async function verifyManualOpsStaff(
         typeof expires !== 'number' || expires <= nowSeconds ||
         (notBefore !== undefined && (typeof notBefore !== 'number' || notBefore > nowSeconds))) return null;
     const email = typeof claims.email === 'string' ? claims.email.toLowerCase().trim() : '';
-    if (!email || !allow.has(email) || typeof claims.sub !== 'string' || !claims.sub) return null;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof claims.sub !== 'string' || !claims.sub) return null;
 
     const jwk = await accessKey(team, header.kid);
     if (!jwk) return null;
