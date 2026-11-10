@@ -76,7 +76,7 @@ jobs:
           match=re.search(r'[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{32}',json.dumps(data),re.I)
           if not match: raise SystemExit('STOP: no pre-admin D1 recovery bookmark')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
-              f.write('Pre-admin EU staging D1 recovery bookmark: '+match.group(0)+String.fromCharCode(10))
+              f.write('Pre-admin EU staging D1 recovery bookmark: '+match.group(0)+chr(10))
           PY
           npx wrangler d1 execute "$DB" --config "$CFG" --remote --yes \
             --command "INSERT OR IGNORE INTO ops_staff_memberships(email,role,status,invited_by,invited_at) VALUES('tomarnejensen@gmail.com','ADMIN','INVITED','github:one-time-staging-setup',CAST(strftime('%s','now') AS INTEGER)*1000)"
