@@ -47,7 +47,7 @@ export async function handleOpsManualRoute(request:Request,env:Env):Promise<Resp
       return json({ok:true,offerId,version:version?.version||1,status:'DRAFT'},201);
     }catch{return json({ok:false,error:'TILBUD_KUNNE_IKKE_LAGRES'},503)}
   }
-  const send=/^\\/api\\/ops\\/manual\\/offers\\/([A-Za-z0-9_-]{8,100})\\/send$/.exec(path);
+  const send=/^\/api\/ops\/manual\/offers\/([A-Za-z0-9_-]{8,100})\/send$/.exec(path);
   if(send){
     const offer=await env.FINNBILGLASS_DB.prepare('SELECT o.*,i.navn,i.kontakt FROM ops_manual_offers o JOIN beta_inquiries i ON i.id=o.inquiry_id WHERE o.offer_id=?').bind(send[1]).first<OfferForSend>();
     if(!offer)return json({ok:false,error:'TILBUD_IKKE_FUNNET'},404);
@@ -58,7 +58,7 @@ export async function handleOpsManualRoute(request:Request,env:Env):Promise<Resp
   }
   // Reconciliation may only be performed by an admin after locating the actual
   // Resend message ID. This endpoint verifies it with Resend via GET; never resends.
-  const reconcile=/^\\/api\\/ops\\/manual\\/offers\\/([A-Za-z0-9_-]{8,100})\\/reconcile$/.exec(path);
+  const reconcile=/^\/api\/ops\/manual\/offers\/([A-Za-z0-9_-]{8,100})\/reconcile$/.exec(path);
   if(reconcile){
     if(staff.role!=='ADMIN')return json({ok:false,error:'KREVER_ADMIN'},403);
     const providerId=typeof payload.providerMessageId==='string'?payload.providerMessageId.trim():'';
