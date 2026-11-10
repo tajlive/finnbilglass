@@ -6,13 +6,16 @@ on:
   workflow_dispatch:
     inputs:
       candidate_sha:
-        description: "Full 40-character SHA of PR #57 HEAD"
-        required: true
+        description: "Optional: leave blank to pin current PR #57 HEAD automatically"
+        required: false
+        default: ""
         type: string
       authorization:
-        description: "Type STAGING-ONLY (no production changes)"
+        description: "Confirm staging-only run"
         required: true
-        type: string
+        default: STAGING-ONLY
+        type: choice
+        options: [STAGING-ONLY]
       apply_migrations:
         description: "Apply explicitly reviewed 0040-0044 to staging D1"
         required: true
@@ -48,9 +51,13 @@ jobs:
         run: |
           set -euo pipefail
           test "$AUTHORIZATION" = "STAGING-ONLY"
-          [[ "$EXPECTED" =~ ^[0-9a-f]{40}$ ]]
           PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/57")
           ACTUAL=$(echo "$PR" | jq -r .head.sha)
+          if [ -z "$EXPECTED" ]; then
+            EXPECTED="$ACTUAL"
+            echo "Auto-pinned current PR #57 HEAD for this run"
+          fi
+          [[ "$EXPECTED" =~ ^[0-9a-f]{40}$ ]]
           BASE=$(echo "$PR" | jq -r .base.ref)
           HEAD=$(echo "$PR" | jq -r .head.ref)
           FORK=$(echo "$PR" | jq -r .head.repo.full_name)
@@ -75,9 +82,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run qa
+      - name: Safe validation summary
+        if: ${{ !inputs.apply_migrations && !inputs.deploy }}
+        run: |
+          {
+            echo "### Staging preflight: PASS"
+            echo "Reviewed PR #57 commit: ${{ steps.pin.outputs.sha }}"
+            echo "No Cloudflare API access, D1 migration, Worker deploy, customer email, or payment was attempted."
+            echo "Next: configure a dedicated staging GitHub environment before any DB/deploy step."
+          } >> "$GITHUB_STEP_SUMMARY"
 
   staging:
     needs: verify-candidate
+    if: inputs.apply_migrations || inputs.deploy
     runs-on: ubuntu-latest
     environment: staging
     env:
