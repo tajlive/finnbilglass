@@ -30,6 +30,11 @@ on:
         required: true
         default: false
         type: boolean
+      bootstrap_admin_email:
+        description: "Optional one-time STAGING admin email; requires apply_migrations=true and repo owner"
+        required: false
+        default: ""
+        type: string
       deploy:
         description: "Deploy tested candidate to workers.dev staging ONLY"
         required: true
@@ -209,6 +214,21 @@ jobs:
             npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
               --file "migrations/proposed/${n}.sql.proposed"
           done
+      - name: Bootstrap first invited staging admin after verified migrations
+        if: inputs.apply_migrations && inputs.bootstrap_admin_email != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
+          BOOTSTRAP_EMAIL: ${{ inputs.bootstrap_admin_email }}
+        run: |
+          set -euo pipefail
+          # Only the repository owner can select the initial staging ADMIN.
+          test "$GITHUB_ACTOR" = 'tajlive'
+          EMAIL=$(printf '%s' "$BOOTSTRAP_EMAIL" | tr '[:upper:]' '[:lower:]')
+          [[ "$EMAIL" =~ ^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,20}$ ]]
+          # No SQL metacharacters are accepted; pre-existing memberships are never modified.
+          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
+            --command "INSERT OR IGNORE INTO ops_staff_memberships(email,role,status,invited_by,invited_at) VALUES('$EMAIL','ADMIN','INVITED','github:staging-bootstrap',CAST(strftime('%s','now') AS INTEGER)*1000)"
+          echo 'Initial staging ADMIN invitation seeded if the address was not already present.'
       - name: Require all staging OPS tables before deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
@@ -261,6 +281,7 @@ jobs:
             echo 'D1: finnbilglass-db-staging'
             echo "Migrations requested: ${{ inputs.apply_migrations }}"
             echo "Read-only inspection requested: ${{ inputs.inspect_staging }}"
+            echo "First admin invitation requested: ${{ inputs.apply_migrations && inputs.bootstrap_admin_email != '' }}"
             echo "Deploy requested: ${{ inputs.deploy }}"
             echo "This workflow does not create test sales, send email or initiate payments."
           } >> "$GITHUB_STEP_SUMMARY"
