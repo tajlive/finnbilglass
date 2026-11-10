@@ -29,7 +29,7 @@ test('one-click invite + first Access login activates role, no app OTP or per-us
  try{
   const invite=await inviteOpsStaff(f.db,admin,'Worker@Example.com','OPERATOR',2000);
   assert.deepEqual(invite,{email:'worker@example.com',role:'OPERATOR',status:'INVITED'});
-  assert.equal(await recogniseInvitedStaff(f.db,worker,'signed.cloud.jwt.1',2200),Object.assign({},worker,{role:'OPERATOR',status:'ACTIVE'}));
+  assert.deepEqual(await recogniseInvitedStaff(f.db,worker,'signed.cloud.jwt.1',2200),Object.assign({},worker,{role:'OPERATOR',status:'ACTIVE'}));
   const same=await recogniseInvitedStaff(f.db,worker,'signed.cloud.jwt.1',2300);
   assert.equal(same?.role,'OPERATOR');
   const logs=await listOpsActivity(f.db,admin);
