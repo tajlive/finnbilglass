@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+"""Offline, no-secrets D1/SQLite staging schema rehearsal. Never contacts Cloudflare.
+
+Run from project root: python3 scripts/maintenance/staging-migration-rehearsal.py
+"""
+from __future__ import annotations
+
+import json
+import sqlite3
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+MIGRATIONS = [
+    "0040_ops_manual_offer_order",
+    "0041_ops_staff_invites_activity",
+    "0042_ops_reply_outbox",
+    "0043_ops_gmail_sync",
+    "0044_ops_offer_outbox",
+]
+REQUIRED = {
+    "ops_manual_offers", "ops_manual_orders", "ops_staff_memberships",
+    "ops_staff_activity", "ops_reply_outbox", "ops_messages", "ops_mail_details",
+    "ops_mail_sync_state", "ops_offer_outbox", "ops_mail_events", "ops_work_events",
+}
+
+
+def rejects(db: sqlite3.Connection, query: str, params: tuple = ()) -> None:
+    try:
+        db.execute(query, params)
+    except sqlite3.IntegrityError:
+        return
+    raise AssertionError(f"Expected D1/SQLite to reject: {query[:100]}")
+
+
+def rehearsal() -> dict:
+    db = sqlite3.connect(":memory:")
+    db.execute("PRAGMA foreign_keys=ON")
+    # Only pre-existing FK parent is needed to test the proposed OPS schema.
+    # Never create a customer or production database during this rehearsal.
+    db.executescript("""
+    CREATE TABLE beta_inquiries (
+      id INTEGER PRIMARY KEY, kontakt TEXT NOT NULL
+    );
+    CREATE TABLE beta_inquiry_events (
+      event_id TEXT PRIMARY KEY, inquiry_id INTEGER, event_type TEXT,
+      previous_status TEXT, status TEXT, note TEXT, created_at INTEGER,
+      created_by TEXT, meta_json TEXT
+    );
+    """)
+    for name in MIGRATIONS:
+        sql = (ROOT / "migrations" / "proposed" / (name + ".sql.proposed")).read_text()
+        db.executescript(sql)
+    tables = {r[0] for r in db.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+    )}
+    assert REQUIRED <= tables, f"Missing tables: {REQUIRED - tables}"
+    assert not list(db.execute("PRAGMA foreign_key_check"))
+    db.execute("INSERT INTO beta_inquiries(id,kontakt) VALUES(?,?)",
+               (1, "staging-only@example.invalid"))
+    db.execute("""
+      INSERT INTO ops_manual_offers
+      (offer_id,inquiry_id,version,sku,fitment_evidence_ref,equipment_json,
+       total_minor,currency,delivery_note,status,created_by,created_at)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+    """, ("offer-00000001", 1, 1, "GLASS-001", "evidence-1234567890", "{}",
+          125000, "NOK", "Frakt avtales", "DRAFT", "qa@example.invalid", 1000))
+    order_sql = """
+      INSERT INTO ops_manual_orders
+      (order_id,inquiry_id,offer_id,sku,total_minor,currency,created_at,
+       created_by,status) VALUES(?,?,?,?,?,?,?,?,?)
+    """
+    order = ("order-00000001", 1, "offer-00000001", "GLASS-001",
+             125000, "NOK", 1500, "qa@example.invalid", "ORDER_CREATED")
+    # Never create an order directly from an unsent or unaccepted draft.
+    rejects(db, order_sql, order)
+    db.execute("""
+      INSERT INTO ops_offer_outbox
+      (offer_id,inquiry_id,request_id,recipient,subject,text_body,html_body,
+       status,created_at,updated_at)
+      VALUES(?,?,?,?,?,?,?,'QUEUED',?,?)
+    """, ("offer-00000001", 1, "request-00000001", "staging-only@example.invalid",
+          "Your offer", "Sample text", "<p>Sample text</p>", 1000, 1000))
+    rejects(db, """
+      INSERT INTO ops_offer_outbox
+      (offer_id,inquiry_id,request_id,recipient,subject,text_body,html_body,
+       status,created_at,updated_at)
+      VALUES(?,?,?,?,?,?,?,'QUEUED',?,?)
+    """, ("offer-00000001", 1, "request-00000002", "staging-only@example.invalid",
+          "Your offer", "Sample text", "<p>Sample text</p>", 1001, 1001))
+    db.execute("UPDATE ops_offer_outbox SET status='SENDING',updated_at=1100 WHERE offer_id='offer-00000001'")
+    rejects(db, "UPDATE ops_offer_outbox SET recipient='attacker@example.invalid' WHERE offer_id='offer-00000001'")
+    rejects(db, "UPDATE ops_offer_outbox SET status='SENT' WHERE offer_id='offer-00000001'")
+    db.execute("UPDATE ops_offer_outbox SET status='SENT',provider_message_id='resend-test-id',updated_at=1200 WHERE offer_id='offer-00000001'")
+    db.execute("UPDATE ops_manual_offers SET status='SENT',sent_at=1200 WHERE offer_id='offer-00000001'")
+    rejects(db, order_sql, order)
+    db.execute("""
+      UPDATE ops_manual_offers SET status='ACCEPTED',accepted_at=1450,
+      accepted_channel='EMAIL',acceptance_ref='synthetic-proof-123'
+      WHERE offer_id='offer-00000001'
+    """)
+    db.execute(order_sql, order)
+    rejects(db, order_sql, ("order-00000002", 1, "offer-00000001",
+                             "GLASS-001", 125000, "NOK", 1550,
+                             "qa@example.invalid", "ORDER_CREATED"))
+    rejects(db, "UPDATE ops_manual_offers SET total_minor=1 WHERE offer_id='offer-00000001'")
+    rejects(db, "UPDATE ops_manual_orders SET sku='CHANGED' WHERE order_id='order-00000001'")
+    db.execute("""
+      UPDATE ops_manual_orders
+      SET status='PAYMENT_LINK_SENT',payment_link_reference='manual-sandbox-123',
+          payment_link_sent_at=1800 WHERE order_id='order-00000001'
+    """)
+    rejects(db, "UPDATE ops_manual_orders SET status='ORDER_CREATED' WHERE order_id='order-00000001'")
+    db.execute("""
+      INSERT INTO ops_reply_outbox
+      (request_id,inquiry_id,actor_email,recipient,body,status,created_at,updated_at)
+      VALUES('response-00000000001',1,'qa@example.invalid',
+             'staging-only@example.invalid','Sample','QUEUED',1000,1000)
+    """)
+    rejects(db, """
+      UPDATE ops_reply_outbox SET status='SENT',provider_message_id=NULL,error=NULL
+      WHERE request_id='response-00000000001'
+    """)
+    db.execute("""
+      UPDATE ops_reply_outbox SET status='SENT',provider_message_id='resend-reply-id'
+      WHERE request_id='response-00000000001'
+    """)
+    db.execute("""
+      INSERT INTO ops_staff_activity(event_id,actor_email,action,subject_type,
+                                     subject_id,created_at,details_json)
+      VALUES('event-1','qa@example.invalid','OFFER_SENT','OFFER',
+             'offer-00000001',1300,'{}')
+    """)
+    rejects(db, "UPDATE ops_staff_activity SET action='LOGIN' WHERE event_id='event-1'")
+    rejects(db, "DELETE FROM ops_staff_activity WHERE event_id='event-1'")
+    assert not list(db.execute("PRAGMA foreign_key_check"))
+    # CREATE IF NOT EXISTS should be safe if an interrupted migration is rerun.
+    for name in MIGRATIONS:
+        sql = (ROOT / "migrations" / "proposed" / (name + ".sql.proposed")).read_text()
+        db.executescript(sql)
+    assert db.execute("SELECT COUNT(*) FROM ops_manual_orders").fetchone()[0] == 1
+    assert db.execute("SELECT COUNT(*) FROM ops_offer_outbox").fetchone()[0] == 1
+    return {
+        "status": "PASS", "migration_files": len(MIGRATIONS),
+        "required_tables": len(REQUIRED),
+        "foreign_key_check": "PASS", "offer_duplicate": "BLOCKED",
+        "order_without_acceptance": "BLOCKED", "immutable_terms": "PASS",
+        "resend_without_id": "BLOCKED", "staff_audit": "IMMUTABLE",
+        "reapply": "PASS", "remote_db_access": False
+    }
+
+
+if __name__ == "__main__":
+    print(json.dumps(rehearsal(), sort_keys=True))
