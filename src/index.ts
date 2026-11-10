@@ -47,6 +47,7 @@ import { handleCustomerPaymentOrders } from './routes/customer-payment-orders';
 import { handleAdminRoute } from './routes/admin';
 import { mottakEpost, getEpostHistorikk, sendManuellEpost } from './routes/epost';
 import { syncGmailEmails, gmailSyncStatus } from './routes/gmail-sync';
+import { unassignedMail, assignUnmatchedMail } from './routes/mail-allocation';
 import { setAuthStorage } from './auth';
 import { verifiserAccess } from './access-jwt';
 import { D1AuthStorage } from './auth-storage';
@@ -1809,6 +1810,20 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       return sendManuellEpost(env, request);
     }
+    // Unmatched e-mail queue (staff-only, isolated behind the OPS workbench flag).
+    if (path === '/api/ops/epost/ufordelt' && method === 'GET') {
+      if (env.OPS_WORKBENCH_ENABLED !== 'true') return json({ ok: false, error: 'IKKE_AKTIVERT' }, 404);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Ingen tilgang' }, 401);
+      return unassignedMail(env);
+    }
+    const assignMailMatch = /^\/api\/ops\/epost\/ufordelt\/([A-Za-z0-9_-]{1,210})\/fordel$/.exec(path);
+    if (method === 'POST' && assignMailMatch) {
+      if (env.OPS_WORKBENCH_ENABLED !== 'true') return json({ ok: false, error: 'IKKE_AKTIVERT' }, 404);
+      if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Ingen tilgang' }, 401);
+      const identity = await verifiserAccess(request, env);
+      return assignUnmatchedMail(env, request, assignMailMatch[1], identity?.epost || 'support-token');
+    }
+
     const gmailSyncMatch = /^\/api\/ops\/epost\/gmail-sync$/.exec(path);
     if (method === 'POST' && gmailSyncMatch) {
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
