@@ -22,8 +22,17 @@ export async function mottakEpost(env: Env, request: Request) {
     try { payload = JSON.parse(rawBody); } catch { return new Response('Ugyldig JSON', { status: 400 }); }
     if (payload?.type !== 'email.received') return new Response('Ignorert', { status: 200 });
     const providerId = payload?.data?.email_id;
-    if (typeof providerId !== 'string') return new Response('Mangler meldings-ID', { status: 400 });
-    const incoming = await syncIncoming(env, providerId, payload.data.to);
+    if (typeof providerId !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(providerId)) {
+        return new Response('Mangler gyldig meldings-ID', { status: 400 });
+    }
+    // Never acknowledge a genuine receive event with missing recipients.
+    // Resend retries a non-2xx response; silently ignoring it loses mail.
+    const recipients = Array.isArray(payload?.data?.to) ? payload.data.to : [payload?.data?.to];
+    if (!recipients.some((address: unknown) =>
+        typeof address === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address.trim()))) {
+        return new Response('Mottaker mangler fra webhooksvar', { status: 422 });
+    }
+    const incoming = await syncIncoming(env, providerId, recipients);
     if ('ignored' in incoming && incoming.ignored) {
         return new Response('Mottak av annen tjeneste', { status: 200 });
     }
