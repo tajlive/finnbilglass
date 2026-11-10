@@ -15,7 +15,7 @@ Status oppdatert 2026-11-10. Beslutningen gjelder alle nye agenter, Codex-økter
 ## Verifiserte tekniske forhold
 
 - **Grønn:** staging-Worker har `GOOGLE_OAUTH_CLIENT_ID` og `GOOGLE_OAUTH_CLIENT_SECRET` som eksisterende hemmelige bindinger, samt `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `OPS_ACCESS_AUD` og `OPS_ACCESS_TEAM_DOMAIN`. Se [read-only inventory #42915165181](https://github.com/tajlive/finnbilglass/actions/runs/42915165181).
-- **Mangler:** `GMAIL_REFRESH_TOKEN`, `OPS_INBOUND_ADDRESS` og `SUPPORT_FROM_EMAIL` som Worker secrets, mens `GMAIL_SYNC_ENABLED=false` i `wrangler.staging.toml`. `GMAIL_PUBSUB_TOPIC` ikke installert; push er valgfri, «Synk nå» kan testes først.
+- **Status etter oppsett:** `OPS_GMAIL_TOKEN_ENCRYPTION_KEY` finnes på staging Worker, og tre `ops_workspace_*`-tabeller er opprettet på eksakt EU-staging-D1. `OPS_WORKSPACE_OAUTH_ENABLED=true` lar en innlogget ADMIN gjennomføre engangssamtykke. **Ingen refresh token er samtykket eller lagret ennå.** `GMAIL_REFRESH_TOKEN` som manuelt Worker-secret er ikke lenger nødvendig i staging; den nye flyten lagrer tokenet AES-GCM-kryptert. `OPS_INBOUND_ADDRESS` og autoriserte alias er ikke ferdig kontrollert. `GMAIL_SYNC_ENABLED=false` inntil dette er verifisert. `GMAIL_PUBSUB_TOPIC` er valgfritt og ikke installert.
 - **Første stagingtilbud:** syntetisk sak #1, versjon 1, `DRAFT`, NOK 1,00, ingen Resend-utsending eller ordre; [D1-bevis #42914272906](https://github.com/tajlive/finnbilglass/actions/runs/42914272906).
 - ChatGPTs tilgjengelige Gmail-konto er `tomarnejensen@gmail.com` og er **ikke** Workspace-postkassen. Den kan ikke benyttes som OPS' Gmail refresh token uten en separat autorisasjon av Workspace.
 - Google krever eksakt matchende registrert OAuth redirect URI for Web Server-flow, `access_type=offline` og `state` mot CSRF. Eventuelle eksisterende OAuth-klienter må bekreftes mot dette før tilkobling.
@@ -23,9 +23,17 @@ Status oppdatert 2026-11-10. Beslutningen gjelder alle nye agenter, Codex-økter
 ## Gjennomføring (uten ny Workspace)
 
 1. Finn eksisterende Workspace-postkasses primæradresse og alias; velg `OPS_INBOUND_ADDRESS` bare etter bekreftelse. Bekreft at Googles Gmail API er tilgjengelig for eksisterende OAuth-klient og at consent-skjermen støtter `gmail.readonly`.
-2. Tilby sikker engangstilkobling fra ADMIN-beskyttet Operations Center: state, PKCE, eksakt redirect URI, offline, tokenkryptering; feile lukket på avvikende mailbox og manglende refresh token. Ikke godkjenn eier via personlig Gmail-konto.
+2. **Engangstilkoblingen er deployet i staging**: innlogget ADMIN åpner `https://ops-staging.finnbilglass.no/ops/ansatte`, velger «Godkjenn Gmail-lesetilgang én gang» og gir eksplisitt samtykke for **`tomarne@finnbilglass.no`**. OAuth bruker state, PKCE, eksakt callback `https://ops-staging.finnbilglass.no/api/ops/manual/workspace/oauth/callback`, offline tilgang og kryptert D1-lagring. Personlig Gmail blir avvist etter autentisert Gmail-profilkontroll. **Bekreft at callback URI allerede er registrert på den eksisterende Google OAuth-klienten i Google Cloud**; ikke lag ny Workspace eller Google-app før dette er kontrollert.
 3. Verifiser read-only Gmail profile, mailbox-alias og tilgang. Sett `GMAIL_SYNC_ENABLED=true` **kun i staging** etter bevis. Første test bruker kontrollert post i eksisterende Workspace-postkasse.
 4. Kjør full tilbud→utsending→kundeaksept→ordre-E2E med godkjent testpostkasse, to ansatte og idempotens; deretter GO/NO-GO. Ikke skap en ordre på syntetisk sak #1.
+
+## Faktisk stagingbevis fra 10. november 2026
+
+- [GitHub-kjøring #42918470764](https://github.com/tajlive/finnbilglass/actions/runs/42918470764) **SUCCESS**: 0045 SQL migrasjon ble først kjørt i SQLite QA og deretter installert på korrekt EU-staging-D1 etter Time Travel-bokmerke; de tre OAuth-tabellene finnes. En 256-bit AES-GCM-nøkkel ble generert med kryptografisk tilfeldig verdi og satt som **staging Worker-secret uten logg-/Git-eksponering**. Den privilegerte engangsjobben er fjernet.
+- [GitHub-kjøring #42918847285](https://github.com/tajlive/finnbilglass/actions/runs/42918847285) **SUCCESS**: faktisk stagingdeploy av ADMIN-OAuth-samtykke med full QA og SQL-rehearsal; health HTTP **200**, uautentisert OAuth-status og start HTTP **401**. Staging `GMAIL_SYNC_ENABLED=false`. Midlertidig, privilegert deployjobb er fjernet.
+- [GitHub PR-verifisering #42917859075](https://github.com/tajlive/finnbilglass/actions/runs/42917859075) **SUCCESS**: test av feil/privat Gmail-profil, gjenbrukt OAuth-state, manglende offline refresh token, kryptert lagring og rolle-gating.
+- **Reell eiergodkjenning er fortsatt nødvendig**: knapp i staging `/ops/ansatte`; tilhørende Google OAuth-klient må ha eksakt godkjent redirect URI. Ikke utgi det for ferdig koblet til Gmail før faktisk samtykke og profilkontroll.
+- **Google-policy:** `gmail.readonly` er et *restricted scope*. Oppsett i Google Cloud Console (Internal vs. External, OAuth-verifisering, samt testpubliseringens begrensede refresh token-levetid) må kontrolleres før vi lover permanent drift. Bruk den eksisterende Workspace-organisasjonen og minimer tilgangen.
 
 ## Eksternt kontrollpunkt som ikke kan automatiseres uten samtykke
 
