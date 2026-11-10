@@ -36,7 +36,7 @@ async function findCase(db: D1Database, headers: Record<string, string>, counter
   return confirmedCaseId(proposed, counterparty, row);
 }
 
-async function recordMessage(env: Env, message: GmailSafeMessage, mailbox: string): Promise<boolean> {
+export async function recordMessage(env: Env, message: GmailSafeMessage, mailbox: string): Promise<boolean> {
   if (!MSG_ID.test(message.id)) throw new Error('GMAIL_INVALID_MESSAGE_ID');
   const db = syncDb(env);
   const headers = gmailHeaders(message);
