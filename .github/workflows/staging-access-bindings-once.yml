@@ -1,0 +1,103 @@
+name: FinnBilGlass - one-time staging Access bindings
+
+# Writes ONLY two known public JWT validation configuration values to one
+# staging Worker. Does not edit Access policies, production Workers, D1 or GitHub secrets.
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/staging-access-bindings-once.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: finnbilglass-staging-access-bindings
+  cancel-in-progress: false
+
+jobs:
+  configure-staging-access:
+    if: github.repository == 'tajlive/finnbilglass' && github.ref == 'refs/heads/main' && github.actor == 'tajlive'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 6
+    steps:
+      - name: Verify effective public Access audience and set only staging Worker bindings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json,os,re,urllib.error,urllib.parse,urllib.request
+          account='80d5b1d56a3e907150ba7348b6182894'
+          dbid='78842e17-ab0b-47c1-acde-244044073466'
+          script='finnbilglass-frontrute-staging'
+          team='tomarnejensen.cloudflareaccess.com'
+          aud='8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb'
+          token=os.environ.get('CLOUDFLARE_API_TOKEN','')
+          if not token: raise SystemExit('STOP: Cloudflare credential is absent')
+          assert re.fullmatch(r'[0-9a-f]{64}',aud)
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,url): return None
+          opener=urllib.request.build_opener(NoRedirect)
+          loginreq=urllib.request.Request('https://ops-staging.finnbilglass.no/',method='GET')
+          try:
+              opener.open(loginreq,timeout=15)
+              raise SystemExit('STOP: staging OPS not protected by Access redirect')
+          except urllib.error.HTTPError as err:
+              if err.code not in (301,302,303,307,308): raise SystemExit('STOP: Access login redirect missing')
+              uri=urllib.parse.urlsplit(err.headers.get('Location',''))
+          params=urllib.parse.parse_qs(uri.query)
+          if (uri.scheme!='https' or uri.hostname!=team or
+              uri.path!='/cdn-cgi/access/login/ops-staging.finnbilglass.no' or
+              params.get('kid')!=[aud]):
+              raise SystemExit('STOP: public Access issuer and AUD differ from pinned staging app')
+          print('Verified signed-login redirect is configured for pinned staging app')
+          root=f'https://api.cloudflare.com/client/v4/accounts/{account}'
+          headers={'Authorization':'Bearer '+token,'Accept':'application/json'}
+          def request(url,method='GET',payload=None):
+              data=json.dumps(payload).encode() if payload else None
+              h=dict(headers)
+              if data is not None: h['Content-Type']='application/json'
+              req=urllib.request.Request(url,method=method,data=data,headers=h)
+              try:
+                  with urllib.request.urlopen(req,timeout=20) as rsp:
+                      out=json.loads(rsp.read(150000))
+              except urllib.error.HTTPError as err:
+                  raise SystemExit(f'STOP: Cloudflare {method} {err.code}') from None
+              if not out.get('success'):
+                  raise SystemExit('STOP: Cloudflare API returned non-success')
+              return out.get('result')
+          db=request(f'{root}/d1/database/{dbid}')
+          if not isinstance(db,dict) or db.get('name')!='finnbilglass-db-staging' or db.get('jurisdiction')!='eu' or db.get('uuid')!=dbid:
+              raise SystemExit('STOP: expected EU staging D1 not found')
+          endpoint=f'{root}/workers/scripts/{script}/secrets'
+          listed=request(endpoint)
+          if not isinstance(listed,list):
+              raise SystemExit('STOP: staging Worker secrets list not returned')
+          names={x.get('name') for x in listed if isinstance(x,dict)}
+          if 'RESEND_API_KEY' not in names:
+              raise SystemExit('STOP: staging Worker is not the expected initialized script')
+          values={'OPS_ACCESS_TEAM_DOMAIN':team,'OPS_ACCESS_AUD':aud}
+          updated=[]
+          for key,value in values.items():
+              if key in names:
+                  print(f'SKIP: {key} already configured (value not readable)')
+                  continue
+              request(endpoint,'PUT',{'name':key,'type':'secret_text','text':value})
+              print(f'ADDED: {key} to staging Worker only')
+              updated.append(key)
+          after=request(endpoint)
+          actual={x.get('name') for x in after if isinstance(x,dict)}
+          required={'OPS_ACCESS_TEAM_DOMAIN','OPS_ACCESS_AUD','RESEND_API_KEY'}
+          if not required<=actual:
+              raise SystemExit('STOP: staging secrets not complete')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('### Staging Access JWT validation configuration ready'+chr(10))
+              out.write('Cloudflare Worker: '+script+chr(10))
+              out.write('Issuer: '+team+chr(10))
+              out.write('AUD: '+aud+chr(10))
+              out.write('Only missing bindings added: '+str(updated)+chr(10))
+              out.write('Production D1, Worker, Access policies and emails untouched.'+chr(10))
+              out.write('This secret API update can publish a new STAGING Worker version; test staging after change.'+chr(10))
+          print('PASS: staging Worker contains required Access and Resend secret names')
+          PY
