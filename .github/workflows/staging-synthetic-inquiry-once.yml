@@ -1,5 +1,6 @@
 name: FinnBilGlass - one-time synthetic staging customer journey
 
+# Re-run after verified 0005 feature_flags repair (staging D1 only).
 # Real staging endpoint test, but no real customer data, email, payment or
 # production writes. Synthetic contact uses reserved .invalid TLD.
 on:
