@@ -15,8 +15,8 @@ export interface Env {
   EVIDENCE_UPLOAD_ENABLED?: string;
   EVIDENCE_REVIEW_ENABLED?: string;
   EVIDENCE_STATUS_CHANGE_ENABLED?: string;
-  /** Utgående e-post-svar til kunder (Brevo v3 SMTP). Uten nøkkel er /reply 503 «ikke konfigurert». */
-  BREVO_API_KEY?: string;
+  /** Utgående e-post via Resend. Uten nøkkel er /reply 503 «ikke konfigurert». */
+  RESEND_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
