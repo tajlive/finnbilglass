@@ -33,7 +33,14 @@
 ## GitHub Actions-kjøring
 
 Åpne Actions → **Staging OPS - manual release gate** → Run workflow på `main`.
-La `candidate_sha` stå **tomt** (workflowen henter og låser gjeldende PR #57 HEAD automatisk), `authorization=STAGING-ONLY`. Kjør først `apply_migrations=false`, `deploy=false` for en **nøkkelfri QA-gjennomgang** (staging-jobben hoppes over); deretter migrasjon/deploy når schema, OAuth, Access og secrets er bekreftet. Workflowen stopper ved feil identitet, feil D1 UUID, feil Worker, manglende Time Travel, migrasjoner eller manglende Worker-secrets.
+La `candidate_sha` stå **tomt** (workflowen henter og låser gjeldende PR #57 HEAD automatisk), `authorization=STAGING-ONLY`.
+
+1. **Ingen nøkler nødvendig:** `inspect_staging=false`, `apply_migrations=false`, `deploy=false` gir full QA, lokal test av alle fem D1-migrasjoner og Wrangler-dry-run, uten Cloudflare-tilgang.
+2. **Første ekte driftskontroll (skrivebeskyttet):** Etter at dedikert token er lagt i GitHub Environment `staging`, sett `inspect_staging=true`, la migrasjon/deploy stå `false`. Da kontrolleres Cloudflare-konto, staging-D1 UUID og tabelloversikt uten skriving.
+3. **Første stagingmigrasjon:** Kjør `apply_migrations=true`, `deploy=false`, eventuelt sett `bootstrap_admin_email` til e-postadressen for første administrator. Denne initieringen krever at arbeidsflyten startes av repo-eier `tajlive`. E-postvalget er valgfritt og benyttes **kun** under denne stagingmigrasjonen. `INSERT OR IGNORE` oppretter bare manglende invitasjon og overskriver aldri eksisterende ansattrolle.
+4. **Stagingdeploy:** Etter verifisert SQL, Cloudflare Access AUD og staging Worker-secrets, sett `deploy=true`. Workflowen kontrollerer nødvendige tabeller og Worker-secret-navn før den deployer. Bruk **kun staging**.
+
+Workflowen stopper ved feil identitet, feil D1 UUID, feil Worker, manglende Time Travel, migrasjoner eller Worker-secrets. Google/Access JWT fra invitert administrator aktiverer invitasjonen ved første innlogging – uten et nytt lokalt app-passord.
 
 D1 Time Travel gjenoppretter *hele databasen* og kan overskrive andre skriveoperasjoner. Cloudflares retensjon er **7 dager på Free eller 30 dager på Workers Paid**; bruk ikke et fast 30-dagersløfte uten abonnementskontroll. Bruk gjenoppretting kun etter driftsbeslutning og konsekvenskontroll, ikke automatisk i en workflow.
 
