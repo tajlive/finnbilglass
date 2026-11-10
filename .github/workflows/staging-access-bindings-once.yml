@@ -39,7 +39,8 @@ jobs:
           class NoRedirect(urllib.request.HTTPRedirectHandler):
               def redirect_request(self,req,fp,code,msg,headers,url): return None
           opener=urllib.request.build_opener(NoRedirect)
-          loginreq=urllib.request.Request('https://ops-staging.finnbilglass.no/',method='GET')
+          loginreq=urllib.request.Request('https://ops-staging.finnbilglass.no/',method='GET',
+              headers={'Accept':'text/html','User-Agent':'FinnBilGlass-Access-ReadOnly-Diagnostic/1'})
           try:
               opener.open(loginreq,timeout=15)
               raise SystemExit('STOP: staging OPS not protected by Access redirect')
