@@ -8,6 +8,12 @@ export interface Env {
   IMAGE_RESOLVER_SECRET?: string;
   OPPLAERING_BUCKET?: R2Bucket;
   SUPPORT_EVIDENCE_TOKEN?: string;
+  /** Cloudflare Access staff sign-in for protected manual-order actions. Fail closed when unset. */
+  OPS_ACCESS_TEAM_DOMAIN?: string;
+  OPS_ACCESS_AUD?: string;
+  OPS_MANUAL_STAFF_EMAILS?: string;
+  /** Explicit switch; no order routes are active by default. */
+  OPS_MANUAL_ORDERS_ENABLED?: string;
   /** STAGING: konversasjonell assistent (fitment-v1/conversation-v1). Prod default: AV. */
   ASSISTANT_ENABLED?: string;
   MULTI_GLASS_ENABLED?: string;
