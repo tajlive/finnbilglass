@@ -82,6 +82,11 @@ export function opsAdminUi(): Response {
         </div>
         <div id="innboks-tabell" class="empty">Ingen saker lastet.</div>
       </div>
+      <div class="card">
+        <h2>Må fordeles</h2>
+        <p class="hint">E-poster som ikke kan knyttes sikkert til en sak. Kontroller kunde og saksnummer før du velger sak.</p>
+        <div id="ufordelt-liste" class="empty">Ingen ufordelte meldinger lastet.</div>
+      </div>
     </section>
 
     <section class="view" id="view-sak">
