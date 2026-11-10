@@ -39,7 +39,7 @@ export async function assignUnmatchedMail(
   catch { return json({ ok: false, error: 'UGYLDIG_JSON' }, 400); }
   const inquiryId = input.inquiryId;
   const reason = typeof input.reason === 'string' ? input.reason.trim() : '';
-  if (!Number.isSafeInteger(inquiryId) || Number(inquiryId) <= 0 || reason.length < 12 || reason.length > 300) {
+  if (typeof inquiryId !== 'number' || !Number.isSafeInteger(inquiryId) || Number(inquiryId) <= 0 || reason.length < 12 || reason.length > 300) {
     return json({ ok: false, error: 'SAK_OG_BEGRUNNELSE_PAKREVD' }, 400);
   }
   const db = syncDb(env);
