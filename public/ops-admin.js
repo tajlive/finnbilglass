@@ -185,15 +185,59 @@
     var el = $('#innboks-tabell');
     el.innerHTML = '<div class="empty">Laster…</div>';
     if (!state.saker.length) {
-      api('/api/ops/saker').then(function (d) { state.saker = d.saker || []; tegnInnboks(); })
+      api('/api/ops/saker').then(function (d) { state.saker = d.saker || []; tegnInnboks(); lastUfordelt(); })
         .catch(function (e) { feil('#innboks-tabell', e.status === 401 ? 'Ingen tilgang.' : e.message); });
-    } else tegnInnboks();
+    } else { tegnInnboks(); lastUfordelt(); }
 
     function tegnInnboks() {
       var f = state.filter;
       var rader = state.saker.filter(function (s) { return !f || s.status === f; });
       renderTabell('#innboks-tabell', rader);
     }
+  }
+
+
+  // ── Sikker, manuell fordeling av innkommende og sendte meldinger ──
+  function lastUfordelt() {
+    var el = document.getElementById('ufordelt-liste');
+    if (!el) return;
+    el.innerHTML = '<div class="empty">Laster ufordelte meldinger…</div>';
+    api('/api/ops/epost/ufordelt').then(function (d) {
+      var messages = d.messages || [];
+      if (!messages.length) { el.innerHTML = '<p class="muted">Ingen ufordelte meldinger.</p>'; return; }
+      var cases = state.saker.filter(function (s) { return Number.isInteger(s.inquiryId) && s.inquiryId > 0; });
+      var options = '<option value="">Velg riktig sak…</option>' + cases.map(function (s) {
+        return '<option value="' + esc(s.inquiryId) + '">#' + esc(s.inquiryId) +
+          ' · ' + esc(s.navn || s.regnr || '') + '</option>';
+      }).join('');
+      el.innerHTML = '<table class="list"><thead><tr><th>Melding</th><th>Korrespondent</th><th>Sak</th></tr></thead><tbody>' +
+        messages.map(function (m) {
+          return '<tr data-mail="' + esc(m.id) + '"><td><strong>' + esc(m.subject || '(uten emne)') +
+            '</strong><br><span class="muted">' + esc(String(m.body || '').slice(0, 170)) +
+            '</span></td><td>' + esc(m.recipient || '') + '<br><span class="muted">' +
+            esc(m.direction === 'IN' ? 'Fra kunde' : 'Sendt fra support') +
+            '</span></td><td><select aria-label="Velg sak">' + options +
+            '</select><button class="secondary" type="button" data-assign>Fordel</button></td></tr>';
+        }).join('') + '</tbody></table>';
+      el.querySelectorAll('[data-assign]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var row = btn.closest('[data-mail]');
+          var selected = row.querySelector('select').value;
+          if (!selected) { alert('Velg riktig sak først.'); return; }
+          var reason = window.prompt('Hvorfor hører denne meldingen til sak #' + selected + '?');
+          if (!reason || reason.trim().length < 12) { alert('Begrunn med minst 12 tegn.'); return; }
+          btn.disabled = true;
+          api('/api/ops/epost/ufordelt/' + encodeURIComponent(row.dataset.mail) + '/fordel', {
+            method: 'POST', body: { inquiryId: Number(selected), reason: reason.trim() },
+          }).then(function () {
+            lastUfordelt();
+            alert('Meldingen er knyttet til sak #' + selected + ' med revisjonsspor.');
+          }).catch(function (err) { btn.disabled = false; alert(err.message); });
+        });
+      });
+    }).catch(function (e) {
+      el.innerHTML = '<p class="muted">' + esc(e.status === 404 ? 'Meldingsfordeling er ikke aktivert i dette miljøet.' : e.message) + '</p>';
+    });
   }
 
   // ── Saksdetalj ─────────────────────────────────────────
@@ -518,7 +562,7 @@
       var h = d.historikk || [];
       el.innerHTML = h.length
         ? '<ul class="timeline">' + h.map(function (x) {
-            var navn = x.type === 'reply' ? 'Svar til kunde' : x.type === 'status' ? 'Statusendring' : 'Notat';
+            var navn = x.type === 'incoming' ? 'Kundesvar' : x.type === 'sent' ? 'Sendt e-post' : x.type === 'reply' ? 'Svar til kunde' : x.type === 'status' ? 'Statusendring' : 'Notat';
             return '<li><time>' + new Date(x.tid).toLocaleString('nb-NO') + ' · ' + esc(x.fra || '') + '</time><strong>' + esc(navn) + '</strong>' +
               (x.innhold ? '<br><span class="muted">' + esc(String(x.innhold).slice(0, 220)) + '</span>' : '') + '</li>';
           }).join('') + '</ul>'
