@@ -67,7 +67,9 @@ function testDb(){
   };
   // Expose D1 statement metadata only for deterministic mocks, no external D1.
   const wrapped={prepare(sql){
-    return {bind(...params){
+    // D1 supports both db.prepare(sql).first() and db.prepare(sql).bind(...).first().
+    const unbound=db.prepare(sql).bind();
+    return {...unbound,bind(...params){
       const inner=db.prepare(sql).bind(...params);
       return {...inner,sql,params};
     }};
