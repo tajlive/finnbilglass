@@ -1,0 +1,82 @@
+name: FinnBilGlass - verify first staging admin login (read-only)
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/staging-login-readonly-once.yml
+permissions:
+  contents: read
+jobs:
+  inspect:
+    if: github.repository == 'tajlive/finnbilglass' && github.ref == 'refs/heads/main' && github.actor == 'tajlive'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    environment: staging
+    steps:
+      - name: Read only first-admin membership status and login audit (no personal rows)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json,os,urllib.request,urllib.error
+          acct='80d5b1d56a3e907150ba7348b6182894'
+          dbid='78842e17-ab0b-47c1-acde-244044073466'
+          token=os.environ.get('CLOUDFLARE_API_TOKEN','')
+          if not token: raise SystemExit('FAIL: configured Cloudflare token unavailable')
+          endpoint=f'https://api.cloudflare.com/client/v4/accounts/{acct}/d1/database/{dbid}'
+          headers={'Authorization':'Bearer '+token,'Accept':'application/json'}
+          def call(url,data=None):
+            h=dict(headers); payload=None
+            if data is not None:
+              h['Content-Type']='application/json'
+              payload=json.dumps(data).encode()
+            req=urllib.request.Request(url,method='POST' if payload else 'GET',data=payload,headers=h)
+            with urllib.request.urlopen(req,timeout=20) as response:
+              result=json.loads(response.read(150000))
+            if not result.get('success'):raise RuntimeError('Cloudflare API failed')
+            return result.get('result')
+          db=call(endpoint) or {}
+          if db.get('name')!='finnbilglass-db-staging' or db.get('uuid')!=dbid or db.get('jurisdiction')!='eu':
+            raise SystemExit('FAIL: wrong or non-EU database')
+          # Only SELECT statements. No customer rows, emails, JWTs or tokens written to logs.
+          queries=[
+            ("first administrator", """
+             SELECT role,status,
+               (accepted_at IS NOT NULL) AS has_accepted,
+               (last_login_at IS NOT NULL) AS has_login
+             FROM ops_staff_memberships
+             WHERE email='tomarnejensen@gmail.com'
+            """),
+            ("staff login audit", """
+             SELECT COUNT(*) AS login_events
+             FROM ops_staff_activity
+             WHERE action='LOGIN' AND actor_email='tomarnejensen@gmail.com'
+            """),
+            ("staging customer inquiry count", "SELECT COUNT(*) AS n FROM beta_inquiries")
+          ]
+          notes=['### First staging administrator login - read-only D1 evidence']
+          summary={}
+          for label,sql in queries:
+            result=call(endpoint+'/query',{'sql':sql.strip()})
+            rows=[r for part in (result if isinstance(result,list) else [result]) if isinstance(part,dict)
+                  for r in part.get('results',[]) if isinstance(r,dict)]
+            if len(rows)!=1: raise SystemExit(f'FAIL: unexpected {label} query result')
+            summary[label]=rows[0]
+          admin=summary['first administrator']
+          if admin.get('role')!='ADMIN' or admin.get('status')!='ACTIVE' or not admin.get('has_accepted'):
+            raise SystemExit('FAIL: first admin is not ACTIVE after Access login')
+          if not admin.get('has_login'):
+            raise SystemExit('FAIL: first admin has no last_login_at')
+          events=summary['staff login audit']['login_events']
+          if not isinstance(events,int) or events<1:
+            raise SystemExit('FAIL: first admin has no LOGIN audit entry')
+          print('PASS: invited ADMIN became ACTIVE after Access login')
+          print('PASS: accepted_at and last_login_at recorded')
+          print(f'PASS: staff LOGIN audit events: {events}')
+          print('Staging inquiry rows:',summary['staging customer inquiry count'].get('n'))
+          notes+=['PASS: ADMIN ACTIVE, accepted and last_login timestamps set',
+                  f'PASS: {events} LOGIN audit event(s)',
+                  'No SQL writes, customer rows, emails, payments or deployments performed.']
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+            out.write(chr(10).join(notes)+chr(10))
+          PY
