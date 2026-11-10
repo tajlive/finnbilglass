@@ -41,6 +41,9 @@ jobs:
       - name: Testsuite
         run: npm test
 
+      - name: Rehearse proposed staging D1 migrations locally (no credentials)
+        run: python3 scripts/maintenance/staging-migration-rehearsal.py
+
       - name: Installer Chromium for skrivebeskyttet smoke (PR #40)
         if: github.event_name == 'pull_request' && github.event.pull_request.number == 40
         run: npx playwright install --with-deps chromium
