@@ -89,7 +89,7 @@
     "test:glass-body": "node --import tsx --test tests/glass-body-compatibility.test.mjs",
     "test:ops-workbench": "node --import tsx --test tests/ops-workbench.test.mjs tests/ops-workbench-integration.test.mjs",
     "test:resolver-price": "node --import tsx --test tests/resolver-price.test.ts",
-    "test:gmail-safe-sync": "node --import tsx --test tests/gmail-safe-sync.test.mjs tests/gmail-case-history.test.mjs tests/mail-allocation.test.mjs tests/gmail-record.test.mjs"
+    "test:gmail-safe-sync": "node --import tsx --test tests/gmail-safe-sync.test.mjs tests/gmail-case-history.test.mjs tests/mail-allocation.test.mjs tests/gmail-record.test.mjs tests/resend-receive-guard.test.mjs"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260811.1",
