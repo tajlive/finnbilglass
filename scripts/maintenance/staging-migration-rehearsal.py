@@ -10,18 +10,16 @@ import sqlite3
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-MIGRATIONS = [
-    "0040_ops_manual_offer_order",
-    "0041_ops_staff_invites_activity",
-    "0042_ops_reply_outbox",
-    "0043_ops_gmail_sync",
-    "0044_ops_offer_outbox",
-]
-REQUIRED = {
-    "ops_manual_offers", "ops_manual_orders", "ops_staff_memberships",
-    "ops_staff_activity", "ops_reply_outbox", "ops_messages", "ops_mail_details",
-    "ops_mail_sync_state", "ops_offer_outbox", "ops_mail_events", "ops_work_events",
+MANIFEST = json.loads(
+    (ROOT / "scripts/maintenance/staging-fresh-db-manifest.json").read_text()
+)
+MIGRATIONS = MANIFEST["base"] + MANIFEST["ops"]
+REQUIRED = set(MANIFEST["required_tables"]) | {
+    "ops_mail_details", "ops_mail_events", "ops_work_events",
 }
+assert MANIFEST["database_name"] == "finnbilglass-db-staging"
+assert MANIFEST["database_id"] == "78842e17-ab0b-47c1-acde-244044073466"
+assert len(MANIFEST["ops"]) == 5
 
 
 def rejects(db: sqlite3.Connection, query: str, params: tuple = ()) -> None:
@@ -35,28 +33,28 @@ def rejects(db: sqlite3.Connection, query: str, params: tuple = ()) -> None:
 def rehearsal() -> dict:
     db = sqlite3.connect(":memory:")
     db.execute("PRAGMA foreign_keys=ON")
-    # Only pre-existing FK parent is needed to test the proposed OPS schema.
-    # Never create a customer or production database during this rehearsal.
-    db.executescript("""
-    CREATE TABLE beta_inquiries (
-      id INTEGER PRIMARY KEY, kontakt TEXT NOT NULL
-    );
-    CREATE TABLE beta_inquiry_events (
-      event_id TEXT PRIMARY KEY, inquiry_id INTEGER, event_type TEXT,
-      previous_status TEXT, status TEXT, note TEXT, created_at INTEGER,
-      created_by TEXT, meta_json TEXT
-    );
-    """)
-    for name in MIGRATIONS:
-        sql = (ROOT / "migrations" / "proposed" / (name + ".sql.proposed")).read_text()
+    # Rehearse THE SAME historical base + OPS files as remote bootstrap.
+    # Uses a real inquiry schema, never a fake FK-only substitute.
+    # No credentials and no Cloudflare calls.
+    for path in MIGRATIONS:
+        assert path.startswith("migrations/"), path
+        assert ".." not in path, path
+        sql = (ROOT / path).read_text(encoding="utf8")
         db.executescript(sql)
     tables = {r[0] for r in db.execute(
         "SELECT name FROM sqlite_master WHERE type='table'"
     )}
     assert REQUIRED <= tables, f"Missing tables: {REQUIRED - tables}"
     assert not list(db.execute("PRAGMA foreign_key_check"))
-    db.execute("INSERT INTO beta_inquiries(id,kontakt) VALUES(?,?)",
-               (1, "staging-only@example.invalid"))
+    db.execute(
+        "INSERT INTO beta_inquiries(id,navn,kontakt) VALUES(?,?,?)",
+        (1, "Staging synthetic", "staging-only@example.invalid"),
+    )
+    db.execute("""
+      INSERT INTO beta_inquiry_events
+      (event_id,inquiry_id,event_type,created_at,created_by)
+      VALUES ('synthetic-reply',1,'reply',1100,'qa@example.invalid')
+    """)
     db.execute("""
       INSERT INTO ops_manual_offers
       (offer_id,inquiry_id,version,sku,fitment_evidence_ref,equipment_json,
@@ -134,13 +132,13 @@ def rehearsal() -> dict:
     rejects(db, "DELETE FROM ops_staff_activity WHERE event_id='event-1'")
     assert not list(db.execute("PRAGMA foreign_key_check"))
     # CREATE IF NOT EXISTS should be safe if an interrupted migration is rerun.
-    for name in MIGRATIONS:
-        sql = (ROOT / "migrations" / "proposed" / (name + ".sql.proposed")).read_text()
+    for path in MANIFEST["ops"]:
+        sql = (ROOT / path).read_text(encoding="utf8")
         db.executescript(sql)
     assert db.execute("SELECT COUNT(*) FROM ops_manual_orders").fetchone()[0] == 1
     assert db.execute("SELECT COUNT(*) FROM ops_offer_outbox").fetchone()[0] == 1
     return {
-        "status": "PASS", "migration_files": len(MIGRATIONS),
+        "status": "PASS", "migration_files": len(MIGRATIONS), "base_files": len(MANIFEST["base"]),
         "required_tables": len(REQUIRED),
         "foreign_key_check": "PASS", "offer_duplicate": "BLOCKED",
         "order_without_acceptance": "BLOCKED", "immutable_terms": "PASS",
