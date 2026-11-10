@@ -27,7 +27,7 @@ import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, ty
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
 import { opsAdminUi } from './routes/ops-admin-ui';
-import { handleKatalogSok, handleKatalogGlass, handleGlassValg, handleTilbud, handleEpostHistorikk } from './routes/admin-katalog';
+import { handleKatalogSok, handleKatalogGlass, handleGlassValg, handleTilbud } from './routes/admin-katalog';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
@@ -1790,7 +1790,7 @@ async function handleRequest(request: Request, env: Env, ctx?: ExecutionContext)
     const epostMatch = /^\/api\/ops\/inquiries\/(\d+)\/epost$/.exec(path);
     if (method === 'GET' && epostMatch) {
       if (!(await adminAutorisert(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
-      return handleEpostHistorikk(env, Number(epostMatch[1]));
+      return getEpostHistorikk(env, Number(epostMatch[1]));
     }
 
     // ── E-postsynkronisering (ny API) ───────────────────────────────────────────
