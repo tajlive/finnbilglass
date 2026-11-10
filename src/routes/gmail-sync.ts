@@ -36,7 +36,7 @@ async function findCase(db: D1Database, headers: Record<string, string>, counter
   return confirmedCaseId(proposed, counterparty, row);
 }
 
-async function recordMessage(env: Env, message: GmailSafeMessage, mailbox: string): Promise<void> {
+async function recordMessage(env: Env, message: GmailSafeMessage, mailbox: string): Promise<boolean> {
   if (!MSG_ID.test(message.id)) throw new Error('GMAIL_INVALID_MESSAGE_ID');
   const db = syncDb(env);
   const headers = gmailHeaders(message);
@@ -45,34 +45,42 @@ async function recordMessage(env: Env, message: GmailSafeMessage, mailbox: strin
   if (!allowed.length) throw new Error('GMAIL_NO_COMPANY_ALIAS');
   const from = singleAddress(headers.from);
   const to = singleAddress(headers.to);
+  const emailTokens = (value: string) => [...new Set((value.match(/[A-Z0-9.!#$%&'*+/=?^_{}|~-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []).map(e => e.toLowerCase()))];
+  const fromTokens = emailTokens(headers.from || '');
+  const toTokens = emailTokens(headers.to || '');
+  const hasCompanySender = fromTokens.some(e => allowed.includes(e));
+  const hasCompanyRecipient = toTokens.some(e => allowed.includes(e));
   const sent = message.labelIds?.includes('SENT') === true;
   const inbox = message.labelIds?.includes('INBOX') === true;
   // Ignore personal and unrelated Gmail messages, and ambiguous multi-address headers.
-  if ((!sent && !inbox) || !from || !to) return;
-  if (sent && !allowed.includes(from)) return;
-  if (!sent && (!allowed.includes(to) || from === mailbox || allowed.includes(from))) return;
-  const counterpart = sent ? to : from;
-  if (allowed.includes(counterpart)) return;
+  if (!sent && !inbox) return false;
+  if (sent && !hasCompanySender) return false;
+  if (!sent && (!hasCompanyRecipient || (from === mailbox && hasCompanySender))) return false;
+  // Multi-recipient or malformed headers must remain visible but unassigned.
+  const counterpart = sent ? (to || String(headers.to || '').slice(0, 240))
+    : (from || String(headers.from || '').slice(0, 240));
+  if (!counterpart || allowed.includes(counterpart)) return false;
+  const safeToAutoLink = !!from && !!to && fromTokens.length === 1 && toTokens.length === 1;
 
   const providerId = 'gmail-' + message.id;
   const existing = await db.prepare('SELECT id FROM ops_messages WHERE provider_id=?')
     .bind(providerId).first();
-  if (existing) return;
+  if (existing) return false;
   const rfcMessageId = String(headers['message-id'] || '').trim().slice(0, 300);
   if (rfcMessageId) {
     const crossProvider = await db.prepare(
       'SELECT m.id FROM ops_messages m JOIN ops_mail_details d ON m.provider_id = d.provider_id '
       + 'WHERE d.rfc_message_id = ? LIMIT 1',
     ).bind(rfcMessageId).first();
-    if (crossProvider) return;
+    if (crossProvider) return false;
   }
-  const inquiryId = await findCase(db, headers, counterpart);
+  const inquiryId = safeToAutoLink ? await findCase(db, headers, counterpart) : null;
   const parts = extractEmailBody(message as Parameters<typeof extractEmailBody>[0]);
   const plain = (parts.text || parts.html.replace(/<[^>]*>/g, ' ')).slice(0, 30000);
   const subject = String(headers.subject || '(uten emne)').slice(0, 250);
   const now = Date.now();
   // One transaction: no partial state if details insertion fails.
-  await db.batch([
+  const results = await db.batch([
     db.prepare(
       'INSERT OR IGNORE INTO ops_messages('
       + 'id,inquiry_id,request_id,direction,recipient,subject,body,status,provider_id,actor,created_at,updated_at'
@@ -86,6 +94,7 @@ async function recordMessage(env: Env, message: GmailSafeMessage, mailbox: strin
       JSON.stringify({ 'message-id': rfcMessageId || null, 'in-reply-to': headers['in-reply-to'] || null,
         gmailThreadId: message.threadId || null }), '[]'),
   ]);
+  return results[0]?.meta.changes === 1;
 }
 
 export interface GmailSyncResult { synced: number; errors: string[]; mode?: 'incremental' | 'full' }
@@ -102,7 +111,7 @@ export async function syncGmailEmails(env: Env): Promise<GmailSyncResult> {
     const batch = await loadGmailBatch(tokens.access_token, originalCursor);
     let imported = 0;
     await consumeGmailBatch(batch,
-      async (message, mailbox) => { await recordMessage(env, message, mailbox); imported++; },
+      async (message, mailbox) => { if (await recordMessage(env, message, mailbox)) imported++; },
       async (newCursor) => {
         // Store progress only after all pages and messages were persisted.
         // Do not overwrite a cursor advanced by a competing sync run.
