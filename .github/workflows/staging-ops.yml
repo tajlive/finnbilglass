@@ -93,6 +93,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run qa
+      - name: Rehearse all five staging OPS migrations in ephemeral SQLite
+        run: python3 scripts/maintenance/staging-migration-rehearsal.py
       - name: Compile exact staging Worker without deploying or Cloudflare credentials
         run: npx wrangler deploy --config wrangler.staging.toml --dry-run --outdir /tmp/fbg-staging-bundle
       - name: Safe validation summary
