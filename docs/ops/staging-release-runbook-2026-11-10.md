@@ -22,6 +22,14 @@
 - Staging-migrasjon og deploy er fortsatt en eksplisitt engangsgodkjent handling, beskyttet av GitHub-miljøet `staging` og `STAGING_CLOUDFLARE_API_TOKEN`. Egen staging-API-token må legges inn én gang; ingen lokal `wrangler login` eller separat ansattpassord skal være nødvendig.
 - Den tidligere brukte repository-secreten `CLOUDFLARE_API_TOKEN` for produksjon **kan ikke** brukes av staging-jobben. Konto-ID er allerede satt i workflowen, og skal ikke tastes inn på nytt.
 
+## Kontinuerlig QA og leverandøroppdateringer
+
+- `.github/workflows/nightly-quality.yml` kjører på `main` via GitHub Actions hver dag kl. **04:23 UTC**, og kan også startes manuelt. Den tester både `main` og **gjeldende HEAD fra draft PR #57** så lenge denne fortsatt er aktiv og eies av repoet. Den kjører `npm ci`, full `npm run qa` (TypeScript og tester) og `wrangler deploy --dry-run` for staging-bunten. Ingen Cloudflare-token, D1-skriving, Worker-deploy, e-post eller betaling. Scheduled jobs kan bli forsinket av GitHub.
+- Første [nightly QA-kjøring #42882989348](https://github.com/tajlive/finnbilglass/actions/runs/42882989348) bestod **begge jobbene**, inkludert Worker-dry-run, 10.11.2026. Dette er **ikke** et bevis for fullført staginghandel.
+- Den allerede aktive ChatGPT-automatiseringen «FinnBilGlass – produksjonsledelse og utviklingskontroll» sjekker GitHub/staging/CI med eksisterende seks-timers intervall og rapporterer nye avvik; den er oppdatert til å følge denne workflowen og PR #57.
+- Den eksisterende fredagsrapporten «AI-agenter: ukentlig kortliste» inkluderer nå **praktisk leverandør- og sikkerhetskontroll for Cloudflare, Wrangler, GitHub Actions, Resend og Gmail**. Undersøk nyheten mot dokumentasjon, kode og QA før den tas i bruk. Ingen automatisk produksjonsutrulling på grunnlag av foruminnlegg eller changelog.
+- Ved rød nattlig CI: lokaliser failing step/test i workflow-logs, klassifiser avhengighetsproblem/flaky/regresjon, lag sporbar fix på kandidatgren/PR, kontroller ny full QA og dry-run. Ikke slå av sjekker for å få grønt resultat. Hvis D1/Access/Workspace-secrets mangler, be om **en** autorisert engangsgodkjenning; ikke be om lokal `wrangler login` i hver chat.
+
 ## GitHub Actions-kjøring
 
 Åpne Actions → **Staging OPS - manual release gate** → Run workflow på `main`.
