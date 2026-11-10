@@ -36,6 +36,11 @@ jobs:
         run: npm ci
       - name: Full test and TypeScript QA
         run: npm run qa
+      - name: Rehearse OPS migrations locally when present
+        run: |
+          if [ -f scripts/maintenance/staging-migration-rehearsal.py ]; then
+            python3 scripts/maintenance/staging-migration-rehearsal.py
+          fi
       - name: Verify staging Worker bundle, no Cloudflare credentials
         run: npx wrangler deploy --config wrangler.staging.toml --dry-run --outdir /tmp/fbg-nightly-main
       - name: Record non-deploy verification
@@ -92,6 +97,9 @@ jobs:
       - name: Full candidate QA
         if: steps.pin.outputs.active == 'true'
         run: npm run qa
+      - name: Rehearse all five candidate OPS D1 migrations in memory
+        if: steps.pin.outputs.active == 'true'
+        run: python3 scripts/maintenance/staging-migration-rehearsal.py
       - name: Validate exact candidate staging bundle without deploy
         if: steps.pin.outputs.active == 'true'
         run: |
