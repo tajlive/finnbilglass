@@ -20,7 +20,7 @@ import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STAT
 import { operationsCenterUi } from './ops-center-ui';
 import { handleOpsStaffRoute } from './ops-staff-routes';
 import { verifyManualOpsStaff } from './ops-manual-access';
-import { recogniseInvitedStaff } from './ops-staff';
+import { recogniseInvitedStaff, type OpsStaff } from './ops-staff';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
@@ -166,6 +166,14 @@ function dataUrlTilBytes(dataUrl: string): { bytes: Uint8Array; mime: string; ex
   }
 }
 
+// A signed staff identity is bound to this request, never taken from client JSON.
+const opsActorByRequest = new WeakMap<Request, OpsStaff>();
+function caseAuditStatement(env: Env, staff: OpsStaff, action: string, caseId: number, now: number) {
+  return env.FINNBILGLASS_DB.prepare(
+    "INSERT INTO ops_staff_activity(event_id,actor_email,action,subject_type,subject_id,created_at,details_json) "+
+    "VALUES(?,?,?,'INQUIRY',?,?,'{}')"
+  ).bind('evt-'+crypto.randomUUID(),staff.email,action,String(caseId),now);
+}
 async function supportAuthorised(request: Request, env: Env): Promise<boolean> {
   // Keep legacy support-token access during the gradual Operations Centre migration.
   const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
@@ -179,7 +187,9 @@ async function supportAuthorised(request: Request, env: Env): Promise<boolean> {
   try {
     const staff = await recogniseInvitedStaff(env.FINNBILGLASS_DB, verified, accessJwt);
     // Reviewer can inspect cases, but only operators/admins can mutate them.
-    return !!staff && (request.method === 'GET' || staff.role !== 'REVIEWER');
+    if (!staff || (request.method !== 'GET' && staff.role === 'REVIEWER')) return false;
+    opsActorByRequest.set(request, staff);
+    return true;
   } catch {
     return false;
   }
@@ -819,8 +829,9 @@ export default {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!(await supportAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
-      const to = body.status, actor = typeof body.actor === 'string' ? body.actor.trim() : '', reason = body.reason;
-      if (!isInquiryStatus(to) || !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
+      const staffActor=opsActorByRequest.get(request);
+      const to = body.status, actor = staffActor?.email ?? (typeof body.actor === 'string' ? body.actor.trim() : ''), reason = body.reason;
+      if (!isInquiryStatus(to) || (!staffActor && !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor)) || !validInquiryReason(reason)) return json({ ok: false, error: 'Status, ansvarlig og kort begrunnelse er påkrevd.' }, 400);
       const id = Number(inquiryStatusMatch[1]);
       const row = await env.FINNBILGLASS_DB.prepare('SELECT status FROM beta_inquiries WHERE id = ?').bind(id).first<{ status: string }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
@@ -831,6 +842,7 @@ export default {
       await env.FINNBILGLASS_DB.batch([
         env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, meta),
         env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind(to, now, actor, id),
+        ...(staffActor ? [caseAuditStatement(env,staffActor,'INQUIRY_STATUS_CHANGED',id,now)] : []),
       ]);
       return json({ ok: true, status: to });
     }
@@ -840,13 +852,16 @@ export default {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!(await supportAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
-      const actor = typeof body.actor === 'string' ? body.actor.trim() : '', note = body.note;
-      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !validInquiryReason(note)) return json({ ok: false, error: 'Ansvarlig og notat er påkrevd.' }, 400);
+      const staffActor=opsActorByRequest.get(request);
+      const actor = staffActor?.email ?? (typeof body.actor === 'string' ? body.actor.trim() : ''), note = body.note;
+      if ((!staffActor && !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor)) || !validInquiryReason(note)) return json({ ok: false, error: 'Ansvarlig og notat er påkrevd.' }, 400);
       const id = Number(inquiryNoteMatch[1]);
       const row = await env.FINNBILGLASS_DB.prepare('SELECT id FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
       const now = Date.now();
-      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor).run();
+      const noteWrite=env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by) VALUES (?, ?, 'note', ?, ?, ?)").bind(`note-${id}-${now}-${crypto.randomUUID()}`, id, note.trim(), now, actor);
+      if (staffActor) await env.FINNBILGLASS_DB.batch([noteWrite,caseAuditStatement(env,staffActor,'INQUIRY_NOTE_ADDED',id,now)]);
+      else await noteWrite.run();
       return json({ ok: true });
     }
     const inquiryReplyMatch = /^\/api\/ops\/inquiries\/(\d+)\/reply$/.exec(path);
@@ -857,8 +872,9 @@ export default {
       if (!(await supportAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
       if (!env.BREVO_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
-      const actor = typeof body.actor === 'string' ? body.actor.trim() : '', message = typeof body.message === 'string' ? body.message.trim() : '';
-      if (!/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);
+      const staffActor=opsActorByRequest.get(request);
+      const actor = staffActor?.email ?? (typeof body.actor === 'string' ? body.actor.trim() : ''), message = typeof body.message === 'string' ? body.message.trim() : '';
+      if ((!staffActor && !/^[a-zA-Z0-9 _.-]{2,64}$/.test(actor)) || !message || message.length > 2000) return json({ ok: false, error: 'Ansvarlig og svar-tekst er påkrevd.' }, 400);
       const id = Number(inquiryReplyMatch[1]);
       const row = await env.FINNBILGLASS_DB.prepare('SELECT id, navn, kontakt, regnr FROM beta_inquiries WHERE id = ?').bind(id).first<{ id: number; navn: string | null; kontakt: string; regnr: string | null }>();
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
@@ -867,7 +883,9 @@ export default {
       const sendt = await sendReplyEmail(env, epost, row.navn, row.regnr, message);
       if (!sendt.ok) return json({ ok: false, error: sendt.error || 'Kunne ikke sende e-posten.' }, 502);
       const now = Date.now();
-      await env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ to: epost, to_user: row.navn || null })).run();
+      const replyWrite=env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, note, created_at, created_by, meta_json) VALUES (?, ?, 'reply', ?, ?, ?, ?)").bind(`reply-${id}-${now}-${crypto.randomUUID()}`, id, message, now, actor, JSON.stringify({ to: epost, to_user: row.navn || null }));
+      if (staffActor) await env.FINNBILGLASS_DB.batch([replyWrite,caseAuditStatement(env,staffActor,'INQUIRY_REPLY_SENT',id,now)]);
+      else await replyWrite.run();
       return json({ ok: true, to: epost });
     }
     if (method === 'GET' && path === '/api/ops/saker') {
