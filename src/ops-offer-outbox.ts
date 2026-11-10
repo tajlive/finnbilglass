@@ -47,8 +47,13 @@ async function completeSend(env: Env, row: OutboxRow, actor: string, providerId:
 export async function sendQueuedOffer(env: Env, offer: OfferForSend, actor: string): Promise<Result> {
   const db=env.FINNBILGLASS_DB;
   if (offer.status === 'SENT' || offer.status === 'ACCEPTED') return {ok:true,status:offer.status,alreadySent:true};
-  if (offer.status !== 'DRAFT' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(offer.kontakt)) {
-    return {ok:false,status:'REJECTED',error:'TILBUD_ELLER_EPOST_UGYLDIG'};
+  // Never try sending a real provider email to reserved synthetic domains.
+  // This must be checked BEFORE an outbox record is queued or claimed.
+  const recipient = offer.kontakt.trim();
+  const domain = recipient.split('@')[1]?.toLowerCase() ?? '';
+  const syntheticDomain = /(^|\.)(invalid|test|example|localhost)$/.test(domain);
+  if (offer.status !== 'DRAFT' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient) || syntheticDomain) {
+    return {ok:false,status:'REJECTED',error:syntheticDomain?'TESTADRESSE_KAN_IKKE_MOTTA_TILBUD':'TILBUD_ELLER_EPOST_UGYLDIG'};
   }
   const subject=`Tilbud på bilglass – sak ${offer.inquiry_id}, versjon ${offer.version}`;
   const message=`Hei ${String(offer.navn||'')},\n\nTilbud ${offer.version}: ${offer.sku}\nTotalpris inkl. mva.: ${(Number(offer.total_minor)/100).toFixed(2)} NOK\nLevering: ${offer.delivery_note}\n\nSvar på denne e-posten for å godta tilbudet. Oppgi tilbudsversjon ${offer.version}.\n\nFinnBilglass`;
