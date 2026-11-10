@@ -37,10 +37,11 @@ test('one-click invite + first Access login activates role, no app OTP or per-us
   const employees=await listOpsStaff(f.db,admin);
   assert.equal(employees.length,2);
   assert.equal(employees.find(x=>x.email===worker.email)?.status,'ACTIVE');
-  assert.equal(employees.find(x=>x.email===worker.email)?.last_login_at,2300);
+  assert.equal(employees.find(x=>x.email===worker.email)?.last_login_at,2200);
   await recogniseInvitedStaff(f.db,worker,'new.signed.cloud.jwt.2',2500);
   const again=await listOpsActivity(f.db,admin);
   assert.equal(again.filter(x=>x.action==='LOGIN').length,2,'new signed token is another login session');
+  assert.equal((await listOpsStaff(f.db,admin)).find(x=>x.email===worker.email)?.last_login_at,2500);
  }finally{f.sqlite.close();}
 });
 test('uninvited or revoked Google user has no staff access',async()=>{
