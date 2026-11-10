@@ -199,8 +199,11 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const bookmark=JSON.parse(fs.readFileSync('/tmp/fbg-bookmark.json','utf8'));
-          if(!JSON.stringify(bookmark).includes('bookmark'))throw Error('D1_BOOKMARK_MISSING');
-          console.log('Staging-only D1 recovery bookmark verified before mutation');
+          const match=JSON.stringify(bookmark).match(/[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{32}/i);
+          if(!match)throw Error('D1_BOOKMARK_MISSING');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            'Pre-write STAGING D1 restore bookmark: '+match[0]+'\\n');
+          console.log('Staging D1 recovery bookmark recorded in protected release summary');
           NODE
       - name: Apply reviewed OPS migrations on STAGING only
         env:
