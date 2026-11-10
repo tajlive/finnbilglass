@@ -18,6 +18,7 @@ import { analyseEvidenceImage, createCaseId, isEvidenceImageType, MAX_EVIDENCE_I
 import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, type SupportCaseStatus } from './support-evidence-workflow';
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
+import { handleOpsStaffRoute } from './ops-staff-routes';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
@@ -724,6 +725,11 @@ export default {
       return json({ ok: true, caseId, status: 'NEW', imageCount: records.length, decisionAuthority: 'NONE' }, 201);
     }
 
+    // New invitation and employee activity surface: one Cloudflare Access login,
+    // with D1 invitation/role checks. Never the legacy support bearer token.
+    if (path === '/ops/ansatte' || path.startsWith('/api/ops/manual/')) {
+      return handleOpsStaffRoute(request, env);
+    }
     if (method === 'GET' && path === '/ops') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       return operationsCenterUi();
