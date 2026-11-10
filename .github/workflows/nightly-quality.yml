@@ -113,3 +113,50 @@ jobs:
             echo "Tested candidate: ${{ steps.pin.outputs.sha }}"
             echo "No Cloudflare API credentials, migrations, email or payments."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  staging-access-smoke:
+    name: Staging - public health and unauthenticated OPS protections
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read-only smoke of deployed staging (no login, writes or emails)
+        run: |
+          python3 - <<'PY'
+          import os, urllib.request, urllib.error, urllib.parse
+          base='https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev'
+          routes={
+              '/health':{200},
+              '/api/ops/summary':{401,403},
+              '/api/ops/epost/gmail-sync/status':{401,403},
+              '/api/ops/manual/inquiries/1/offers':{401,403},
+          }
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,url):return None
+          http=urllib.request.build_opener(NoRedirect)
+          notes=['### Deployed staging - credential-free read-only checks']
+          for path,allowed in routes.items():
+              req=urllib.request.Request(base+path,method='GET',headers={
+                  'Accept':'application/json','User-Agent':'FinnBilGlass-Safe-Staging-Smoke/1'})
+              try:
+                  with http.open(req,timeout=15) as response: code=response.status
+              except urllib.error.HTTPError as err: code=err.code
+              if code not in allowed:
+                  raise SystemExit(f'FAIL: {path} returned {code}; expected {sorted(allowed)}')
+              print(f'PASS: {path}: HTTP {code}')
+              notes.append(f'- {path}: HTTP {code}')
+          # Cloudflare Access should challenge unauthenticated employees.
+          req=urllib.request.Request('https://ops-staging.finnbilglass.no/',method='GET',
+              headers={'Accept':'text/html','User-Agent':'FinnBilGlass-Access-ReadOnly-Diagnostic/1'})
+          try:
+              with http.open(req,timeout=15) as response:
+                  code=response.status; location=response.headers.get('Location','')
+          except urllib.error.HTTPError as err:
+              code=err.code; location=err.headers.get('Location','')
+          host=urllib.parse.urlsplit(location).hostname
+          if code not in (301,302,303,307,308) or host!='tomarnejensen.cloudflareaccess.com':
+              raise SystemExit(f'FAIL: Access login not enforced; HTTP {code} redirect host {host}')
+          notes.append('- ops-staging host: Access login challenge confirmed')
+          print('PASS: operations staging requires Cloudflare Access')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write(chr(10).join(notes)+chr(10))
+          PY
