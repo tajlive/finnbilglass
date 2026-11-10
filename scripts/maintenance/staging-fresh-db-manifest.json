@@ -7,6 +7,7 @@
   "base": [
     "migrations/0001_resolver_tables.sql",
     "migrations/0002_staging_baseline.sql",
+    "migrations/0005_feature_flags.sql",
     "migrations/0010_opplaering.sql",
     "migrations/0012_evidence_ledger.sql",
     "migrations/0013_evidence_capture_v01.sql",
