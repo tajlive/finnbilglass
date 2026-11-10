@@ -175,6 +175,20 @@ jobs:
           }
           console.log('Required staging OPS tables verified');
           NODE
+      - name: Verify permanent Worker secrets exist before deploy
+        if: inputs.deploy
+        run: |
+          set -euo pipefail
+          npx wrangler secret list --config wrangler.staging.toml --format json > /tmp/fbg-staging-secrets.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const secrets=JSON.parse(fs.readFileSync('/tmp/fbg-staging-secrets.json','utf8'));
+          const found=new Set((Array.isArray(secrets)?secrets:[]).map(x=>x.name));
+          for(const name of ['OPS_ACCESS_TEAM_DOMAIN','OPS_ACCESS_AUD','RESEND_API_KEY']){
+            if(!found.has(name))throw Error('MISSING_STAGING_WORKER_SECRET_'+name);
+          }
+          console.log('Cloudflare Access and Resend Worker secret names verified; values never printed');
+          NODE
       - name: Deploy EXACT reviewed SHA to staging Worker (never prod)
         if: inputs.deploy
         run: |
