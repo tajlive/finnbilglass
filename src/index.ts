@@ -180,12 +180,15 @@ function caseAuditStatement(env: Env, staff: OpsStaff, action: string, caseId: n
   ).bind('evt-'+crypto.randomUUID(),staff.email,action,String(caseId),now);
 }
 async function supportAuthorised(request: Request, env: Env): Promise<boolean> {
-  // Keep legacy support-token access during the gradual Operations Centre migration.
-  const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
-  if (env.SUPPORT_EVIDENCE_TOKEN && token === env.SUPPORT_EVIDENCE_TOKEN) return true;
+  // Legacy bearer-token login is retained ONLY for environments that have not
+  // migrated to the invited-staff portal. Once enabled, signed Cloudflare Access
+  // plus the active D1 membership is mandatory, even if the caller knows the old token.
+  if (env.OPS_STAFF_PORTAL_ENABLED !== 'true') {
+    const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+    return !!env.SUPPORT_EVIDENCE_TOKEN && token === env.SUPPORT_EVIDENCE_TOKEN;
+  }
 
   // Invited staff need only one Cloudflare Access login, not a second app token.
-  if (env.OPS_STAFF_PORTAL_ENABLED !== 'true') return false;
   const verified = await verifyManualOpsStaff(request, env);
   const accessJwt = request.headers.get('Cf-Access-Jwt-Assertion');
   if (!verified || !accessJwt) return false;
