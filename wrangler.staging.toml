@@ -18,7 +18,7 @@ binding = "AI"
 [[d1_databases]]
 binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db-staging"
-database_id = "6c8c3eeb-e4bb-41c7-831f-25e5a735717c"
+database_id = "78842e17-ab0b-47c1-acde-244044073466"
 
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
