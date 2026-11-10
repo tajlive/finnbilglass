@@ -30,6 +30,14 @@ ENVIRONMENT = "staging"
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
 EVIDENCE_STATUS_CHANGE_ENABLED = "false"
+# Staging-only staff and manual sales. These routes still require signed
+# Cloudflare Access JWT + a D1 invitation and remain unavailable without both.
+OPS_STAFF_PORTAL_ENABLED = "true"
+OPS_MANUAL_ORDERS_ENABLED = "true"
+OPS_WORKBENCH_ENABLED = "true"
+# Gmail remains disabled until the Workspace mailbox owner grants offline OAuth
+# and all three OAuth credentials are installed as Worker secrets.
+GMAIL_SYNC_ENABLED = "false"
 
 # ── Observability: Workers Logs-lagring AV, invocation_logs PÅ (konsistens med prod) ──
 [observability.logs]
