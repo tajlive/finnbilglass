@@ -15,6 +15,13 @@
 4. Identifiser faktisk **Google Workspace-postkasse** for `post@finnbilglass.no`. Aliaset alene er ikke en mailbox. Postkasseeier gir Gmail `gmail.readonly` via OAuth 2.0 med offline access. Lagre `GMAIL_REFRESH_TOKEN`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` som staging Worker-secrets. Sett `OPS_INBOUND_ADDRESS` til riktig firmaadresse og aktiver `GMAIL_SYNC_ENABLED=true` **først etter** vellykket separat lesetest. ChatGPTs tilkobling til en privat Gmail-konto er ikke overførbar til Worker og skal ikke brukes som refresh-token.
 5. Staging-kandidaten forventer alle 0040–0044 migrasjoner, inklusive `ops_offer_outbox`. Les faktisk schema og behold D1 Time Travel-bookmark (30 dager) før migrasjon. Ingen ukontrollert kjøring av hele `migrations/`-mappen.
 
+## Automatisering som er aktiv
+
+- Endring av `.github/workflows/staging-ops.yml` på `main` starter automatisk en **nøkkelfri QA-preflight**. Kjøring [42881392683](https://github.com/tajlive/finnbilglass/actions/runs/42881392683) bestod. Denne triggeren har ingen Cloudflare-secrets og kan ikke kjøre migrasjon/deploy.
+- PR #57 har i tillegg automatisk `PR Verification` for hver kodeendring. Ikke dupliser testarbeid manuelt uten grunn.
+- Staging-migrasjon og deploy er fortsatt en eksplisitt engangsgodkjent handling, beskyttet av GitHub-miljøet `staging` og `STAGING_CLOUDFLARE_API_TOKEN`. Egen staging-API-token må legges inn én gang; ingen lokal `wrangler login` eller separat ansattpassord skal være nødvendig.
+- Den tidligere brukte repository-secreten `CLOUDFLARE_API_TOKEN` for produksjon **kan ikke** brukes av staging-jobben. Konto-ID er allerede satt i workflowen, og skal ikke tastes inn på nytt.
+
 ## GitHub Actions-kjøring
 
 Åpne Actions → **Staging OPS - manual release gate** → Run workflow på `main`.
