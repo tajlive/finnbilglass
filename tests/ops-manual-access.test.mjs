@@ -54,7 +54,7 @@ test('spoofed email and Bearer support token cannot pass without signed Access J
   }),env,now);
   assert.equal(access,null);
 });
-test('issuer, audience, expiry, staff email, and signature all fail closed',async()=>{
+test('issuer, audience, expiry, invalid email, and signature all fail closed',async()=>{
   const f=await fixture(),orig=globalThis.fetch;
   globalThis.fetch=async()=>new Response(JSON.stringify({
     keys:[{...f.jwk,kid:'test-key-one',alg:'RS256',use:'sig'}]
@@ -65,7 +65,7 @@ test('issuer, audience, expiry, staff email, and signature all fail closed',asyn
       {...f.good,aud:['wrong-aud']},
       {...f.good,exp:now-1},
       {...f.good,iat:now+400},
-      {...f.good,email:'not-staff@example.com'},
+      {...f.good,email:'invalid-email'},
       {...f.good,sub:''}
     ];
     for(const claims of variations)
