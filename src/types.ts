@@ -34,6 +34,12 @@ export interface Env {
   GOOGLE_OAUTH_CLIENT_ID?: string;
   GOOGLE_OAUTH_CLIENT_SECRET?: string;
   GMAIL_PUBSUB_TOPIC?: string;
+  /** One-time admin OAuth for the EXISTING FinnBilGlass Workspace, staging-only until approved. */
+  OPS_WORKSPACE_OAUTH_ENABLED?: string;
+  /** 32 random bytes base64url, installed as a Worker secret; never commit key. */
+  OPS_GMAIL_TOKEN_ENCRYPTION_KEY?: string;
+  /** Exact existing Workspace mailbox permitted for the Gmail readonly mirror. */
+  OPS_GMAIL_EXPECTED_MAILBOX?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;
