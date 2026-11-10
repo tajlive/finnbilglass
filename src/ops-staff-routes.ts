@@ -7,6 +7,7 @@ import { verifyManualOpsStaff, validManualWriteOrigin } from './ops-manual-acces
 import { recogniseInvitedStaff, inviteOpsStaff, revokeOpsStaff, listOpsStaff, listOpsActivity } from './ops-staff';
 import { opsStaffUi } from './ops-staff-ui';
 import { sendMail, avsenderEpost } from './mail';
+import { beginWorkspaceOAuth, finishWorkspaceOAuth, workspaceConnectionStatus } from './ops-workspace-oauth';
 
 function reply(data:unknown,status=200):Response{
  return new Response(JSON.stringify(data),{status,headers:{
@@ -51,6 +52,13 @@ export async function handleOpsStaffRoute(request:Request,env:Env):Promise<Respo
  if(request.method==='GET' && path==='/api/ops/manual/session')
    return reply({ok:true,staff:{email:staff.email,role:staff.role}});
  if(staff.role!=='ADMIN')return reply({ok:false,error:'KREVER_ADMIN'},403);
+ // OAuth is separate from Cloudflare Access login and only ADMIN may grant Gmail read-only.
+ if(request.method==='GET'&&path==='/api/ops/manual/workspace/oauth/status'){
+  return reply({ok:true,...await workspaceConnectionStatus(env)});
+ }
+ if(request.method==='GET'&&path==='/api/ops/manual/workspace/oauth/callback'){
+  return finishWorkspaceOAuth(request,env,staff);
+ }
 
  if(request.method==='GET' && path==='/api/ops/manual/staff'){
   try{return reply({ok:true,staff:await listOpsStaff(env.FINNBILGLASS_DB,staff)})}
@@ -69,6 +77,9 @@ export async function handleOpsStaffRoute(request:Request,env:Env):Promise<Respo
  const payload=await bodyJson(request);
  if(!payload)return reply({ok:false,error:'UGYLDIG_JSON'},400);
 
+ if(path==='/api/ops/manual/workspace/oauth/start'){
+  return beginWorkspaceOAuth(env,staff);
+ }
  if(path==='/api/ops/manual/staff/invite'){
   if(typeof payload.email!=='string' || typeof payload.role!=='string')
     return reply({ok:false,error:'EPOST_OG_ROLLE_PAKREVD'},400);
