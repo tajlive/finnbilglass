@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { webcrypto } from 'node:crypto';
-import { verifyManualOpsStaff, validManualWriteOrigin } from '../src/ops-manual-access.ts';
+import { verifyManualOpsStaff, validManualWriteOrigin, allowLegacySupportToken } from '../src/ops-manual-access.ts';
 
 const TEAM='https://example-team.cloudflareaccess.com';
 const AUD='abc123-ops-access-audience-tag-123456';
@@ -95,4 +95,18 @@ test('only same-origin browser writes with explicit intent and JSON pass CSRF ch
       {method:'POST',headers:h,body:'{}'});
     assert.equal(validManualWriteOrigin(r),false);
   }
+});
+
+test('enabled staff portal categorically rejects legacy support bearer bypass',()=>{
+  const legacyToken='synthetic-legacy-token-only-for-test';
+  const authenticated=new Request('https://finnbilglass.no/api/ops/saker',{
+    headers:{Authorization:'Bearer '+legacyToken}
+  });
+  const base={SUPPORT_EVIDENCE_TOKEN:legacyToken};
+  assert.equal(allowLegacySupportToken(authenticated,{...base,OPS_STAFF_PORTAL_ENABLED:'false'}),true,
+    'compatibility remains available only before migration');
+  assert.equal(allowLegacySupportToken(authenticated,{...base,OPS_STAFF_PORTAL_ENABLED:'true'}),false,
+    'Access mode must reject even a correct legacy bearer token');
+  assert.equal(allowLegacySupportToken(authenticated,{...base,OPS_STAFF_PORTAL_ENABLED:'staging'}),true);
+  assert.equal(allowLegacySupportToken(new Request('https://finnbilglass.no/api/ops/saker'),base),false);
 });
