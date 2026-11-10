@@ -40,21 +40,52 @@ export async function mottakEpost(env: Env, request: Request) {
  */
 export async function getEpostHistorikk(env: Env, inquiryId: number) {
     const db = getInquiryDb(env);
-    const rader = await db.prepare(
-        `SELECT event_id, event_type, note, created_at, created_by, meta_json
-        FROM beta_inquiry_events
-        WHERE inquiry_id = ? AND event_type IN ('reply', 'status', 'note')
-        ORDER BY created_at DESC LIMIT 100`
-    ).bind(inquiryId).all<Row>();
+    const inquiry = await db.prepare('SELECT id FROM beta_inquiries WHERE id=?').bind(inquiryId).first();
+    if (!inquiry) return json({ ok: false, error: 'SAK_IKKE_FUNNET' }, 404);
 
-    const historikk = (rader.results ?? []).map(r => ({
-        tid: r.created_at,
-        type: r.event_type,
-        fra: r.created_by,
-        innhold: r.note,
-        meta: r.meta_json ? JSON.parse(String(r.meta_json)) : null
+    // Both the legacy activity log and the canonical message ledger are visible on the case.
+    // Never match by sender alone: this query only selects an already verified inquiry_id.
+    const [activity, messages] = await Promise.all([
+        db.prepare(
+            "SELECT event_id,event_type,note,created_at,created_by,meta_json FROM beta_inquiry_events " +
+            "WHERE inquiry_id=? AND event_type IN ('reply','status','note') ORDER BY created_at DESC LIMIT 100"
+        ).bind(inquiryId).all<Row>(),
+        db.prepare(
+            "SELECT id,direction,recipient,subject,body,status,provider_id,actor,created_at " +
+            "FROM ops_messages WHERE inquiry_id=? AND status<>'DRAFT' ORDER BY created_at DESC LIMIT 100"
+        ).bind(inquiryId).all<Row>(),
+    ]);
+
+    const canonical = messages.results || [];
+    const providerIds = new Set(canonical.map(m => String(m.provider_id || '')).filter(Boolean));
+    const old = (activity.results || []).flatMap(row => {
+        let metadata: Record<string, unknown> | null = null;
+        try {
+            if (row.meta_json) metadata = JSON.parse(String(row.meta_json)) as Record<string, unknown>;
+        } catch { metadata = null; }
+        // A Resend send recorded in both ledgers appears just once.
+        if (metadata?.provider_message_id && providerIds.has(String(metadata.provider_message_id))) return [];
+        return [{
+            id: String(row.event_id),
+            tid: Number(row.created_at),
+            type: row.event_type,
+            fra: row.created_by,
+            innhold: row.note,
+            meta: metadata,
+        }];
+    });
+    const synced = canonical.map(row => ({
+        id: String(row.id),
+        tid: Number(row.created_at),
+        type: row.direction === 'IN' ? 'incoming' : 'sent',
+        fra: row.direction === 'IN' ? 'kunde' : row.actor || 'ansatt',
+        innhold: row.body,
+        meta: {
+            source: 'ops_messages', direction: row.direction, status: row.status,
+            subject: row.subject, recipient: row.recipient, providerId: row.provider_id,
+        },
     }));
-
+    const historikk = [...old, ...synced].sort((a, b) => b.tid - a.tid);
     return json({ ok: true, historikk });
 }
 
