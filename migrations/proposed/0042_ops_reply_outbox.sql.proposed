@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS ops_reply_outbox (
   error TEXT,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
-  CHECK(status!='SENT' OR provider_message_id IS NOT NULL OR error IS NULL)
+  -- Never acknowledge delivery without an actual Resend provider message ID.
+  CHECK(status!='SENT' OR provider_message_id IS NOT NULL)
 );
 CREATE INDEX IF NOT EXISTS idx_ops_reply_outbox_inquiry
   ON ops_reply_outbox(inquiry_id,created_at);
