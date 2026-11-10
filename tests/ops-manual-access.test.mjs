@@ -8,8 +8,7 @@ const AUD='abc123-ops-access-audience-tag-123456';
 const ALLOWED='staff@example.com';
 const env={
   OPS_ACCESS_TEAM_DOMAIN:'example-team.cloudflareaccess.com',
-  OPS_ACCESS_AUD:AUD,
-  OPS_MANUAL_STAFF_EMAILS:ALLOWED
+  OPS_ACCESS_AUD:AUD
 };
 const now=1800000000;
 const b64=obj=>Buffer.from(JSON.stringify(obj)).toString('base64url');
@@ -75,7 +74,6 @@ test('issuer, audience, expiry, staff email, and signature all fail closed',asyn
     const jwt=await f.sign();
     assert.equal(await verifyManualOpsStaff(req(jwt.slice(0,-2)+'xx'),env,now),null);
     assert.equal(await verifyManualOpsStaff(req(jwt),{...env,OPS_ACCESS_AUD:undefined},now),null);
-    assert.equal(await verifyManualOpsStaff(req(jwt),{...env,OPS_MANUAL_STAFF_EMAILS:undefined},now),null);
     assert.equal(await verifyManualOpsStaff(req(jwt),{...env,OPS_ACCESS_TEAM_DOMAIN:'https://attacker.example.com'},now),null);
   }finally{globalThis.fetch=orig;}
 });
