@@ -1,0 +1,162 @@
+name: FinnBilGlass - one-time EU staging Workspace OAuth bootstrap
+
+on:
+  push:
+    branches:
+      - staging/first-sale-20261110
+    paths:
+      - .github/workflows/staging-workspace-oauth-bootstrap-once.yml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: finnbilglass-eu-staging-workspace-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.repository == 'tajlive/finnbilglass' && github.ref == 'refs/heads/staging/first-sale-20261110' && github.actor == 'tajlive'
+    environment: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - name: Verify exact PR branch and secure pinned release context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/pulls/57")
+          test "$(echo "$pr" | jq -r .state)" = open
+          test "$(echo "$pr" | jq -r .draft)" = true
+          test "$(echo "$pr" | jq -r .head.repo.full_name)" = "$GITHUB_REPOSITORY"
+          test "$(echo "$pr" | jq -r .head.ref)" = staging/first-sale-20261110
+          test "$(echo "$pr" | jq -r .head.sha)" = "$GITHUB_SHA"
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rehearse final schema on ephemeral SQLite, without secrets
+        run: |
+          set -euo pipefail
+          python3 scripts/maintenance/staging-migration-rehearsal.py
+          npm ci
+          npm run test:ops-workspace-oauth
+          npm run typecheck
+      - name: Verify correct EU staging DB and current Worker secret bindings
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json,os,urllib.request
+          token=os.environ.get('CLOUDFLARE_API_TOKEN','')
+          if not token:raise SystemExit('STOP: existing staging bootstrap credential missing')
+          base='https://api.cloudflare.com/client/v4/accounts/80d5b1d56a3e907150ba7348b6182894'
+          def read(path):
+            req=urllib.request.Request(base+path,headers={
+              'Authorization':'Bearer '+token,'Accept':'application/json'},method='GET')
+            with urllib.request.urlopen(req,timeout=18) as rsp:body=json.loads(rsp.read(100000))
+            if not body.get('success'):raise SystemExit('STOP: Cloudflare API rejected resource access')
+            return body.get('result')
+          d=read('/d1/database/78842e17-ab0b-47c1-acde-244044073466') or {}
+          if (d.get('uuid')!='78842e17-ab0b-47c1-acde-244044073466' or
+              d.get('name')!='finnbilglass-db-staging' or d.get('jurisdiction')!='eu'):
+            raise SystemExit('STOP: wrong Cloudflare D1 identity/jurisdiction')
+          items=read('/workers/scripts/finnbilglass-frontrute-staging/secrets')
+          if not isinstance(items,list):raise SystemExit('STOP: expected Worker secret listing')
+          names={i.get('name') for i in items if isinstance(i,dict)}
+          required={'GOOGLE_OAUTH_CLIENT_ID','GOOGLE_OAUTH_CLIENT_SECRET',
+                    'RESEND_API_KEY','OPS_ACCESS_TEAM_DOMAIN','OPS_ACCESS_AUD'}
+          if not required<=names:
+            raise SystemExit('STOP: missing pre-existing staging OAuth/Access/Resend configuration')
+          print('PASS: verified isolated EU D1, staging Worker and existing Google OAuth client bindings')
+          PY
+      - name: Install additive OAuth tables only on exact isolated EU staging D1
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 80d5b1d56a3e907150ba7348b6182894
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/workspace-oauth-staging.toml" <<'TOML'
+          name = "finnbilglass-workspace-oauth-staging-bootstrap"
+          account_id = "80d5b1d56a3e907150ba7348b6182894"
+          [[d1_databases]]
+          binding = "FINNBILGLASS_DB"
+          database_name = "finnbilglass-db-staging"
+          database_id = "78842e17-ab0b-47c1-acde-244044073466"
+          TOML
+          DB=finnbilglass-db-staging
+          CFG="$RUNNER_TEMP/workspace-oauth-staging.toml"
+          npx wrangler d1 execute "$DB" --config "$CFG" --remote --json \
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('ops_workspace_oauth_attempts','ops_workspace_gmail_tokens','ops_workspace_oauth_audit')" > "$RUNNER_TEMP/workspace-before.json"
+          python3 - <<'PY'
+          import json,os
+          data=json.load(open(os.environ['RUNNER_TEMP']+'/workspace-before.json'))
+          entries=data if isinstance(data,list) else [data]
+          names={r['name'] for item in entries for r in item.get('results',[]) if 'name' in r}
+          if names:raise SystemExit('STOP: OAuth tables already exist; manual schema reconciliation required')
+          print('PASS: no pre-existing Workspace OAuth tables (no prior grant to overwrite)')
+          PY
+          npx wrangler d1 time-travel info "$DB" --config "$CFG" --json > "$RUNNER_TEMP/workspace-time-travel.json"
+          python3 - <<'PY'
+          import json,os,re
+          data=json.load(open(os.environ['RUNNER_TEMP']+'/workspace-time-travel.json'))
+          match=re.search(r'[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{32}',json.dumps(data),re.I)
+          if not match:raise SystemExit('STOP: no pre-write D1 Time Travel bookmark')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+            f.write('EU staging pre-OAuth D1 Time Travel bookmark: '+match.group(0)+chr(10))
+          print('PASS: pre-write staging Time Travel bookmark recorded')
+          PY
+          npx wrangler d1 execute "$DB" --config "$CFG" --remote --yes \
+            --file migrations/proposed/0045_ops_workspace_oauth.sql.proposed >/dev/null
+          npx wrangler d1 execute "$DB" --config "$CFG" --remote --json \
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'ops_workspace_%' ORDER BY name" > "$RUNNER_TEMP/workspace-after.json"
+          python3 - <<'PY'
+          import json,os
+          data=json.load(open(os.environ['RUNNER_TEMP']+'/workspace-after.json'))
+          rows=data if isinstance(data,list) else [data]
+          actual={x.get('name') for r in rows for x in r.get('results',[])}
+          expected={'ops_workspace_oauth_attempts','ops_workspace_gmail_tokens','ops_workspace_oauth_audit'}
+          if not expected<=actual:raise SystemExit('STOP: expected OAuth tables missing')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+            f.write('PASS: three Workspace OAuth tables created in isolated EU D1.'+chr(10))
+          print('PASS: three Workspace OAuth tables created; no existing customer rows modified')
+          PY
+      - name: Create 32-byte AES-GCM key only if absent on staging Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import base64,json,os,urllib.request,urllib.error
+          account='80d5b1d56a3e907150ba7348b6182894'
+          script='finnbilglass-frontrute-staging'
+          token=os.environ.get('CLOUDFLARE_API_TOKEN','')
+          base=f'https://api.cloudflare.com/client/v4/accounts/{account}/workers/scripts/{script}/secrets'
+          hdr={'Authorization':'Bearer '+token,'Accept':'application/json','Content-Type':'application/json'}
+          def call(method,data=None):
+            req=urllib.request.Request(base,method=method,headers=hdr,
+              data=json.dumps(data).encode() if data else None)
+            try:
+              with urllib.request.urlopen(req,timeout=20) as res:parsed=json.loads(res.read(50000))
+            except urllib.error.HTTPError as e:
+              raise SystemExit(f'STOP: Cloudflare Worker secret API HTTP {e.code}') from None
+            if not parsed.get('success'):raise SystemExit('STOP: Cloudflare Worker secret API failed')
+            return parsed.get('result')
+          names={x.get('name') for x in call('GET') if isinstance(x,dict)}
+          key='OPS_GMAIL_TOKEN_ENCRYPTION_KEY'
+          if key in names:
+            print('SKIP: pre-existing staging encryption key preserved; value not accessed')
+          else:
+            secret=base64.urlsafe_b64encode(os.urandom(32)).decode().rstrip('=')
+            call('PUT',{'name':key,'type':'secret_text','text':secret})
+            # The secret never appears in a log, source file, PR or environment output.
+            del secret
+            print('PASS: staging-only AES-GCM encryption key safely provisioned')
+          names={x.get('name') for x in call('GET') if isinstance(x,dict)}
+          if key not in names:raise SystemExit('STOP: encryption-key secret not persisted')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+            f.write('PASS: staging encryption secret exists; no key material printed.'+chr(10))
+          PY
