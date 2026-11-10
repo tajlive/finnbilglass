@@ -9,7 +9,7 @@
 
 ## Engangsoppsett uten ny wrangler-login per økt
 
-1. Opprett GitHub Repository Settings → Environments → **staging**. Begrens godkjenning/reviewers og tillatte deployment branches til `main`. Legg til *environment secrets* `CLOUDFLARE_API_TOKEN` og `CLOUDFLARE_ACCOUNT_ID`; konto-ID skal være `80d5b1d56a3e907150ba7348b6182894`. API-token skal ha kun nødvendige staging-rettigheter: Workers Scripts Edit og D1 Edit, **ingen Zone/DNS-edit**. Dokumenter tokenrotasjon. Ikke bruk brukerens personlige globale API-nøkkel.
+1. Opprett GitHub Repository Settings → Environments → **staging**. Begrens godkjenning/reviewers og tillatte deployment branches til `main`. Legg til **kun** *environment secret* `STAGING_CLOUDFLARE_API_TOKEN` (dedikert til staging). Konto-ID `80d5b1d56a3e907150ba7348b6182894` er en ikke-hemmelig, eksplisitt verdi i den låste staging-workflowen. **Ikke bruk** eksisterende repository-/produksjonssecret `CLOUDFLARE_API_TOKEN`. API-token skal ha kun nødvendige staging-rettigheter: Workers Scripts Edit og D1 Edit, **ingen Zone/DNS-edit**. Dokumenter tokenrotasjon. Ikke bruk brukerens personlige globale API-nøkkel.
 2. Cloudflare Access beskytter riktig staging-host. Kontroller appens host, Access team-domain og AUD og koblingen til `finnbilglass-frontrute-staging`. Legg til to ansatte i Access-allow-policys Google/OTP-flyt. `ops_staff_memberships` er en separat rolle-/invitasjonsliste, men ingen skal måtte angi et lokalt Operations-passord. Login-JWT må faktisk verifiseres mot Access JWKS.
 3. Installer **Worker-secrets bare på staging-Worker**, ikke i repository: `OPS_ACCESS_TEAM_DOMAIN`, `OPS_ACCESS_AUD`, `RESEND_API_KEY` (og eksisterende staging-secrets som trengs). GitHub workflow krever disse tre navnene før deploy. Å sette Worker-secrets kan utløse en ny Worker-versjon; gjør det i et planlagt stagingvindu. Ikke lim tokens i PR/Actions-logger.
 4. Identifiser faktisk **Google Workspace-postkasse** for `post@finnbilglass.no`. Aliaset alene er ikke en mailbox. Postkasseeier gir Gmail `gmail.readonly` via OAuth 2.0 med offline access. Lagre `GMAIL_REFRESH_TOKEN`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` som staging Worker-secrets. Sett `OPS_INBOUND_ADDRESS` til riktig firmaadresse og aktiver `GMAIL_SYNC_ENABLED=true` **først etter** vellykket separat lesetest. ChatGPTs tilkobling til en privat Gmail-konto er ikke overførbar til Worker og skal ikke brukes som refresh-token.
@@ -18,7 +18,7 @@
 ## GitHub Actions-kjøring
 
 Åpne Actions → **Staging OPS - manual release gate** → Run workflow på `main`.
-Oppgi eksakt 40-tegn SHA fra PR #57, `authorization=STAGING-ONLY`. Først en kjøring med `apply_migrations=false`, `deploy=false` for verifikasjon; deretter migrasjon/deploy når schema, OAuth, Access og secrets er bekreftet. Workflowen stopper ved feil identitet, feil D1 UUID, feil Worker, manglende Time Travel, migrasjoner eller manglende Worker-secrets.
+La `candidate_sha` stå **tomt** (workflowen henter og låser gjeldende PR #57 HEAD automatisk), `authorization=STAGING-ONLY`. Kjør først `apply_migrations=false`, `deploy=false` for en **nøkkelfri QA-gjennomgang** (staging-jobben hoppes over); deretter migrasjon/deploy når schema, OAuth, Access og secrets er bekreftet. Workflowen stopper ved feil identitet, feil D1 UUID, feil Worker, manglende Time Travel, migrasjoner eller manglende Worker-secrets.
 
 D1 Time Travel gjenoppretter *hele databasen* og kan overskrive andre skriveoperasjoner. Bruk gjenoppretting kun etter driftsbeslutning og konsekvenskontroll, ikke automatisk i en workflow.
 
