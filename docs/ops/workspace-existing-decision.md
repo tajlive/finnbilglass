@@ -35,6 +35,28 @@ Status oppdatert 2026-11-10. Beslutningen gjelder alle nye agenter, Codex-økter
 - **Reell eiergodkjenning er fortsatt nødvendig**: knapp i staging `/ops/ansatte`; tilhørende Google OAuth-klient må ha eksakt godkjent redirect URI. Ikke utgi det for ferdig koblet til Gmail før faktisk samtykke og profilkontroll.
 - **Google-policy:** `gmail.readonly` er et *restricted scope*. Oppsett i Google Cloud Console (Internal vs. External, OAuth-verifisering, samt testpubliseringens begrensede refresh token-levetid) må kontrolleres før vi lover permanent drift. Bruk den eksisterende Workspace-organisasjonen og minimer tilgangen.
 
+## Blokkering 11.11.2026 – Google OAuth redirect_uri_mismatch
+
+**Bekreftet i Googles faktiske feilmelding i Chrome**, etter at administrator trykket «Godkjenn Gmail-lesetilgang én gang»:
+
+- Google returnerte `400 redirect_uri_mismatch` før samtykke/tilgang ble gitt.
+- Eksisterende OAuth client ID, fra feilens `client_id`: `546660856812-hg0q0892674cqomekd4ibmt5ja4i0egg.apps.googleusercontent.com`. Dette er en offentlig klientidentifikator, **ikke** et klientpassord.
+- Appens eksakte `redirect_uri` fra Google-feildetaljene:
+  `https://ops-staging.finnbilglass.no/api/ops/manual/workspace/oauth/callback`
+- Google viste `tomarnejensen@gmail.com` som forhåndsvalgt konto, men **det er ikke årsaken til redirect-feilen**. Ved neste forsøk velges den eksisterende Workspace-postkassen `tomarne@finnbilglass.no`. OAuth-flyten har uansett eksplisitt verifikasjon av Gmail-profilens adresse før kryptert token lagres.
+
+**Løsning – endre eksisterende klient, ikke opprett ny:**
+
+1. Åpne [Google Auth Platform → Clients](https://console.cloud.google.com/auth/clients), velg prosjektet som eier klient-ID-en nevnt over, og åpne akkurat denne **Web application** OAuth-klienten.
+2. Under **Authorized redirect URIs**: **Add URI** og legg inn den eksakte `https://ops-staging.finnbilglass.no/api/ops/manual/workspace/oauth/callback` (ingen etterfølgende `/`). Behold alle eksisterende URI-er. Lagre.
+3. Google kan bruke noen minutter eller mer på oppdatering. Gå til `https://ops-staging.finnbilglass.no/ops/ansatte` og start Gmail-samtykket på nytt, med `tomarne@finnbilglass.no`. Hvert forsøk må få en **ny** CSRF-state og PKCE-verifier; gjenbruk aldri en tidligere Google OAuth-URL.
+4. **Ikke kopier eller del** `GOOGLE_OAUTH_CLIENT_SECRET`, OAuth-kode eller Google refresh token. Hvis Web application-klienten ikke finnes i prosjektet, kontroller prosjekt/konto og klienttype før noen erstattes.
+5. Verifiser status i ADMIN-siden og D1 (koblet Workspace-mailbox, én append-only samtykkehendelse). Aktiver først deretter `GMAIL_SYNC_ENABLED` og valider kontrollert inbox-synk.
+
+**Status:** Klargjort OAuth-kode og tabeller på staging, men **ingen gyldig samtykke eller lagret Gmail-refresh-token er bekreftet**. Ikke hev at Workspace/Gmail er aktivert. Ikke endre produksjon.
+
+Google-kilder: [OAuth Web Server – redirect_uri_mismatch](https://developers.google.com/identity/protocols/oauth2/web-server#authorization-errors-redirect-uri-mismatch), [Manage OAuth Clients](https://support.google.com/cloud/answer/15549257?hl=en).
+
 ## Eksternt kontrollpunkt som ikke kan automatiseres uten samtykke
 
 Bare **kontoens eier** kan gi den innloggede Workspace-postkassen Gmail `readonly` OAuth-rettigheter, og eksisterende OAuth-klient må ha riktig redirect URI i Google Cloud Console. Dette er ikke det samme som å opprette Google Workspace på nytt.
