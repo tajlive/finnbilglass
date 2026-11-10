@@ -126,7 +126,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: "80d5b1d56a3e907150ba7348b6182894"
       STAGING_WORKER: finnbilglass-frontrute-staging
       STAGING_DB: finnbilglass-db-staging
-      STAGING_DB_ID: 6c8c3eeb-e4bb-41c7-831f-25e5a735717c
+      STAGING_DB_ID: 78842e17-ab0b-47c1-acde-244044073466
     steps:
       - uses: actions/checkout@v4
         with:
@@ -154,7 +154,7 @@ jobs:
             name:'finnbilglass-frontrute-staging',
             account_id:'80d5b1d56a3e907150ba7348b6182894',
             database_name:'finnbilglass-db-staging',
-            database_id:'6c8c3eeb-e4bb-41c7-831f-25e5a735717c',
+            database_id:'78842e17-ab0b-47c1-acde-244044073466',
             bucket_name:'finnbilglass-opplaering-staging'
           };
           const lines=new Set(content.split(String.fromCharCode(10)).map(x=>x.trim()));
