@@ -1,0 +1,88 @@
+name: FinnBilGlass - verify synthetic staging offer draft read-only
+
+# Read-only staging D1 verification, no checkout or PR code execution.
+# Never mutates customer data, offer state, staff, payment, Gmail or Resend.
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/verify-staging-synthetic-draft-once.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    if: github.repository == 'tajlive/finnbilglass' && github.ref == 'refs/heads/main' && github.actor == 'tajlive'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+    steps:
+      - name: Verify EU staging D1 and exact synthetic DRAFT + audit; no PII output
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, json, urllib.request
+          account='80d5b1d56a3e907150ba7348b6182894'
+          uuid='78842e17-ab0b-47c1-acde-244044073466'
+          token=os.environ.get('CLOUDFLARE_API_TOKEN','')
+          if not token: raise SystemExit('Missing existing Cloudflare diagnostic credential')
+          base=f'https://api.cloudflare.com/client/v4/accounts/{account}/d1/database/{uuid}'
+          headers={'Authorization':'Bearer '+token,'Accept':'application/json'}
+          def get(path='',sql=None):
+              payload=json.dumps({'sql':sql}).encode() if sql is not None else None
+              h=dict(headers)
+              if payload:h['Content-Type']='application/json'
+              request=urllib.request.Request(base+path,headers=h,
+                   data=payload,method='POST' if payload else 'GET')
+              with urllib.request.urlopen(request,timeout=20) as res:
+                  body=json.loads(res.read(100000))
+              if not body.get('success'):raise SystemExit('Cloudflare D1 returned non-success')
+              return body.get('result')
+          info=get() or {}
+          if info.get('name')!='finnbilglass-db-staging' or info.get('uuid')!=uuid or info.get('jurisdiction')!='eu':
+              raise SystemExit('STOP: isolated EU staging DB identity not verified')
+          def count(sql):
+              result=get('/query',sql)
+              entries=result if isinstance(result,list) else [result]
+              rows=[row for item in entries if isinstance(item,dict) for row in item.get('results',[])]
+              if len(rows)!=1 or not isinstance(rows[0].get('n'),int):
+                  raise SystemExit('STOP: unexpected D1 count query response')
+              return rows[0]['n']
+          checks=[
+            ('exact synthetic draft',"""
+              SELECT COUNT(*) AS n FROM ops_manual_offers
+              WHERE inquiry_id=1 AND version=1
+                AND sku='QA-ONLY-NO-GLASS'
+                AND fitment_evidence_ref='QA-SYNTHETIC-NO-FITMENT'
+                AND total_minor=100 AND currency='NOK'
+                AND delivery_note='QA – ingen faktisk levering'
+                AND status='DRAFT' AND sent_at IS NULL
+                AND accepted_at IS NULL
+            """,1),
+            ('staff OFFER_CREATED audit',"""
+              SELECT COUNT(*) AS n
+              FROM ops_staff_activity a
+              JOIN ops_manual_offers o ON o.offer_id=a.subject_id
+              WHERE o.inquiry_id=1 AND o.version=1
+                AND a.action='OFFER_CREATED'
+                AND a.subject_type='OFFER'
+                AND a.actor_email=o.created_by
+            """,1),
+            ('no send queued or attempted',"""
+              SELECT COUNT(*) AS n FROM ops_offer_outbox WHERE inquiry_id=1
+            """,0),
+            ('no manual orders',"""
+              SELECT COUNT(*) AS n FROM ops_manual_orders WHERE inquiry_id=1
+            """,0)
+          ]
+          notes=['### Synthetic offer draft – isolated EU staging D1 read-only audit']
+          for label,sql,expected in checks:
+              result=count(sql)
+              if result!=expected:raise SystemExit(f'FAIL: {label}: {result}, expected {expected}')
+              notes.append(f'- PASS: {label} = {result}')
+              print(f'PASS: {label} = {result}')
+          notes.append('No email, order, payment, staff change or D1 write attempted.')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write(chr(10).join(notes)+chr(10))
+          PY
