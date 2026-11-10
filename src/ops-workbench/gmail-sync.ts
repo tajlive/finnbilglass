@@ -1,4 +1,5 @@
 import type { Env } from '../types';
+import { storedWorkspaceRefreshToken } from '../ops-workspace-oauth';
 
 interface GmailTokenResponse {
   access_token: string;
@@ -40,8 +41,11 @@ const GMAIL_SCOPES = [
 ].join(' ');
 
 export async function getGmailTokens(env: Env): Promise<{ access_token: string; refresh_token: string } | null> {
-  // Tokens stored in D1 or KV - for now read from environment
-  const refreshToken = env.GMAIL_REFRESH_TOKEN;
+  // Prefer the explicitly ADMIN-consented, encrypted FinnBilGlass Workspace
+  // mailbox in staging. Never infer access from a private ChatGPT Gmail account.
+  const refreshToken = env.OPS_WORKSPACE_OAUTH_ENABLED === 'true'
+    ? await storedWorkspaceRefreshToken(env)
+    : env.GMAIL_REFRESH_TOKEN;
   const clientId = env.GOOGLE_OAUTH_CLIENT_ID;
   const clientSecret = env.GOOGLE_OAUTH_CLIENT_SECRET;
 
@@ -61,7 +65,7 @@ export async function getGmailTokens(env: Env): Promise<{ access_token: string; 
   });
 
   if (!response.ok) {
-    console.error('Gmail token refresh failed:', await response.text());
+    // No provider body in logs: it can include sensitive token metadata.
     return null;
   }
 
