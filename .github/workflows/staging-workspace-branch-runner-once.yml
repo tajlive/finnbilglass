@@ -1,0 +1,23 @@
+name: FinnBilGlass - staging-only branch runner check
+on:
+  push:
+    branches:
+      - staging/first-sale-20261110
+    paths:
+      - .github/workflows/staging-workspace-branch-runner-once.yml
+
+permissions:
+  contents: read
+
+jobs:
+  check-branch-execution:
+    if: github.repository == 'tajlive/finnbilglass' && github.ref == 'refs/heads/staging/first-sale-20261110' && github.actor == 'tajlive'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify staging branch runner without secrets or production deploy
+        run: |
+          test "$GITHUB_REPOSITORY" = tajlive/finnbilglass
+          test "$GITHUB_REF" = refs/heads/staging/first-sale-20261110
+          echo "STAGING_BRANCH_WORKFLOW_SAFE=true"
+          echo "No checkout, no Cloudflare or GitHub secrets, no production changes"
