@@ -59,6 +59,14 @@
 
 **Fortsatt NO-GO for produksjon** til staging-Worker og komplett handel er dokumentert med faktiske testkall. Ingen kundedata, Worker-deploy, e-post eller penger ble behandlet av de ovennevnte bootstrapjobbene.
 
+## Staging Worker faktisk deployet – Cloudflare CLI 10.11.2026
+
+- **Eksisterende Cloudflare Access-app identifisert uten Zero Trust-adminrettigheter:** `ops-staging.finnbilglass.no` gir `302` mot `tomarnejensen.cloudflareaccess.com`. Cloudflare Access' offentlige innloggings-`kid` ble verifisert mot staginghosten og gir eksakt application **AUD** `8e526c95018b6569d35cf08fba4148e54f1f66a8322246359cb58f5513bc8dbb`. Se [CLI-oppdagelse #42907601189](https://github.com/tajlive/finnbilglass/actions/runs/42907601189).
+- **De to manglende staging Worker-secrets er installert:** `OPS_ACCESS_TEAM_DOMAIN` og `OPS_ACCESS_AUD`. Eksisterende `RESEND_API_KEY` er beholdt. [Engangskjøring #42907894618](https://github.com/tajlive/finnbilglass/actions/runs/42907894618) SUCCESS. Secret-oppdateringen berørte kun `finnbilglass-frontrute-staging`. Zero Trust-policy er ikke endret.
+- **Faktisk stagingdeploy med Wrangler CLI:** [#42908130357](https://github.com/tajlive/finnbilglass/actions/runs/42908130357) **SUCCESS**. Fastlåst PR #57 HEAD `f01946960d46fcb2fe0d0e758e102d1c4ae64d48`; `npm ci`, full `npm run qa`, offline schema-rehearsal og staging dry-run før token ble brukt. Fysisk EU-D1 identitet, alle tre nødvendig Worker-secret-navn og fravær av produksjonsruter ble kontrollert. `wrangler deploy --config wrangler.staging.toml` fullførte, og `workers.dev/health` svarte HTTP **200** etterpå.
+- Både privilegert engangsjobben for Access-verdier og engangsjobben for stagingdeploy er **fjernet** fra `main` etter vellykket kjøring. Repo-token ble brukt som avgrenset engangs-bootstrap; varig releaseport krever fremdeles dedikert `STAGING_CLOUDFLARE_API_TOKEN` i GitHub Environment `staging`.
+- **Ikke forveksle deploy med E2E-godkjenning:** Den første faktiske Access-innloggingen (inkl. D1 INVITED→ACTIVE), minst én til invitert ansatt, kundesak→tilbud→Resend→aksept→ordre, duplikatkontroll, Gmail Workspace OAuth og Kustom manuelt må fremdeles prøves i staging. Ingen ekte e-postutsending eller betaling ble foretatt av deployjobben. Produksjon fortsatt **NO-GO**.
+
 ## GitHub Actions-kjøring
 
 Åpne Actions → **Staging OPS - manual release gate** → Run workflow på `main`.
