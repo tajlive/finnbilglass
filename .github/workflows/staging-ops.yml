@@ -98,8 +98,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # Different name from production; never fall back to the repo-level prod token.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
+      # Account ID is non-secret and pinned to the reviewed staging account.
+      CLOUDFLARE_ACCOUNT_ID: "80d5b1d56a3e907150ba7348b6182894"
       STAGING_WORKER: finnbilglass-frontrute-staging
       STAGING_DB: finnbilglass-db-staging
       STAGING_DB_ID: 6c8c3eeb-e4bb-41c7-831f-25e5a735717c
@@ -116,7 +118,10 @@ jobs:
       - name: Fail-closed account, Worker, D1 and config checks
         run: |
           set -euo pipefail
-          test -n "$CLOUDFLARE_API_TOKEN"
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Add STAGING_CLOUDFLARE_API_TOKEN to GitHub environment staging; production token must not be reused"
+            exit 1
+          fi
           test "$CLOUDFLARE_ACCOUNT_ID" = "80d5b1d56a3e907150ba7348b6182894"
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
