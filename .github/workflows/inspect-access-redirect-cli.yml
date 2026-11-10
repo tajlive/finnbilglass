@@ -60,6 +60,14 @@ jobs:
                   if p.hostname.endswith('.cloudflareaccess.com'):
                       output.append('Cloudflare Access issuer: `'+p.hostname+'`')
                       print('Cloudflare Access issuer host: '+p.hostname)
+                      print('Access redirect path: '+p.path[:220])
+                      print('Access redirect query keys: '+','.join(sorted(urllib.parse.parse_qs(p.query))))
+                      params=urllib.parse.parse_qs(p.query)
+                      for qname in ('aud','audience','app_aud','application_aud'):
+                          for val in params.get(qname,[]):
+                              if re.fullmatch(r'[a-zA-Z0-9_-]{16,100}',val):
+                                  print('Public Access audience param ('+qname+'): '+val)
+                                  output.append('Public Access AUD parameter: `'+val+'`')
                   match=re.search(r'/cdn-cgi/access/login/([0-9a-zA-Z_-]{16,100})',p.path)
                   if match:
                       output.append('Access login route ID (verify vs AUD): `'+match.group(1)+'`')
