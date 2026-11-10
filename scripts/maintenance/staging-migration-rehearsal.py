@@ -137,13 +137,61 @@ def rehearsal() -> dict:
         db.executescript(sql)
     assert db.execute("SELECT COUNT(*) FROM ops_manual_orders").fetchone()[0] == 1
     assert db.execute("SELECT COUNT(*) FROM ops_offer_outbox").fetchone()[0] == 1
+    # New Workspace OAuth schema is a proposal, not yet applied in Cloudflare.
+    # Rehearse it independently on top of existing OPS schema and verify that
+    # state cannot be reused and append-only consent audit cannot be rewritten.
+    oauth_path = "migrations/proposed/0045_ops_workspace_oauth.sql.proposed"
+    oauth_sql = (ROOT / oauth_path).read_text(encoding="utf8")
+    db.executescript(oauth_sql)
+    oauth_tables = {
+        "ops_workspace_oauth_attempts",
+        "ops_workspace_gmail_tokens",
+        "ops_workspace_oauth_audit",
+    }
+    actual = {r[0] for r in db.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'"
+    )}
+    assert oauth_tables <= actual, f"Missing OAuth schema: {oauth_tables - actual}"
+    db.execute("""
+        INSERT INTO ops_workspace_oauth_attempts
+        (state,actor_email,verifier_ciphertext,created_at,expires_at)
+        VALUES(?,?,?,?,?)
+    """, ("0" * 64, "qa@example.invalid", "synthetic-encrypted-pkce", 1000, 61000))
+    rejects(db, """
+        INSERT INTO ops_workspace_oauth_attempts
+        (state,actor_email,verifier_ciphertext,created_at,expires_at)
+        VALUES(?,?,?,?,?)
+    """, ("0" * 64, "qa@example.invalid", "duplicate", 1000, 61000))
+    db.execute("""
+        INSERT INTO ops_workspace_gmail_tokens
+        (id,mailbox,refresh_ciphertext,scope,connected_by,connected_at,updated_at)
+        VALUES('primary',?,?,?,?,?,?)
+    """, ("tomarne@finnbilglass.no", "synthetic-AES-GCM-ciphertext",
+          "https://www.googleapis.com/auth/gmail.readonly",
+          "qa@example.invalid", 1000, 1000))
+    db.execute("""
+        INSERT INTO ops_workspace_oauth_audit
+        (id,actor_email,action,mailbox,created_at)
+        VALUES('audit-1','qa@example.invalid','CONNECTED',
+               'tomarne@finnbilglass.no',1000)
+    """)
+    rejects(db, "UPDATE ops_workspace_oauth_audit SET mailbox='other' WHERE id='audit-1'")
+    rejects(db, "DELETE FROM ops_workspace_oauth_audit WHERE id='audit-1'")
+    rejects(db, """
+        INSERT INTO ops_workspace_gmail_tokens
+        (id,mailbox,refresh_ciphertext,scope,connected_by,connected_at,updated_at)
+        VALUES('secondary',?,?,?,?,?,?)
+    """, ("other@finnbilglass.no", "synthetic", "readonly", "qa", 1000, 1000))
+    db.executescript(oauth_sql)  # Idempotent CREATE TABLE/INDEX/TRIGGER.
+    assert not list(db.execute("PRAGMA foreign_key_check"))
     return {
         "status": "PASS", "migration_files": len(MIGRATIONS), "base_files": len(MANIFEST["base"]),
         "required_tables": len(REQUIRED),
         "foreign_key_check": "PASS", "offer_duplicate": "BLOCKED",
         "order_without_acceptance": "BLOCKED", "immutable_terms": "PASS",
         "resend_without_id": "BLOCKED", "staff_audit": "IMMUTABLE",
-        "reapply": "PASS", "remote_db_access": False
+        "reapply": "PASS", "oauth_migration_proposal": "REHEARSED_ONLY", "oauth_consent_audit": "IMMUTABLE",
+        "remote_db_access": False
     }
 
 
