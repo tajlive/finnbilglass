@@ -92,6 +92,18 @@ export async function verifyManualOpsStaff(
   }
 }
 
+/** Temporary compatibility ONLY before staff portal is enabled.
+ * Once the new Operations login is active, no legacy bearer token can bypass it.
+ */
+export function allowLegacySupportToken(
+  request: Request,
+  env: { OPS_STAFF_PORTAL_ENABLED?: string; SUPPORT_EVIDENCE_TOKEN?: string },
+): boolean {
+  if (env.OPS_STAFF_PORTAL_ENABLED === 'true') return false;
+  const supplied = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
+  return !!env.SUPPORT_EVIDENCE_TOKEN && supplied === env.SUPPORT_EVIDENCE_TOKEN;
+}
+
 /** CSRF defense: write requests are same-origin JSON with an intent header. */
 export function validManualWriteOrigin(request: Request): boolean {
   const origin = request.headers.get('Origin');
