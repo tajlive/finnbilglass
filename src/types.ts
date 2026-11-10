@@ -8,6 +8,13 @@ export interface Env {
   IMAGE_RESOLVER_SECRET?: string;
   OPPLAERING_BUCKET?: R2Bucket;
   SUPPORT_EVIDENCE_TOKEN?: string;
+  /** Cloudflare Access staff sign-in for protected manual-order actions. Fail closed when unset. */
+  OPS_ACCESS_TEAM_DOMAIN?: string;
+  OPS_ACCESS_AUD?: string;
+  /** Enable invited-employee panel after staging Access/D1 are ready (default off). */
+  OPS_STAFF_PORTAL_ENABLED?: string;
+  /** Explicit switch; no order routes are active by default. */
+  OPS_MANUAL_ORDERS_ENABLED?: string;
   /** STAGING: konversasjonell assistent (fitment-v1/conversation-v1). Prod default: AV. */
   ASSISTANT_ENABLED?: string;
   MULTI_GLASS_ENABLED?: string;
@@ -15,8 +22,8 @@ export interface Env {
   EVIDENCE_UPLOAD_ENABLED?: string;
   EVIDENCE_REVIEW_ENABLED?: string;
   EVIDENCE_STATUS_CHANGE_ENABLED?: string;
-  /** Utgående e-post-svar til kunder (Brevo v3 SMTP). Uten nøkkel er /reply 503 «ikke konfigurert». */
-  BREVO_API_KEY?: string;
+  /** Utgående e-post via Resend. Uten nøkkel er /reply 503 «ikke konfigurert». */
+  RESEND_API_KEY?: string;
   SUPPORT_FROM_EMAIL?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;

@@ -1,0 +1,22 @@
+-- PROPOSAL ONLY. Apply only after backing up and confirming the Operations D1.
+-- Persists a stable request key and payload before Resend is called. Retries
+-- reuse the same key so a provider-accepted message is not sent twice.
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS ops_reply_outbox (
+  request_id TEXT PRIMARY KEY CHECK(length(request_id) BETWEEN 16 AND 80),
+  inquiry_id INTEGER NOT NULL REFERENCES beta_inquiries(id),
+  actor_email TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  body TEXT NOT NULL CHECK(length(body) BETWEEN 1 AND 2000),
+  status TEXT NOT NULL CHECK(status IN ('QUEUED','FAILED','SENT')),
+  provider_message_id TEXT,
+  error TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  CHECK(status!='SENT' OR provider_message_id IS NOT NULL OR error IS NULL)
+);
+CREATE INDEX IF NOT EXISTS idx_ops_reply_outbox_inquiry
+  ON ops_reply_outbox(inquiry_id,created_at);
+CREATE INDEX IF NOT EXISTS idx_ops_reply_outbox_status
+  ON ops_reply_outbox(status,updated_at);
