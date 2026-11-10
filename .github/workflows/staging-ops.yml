@@ -1,0 +1,194 @@
+name: Staging OPS - manual release gate
+
+# The workflow lives on main, but executes exactly the reviewed PR #57 head.
+# Never accepts arbitrary commits/forks or runs automatically on PR/push.
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: "Full 40-character SHA of PR #57 HEAD"
+        required: true
+        type: string
+      authorization:
+        description: "Type STAGING-ONLY (no production changes)"
+        required: true
+        type: string
+      apply_migrations:
+        description: "Apply explicitly reviewed 0040-0044 to staging D1"
+        required: true
+        default: false
+        type: boolean
+      deploy:
+        description: "Deploy tested candidate to workers.dev staging ONLY"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: finnbilglass-staging-ops
+  cancel-in-progress: false
+
+jobs:
+  verify-candidate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+    steps:
+      - name: Verify manually entered SHA matches the exact open PR
+        id: pin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED: ${{ inputs.candidate_sha }}
+          AUTHORIZATION: ${{ inputs.authorization }}
+        run: |
+          set -euo pipefail
+          test "$AUTHORIZATION" = "STAGING-ONLY"
+          [[ "$EXPECTED" =~ ^[0-9a-f]{40}$ ]]
+          PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/57")
+          ACTUAL=$(echo "$PR" | jq -r .head.sha)
+          BASE=$(echo "$PR" | jq -r .base.ref)
+          HEAD=$(echo "$PR" | jq -r .head.ref)
+          FORK=$(echo "$PR" | jq -r .head.repo.full_name)
+          DRAFT=$(echo "$PR" | jq -r .draft)
+          test "$EXPECTED" = "$ACTUAL"
+          test "$BASE" = main
+          test "$HEAD" = staging/first-sale-20261110
+          test "$FORK" = "$GITHUB_REPOSITORY"
+          test "$DRAFT" = true
+          echo "sha=$EXPECTED" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pin.outputs.sha }}
+          persist-credentials: false
+      - name: Verify checked-out commit
+        env:
+          EXPECTED: ${{ steps.pin.outputs.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run qa
+
+  staging:
+    needs: verify-candidate
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      STAGING_WORKER: finnbilglass-frontrute-staging
+      STAGING_DB: finnbilglass-db-staging
+      STAGING_DB_ID: 6c8c3eeb-e4bb-41c7-831f-25e5a735717c
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify-candidate.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Fail-closed account, Worker, D1 and config checks
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test "$CLOUDFLARE_ACCOUNT_ID" = "80d5b1d56a3e907150ba7348b6182894"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const content=fs.readFileSync('wrangler.staging.toml','utf8');
+          for(const [key,value] of Object.entries({
+            name:'finnbilglass-frontrute-staging',
+            account_id:'80d5b1d56a3e907150ba7348b6182894',
+            database_name:'finnbilglass-db-staging',
+            database_id:'6c8c3eeb-e4bb-41c7-831f-25e5a735717c',
+            bucket_name:'finnbilglass-opplaering-staging'
+          })){
+            if(!new RegExp('^'+key+'\\\\s*=\\\\s*["\\u0027]'+value+'["\\u0027]\\\\s*$','m').test(content)) throw Error('Wrong staging '+key);
+          }
+          if(/^\\\\[\\\\[routes\\\\]\\\\]/m.test(content)||/custom_domain\\\\s*=\\\\s*true/.test(content))throw Error('STAGING_HAS_PRODUCTION_ROUTE');
+          NODE
+          test -f migrations/proposed/0040_ops_manual_offer_order.sql.proposed
+          test -f migrations/proposed/0041_ops_staff_invites_activity.sql.proposed
+          test -f migrations/proposed/0042_ops_reply_outbox.sql.proposed
+          test -f migrations/proposed/0043_ops_gmail_sync.sql.proposed
+          test -f migrations/proposed/0044_ops_offer_outbox.sql.proposed
+      - name: Verify Cloudflare API account and actual staging DB
+        run: |
+          set -euo pipefail
+          npx wrangler d1 info "$STAGING_DB" --config wrangler.staging.toml --json > /tmp/fbg-db-info.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const x=JSON.parse(fs.readFileSync('/tmp/fbg-db-info.json','utf8'));
+          const db=Array.isArray(x)?x[0]:x;
+          if(String(db.uuid||db.id||'')!==process.env.STAGING_DB_ID)throw Error('D1_ID_MISMATCH');
+          if(db.name && db.name!==process.env.STAGING_DB)throw Error('D1_NAME_MISMATCH');
+          if(db.version && db.version!=='production')throw Error('STAGING_D1_TIME_TRAVEL_NOT_SUPPORTED');
+          console.log('Verified staging D1 identity, name, and backend');
+          NODE
+      - name: Inspect actual schema, without customer data
+        run: |
+          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_manual_offers','ops_staff_memberships','ops_reply_outbox','ops_messages','ops_offer_outbox') ORDER BY name"
+      - name: Record Time Travel restore point before any write
+        if: inputs.apply_migrations || inputs.deploy
+        run: |
+          set -euo pipefail
+          npx wrangler d1 time-travel info "$STAGING_DB" --config wrangler.staging.toml --json > /tmp/fbg-bookmark.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const bookmark=JSON.parse(fs.readFileSync('/tmp/fbg-bookmark.json','utf8'));
+          if(!JSON.stringify(bookmark).includes('bookmark'))throw Error('D1_BOOKMARK_MISSING');
+          console.log('Staging-only D1 recovery bookmark verified before mutation');
+          NODE
+      - name: Apply reviewed OPS migrations on STAGING only
+        if: inputs.apply_migrations
+        run: |
+          set -euo pipefail
+          # Explicit list: NEVER run the project's general migrations folder.
+          # Idempotent CREATE IF NOT EXISTS; a partial failure stops before deploy.
+          for n in 0040_ops_manual_offer_order 0041_ops_staff_invites_activity 0042_ops_reply_outbox 0043_ops_gmail_sync 0044_ops_offer_outbox; do
+            npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
+              --file "migrations/proposed/${n}.sql.proposed"
+          done
+      - name: Require all staging OPS tables before deploy
+        if: inputs.deploy
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox')" > /tmp/fbg-ops-schema.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const rows=JSON.parse(fs.readFileSync('/tmp/fbg-ops-schema.json','utf8'));
+          const names=new Set((Array.isArray(rows)?rows.flatMap(x=>x.results||[]):rows.results||[]).map(x=>x.name));
+          for(const name of ['beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox']){
+            if(!names.has(name))throw Error('MISSING_STAGING_TABLE_'+name);
+          }
+          console.log('Required staging OPS tables verified');
+          NODE
+      - name: Deploy EXACT reviewed SHA to staging Worker (never prod)
+        if: inputs.deploy
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.verify-candidate.outputs.sha }}"
+          npx wrangler deploy --config wrangler.staging.toml
+      - name: Read-only staging health check
+        if: inputs.deploy
+        run: curl --fail --silent --show-error --max-time 20 "https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev/health"
+      - name: Release record
+        run: |
+          {
+            echo "### FinnBilGlass staging-only release"
+            echo "Candidate SHA: ${{ needs.verify-candidate.outputs.sha }}"
+            echo "D1: `finnbilglass-db-staging`"
+            echo "Migrations requested: ${{ inputs.apply_migrations }}"
+            echo "Deploy requested: ${{ inputs.deploy }}"
+            echo "This workflow does not create test sales, send email or initiate payments."
+          } >> "$GITHUB_STEP_SUMMARY"
