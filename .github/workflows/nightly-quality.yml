@@ -1,0 +1,107 @@
+name: FinnBilGlass - nightly quality checks
+
+# Credential-free, read-only quality checks. NEVER deploy or mutate D1.
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/nightly-quality.yml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: finnbilglass-nightly-qa
+  cancel-in-progress: false
+
+jobs:
+  main-quality:
+    name: main - full QA and staging compile
+    runs-on: ubuntu-latest
+    cache-mode: read
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Full test and TypeScript QA
+        run: npm run qa
+      - name: Verify staging Worker bundle, no Cloudflare credentials
+        run: npx wrangler deploy --config wrangler.staging.toml --dry-run --outdir /tmp/fbg-nightly-main
+      - name: Record non-deploy verification
+        run: |
+          {
+            echo "### FinnBilGlass main: nightly QA passed"
+            echo "Commit: ${GITHUB_SHA}"
+            echo "TypeScript, automated QA and Wrangler dry-run only."
+            echo "No database, deployment, email or payment operation."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  active-candidate-quality:
+    name: PR 57 - full QA and staging compile (when active)
+    runs-on: ubuntu-latest
+    cache-mode: none
+    timeout-minutes: 50
+    steps:
+      - name: Identify current reviewed staging candidate
+        id: pin
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/57")
+          STATE=$(echo "$PR" | jq -r .state)
+          DRAFT=$(echo "$PR" | jq -r .draft)
+          BASE=$(echo "$PR" | jq -r .base.ref)
+          HEAD=$(echo "$PR" | jq -r .head.ref)
+          OWNER=$(echo "$PR" | jq -r .head.repo.full_name)
+          SHA=$(echo "$PR" | jq -r .head.sha)
+          if [ "$STATE" = open ] && [ "$DRAFT" = true ] &&
+             [ "$BASE" = main ] && [ "$HEAD" = staging/first-sale-20261110 ] &&
+             [ "$OWNER" = "$GITHUB_REPOSITORY" ] &&
+             [[ "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+            echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+            echo "Checking active PR #57 at $SHA"
+          else
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            echo "PR #57 is not the active staging release candidate; no candidate checkout"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.pin.outputs.active == 'true'
+        with:
+          ref: ${{ steps.pin.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        if: steps.pin.outputs.active == 'true'
+        with:
+          node-version: 22
+      - name: Install pinned candidate dependencies
+        if: steps.pin.outputs.active == 'true'
+        run: npm ci
+      - name: Full candidate QA
+        if: steps.pin.outputs.active == 'true'
+        run: npm run qa
+      - name: Validate exact candidate staging bundle without deploy
+        if: steps.pin.outputs.active == 'true'
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ steps.pin.outputs.sha }}"
+          npx wrangler deploy --config wrangler.staging.toml --dry-run --outdir /tmp/fbg-nightly-candidate
+      - name: Nightly candidate result
+        if: steps.pin.outputs.active == 'true'
+        run: |
+          {
+            echo "### FinnBilGlass PR #57: nightly QA passed"
+            echo "Tested candidate: ${{ steps.pin.outputs.sha }}"
+            echo "No Cloudflare API credentials, migrations, email or payments."
+          } >> "$GITHUB_STEP_SUMMARY"
