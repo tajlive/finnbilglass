@@ -62,6 +62,10 @@ jobs:
                       print('Cloudflare Access issuer host: '+p.hostname)
                       print('Access redirect path: '+p.path[:220])
                       print('Access redirect query keys: '+','.join(sorted(urllib.parse.parse_qs(p.query))))
+                      for value in urllib.parse.parse_qs(p.query).get('kid',[]):
+                          if re.fullmatch(r'[a-fA-F0-9]{64}',value):
+                              print('Cloudflare Access AUD (kid): '+value)
+                              output.append('Cloudflare Access AUD tag (kid): `'+value+'`')
                       params=urllib.parse.parse_qs(p.query)
                       for qname in ('aud','audience','app_aud','application_aud'):
                           for val in params.get(qname,[]):
