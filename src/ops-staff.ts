@@ -38,23 +38,30 @@ export async function recogniseInvitedStaff(
   if(!row || row.status==='REVOKED' || !roles.includes(row.role))return null;
   if(row.status==='INVITED'){
     await db.prepare(
-      "UPDATE ops_staff_memberships SET status='ACTIVE',accepted_at=?,last_login_at=? "+
+      "UPDATE ops_staff_memberships SET status='ACTIVE',accepted_at=? "+
       "WHERE email=? AND status='INVITED'"
-    ).bind(now,now,email).run();
+    ).bind(now,email).run();
+    // A revocation may race with first login. Never trust the stale INVITED row.
+    const fresh=await db.prepare(
+      'SELECT status,role FROM ops_staff_memberships WHERE email=?'
+    ).bind(email).first<Pick<Membership,'status'|'role'>>();
+    if(fresh?.status!=='ACTIVE'||fresh.role!==row.role)return null;
   }
   // Hash signed token. Never persist the bearer token itself or the staff IP.
   const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(accessToken));
   const fingerprint=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
   const eventId='login-'+fingerprint;
-  await db.prepare(
+  const logged=await db.prepare(
     "INSERT OR IGNORE INTO ops_staff_activity "+
     "(event_id,actor_email,action,subject_type,subject_id,created_at,details_json) "+
     "VALUES(?,?,'LOGIN','STAFF',?,?,'{}')"
   ).bind(eventId,email,email,now).run();
-  await db.prepare(
-    'UPDATE ops_staff_memberships SET last_login_at=? WHERE email=? AND status=\'ACTIVE\' '+
-    'AND (last_login_at IS NULL OR last_login_at<?)'
-  ).bind(now,email,now).run();
+  if(Number(logged.meta.changes??0)===1){
+    await db.prepare(
+      'UPDATE ops_staff_memberships SET last_login_at=? WHERE email=? AND status=\'ACTIVE\' '+
+      'AND (last_login_at IS NULL OR last_login_at<?)'
+    ).bind(now,email,now).run();
+  }
   return {email,role:row.role,status:'ACTIVE',subject:verified.subject,audience:verified.audience};
 }
 
