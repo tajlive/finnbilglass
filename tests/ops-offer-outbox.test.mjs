@@ -42,6 +42,23 @@ function fixture(){
     auditCount:()=>sqlite.prepare("SELECT count(*) AS n FROM ops_staff_activity WHERE action='OFFER_SENT'").get().n
   };
 }
+test('reserved synthetic staging addresses cannot queue or trigger Resend',async()=>{
+  for(const contact of ['qa-inquiry-20261110@example.invalid','dummy@qa.test','qa@sub.example','qa@localhost']){
+    const f=fixture(),oldFetch=globalThis.fetch;let sends=0;
+    globalThis.fetch=async()=>{sends++;throw new Error('PROVIDER_CALL_FORBIDDEN')};
+    try{
+      const result=await sendQueuedOffer(f.env,{...f.offer,kontakt:contact},'admin@example.com');
+      assert.equal(result.ok,false);
+      assert.equal(result.status,'REJECTED');
+      assert.equal(result.error,'TESTADRESSE_KAN_IKKE_MOTTA_TILBUD');
+      assert.equal(f.outbox(),undefined,'No outbox payload may be queued for a reserved domain');
+      assert.equal(f.sent(),'DRAFT');
+      assert.equal(f.eventCount(),0);
+      assert.equal(f.auditCount(),0);
+      assert.equal(sends,0);
+    }finally{globalThis.fetch=oldFetch;f.close()}
+  }
+});
 test('one immutable D1 record before Resend, one send even on repeated clicks',async()=>{
  const f=fixture(),original=globalThis.fetch;let calls=0;
  globalThis.fetch=async(_url,options)=>{
