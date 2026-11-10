@@ -20,9 +20,12 @@ import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, ty
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
 import { handleOpsStaffRoute } from './ops-staff-routes';
-import { verifyManualOpsStaff } from './ops-manual-access';
+import { verifyManualOpsStaff, validManualWriteOrigin } from './ops-manual-access';
 import { recogniseInvitedStaff, type OpsStaff } from './ops-staff';
 import { handleOpsManualRoute } from './ops-manual-routes';
+import { syncGmailEmails, gmailSyncStatus } from './routes/gmail-sync';
+import { unassignedMail, assignUnmatchedMail } from './routes/mail-allocation';
+import { getEpostHistorikk } from './routes/epost';
 import { skuDecisionUi } from './sku-decision-ui';
 import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
@@ -733,6 +736,29 @@ export default {
     }
     if (path === '/ops/ansatte' || path.startsWith('/api/ops/manual/')) {
       return handleOpsStaffRoute(request, env);
+    }
+    const caseMailMatch=/^\/api\/ops\/inquiries\/(\d+)\/epost$/.exec(path);
+    if(method==='GET'&&caseMailMatch){
+      if(!(await supportAuthorised(request,env))||!opsActorByRequest.has(request))return json({ok:false,error:'Unauthorised'},401);
+      return getEpostHistorikk(env,Number(caseMailMatch[1]));
+    }
+    if(path==='/api/ops/epost/gmail-sync/status'&&method==='GET'){
+      if(!(await supportAuthorised(request,env))||!opsActorByRequest.has(request))return json({ok:false,error:'Unauthorised'},401);
+      try{return json(await gmailSyncStatus(env))}catch{return json({ok:false,error:'EPOSTMIGRASJON_MANGLER'},503)}
+    }
+    if(path==='/api/ops/epost/gmail-sync'&&method==='POST'){
+      if(!(await supportAuthorised(request,env))||!opsActorByRequest.has(request))return json({ok:false,error:'Unauthorised'},401);
+      try{return json(await syncGmailEmails(env))}catch{return json({ok:false,error:'GMAIL_SYNKRONISERING_FEILET'},503)}
+    }
+    if(path==='/api/ops/epost/ufordelt'&&method==='GET'){
+      if(!(await supportAuthorised(request,env))||!opsActorByRequest.has(request))return json({ok:false,error:'Unauthorised'},401);
+      try{return await unassignedMail(env)}catch{return json({ok:false,error:'EPOSTMIGRASJON_MANGLER'},503)}
+    }
+    const unmatchedMailMatch=/^\/api\/ops\/epost\/ufordelt\/([A-Za-z0-9_-]{1,210})\/fordel$/.exec(path);
+    if(method==='POST'&&unmatchedMailMatch){
+      if(!(await supportAuthorised(request,env))||!opsActorByRequest.has(request))return json({ok:false,error:'Unauthorised'},401);
+      if(!validManualWriteOrigin(request))return json({ok:false,error:'UGYLDIG_FORESPORSEL'},403);
+      try{return await assignUnmatchedMail(env,request,unmatchedMailMatch[1],opsActorByRequest.get(request)!.email)}catch{return json({ok:false,error:'FORDeling_FEILET'},503)}
     }
     if (method === 'GET' && path === '/ops') {
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);

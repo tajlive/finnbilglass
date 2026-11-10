@@ -24,7 +24,16 @@ export interface Env {
   EVIDENCE_STATUS_CHANGE_ENABLED?: string;
   /** Utgående e-post via Resend. Uten nøkkel er /reply 503 «ikke konfigurert». */
   RESEND_API_KEY?: string;
+  RESEND_WEBHOOK_SECRET?: string;
   SUPPORT_FROM_EMAIL?: string;
+  OPS_INBOUND_ADDRESS?: string;
+  SUPPORT_EPOST?: string;
+  OPS_WORKBENCH_ENABLED?: string;
+  GMAIL_SYNC_ENABLED?: string;
+  GMAIL_REFRESH_TOKEN?: string;
+  GOOGLE_OAUTH_CLIENT_ID?: string;
+  GOOGLE_OAUTH_CLIENT_SECRET?: string;
+  GMAIL_PUBSUB_TOPIC?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;
