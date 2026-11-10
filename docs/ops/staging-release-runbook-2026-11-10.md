@@ -30,6 +30,14 @@
 - Den eksisterende fredagsrapporten «AI-agenter: ukentlig kortliste» inkluderer nå **praktisk leverandør- og sikkerhetskontroll for Cloudflare, Wrangler, GitHub Actions, Resend og Gmail**. Undersøk nyheten mot dokumentasjon, kode og QA før den tas i bruk. Ingen automatisk produksjonsutrulling på grunnlag av foruminnlegg eller changelog.
 - Ved rød nattlig CI: lokaliser failing step/test i workflow-logs, klassifiser avhengighetsproblem/flaky/regresjon, lag sporbar fix på kandidatgren/PR, kontroller ny full QA og dry-run. Ikke slå av sjekker for å få grønt resultat. Hvis D1/Access/Workspace-secrets mangler, be om **en** autorisert engangsgodkjenning; ikke be om lokal `wrangler login` i hver chat.
 
+## Oppdatert D1-provisjonering – 10.11.2026
+
+- **Bekreftet:** `finnbilglass-db-staging` eksisterer nå i Cloudflare-konto `80d5b1d56a3e907150ba7348b6182894`. UUID: `78842e17-ab0b-47c1-acde-244044073466`, opprettet med **EU-jurisdiksjon** i [en engangsjobb #42902714452](https://github.com/tajlive/finnbilglass/actions/runs/42902714452). Den påfølgende [kontrollen #42902912457](https://github.com/tajlive/finnbilglass/actions/runs/42902912457) bekreftet aktiv eksisterende API-token, D1-lesetilgang og **riktig** stagingdatabase-ID.
+- Stagingbindingen i `wrangler.staging.toml` og D1-ID-sperrene i `.github/workflows/staging-ops.yml` på `main` bruker nå korrekt UUID. Den tidligere ID-en `6c8c3eeb-e4bb-41c7-831f-25e5a735717c` finnes ikke i kontoens D1-liste.
+- Engangsjobben som kunne opprette ny D1 er **fjernet fra repositoryet etter verifikasjon**; `staging-credential-diagnostic.yml` er beholdt som kun manuelt startbar, skrivebeskyttet kontroll. Eksisterende `CLOUDFLARE_API_TOKEN` ble brukt bare til avgrenset bootstrap og inspeksjon, **ikke** som permanent fallback for D1-migrasjoner og stagingdeploy.
+- **Viktig NO-GO:** Den nye D1-databasen er tom. Før migrasjonene `0040–0044` må basis-tabellene (minst `beta_inquiries` og `beta_inquiry_events`, og nødvendig resolver-/katalogskjema) opprettes i en kontrollert, sporbar prosess uten kopiering av reelle kundedata fra produksjon. Kontroller skjema og testdata eksplisitt, og test hele tilbud/ordre/synk-kjeden. Ikke bruk `finnbilglass-staging-auth` eller produksjons-D1 som erstatning.
+- **Ekstern engangsblokkering:** GitHub Environment `staging` mangler fortsatt `STAGING_CLOUDFLARE_API_TOKEN`. Den skal opprettes som dedikert staging-token og verifiseres før stagingmigrasjon/deploy. Ikke lim tokenverdi i chat eller logger.
+
 ## GitHub Actions-kjøring
 
 Åpne Actions → **Staging OPS - manual release gate** → Run workflow på `main`.
