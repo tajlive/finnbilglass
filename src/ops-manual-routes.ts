@@ -37,7 +37,14 @@ export async function handleOpsManualRoute(request:Request,env:Env):Promise<Resp
     const inquiryId=Number(create[1]),sku=typeof payload.sku==='string'?payload.sku.trim():'',evidence=typeof payload.fitmentEvidenceRef==='string'?payload.fitmentEvidenceRef.trim():'';
     const total=Number(payload.totalMinor),delivery=typeof payload.deliveryNote==='string'?payload.deliveryNote.trim():'';
     const equipment=payload.equipment&&typeof payload.equipment==='object'&&!Array.isArray(payload.equipment)?JSON.stringify(payload.equipment):'{}';
-    if(!sku||sku.length>120||evidence.length<8||evidence.length>200||!Number.isSafeInteger(total)||total<=0||!delivery||delivery.length>500||equipment.length>5000)return json({ok:false,error:'TILBUDSFELT_UGYLDIG'},400);
+    // Return field-specific guidance without echoing customer or product data.
+    // Validation happens BEFORE any D1 write or outbound provider call.
+    const invalid=(field:string,message:string)=>json({ok:false,error:'TILBUDSFELT_UGYLDIG',field,message},400);
+    if(!sku||sku.length>120)return invalid('sku','Fyll inn kontrollert SKU (1–120 tegn).');
+    if(evidence.length<8||evidence.length>200)return invalid('fitmentEvidenceRef','Fyll inn fitment-bevisreferanse (8–200 tegn).');
+    if(!Number.isSafeInteger(total)||total<=0)return invalid('totalMinor','Totalpris må være et positivt heltall i øre (for eksempel 100).');
+    if(!delivery||delivery.length>500)return invalid('deliveryNote','Fyll inn frakt og levering (1–500 tegn).');
+    if(equipment.length>5000)return invalid('equipment','Utstyrsdata er for lange.');
     const inquiry=await env.FINNBILGLASS_DB.prepare('SELECT id FROM beta_inquiries WHERE id=?').bind(inquiryId).first();if(!inquiry)return json({ok:false,error:'SAK_IKKE_FUNNET'},404);
     const offerId=id(),now=Date.now();
     try{
