@@ -21,6 +21,7 @@ export async function mottakEpost(env: Env, request: Request) {
     let payload: any;
     try { payload = JSON.parse(rawBody); } catch { return new Response('Ugyldig JSON', { status: 400 }); }
     if (payload?.type !== 'email.received') return new Response('Ignorert', { status: 200 });
+    if (!env.OPS_INBOUND_ADDRESS) return new Response('Innkommende supportadresse ikke konfigurert', { status: 503 });
     const providerId = payload?.data?.email_id;
     if (typeof providerId !== 'string' || !/^[A-Za-z0-9_-]{1,200}$/.test(providerId)) {
         return new Response('Mangler gyldig meldings-ID', { status: 400 });
