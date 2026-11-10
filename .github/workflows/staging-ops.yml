@@ -202,7 +202,7 @@ jobs:
           const match=JSON.stringify(bookmark).match(/[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{32}/i);
           if(!match)throw Error('D1_BOOKMARK_MISSING');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            'Pre-write STAGING D1 restore bookmark: '+match[0]+'\\n');
+            'Pre-write STAGING D1 restore bookmark: '+match[0]+String.fromCharCode(10));
           console.log('Staging D1 recovery bookmark recorded in protected release summary');
           NODE
       - name: Apply reviewed OPS migrations on STAGING only
