@@ -3,7 +3,7 @@
 ## Faktisk status / grenser
 
 - Kode og QA finnes på draft PR #57, fra `staging/first-sale-20261110`; ikke slå sammen før portene nedenfor er bestått.
-- GitHub Actions `.github/workflows/staging-ops.yml` ligger på `main` med *kun* manuell `workflow_dispatch`. Den krever PR #57s eksakte SHA, `STAGING-ONLY`, en separat `staging`-environment og eksplisitte brytere for D1 og deploy. Ingen vanlig PR/commit kan automatisk deploye staging.
+- GitHub Actions `.github/workflows/staging-ops.yml` ligger på `main`. Endringer i workflow-filen utløser automatisk **nøkkelfri QA og Wrangler dry-run**; faktiske D1-migrasjoner og stagingdeploy skjer bare via eksplisitt `workflow_dispatch`, etter verifisering av PR #57, `STAGING-ONLY`, GitHub Environment `staging` og dedikert staging-token. Commit-SHA hentes automatisk. Ingen vanlig PR/commit kan automatisk deploye staging.
 - Dette er en **manuell** salgsprosess: tilbud → dokumentert kundeaksept → én ordre → Kustom-lenke opprettet og registrert av ansatt. Ingen automatisk checkout, capture, refund, faktura eller betaling.
 - Ingen produksjonsendring, ekte pengeoperasjon eller kundesending er autorisert av denne runbooken.
 
@@ -27,7 +27,7 @@
 Åpne Actions → **Staging OPS - manual release gate** → Run workflow på `main`.
 La `candidate_sha` stå **tomt** (workflowen henter og låser gjeldende PR #57 HEAD automatisk), `authorization=STAGING-ONLY`. Kjør først `apply_migrations=false`, `deploy=false` for en **nøkkelfri QA-gjennomgang** (staging-jobben hoppes over); deretter migrasjon/deploy når schema, OAuth, Access og secrets er bekreftet. Workflowen stopper ved feil identitet, feil D1 UUID, feil Worker, manglende Time Travel, migrasjoner eller manglende Worker-secrets.
 
-D1 Time Travel gjenoppretter *hele databasen* og kan overskrive andre skriveoperasjoner. Bruk gjenoppretting kun etter driftsbeslutning og konsekvenskontroll, ikke automatisk i en workflow.
+D1 Time Travel gjenoppretter *hele databasen* og kan overskrive andre skriveoperasjoner. Cloudflares retensjon er **7 dager på Free eller 30 dager på Workers Paid**; bruk ikke et fast 30-dagersløfte uten abonnementskontroll. Bruk gjenoppretting kun etter driftsbeslutning og konsekvenskontroll, ikke automatisk i en workflow.
 
 ## Tilbudskø og duplikatbeskyttelse
 
