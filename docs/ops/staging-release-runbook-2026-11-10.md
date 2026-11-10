@@ -38,6 +38,27 @@
 - **Viktig NO-GO:** Den nye D1-databasen er tom. Før migrasjonene `0040–0044` må basis-tabellene (minst `beta_inquiries` og `beta_inquiry_events`, og nødvendig resolver-/katalogskjema) opprettes i en kontrollert, sporbar prosess uten kopiering av reelle kundedata fra produksjon. Kontroller skjema og testdata eksplisitt, og test hele tilbud/ordre/synk-kjeden. Ikke bruk `finnbilglass-staging-auth` eller produksjons-D1 som erstatning.
 - **Ekstern engangsblokkering:** GitHub Environment `staging` mangler fortsatt `STAGING_CLOUDFLARE_API_TOKEN`. Den skal opprettes som dedikert staging-token og verifiseres før stagingmigrasjon/deploy. Ikke lim tokenverdi i chat eller logger.
 
+## Verifisert stagingdrift 10.11.2026 – komplett nytt EU-skjema og første admin
+
+**Bestått og dokumentert:**
+
+- [Kredential-/DB-kontroll #42902912457](https://github.com/tajlive/finnbilglass/actions/runs/42902912457): Cloudflare API-token godkjent, korrekt staging-D1 navn/UUID i EU.
+- [Full migrasjonsrehearsal #42904250976](https://github.com/tajlive/finnbilglass/actions/runs/42904250976): gjeldende schema- og OPS-SQL bestod offline, uten Cloudflare-token.
+- [Éngangsklargjøring #42904681771](https://github.com/tajlive/finnbilglass/actions/runs/42904681771): nøyaktig **22 historiske basismigrasjoner + 5 OPS-migrasjoner** lagt til på den tidligere helt tomme databasen `finnbilglass-db-staging` / `78842e17-ab0b-47c1-acde-244044073466`. Konto, UUID og jurisdiksjon `eu` ble verifisert **før** skriving; D1 Time Travel-bokmerke er dokumentert i workflow-oppsummeringen. Alle påkrevde OPS-tabeller finnes, **0 kundehenvendelser** ble opprettet og ingen produksjonsdata ble kopiert.
+- [Første admininvitasjon #42905319320](https://github.com/tajlive/finnbilglass/actions/runs/42905319320): én `ADMIN`-medlemskapspost med status `INVITED` opprettet for eksisterende oppsatt administrator `tomarnejensen@gmail.com`, uten e-postutsending eller ekstra app-passord. Aktiviseres først ved signert Access-innlogging. Den første feilede kjøringen #42905287009 ble rettet og erstattet av den beståtte kjøringen.
+- Begge **én-gangs skrive-workflows** er slettet fra `main` etter suksess. Den eksisterende Cloudflare repo-tokenen ble bare brukt som midlertidig, kontrollert bootstrap; ingen permanent fallback til produksjonsorientert token er innført.
+
+**Ny Access/Resend-readiness:** [read-only #42905866593](https://github.com/tajlive/finnbilglass/actions/runs/42905866593) bekrefter at `RESEND_API_KEY` finnes på staging Worker, mens **`OPS_ACCESS_TEAM_DOMAIN`** og **`OPS_ACCESS_AUD`** mangler. Cloudflare-tokenen kan liste Worker secrets men får **HTTP 403** mot Access-organisasjonen; Access-applisten viste 0 poster i denne tokenens kontovisning. Dette beviser ikke at Access-apps mangler globalt. Offentlig staging `/health` svarte 403 og er derfor **ikke** en bestått smoke-test.
+
+**Neste handlinger før Worker-deploy:**
+
+1. Kontroller Cloudflare Zero Trust-konto som eier `Operations Staging`. Finn *Team domain* (`*.cloudflareaccess.com`) og riktig *Application AUD tag* for den aktuelle staging-host; påse at appen bruker riktig host og har en Allow-policy for inviterte ansatte. Gi en egen autorisert staging-token til GitHub Environment `staging` under `STAGING_CLOUDFLARE_API_TOKEN`. Ikke kopier eksisterende repo-token til Access-policy via frontendkode eller logger.
+2. Installer de to manglende Access-verdiene på **bare** `finnbilglass-frontrute-staging` som Worker secrets. Disse verdiene er identifikatorer, ikke personlige Google-/Workspace OAuth-nøkler. Verifiser at Resend-secret beholdes.
+3. Kjør releaseporten med `inspect_staging=true`, `apply_migrations=false` (migrasjonene er **allerede installert**), `deploy=false`. Dokumenter D1/Worker-secrets; gjennomfør deretter kun stagingdeploy med `deploy=true`.
+4. Test to ansattroller, syntetisk forespørsel, kontrollert tilbud/Resend, deduplisering, Gmail-synk etter godkjent OAuth, dokumentert kundeaksept og kun én manuell ordre. Betalingslenke må fortsatt testes uten reell belastning.
+
+**Fortsatt NO-GO for produksjon** til staging-Worker og komplett handel er dokumentert med faktiske testkall. Ingen kundedata, Worker-deploy, e-post eller penger ble behandlet av de ovennevnte bootstrapjobbene.
+
 ## GitHub Actions-kjøring
 
 Åpne Actions → **Staging OPS - manual release gate** → Run workflow på `main`.
