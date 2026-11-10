@@ -1,8 +1,12 @@
 name: Staging OPS - manual release gate
 
-# The workflow lives on main, but executes exactly the reviewed PR #57 head.
-# Never accepts arbitrary commits/forks or runs automatically on PR/push.
+# Auto-check edits to this workflow (NO Cloudflare access); staging writes
+# remain manual and environment-gated.
 on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/staging-ops.yml
   workflow_dispatch:
     inputs:
       candidate_sha:
@@ -47,7 +51,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EXPECTED: ${{ inputs.candidate_sha }}
-          AUTHORIZATION: ${{ inputs.authorization }}
+          AUTHORIZATION: ${{ github.event_name == 'workflow_dispatch' && inputs.authorization || 'STAGING-ONLY' }}
         run: |
           set -euo pipefail
           test "$AUTHORIZATION" = "STAGING-ONLY"
@@ -83,7 +87,7 @@ jobs:
       - run: npm ci
       - run: npm run qa
       - name: Safe validation summary
-        if: ${{ !inputs.apply_migrations && !inputs.deploy }}
+        if: ${{ github.event_name == 'push' || (!inputs.apply_migrations && !inputs.deploy) }}
         run: |
           {
             echo "### Staging preflight: PASS"
@@ -94,7 +98,7 @@ jobs:
 
   staging:
     needs: verify-candidate
-    if: inputs.apply_migrations || inputs.deploy
+    if: github.event_name == 'workflow_dispatch' && (inputs.apply_migrations || inputs.deploy)
     runs-on: ubuntu-latest
     environment: staging
     env:
