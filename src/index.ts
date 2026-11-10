@@ -20,7 +20,7 @@ import { canTransition, isSupportCaseStatus, legacyStatus, validReviewReason, ty
 import { canTransitionInquiry, isInquiryStatus, validInquiryReason, INQUIRY_STATUS_LABELS, type InquiryStatus } from './inquiry-workflow';
 import { operationsCenterUi } from './ops-center-ui';
 import { handleOpsStaffRoute } from './ops-staff-routes';
-import { verifyManualOpsStaff, validManualWriteOrigin } from './ops-manual-access';
+import { verifyManualOpsStaff, validManualWriteOrigin, allowLegacySupportToken } from './ops-manual-access';
 import { recogniseInvitedStaff, type OpsStaff } from './ops-staff';
 import { handleOpsManualRoute } from './ops-manual-routes';
 import { syncGmailEmails, gmailSyncStatus } from './routes/gmail-sync';
@@ -183,10 +183,7 @@ async function supportAuthorised(request: Request, env: Env): Promise<boolean> {
   // Legacy bearer-token login is retained ONLY for environments that have not
   // migrated to the invited-staff portal. Once enabled, signed Cloudflare Access
   // plus the active D1 membership is mandatory, even if the caller knows the old token.
-  if (env.OPS_STAFF_PORTAL_ENABLED !== 'true') {
-    const token = request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '');
-    return !!env.SUPPORT_EVIDENCE_TOKEN && token === env.SUPPORT_EVIDENCE_TOKEN;
-  }
+  if (env.OPS_STAFF_PORTAL_ENABLED !== 'true') return allowLegacySupportToken(request, env);
 
   // Invited staff need only one Cloudflare Access login, not a second app token.
   const verified = await verifyManualOpsStaff(request, env);
