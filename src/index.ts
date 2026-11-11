@@ -748,6 +748,7 @@ export default {
     }
     if(path==='/api/ops/epost/gmail-sync'&&method==='POST'){
       if(!(await supportAuthorised(request,env))||!opsActorByRequest.has(request))return json({ok:false,error:'Unauthorised'},401);
+      if(!validManualWriteOrigin(request))return json({ok:false,error:'UGYLDIG_FORESPORSEL'},403);
       try{return json(await syncGmailEmails(env))}catch{return json({ok:false,error:'GMAIL_SYNKRONISERING_FEILET'},503)}
     }
     if(path==='/api/ops/epost/ufordelt'&&method==='GET'){
@@ -832,6 +833,7 @@ export default {
       // Beskyttet av support-token + append-only-displin. Aldri fitment-autoritet.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!(await supportAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!validManualWriteOrigin(request)) return json({ ok: false, error: 'UGYLDIG_FORESPORSEL' }, 403);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const staffActor=opsActorByRequest.get(request);
       const to = body.status, actor = staffActor?.email ?? (typeof body.actor === 'string' ? body.actor.trim() : ''), reason = body.reason;
@@ -855,6 +857,7 @@ export default {
       // Internt notat — append-only, aldri synlig i kundeflyten. Åpen i staging+prod som status.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!(await supportAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!validManualWriteOrigin(request)) return json({ ok: false, error: 'UGYLDIG_FORESPORSEL' }, 403);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const staffActor=opsActorByRequest.get(request);
       const actor = staffActor?.email ?? (typeof body.actor === 'string' ? body.actor.trim() : ''), note = body.note;
@@ -874,6 +877,7 @@ export default {
       // Avhengig av RESEND_API_KEY — uten nøkkel returneres 503 «ikke konfigurert».
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
       if (!(await supportAuthorised(request, env))) return json({ ok: false, error: 'Unauthorised' }, 401);
+      if (!validManualWriteOrigin(request)) return json({ ok: false, error: 'UGYLDIG_FORESPORSEL' }, 403);
       if (!env.RESEND_API_KEY) return json({ ok: false, error: 'E-post-sending er ikke konfigurert ennå.' }, 503);
       let body: Record<string, unknown>; try { body = await request.json() as Record<string, unknown>; } catch { return json({ ok: false, error: 'Ugyldig JSON' }, 400); }
       const staffActor=opsActorByRequest.get(request);
