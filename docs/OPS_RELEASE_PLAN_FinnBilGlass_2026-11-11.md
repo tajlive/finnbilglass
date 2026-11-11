@@ -307,3 +307,22 @@ Bruk **eksakt SQL fra** [migrations/proposed/0046_ops_reply_attempts.sql.propose
 **Stopp straks** hvis D1-ID avviker, Time Travel ikke kan bekreftes, preflight er uventet, andre skriver samtidig, SQL-konsoll ikke kan kjøre hele migrasjonen korrekt, eller det er risiko for tap av historiske poster. En post hoc backup er ikke nok.
 
 **Status per planoppdateringen:** Ruten er klar for gjennomføring i **Work/nettleser med interaksjon**. Denne ChatGPT-samtalen kan kontrollere GitHub, men kan ikke selv klikke i Cloudflare Console via den tilkoblede nettleseren. Ingen migrasjon er utført av planoppdateringen.
+
+## 16. Uavhengig staging-0046 PASS – neste kritiske steg er Worker + første-salg-E2E (11.11.2026)
+
+**Databasen er nå verifisert av to uavhengige kilder:**
+
+1. [Operatørbevis i Issue #39](https://github.com/tajlive/finnbilglass/issues/39#issuecomment-6794880468): Cloudflare Console, eksakt EU-staging-D1 UUID `78842e17-ab0b-47c1-acde-244044073466`; Time Travel-bokmerke ble registrert **før** skriving; bare additiv migrasjon 0046 anvendt; `PRAGMA foreign_key_check` uten avvik; tabell, indeks og tre triggere finnes; før/etter `beta_inquiries=1`, `ops_reply_outbox=0`, og ny `ops_reply_attempts=0`.
+2. [GitHub Actions read-only staging readiness #43017420588](https://github.com/tajlive/finnbilglass/actions/runs/43017420588) = **SUCCESS** på main `59fff0e0474071c404047b768a0228acd0cef294`: `STAGING_BASE_TABLES_MISSING: NONE`, `STAGING_REPLY_0046: PRESENT`, `STAGING_0046_OBJECTS_MISSING: NONE`, `Staging OPS schema readiness: PASS`. Sjekker bare tabell-/objektnavn i D1; ingen D1-write, kundeoppslag eller deploy. [PR #76](https://github.com/tajlive/finnbilglass/pull/76) er allerede merged.
+
+**Gate:** 0046 staging schema = **PASS**. Ikke kjør migrasjonen om igjen, og ikke opprett et bredt D1 Edit-token i delt Cloudflare-konto. Dette er ikke det samme som en full restore-drill eller en bekreftet produksjonsversjon.
+
+### Neste gjennomføringsordre – uten nye grunnmigrasjoner
+
+1. **Staging Worker baseline:** Kontroller aktiv staging-Worker-versjon/bindings i Cloudflare mot eksakt OPS-kandidat PR #57 HEAD `49a23a9f8936177d5ab2cf931dbd19453e015fd8`, dens `wrangler.staging.toml`, samme staging-D1 UUID og R2-bucket. Hent opp aktuell Worker-versjon og rollbackversjon. Ikke anta at grønn PR-QA betyr at Worker er deployet.
+2. **Kun staging deploy etter eksplisitt identitetskontroll:** Bruk eierautentisert Cloudflare/Work eller annet gjennomgått staging-spesifikt deploy-løp til `finnbilglass-frontrute-staging` på workers.dev – **ingen** produksjonsruter, D1-migrasjoner, GitHub D1 Edit-token eller betalingsoperasjoner. Før deploy: compile/dry-run den eksakte PR-SHA, verifiser tilgjengelige Worker Access/Resend-secret-navn, runtime flags `OPS_STAFF_PORTAL_ENABLED`, `OPS_MANUAL_ORDERS_ENABLED`, `OPS_WORKBENCH_ENABLED` og `GMAIL_SYNC_ENABLED=false`. **Stopp** ved ukjent Worker-versjon, feil UUID, prod-rute eller manglende rollback. Dokumenter faktisk staging-Worker ID/versjon og rollback i Issue #39.
+3. **Autentisert første-salg-E2E** (Issue #52): to inviterte ansatte og godkjent syntetisk kunde/postboks → uforpliktende henvendelse → dokumentert glassvalg/OE-foto → DRAFT tilbud → én Resend-mock eller kontrollert testutsending → kundesvar/sak → sporbar aksept → nøyaktig én ordre → manuell Kustom Portal-referanse → kun `PAYMENT_LINK_SENT`, aldri PAID uten uavhengig provider-bevis. Verifiser roller, revokasjon, CSRF, dobbeltklikk/race og outbox `REVIEW`. Ikke bruk ekte kunder.
+4. **Historikk og tilbakeføring:** privat D1/R2-før/etter-bevis og testet rollback i isolert miljø; bevar eldre saker, bilder, tilbud og ordre uten reset. Time Travel-bokmerket er bevis på et punkt, **ikke** i seg selv på vellykket gjenoppretting. Godkjenn Workspace/alias eller behold Gmail sync avskrudd og testet manuell journal.
+5. Først etter GO i Issues #39 og #52 for nøyaktig samme kandidat: gå videre med PR #57-review (fortsatt draft), eventuelle merge-konflikter og **kontrollert** produksjonsdeploy/rollback. Normal `main` deploy workflow må ikke brukes til å smugdeploye OPS-koden.
+
+**Nåværende status:** Staging-D1 0046 = PASS; aktiv staging Worker/Access og faktisk første-salg-E2E = IKKE GODKJENT; produksjon = NO-GO. Ingen tilgangsutvidelse til D1 eller produksjonsdata utført av denne planoppdateringen.
