@@ -72,7 +72,10 @@ test('issuer, audience, expiry, invalid email, and signature all fail closed',as
       assert.equal(await verifyManualOpsStaff(req(await f.sign(claims)),env,now),null,
         'forged or invalid claim should not be accepted');
     const jwt=await f.sign();
-    assert.equal(await verifyManualOpsStaff(req(jwt.slice(0,-2)+'xx'),env,now),null);
+    const [jwtHeader,jwtClaims,jwtSignature]=jwt.split('.');
+    const invalidSignature=(jwtSignature[0]==='A'?'B':'A')+jwtSignature.slice(1);
+    assert.notEqual(invalidSignature,jwtSignature,'test must always mutate signature');
+    assert.equal(await verifyManualOpsStaff(req([jwtHeader,jwtClaims,invalidSignature].join('.')),env,now),null);
     assert.equal(await verifyManualOpsStaff(req(jwt),{...env,OPS_ACCESS_AUD:undefined},now),null);
     assert.equal(await verifyManualOpsStaff(req(jwt),{...env,OPS_ACCESS_TEAM_DOMAIN:'https://attacker.example.com'},now),null);
   }finally{globalThis.fetch=orig;}
