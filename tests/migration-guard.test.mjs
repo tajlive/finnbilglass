@@ -164,3 +164,26 @@ test('alle 11 rekonstruerte migrasjoner er oppført i statusfilen', () => {
     }
     assert.equal(status.migrasjoner.length, rekonstruert.length, 'Statusfilen har flere/ færre rader enn de 11');
 });
+
+
+test('OPS staging release gate requires reviewed OAuth schema, disabled Gmail and dedicated token', () => {
+    const workflow = readFileSync(join(WORKFLOW_DIR, 'staging-ops.yml'), 'utf8');
+    assert.match(workflow, /if: github\.event_name == 'workflow_dispatch' && \(inputs\.inspect_staging \|\| inputs\.apply_migrations/);
+    assert.match(workflow, /environment: staging/);
+    assert.match(workflow, /secrets\.STAGING_CLOUDFLARE_API_TOKEN/);
+    assert.doesNotMatch(workflow, /secrets\.CLOUDFLARE_API_TOKEN(?![A-Z_])/);
+    assert.match(workflow, /GMAIL_SYNC_ENABLED = \\"false\\"/);
+    assert.match(workflow, /GMAIL_SYNC_MUST_REMAIN_DISABLED_UNTIL_WORKSPACE_OAUTH_VERIFIED/);
+    assert.match(workflow, /test -f migrations\/proposed\/0045_ops_workspace_oauth\.sql\.proposed/);
+    assert.match(workflow, /for n in [^\n]*0045_ops_workspace_oauth; do/);
+    assert.doesNotMatch(workflow, /for n in [^\n]*0046_ops_reply_attempts/);
+    for (const table of [
+        'ops_workspace_oauth_attempts',
+        'ops_workspace_gmail_tokens',
+        'ops_workspace_oauth_audit',
+    ]) {
+        assert.ok(workflow.includes(table), 'Missing staging schema guard for ' + table);
+    }
+    assert.match(workflow, /if: inputs\.apply_migrations/);
+    assert.match(workflow, /if: inputs\.apply_reply_guard/);
+});
