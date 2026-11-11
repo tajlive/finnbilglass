@@ -345,3 +345,21 @@ Bruk **eksakt SQL fra** [migrations/proposed/0046_ops_reply_attempts.sql.propose
 5. Først deretter: autentisert to-ansatt første-salg-E2E i Issue #52 samt offline D1/R2-historikkgaten, rolle/revokasjon, Resend/Gmail og kontrollert manuell Kustom-lenke. Produksjons-GO krever alle.
 
 **Grense:** Tilgang til å skrive GitHub-filer/PR-er gir ikke i seg selv adgang til å deploye Cloudflare Worker eller godkjenne produksjonsdata. Read-only versjonsinventar er nå fullført uten ekstra token. Stagingdeploy og faktisk E2E er fremdeles ikke gjennomført.
+
+## 18. Eksakt SHA for staging Worker-deploy – sikker implementering (11.11.2026)
+
+**Ny aktiv OPS-kandidat:** [PR #78](https://github.com/tajlive/finnbilglass/pull/78) er **merget kun til staging/first-sale-20261110**, squash commit `9f5ea31c1b838f3603e85478757edb4adac7749f`. Denne er nå også HEAD på draft PR #57. [Samlet kandidat-CI #43037829606](https://github.com/tajlive/finnbilglass/actions/runs/43037829606) = **SUCCESS** på eksakt staging HEAD. Produksjon/migrasjoner er urørt.
+
+- `scripts/maintenance/ops-staging-preflight.mjs` validerer checkout med presis 40-tegns Git-SHA, ren arbeidskopi, staging Worker, workers.dev, eksakt konto `80d5b1d56a3e907150ba7348b6182894`, EU-staging-D1 `78842e17-ab0b-47c1-acde-244044073466`, R2 `finnbilglass-opplaering-staging`, OPS-flagg og `GMAIL_SYNC_ENABLED=false`. Avviser produksjonsruter, ekstra databinding, ukjent commit og manglende additiv 0046-fil. Skriver ikke til Cloudflare.
+- `npm run test:ops-staging-preflight` er lagt inn i `npm run qa` og verifiserer feilsperrene. En sporadisk feil i JWT-testen ble rettet ved garantert korrumpering av signatur under test; ingen autentiserings-bypass er innført.
+- Eksakt operatørrunbook: [staging-exact-sha-worker-deploy.md](https://github.com/tajlive/finnbilglass/blob/staging/first-sale-20261110/docs/ops/staging-exact-sha-worker-deploy.md). Gammel runbook har eksplisitt sikkerhetsoverstyring som forbyr konto-bred D1 Edit GitHub-token i delt Cloudflare-konto.
+
+### Neste steg – én autorisert staging Worker-deploy, uten migrasjon
+
+1. I **eierautentisert Work/Cloudflare-CLI** på en ren klone, hent eksakt `9f5ea31c1b838f3603e85478757edb4adac7749f`. Verifiser ingen endringer i PR #57 HEAD og ingen annen samtidig staging-release.
+2. Kjør `npm ci`, `node scripts/maintenance/ops-staging-preflight.mjs --expected-sha 9f5ea31c1b838f3603e85478757edb4adac7749f`, full `npm run qa`, og deretter samme preflight med `--dry-run`. Dette starter **ikke** Cloudflare-deploy og utfører **ikke** D1-write.
+3. Før deploy verifiser aktuell versjon og **faktisk** tilgjengelig rollback via Cloudflare-dashboardet. Siste observerte staging Worker-ID før dette var `21266eb9-dd0c-4f2a-a623-9a69654fc995`, med tidligere `890cee22-cb40-4164-9ffa-9bdc1c2f44d3`; dette er **ikke** garanti for tilgjengelig rollback eller dagens Worker-versjon.
+4. Bare ved PASS for worker-ID, Access/Resend-secret-navn, D1/R2-bindinger og rollback: eieroperatøren kan kjøre `npx wrangler deploy --config wrangler.staging.toml` **kun for workers.dev-staging** fra eksakt commit. Dette er ikke den eldre `staging-ops.yml` med konto-bred D1 Edit-token. Ingen `wrangler d1 execute`, produksjonsrute, Gmail-import, e-post, Kustom/capture/refund eller faktura.
+5. Etter Worker-deploy: les ny aktiv Cloudflare-versjon, dokumenter koblingen til eksakt Git-commit og rollback, test `/health`, Access-gates og to-ansatt første-salg-E2E mot syntetisk testpostboks. Logg resultat i Issue #39/#52. Kjør senere separat legacy D1/R2, gjenopprettingsdrill og Gmail/alias-gate.
+
+**GO/NO-GO:** Staging D1 0046 = PASS. Ny staging Worker-kandidat testet = PASS (kode). **Faktisk deploy av `9f5ea31...`, Cloudflare Access-authentisert E2E og restore-drill er IKKE verifisert.** Produksjon forblir NO-GO til samtlige porter er godkjent.
