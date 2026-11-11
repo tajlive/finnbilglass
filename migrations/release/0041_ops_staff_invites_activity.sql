@@ -1,0 +1,42 @@
+-- PRODUCTION-REVIEWED ADDITIVE SCHEMA: Access staff membership and audit.
+-- Apply ONLY to verified finnbilglass-db after a verified D1 bookmark.
+-- Initial production ADMIN invitation is a separate explicit operation.
+-- Follow migrations/release/README.md; never auto-apply.
+CREATE TABLE IF NOT EXISTS ops_staff_memberships (
+  email TEXT PRIMARY KEY COLLATE NOCASE,
+  role TEXT NOT NULL CHECK (role IN ('ADMIN','OPERATOR','REVIEWER')),
+  status TEXT NOT NULL DEFAULT 'INVITED' CHECK (status IN ('INVITED','ACTIVE','REVOKED')),
+  invited_by TEXT NOT NULL,
+  invited_at INTEGER NOT NULL,
+  accepted_at INTEGER,
+  last_login_at INTEGER,
+  revoked_at INTEGER,
+  CHECK (status!='ACTIVE' OR accepted_at IS NOT NULL),
+  CHECK (status!='REVOKED' OR revoked_at IS NOT NULL)
+);
+CREATE INDEX IF NOT EXISTS idx_ops_staff_status ON ops_staff_memberships(status,role);
+
+CREATE TABLE IF NOT EXISTS ops_staff_activity (
+  event_id TEXT PRIMARY KEY,
+  actor_email TEXT NOT NULL,
+  action TEXT NOT NULL CHECK (action IN (
+    'LOGIN','STAFF_INVITED','STAFF_REVOKED','OFFER_CREATED',
+    'OFFER_SENT','OFFER_ACCEPTED','ORDER_CREATED',
+    'PAYMENT_LINK_RECORDED','PAYMENT_VERIFIED_MANUALLY',
+    'INQUIRY_STATUS_CHANGED','INQUIRY_NOTE_ADDED','INQUIRY_REPLY_SENT'
+  )),
+  subject_type TEXT NOT NULL CHECK(subject_type IN ('STAFF','OFFER','ORDER','INQUIRY')),
+  subject_id TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  details_json TEXT NOT NULL DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_ops_staff_activity_recent
+  ON ops_staff_activity(created_at DESC,event_id);
+CREATE INDEX IF NOT EXISTS idx_ops_staff_activity_actor
+  ON ops_staff_activity(actor_email,created_at DESC);
+
+-- History is append-only; corrections are written as new, attributable events.
+CREATE TRIGGER IF NOT EXISTS ops_staff_activity_no_update BEFORE UPDATE ON ops_staff_activity
+BEGIN SELECT RAISE(ABORT,'AUDIT_LOG_IMMUTABLE'); END;
+CREATE TRIGGER IF NOT EXISTS ops_staff_activity_no_delete BEFORE DELETE ON ops_staff_activity
+BEGIN SELECT RAISE(ABORT,'AUDIT_LOG_IMMUTABLE'); END;
