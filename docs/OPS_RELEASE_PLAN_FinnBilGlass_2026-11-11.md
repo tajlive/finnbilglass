@@ -137,3 +137,26 @@ Gjennomgått direkte mot GitHub (ikke generert fra gammel samtaleminne). **10 å
 **Ikke lukket som «søppel»:** De åtte sakene representerer forskjellige arbeidspakker eller uavklarte tester. Stale beskrivelser kan oppdateres, men å lukke dem uten verifiserte resultater ville skjule release-risiko.
 
 **Produksjonsstatus:** Fortsatt **NO-GO** for ny OPS-flyt i PR #57 uten dokumentert E2E, legacy-data og rolle-/betalingstester. Eksisterende grønne `main`-Actions innebærer ikke automatisk prod-Worker-deploy.
+
+## 9. Produksjonsframdrift – 11.11.2026, etter PR #65–#67
+
+**Siste bekreftede OPS-kandidat:** \`staging/first-sale-20261110\` på SHA \`af8193ec8d3b481ba1f77b783ce41f8f4b8f6b01\`. [PR #57](https://github.com/tajlive/finnbilglass/pull/57) er nå **mergeable=true / clean**, men fortsatt **draft**. [PR Verification #42963247530](https://github.com/tajlive/finnbilglass/actions/runs/42963247530) **SUCCESS** på eksakt SHA (typecheck, eksisterende tester, isolert migrasjonsrepetisjon, syv nye legacy-tester og sikkerhetskontroller). Dette er testbevis, **ikke** GO for produksjon.
+
+### Faktisk utført, via GitHub
+- [PR #65](https://github.com/tajlive/finnbilglass/pull/65) merget i staging: \`scripts/maintenance/legacy_jobs_release_guard.py\`, syv syntetiske tester og [kjørbar driftsprosedyre](ops/legacy-data-release-gate.md). Kontroll tillater nye saker, men stopper sletting/omskriving av historiske rader.
+- [PR #66](https://github.com/tajlive/finnbilglass/pull/66) merget i staging: samlet \`AGENTS.md\` med \`main\`; beholdt tidligere OPS-beslutninger i \`docs/ops/agent-decisions-staging-20261111.md\`.
+- [PR #67](https://github.com/tajlive/finnbilglass/pull/67) merget i staging: beholdt legacy-testene i eksisterende migrasjonsrepetisjon og beholdt PR-workflow byte-lik \`main\`, uten duplisert CI. Dermed er #57 teknisk mergebar.
+- **Ingen** ny OPS-produksjonsdeploy, reelle betalingsoperasjoner, kundemail eller live D1-endringer utført i dette arbeidet.
+
+### P0 – korteste vei til første sikre salg
+
+1. **Staging-D1 og gamle jobber:** Verifiser produksjons-/staging-bindinger read-only, ta dokumentert D1 backup/Time Travel-bokmerke. Lag sikre offline før/etter-snapshots av samme kopierte grunnlag og kjør legacy-guard. Bekreft én gammel åpen og én lukket sak samt historiske tilbud/ordre i autentisert OPS UI. Dokumenter bare aggregerte bevis i [Issue #39](https://github.com/tajlive/finnbilglass/issues/39); aldri legg kundeeksporter i PR/CI.
+2. **Første-salg-E2E:** Syntetisk/avgrenset forespørsel → korrekt bil/glassgrunnlag → vare og NOK-pris → Resend-tilbud med idempotent outbox → dokumentert aksept → kun én manuell ordre → manuell Kustom Portal-betalingslenke og referanse. Ikke merk betaling godkjent uten separat Kustom-kontroll. Test ansattinnlogging, tilbakekalling og audit. Dokumenter i [Issue #52](https://github.com/tajlive/finnbilglass/issues/52).
+3. **Workspace/epost:** Verifiser reell Workspace-profil og lovlige alias samt faktisk leveringsvei før første kundesvar/import. Hold \`GMAIL_SYNC_ENABLED=false\` frem til eksplisitt sikker stagingkontroll. Kontroller Google OAuth-appens varige publishing-/refresh-token-konfigurasjon; eksisterende External/Testing er ikke dokumentert produksjonsklar. Spor i [Issue #38](https://github.com/tajlive/finnbilglass/issues/38).
+4. **Releasekandidat:** Knytt godkjent stagingrunde til **eksakt SHA**. Verifiser \`main\`/PR-diff og D1-migrasjonsledger uten å kjøre ukjente pending-migrasjoner. Alle auth-/rolle-, test-, mail- og glass-regresjoner samt Cloudflare Access må være grønne. Dokumentér rollback av Worker separat fra database.
+5. **GO / NO-GO:** Ved alle grønne gater: gjennomgå PR #57, fjern draft, merge først da til \`main\` og utfør kontrollert produksjonsdeploy med overvåking. Ved avvik: behold NO-GO og rett kun blokkeringen. Merk ikke en grønn QA-workflow som faktisk deploy.
+6. **Etter første salg:** Først da prioriteres P1 katalog-autofullføring, flerlinjetilbud og arbeidskø. Ikke bygg automatisk capture/refund/checkout nå.
+
+**Prod-baseline ved denne kontrollen:** \`main\` på \`04dd827f72094543df1c45553d2d3a571e79a4f0\`. GitHub Actions for \`main\` kan ha grønn «deploy»-workflow selv når den faktiske Worker-deployjobben er **skipped**; dokumenter derfor deployet Worker-versjon separat.
+
+**Status per 11.11.2026:** OPS **teknisk mergebar og kildekode-QA grønn**; produksjon **NO-GO** på grunn av uverifisert autentisert første-salg-E2E, D1-legacy-check på faktiske kontrollerte kopier og drifts-/Workspace-signoff.
