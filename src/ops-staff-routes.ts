@@ -8,6 +8,7 @@ import { recogniseInvitedStaff, inviteOpsStaff, revokeOpsStaff, listOpsStaff, li
 import { opsStaffUi } from './ops-staff-ui';
 import { sendMail, avsenderEpost } from './mail';
 import { beginWorkspaceOAuth, finishWorkspaceOAuth, workspaceConnectionStatus } from './ops-workspace-oauth';
+import { checkWorkspaceGmailPreflight } from './ops-workspace-preflight';
 
 function reply(data:unknown,status=200):Response{
  return new Response(JSON.stringify(data),{status,headers:{
@@ -79,6 +80,11 @@ export async function handleOpsStaffRoute(request:Request,env:Env):Promise<Respo
 
  if(path==='/api/ops/manual/workspace/oauth/start'){
   return beginWorkspaceOAuth(env,staff);
+ }
+ // ADMIN-only POST behind verified signed Access JWT and same-origin intent header.
+ // No Gmail message fetch, D1 writes, provider response body, or token in response.
+ if(path==='/api/ops/manual/workspace/oauth/preflight'){
+  return reply({ok:true,preflight:await checkWorkspaceGmailPreflight(env)});
  }
  if(path==='/api/ops/manual/staff/invite'){
   if(typeof payload.email!=='string' || typeof payload.role!=='string')
