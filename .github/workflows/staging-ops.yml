@@ -84,7 +84,7 @@ jobs:
           test "$FORK" = "$GITHUB_REPOSITORY"
           test "$DRAFT" = true
           echo "sha=$EXPECTED" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ steps.pin.outputs.sha }}
           persist-credentials: false
@@ -128,7 +128,7 @@ jobs:
       STAGING_DB: finnbilglass-db-staging
       STAGING_DB_ID: 78842e17-ab0b-47c1-acde-244044073466
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.verify-candidate.outputs.sha }}
           persist-credentials: false

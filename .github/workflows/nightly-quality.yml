@@ -25,7 +25,7 @@ jobs:
     cache-mode: read
     timeout-minutes: 50
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: actions/setup-node@v4
@@ -82,7 +82,7 @@ jobs:
             echo "active=false" >> "$GITHUB_OUTPUT"
             echo "PR #57 is not the active staging release candidate; no candidate checkout"
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         if: steps.pin.outputs.active == 'true'
         with:
           ref: ${{ steps.pin.outputs.sha }}
