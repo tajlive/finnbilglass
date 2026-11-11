@@ -326,3 +326,22 @@ Bruk **eksakt SQL fra** [migrations/proposed/0046_ops_reply_attempts.sql.propose
 5. Først etter GO i Issues #39 og #52 for nøyaktig samme kandidat: gå videre med PR #57-review (fortsatt draft), eventuelle merge-konflikter og **kontrollert** produksjonsdeploy/rollback. Normal `main` deploy workflow må ikke brukes til å smugdeploye OPS-koden.
 
 **Nåværende status:** Staging-D1 0046 = PASS; aktiv staging Worker/Access og faktisk første-salg-E2E = IKKE GODKJENT; produksjon = NO-GO. Ingen tilgangsutvidelse til D1 eller produksjonsdata utført av denne planoppdateringen.
+
+## 17. Aktiv staging Worker-versjon – kontrollert read-only 11.11.2026
+
+**Bekreftet i live Cloudflare API via [Actions #43018709985](https://github.com/tajlive/finnbilglass/actions/runs/43018709985) på [PR #77](https://github.com/tajlive/finnbilglass/pull/77), merged til main `fc327a066913309958f0548f627837b8e3553c16`:**
+
+- Worker: `finnbilglass-frontrute-staging` (hardkodet, ingen prod Worker-API). Aktiv Cloudflare-versjon: **`21266eb9-dd0c-4f2a-a623-9a69654fc995`**, opprettet `2026-11-11T02:17:43.576364Z`, kilde `wrangler`; scriptinnhold ETag er tilgjengelig, men ikke skrevet ut.
+- Forrige enkeltversjons-deploy: **`890cee22-cb40-4164-9ffa-9bdc1c2f44d3`**. Dette er en **mulig** rollbackkandidat; verifiser kompatibilitet og at denne versjonen faktisk kan deployes før den regnes som trygg rollback.
+- Samme read-only jobb: `STAGING_REPLY_0046: PRESENT`, `STAGING_0046_OBJECTS_MISSING: NONE`, `Staging OPS schema readiness: PASS`.
+- PR #57 HEAD `49a23a9f8936177d5ab2cf931dbd19453e015fd8` ble committet **2026-11-11T09:06:52Z**, senere enn tidspunktet for aktiv Worker-versjon. Derfor kan ikke versjons-ID-en brukes som bevis på at **den eksakte** PR #57 HEAD er deployet. Ikke godkjenn Worker gate uten en ny eksakt staging-versjonspost.
+
+### Neste handling – én kontrollert Worker-deploy, ingen DB-migrasjoner
+
+1. I eierautentisert Work-/Cloudflare-miljø: ta vare på aktuell staging-Worker-versjon og en **verifisert** rollbackprosedyre. Kontroller `wrangler.staging.toml` fra eksakt PR #57 HEAD (ikke main): Worker `finnbilglass-frontrute-staging`, account `80d5b1d56a3e907150ba7348b6182894`, D1 `78842e17-ab0b-47c1-acde-244044073466`, bucket `finnbilglass-opplaering-staging`, ingen produksjonsruter. Ikke bruk produksjonshemmeligheter i GitHub Actions.
+2. Bygg/QA **eksakt** commit `49a23a9f8936177d5ab2cf931dbd19453e015fd8`, sammenlign med [grønn kandidatverifisering #42992437136](https://github.com/tajlive/finnbilglass/actions/runs/42992437136). Kjør `npx wrangler deploy --config wrangler.staging.toml --dry-run` før handling.
+3. Dersom ansvarlig eier bekrefter sikker Worker-identitet, runtime secrets og rollback: deploy **bare** denne eksakte SHA til `workers.dev` staging via eierautentisert Cloudflare/CLI. Ikke kjør `staging-ops.yml` i modus som krever konto-bred D1 Edit. **Ingen** `wrangler d1 execute`, migrasjon, kundemail eller pengeoperasjon i deployfasen.
+4. Les Cloudflare aktiv versjons-ID på nytt via read-only [staging readiness](https://github.com/tajlive/finnbilglass/actions/workflows/staging-workspace-readiness-once.yml); bekreft nytt versjons-ID og skriv faktisk kildecommit, deploytid, runtime Worker-ID og rollbackkandidat til Issue #39.
+5. Først deretter: autentisert to-ansatt første-salg-E2E i Issue #52 samt offline D1/R2-historikkgaten, rolle/revokasjon, Resend/Gmail og kontrollert manuell Kustom-lenke. Produksjons-GO krever alle.
+
+**Grense:** Tilgang til å skrive GitHub-filer/PR-er gir ikke i seg selv adgang til å deploye Cloudflare Worker eller godkjenne produksjonsdata. Read-only versjonsinventar er nå fullført uten ekstra token. Stagingdeploy og faktisk E2E er fremdeles ikke gjennomført.
