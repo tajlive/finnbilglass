@@ -8,6 +8,7 @@ function dbFixture() {
   raw.exec([
     'CREATE TABLE ops_messages(id TEXT PRIMARY KEY,inquiry_id INTEGER,request_id TEXT,direction TEXT,recipient TEXT,subject TEXT,body TEXT,status TEXT,provider_id TEXT UNIQUE,actor TEXT,created_at INTEGER,updated_at INTEGER);',
     'CREATE TABLE ops_mail_details(provider_id TEXT PRIMARY KEY,source TEXT,rfc_message_id TEXT,headers_json TEXT,attachments_json TEXT);',
+    'CREATE TABLE beta_inquiries(id INTEGER PRIMARY KEY,kontakt TEXT NOT NULL);',
   ].join('\n'));
   const statement = (sql, values = []) => ({
     bind: (...args) => statement(sql, args),
@@ -27,6 +28,7 @@ function dbFixture() {
       } catch (e) { raw.exec('ROLLBACK'); throw e; }
     },
   };
+  raw.prepare('INSERT INTO beta_inquiries(id,kontakt) VALUES(?,?)').run(31, 'kunde@example.com');
   const env = {
     ENVIRONMENT: 'production', FINNBILGLASS_DB: db,
     OPS_INBOUND_ADDRESS: 'support@finnbilglass.no', SUPPORT_FROM_EMAIL: 'support@finnbilglass.no',
@@ -98,6 +100,14 @@ test('Manual Gmail SENT from the approved Workspace mailbox is mirrored without 
     const mismatched=message('sent-unverified-1','tomarne@finnbilglass.no','kunde2@example.com');
     mismatched.labelIds=['SENT'];
     assert.equal(await recordMessage(env,mismatched,'different@finnbilglass.no'),false);
+    const unknownSent=message('sent-unrelated-1','tomarne@finnbilglass.no','friend@example.com');
+    unknownSent.labelIds=['SENT'];
+    assert.equal(await recordMessage(env,unknownSent,'tomarne@finnbilglass.no'),false,
+      'unrelated outgoing Workspace mail must not enter OPS');
+    const ambiguousSent=message('sent-multi-1','tomarne@finnbilglass.no','kunde@example.com, friend@example.com');
+    ambiguousSent.labelIds=['SENT'];
+    assert.equal(await recordMessage(env,ambiguousSent,'tomarne@finnbilglass.no'),false,
+      'multi-recipient outgoing mail is not safe to mirror');
     const forged=message('sent-personal-1','personal@gmail.com','kunde3@example.com');
     forged.labelIds=['SENT'];
     assert.equal(await recordMessage(env,forged,'tomarne@finnbilglass.no'),false);
@@ -120,4 +130,25 @@ test('Norwegian UTF-8 Gmail text survives base64url decoding and D1 storage unch
     assert.equal(body,original);
     assert.doesNotMatch(body,/Ã|�/,'body must not contain mojibake or replacement characters');
   }finally{raw.close()}
+});
+
+
+test('Known customer with number and email is eligible but unreferenced Sent stays unassigned', async () => {
+  const {raw,env}=dbFixture();
+  Object.assign(env,{
+    OPS_WORKSPACE_OAUTH_ENABLED:'true',
+    OPS_GMAIL_EXPECTED_MAILBOX:'tomarne@finnbilglass.no'
+  });
+  try {
+    raw.prepare('UPDATE beta_inquiries SET kontakt=? WHERE id=31').run('92867502 · kunde@example.com');
+    const mail=message('customer-sent-2','tomarne@finnbilglass.no','kunde@example.com');
+    mail.labelIds=['SENT'];
+    mail.payload.headers.find(h=>h.name==='Subject').value='Manuelt svar uten saksreferanse';
+    assert.equal(await recordMessage(env,mail,'tomarne@finnbilglass.no'),true);
+    const stored=raw.prepare('SELECT inquiry_id,direction FROM ops_messages WHERE provider_id=?')
+      .get('gmail-customer-sent-2');
+    assert.equal(stored.inquiry_id,null);
+    assert.equal(stored.direction,'OUT');
+    assert.equal(await recordMessage(env,mail,'tomarne@finnbilglass.no'),false);
+  } finally {raw.close();}
 });
