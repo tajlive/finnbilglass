@@ -164,3 +164,30 @@ test('alle 11 rekonstruerte migrasjoner er oppført i statusfilen', () => {
     }
     assert.equal(status.migrasjoner.length, rekonstruert.length, 'Statusfilen har flere/ færre rader enn de 11');
 });
+
+
+test('OPS staging release uploads inactive Worker version with no D1 or traffic change', () => {
+    const workflow = readFileSync(join(WORKFLOW_DIR, 'staging-ops.yml'), 'utf8');
+    assert.match(workflow, /workflow_dispatch:/);
+    assert.match(workflow, /candidate_sha:/);
+    assert.match(workflow, /if: github\.event_name == 'workflow_dispatch' && inputs\.upload == true/);
+    assert.match(workflow, /environment: staging/);
+    assert.match(workflow, /secrets\.STAGING_WORKER_API_TOKEN/);
+    assert.doesNotMatch(workflow, /secrets\.STAGING_CLOUDFLARE_API_TOKEN/);
+    assert.doesNotMatch(workflow, /secrets\.CLOUDFLARE_API_TOKEN(?![A-Z_])/);
+    assert.doesNotMatch(workflow, /wrangler\s+d1\s+(?:execute|migrations|time-travel)/);
+    assert.doesNotMatch(workflow, /--file\s+migrations\/proposed/);
+    assert.match(workflow, /OPS_ACCESS_TEAM_DOMAIN/);
+    assert.match(workflow, /RESEND_API_KEY/);
+    assert.match(workflow, /ops-staging-preflight\.mjs --expected-sha/);
+    assert.match(workflow, /staging-migration-rehearsal\.py/);
+    assert.match(workflow, /npx wrangler versions upload --config wrangler\.staging\.toml/);
+    assert.doesNotMatch(workflow, /npx wrangler deploy --config wrangler\.staging\.toml/);
+    assert.match(workflow, /ACTIVE_STAGING_WORKER_CHANGED_DURING_UPLOAD/);
+    assert.doesNotMatch(workflow, /npx wrangler deploy --config wrangler\.toml/);
+    assert.match(workflow, /wrangler deployments list/);
+    assert.doesNotMatch(workflow, /wrangler versions deploy/);
+    assert.match(workflow, /\/api\/ops\/summary/);
+    assert.match(workflow, /"401"/);
+    assert.match(workflow, /"403"/);
+});
