@@ -246,3 +246,28 @@ Alle fire PR-ene er merget i **staginggrenen, ikke `main`**. Ingen produksjons-W
 4. Krev faktisk `Time Travel`-bokmerke og senere `ops_reply_attempts: PRESENT` fra separat read-only readiness, deretter offline legacy/R2-gate og autentisert første-salg-E2E.
 
 **GO/NO-GO: NO-GO** inntil reell 0046 stagingmigrasjon, D1 backup, historisk data og E2E er dokumentert. Denne kjøringen endret **ingen** database, sendte **ingen** kunde-e-post, utførte **ingen** betaling og deployet **ingen** Worker.
+
+## 14. Kontobred D1 Edit – sikkerhetsstopp og isolasjonsbeslutning (11.11.2026)
+
+> **VIKTIG: Dette overstyrer handlingspunktene i §12–13 som foreslår å legge `STAGING_CLOUDFLARE_API_TOKEN` med D1 Edit i GitHub og starte `staging-ops.yml`. Ikke opprett eller legg inn et slikt token i den delte Cloudflare-kontoen.**
+
+### Verifisert stopp
+
+- [Issue #39, kommentaren fra Work](https://github.com/tajlive/finnbilglass/issues/39#issuecomment-6794504637): Staging og produksjons-D1 ligger i samme Cloudflare-konto. Tradisjonell `D1 Edit` er kontoavgrenset, ikke trygg database-permission for bare staging. Ingen D1 Edit token ble opprettet, ingen GitHub-secret lagret og ingen ny 0046-migrasjon eller deploy ble kjørt.
+- Time Travel-bookmark/gjenoppretting ble **ikke** verifisert. `ops_reply_attempts` forblir ikke bekreftet anvendt; siste faktiske read-only-sjekk viste `MISSING`. Dette er **NO-GO** for OPS-produksjon.
+- Cloudflare har nyere individuelle **Worker**-tillatelser, men disse er ikke bevis på en databaseavgrenset D1 Edit-token. De gir ikke i seg selv sikker isolering av et direkte `wrangler d1 execute` mot kontoens produksjonsdatabaser.
+
+### Anbefalt rask, sikker gjennomføringsmodell – krever separat review
+
+**Alternativ A (raskest uten å flytte hele staging):** Lag en dedikert, midlertidig migrasjonstjeneste som eies og deployes **utenfor GitHub-release-tokenet**. Tjenesten har en **låst staging-D1-binding** og kan bare utføre akkurat den godkjente 0046-SQL-en; ingen dynamiske SQL-parametere, generisk execute-endepunkt eller database-ID fra request. GitHub skal ikke ha token som kan redigere denne tjenesten, bindings eller Cloudflare-kontoen. Autoriser ett engangskall (f.eks. Cloudflare Access/service-token med ekstra engangskontroll), logg kun ikke-sensitive resultatkoder, krev staging-schema/backup/Time Travel-bookmark på forhånd og journalfør en idempotent operasjonsmarkør. Deaktiver/fjern migrasjonsendepunktet umiddelbart etter verifisert 0046. Begynn med en offline test og uavhengig sikkerhetsgjennomgang før tjenesten deployes. **Ikke bygg et permanent generelt D1-skrive-API.**
+
+**Alternativ B (sterkest konto-isolasjon):** Etabler en separat Cloudflare-konto for staging og gjenopprett Worker, EU-D1, R2, Access/Workspace-konfigurasjon og syntetiske fixtures der. Verifiser bindinger og identiteter på nytt, og oppdater `wrangler.staging.toml` og CI med konto-ID og DB-ID fra det nye miljøet. Deretter kan en kontoavgrenset D1 Edit-token opprettes kun for denne separate stagingkontoen. Ikke bruk kundeproduksjonsdata uten eksplisitt lovlig grunnlag og sikker eksport.
+
+### Neste P0-kontroller
+
+1. Velg alternativ A kun dersom engangstjenestens binding, kallets autorisasjon og fravær av GitHub-administrasjonsnøkkel kan verifiseres. Velg ellers B. Ikke bruk en bred D1-token med bare en kodekontroll av DB-ID som erstatning for tilgangsbegrensning.
+2. Verifiser Time Travel-bookmark og restore-prosedyre på korrekt staging-D1 med read-only autentisering **før** noen SQL-write. Deretter test 0046 mot beskyttet, isolert kopi og kontroller eksisterende outbox/legacy-data.
+3. Kjør kun statisk, reviewet additiv 0046 og verifiser `ops_reply_attempts` og idempotens mot faktisk staging-D1. Ingen deploy, e-post, betaling eller produksjonsmigrasjon.
+4. Oppdater Issue #39 og #52 med eksakt kode-SHA, godkjenningsmetode og aggregert resultat. Første-salg-E2E med to inviterte ansatte og rollback er fortsatt påkrevd før GO.
+
+**Status: NO-GO for skrivetilgang og migrasjon inntil en av disse modellene er etablert og bekreftet.**
