@@ -85,6 +85,9 @@ jobs:
           required={'beta_inquiries','ops_reply_outbox','ops_manual_offers','ops_manual_orders'}
           missing=sorted(required-names)
           reply_ready='ops_reply_attempts' in names
+          # Only hard-coded SQL table names (never records or secret values).
+          print('STAGING_BASE_TABLES_MISSING: '+(','.join(missing) if missing else 'NONE'))
+          print('STAGING_REPLY_0046: '+('PRESENT' if reply_ready else 'MISSING'))
           outcome='PASS' if not missing and reply_ready else 'NO_GO'
           notes=['### Staging OPS reply schema (read-only)',
                  '- Correct EU D1 identity: PASS',
