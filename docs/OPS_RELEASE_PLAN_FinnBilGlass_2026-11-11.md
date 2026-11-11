@@ -228,3 +228,21 @@ Alle fire PR-ene er merget i **staginggrenen, ikke `main`**. Ingen produksjons-W
 5. Først etter dokumentert full staginghandel, bevarte historiske data, riktig Gmail/mottaksrutine, Access-revokasjon og Worker/D1 rollback: vurder om PR #57 kan tas ut av draft og merges til produksjon.
 
 **Status: NO-GO.** 0046 er nøyaktig isolert som et manglende stageskjema. Grunnmigrasjonene 0040–0044 må ikke blindkjøres på nytt. Ingen live migrasjon eller produksjonsendring er autorisert eller utført av read-only testene.
+
+## 13. Staging-kjøring #43009306392 – blokkert før skriv (11.11.2026)
+
+**Kjøring:** [Staging OPS - manual release gate #14](https://github.com/tajlive/finnbilglass/actions/runs/43009306392), manuelt startet på `main` SHA `ec8b2fcb5d99094b5f2d3e7e728e686ff48c0cfe`.
+
+- `verify-candidate`: **SUCCESS** (kompilerte eksakt OPS-kandidat uten deploy). Draft PR #57 HEAD: `49a23a9f8936177d5ab2cf931dbd19453e015fd8`.
+- `staging`: **FAILURE** i `Fail-closed account, Worker, D1 and config checks`: GitHub Actions hadde **tom `CLOUDFLARE_API_TOKEN`**, som leses fra **`secrets.STAGING_CLOUDFLARE_API_TOKEN` på GitHub environment `staging`**. Eksakt loggmelding: `Add STAGING_CLOUDFLARE_API_TOKEN to GitHub environment staging; production token must not be reused`.
+- `Verify Cloudflare API`, `Inspect actual schema`, `Record Time Travel restore point`, `Apply reviewed additive reply migration 0046` og staging Worker-deploy ble **skipped**. Det finnes **ikke** bevis for gjennomført 0046 i denne kjøringen.
+- Npm rapporterte fire høyalvorlige avhengighetsfunn. Det er ikke årsaken til dette stoppet og må vurderes separat uten ukontrollert `npm audit fix`.
+
+### Korteste sikre løsning
+
+1. Opprett/velg et separat, begrenset Cloudflare API-token for **kun** godkjent staging-konto og D1-operasjonen (inkl. Time Travel/backup), etterprøv nødvendige API-scope mot faktisk workflow. Ikke del token i chat, PR eller issue. Ikke bruk produksjonstokenet som fallback.
+2. Legg token sikkert i `GitHub → Settings → Environments → staging → Environment secrets` med **eksakt navn `STAGING_CLOUDFLARE_API_TOKEN`**. Dette kan ikke settes via tilgjengelig GitHub-kobling, som mangler hemmelighetsadministrasjon.
+3. Verifiser at staging-environment-krav og token-scopes tillater jobben; kjør **en ny** manuell `staging-ops.yml` på `main` med samme verifiserte kandidat-SHA, `authorization=STAGING-ONLY`, `inspect_staging=true`, `apply_migrations=false`, `apply_reply_guard=true`, `deploy=false`, tom `bootstrap_admin_email`. Kjør ikke samme mislykkede jobb om igjen før secret er på plass.
+4. Krev faktisk `Time Travel`-bokmerke og senere `ops_reply_attempts: PRESENT` fra separat read-only readiness, deretter offline legacy/R2-gate og autentisert første-salg-E2E.
+
+**GO/NO-GO: NO-GO** inntil reell 0046 stagingmigrasjon, D1 backup, historisk data og E2E er dokumentert. Denne kjøringen endret **ingen** database, sendte **ingen** kunde-e-post, utførte **ingen** betaling og deployet **ingen** Worker.
