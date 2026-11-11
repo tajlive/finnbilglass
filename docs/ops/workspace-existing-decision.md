@@ -75,6 +75,16 @@ Brukeren har oppdatert den **eksisterende** OAuth Web application-klienten «Fin
 
 Kilder: [Google Manage App Audience](https://support.google.com/cloud/answer/15549945?hl=en) og [Google OAuth token-expiration rules](https://developers.google.com/identity/protocols/oauth2).
 
+## Staging callback-feil 11.11.2026 – **IKKE invitasjonsproblem**
+
+- OPS-administrator er **`tomarnejensen@gmail.com`** med `ADMIN / ACTIVE` i D1. Dette er riktig **ansattidentitet i Cloudflare Access** og krever ingen ny invitasjon.
+- Bedriftspostkassen er **`tomarne@finnbilglass.no`**. Denne skal godkjenne Googles `gmail.readonly` for *mailbox-tilkobling*, men skal **ikke** inviteres som en separat OPS-ansatt bare for OAuth-kobling.
+- Google testbrukersperren (403) er passert, og brukeren har sett Gmail-tillatelsene. Google sendte callback til `/ops/ansatte?workspace=failed` etter forsøket. Uklart eksakt backend-feiltrinn før diagnostisk rettelse.
+- [Skrivebeskyttet EU-staging-D1-diagnose #42935263831](https://github.com/tajlive/finnbilglass/actions/runs/42935263831): **5** OAuth-forsøk, **3** brukt/consumed, **2** ikke brukt, **0** lagrede krypterte grants, **0** OAuth-audithendelser. Må ikke tolkes som godkjent Gmail-tilkobling.
+- [Ny sikker feildiagnostikk/stagingdeploy #42935961446](https://github.com/tajlive/finnbilglass/actions/runs/42935961446) **SUCCESS**: OAuth callback returnerer nå bare enum-klassifisert `reason` ved `workspace=failed` (eks. `token_http_400`, `token_incomplete`, `gmail_http_403`, `gmail_mailbox`, `database_save`), og administrasjonssiden viser forklaring som **ikke overskrives av session-meldingen**. Ingen Google auth-kode, refresh token eller provider-feiltekst logges/vises. Full QA og schema-rehearsal bestått, health 200, uautentisert OAuth start/status 401. Gmail-synk fortsatt AV. Engangsworkflow fjernet.
+- **Neste kontroll:** En ny OAuth-godkjenning må startes fra `https://ops-staging.finnbilglass.no/ops/ansatte` siden forrige engangskode ble brukt. Velg *bedriftspostkassen* i Google, men behold OPS ADMIN-innlogget som den eksisterende brukeren. Les eventuelt `reason=...` på retursiden eller det norske feilsammendraget; utbedre først identifisert trinn. Del aldri `code`, `state` eller auth/token-URL.
+- **Ingen produksjonsdeploy** eller reell Gmail-synk før positiv Workspace-grant, mailbox-kontroll, Gmail API-kontroll og avklart 7-dagers testtokenbegrensning.
+
 ## Eksternt kontrollpunkt som ikke kan automatiseres uten samtykke
 
 Bare **kontoens eier** kan gi den innloggede Workspace-postkassen Gmail `readonly` OAuth-rettigheter, og eksisterende OAuth-klient må ha riktig redirect URI i Google Cloud Console. Dette er ikke det samme som å opprette Google Workspace på nytt.
