@@ -191,3 +191,17 @@ test('OPS staging release uploads inactive Worker version with no D1 or traffic 
     assert.match(workflow, /"401"/);
     assert.match(workflow, /"403"/);
 });
+
+
+test('production Worker deploy needs explicit manual GO and exact pinned main SHA', () => {
+    const workflow = readFileSync(join(WORKFLOW_DIR, 'deploy.yml'), 'utf8');
+    assert.match(workflow, /workflow_dispatch:/);
+    assert.match(workflow, /authorization:/);
+    assert.match(workflow, /release_sha:/);
+    assert.match(workflow, /if: github\.event_name == 'workflow_dispatch' && inputs\.authorization == 'PRODUCTION-GO'/);
+    assert.match(workflow, /environment: production/);
+    assert.match(workflow, /test "\$GITHUB_REF" = "refs\/heads\/main"/);
+    assert.match(workflow, /test "\$\(git rev-parse HEAD\)" = "\$APPROVED_SHA"/);
+    assert.doesNotMatch(workflow, /contains\s*\(\s*github\.event\.head_commit\.message/);
+    assert.doesNotMatch(workflow, /if:.*\[deploy\]/);
+});

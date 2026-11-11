@@ -1,12 +1,23 @@
 # CI/CD — finnbilglass (produsert 2026-08-19, erstatter TODO-malen)
-# Gates: test → (deploy ved [deploy]-markør / dispatch) → full betatest mot prod.
+# Gates: test → explicit manual PRODUCTION-GO + pinned SHA + environment approval → prod smoke.
 # Ingen prod-deploy uten grønne gates.
 name: deploy
 
 on:
   push:
     branches: [main]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      authorization:
+        description: "Manual production release authorization (requires separate owner GO)"
+        required: true
+        type: choice
+        options:
+          - PRODUCTION-GO
+      release_sha:
+        description: "Exact 40-character approved main commit SHA"
+        required: true
+        type: string
 
 jobs:
   test-gate:
@@ -49,12 +60,22 @@ jobs:
 
   deploy:
     needs: [test-gate, security-check]
-    # Auto-deploy ved [deploy]-markør i commit-melding eller manuell dispatch.
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[deploy]')
+    # Never deploy on push. Manual dispatch AND separate environment approval required.
+    if: github.event_name == 'workflow_dispatch' && inputs.authorization == 'PRODUCTION-GO'
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
+      - name: Fail closed unless this is the exact approved main commit
+        env:
+          APPROVED_SHA: ${{ inputs.release_sha }}
+          APPROVED_MODE: ${{ inputs.authorization }}
+        run: |
+          set -euo pipefail
+          test "$APPROVED_MODE" = "PRODUCTION-GO"
+          test "$GITHUB_REF" = "refs/heads/main"
+          [[ "$APPROVED_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$APPROVED_SHA"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
