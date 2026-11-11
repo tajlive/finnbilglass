@@ -845,11 +845,29 @@ export default {
       if (!canTransitionInquiry(from, to)) return json({ ok: false, error: `Overgang fra ${from} til ${to} er ikke tillatt.` }, 409);
       const meta = typeof body.meta === 'object' && body.meta !== null ? JSON.stringify(body.meta) : '{}';
       const now = Date.now();
-      await env.FINNBILGLASS_DB.batch([
-        env.FINNBILGLASS_DB.prepare("INSERT INTO beta_inquiry_events (event_id, inquiry_id, event_type, previous_status, status, note, created_at, created_by, meta_json) VALUES (?, ?, 'status', ?, ?, ?, ?, ?, ?)").bind(`status-${id}-${now}-${crypto.randomUUID()}`, id, from, to, reason.trim(), now, actor, meta),
-        env.FINNBILGLASS_DB.prepare('UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ?').bind(to, now, actor, id),
-        ...(staffActor ? [caseAuditStatement(env,staffActor,'INQUIRY_STATUS_CHANGED',id,now)] : []),
-      ]);
+      // CAS must happen first. D1 batch is one SQLite transaction: if the
+      // write loses a race, changes()=0 and neither history nor audit appears.
+      // If either append fails, the status update rolls back too.
+      try {
+        const results = await env.FINNBILGLASS_DB.batch([
+          env.FINNBILGLASS_DB.prepare(
+            'UPDATE beta_inquiries SET status = ?, updated_at = ?, assigned_to = ? WHERE id = ? AND status = ?'
+          ).bind(to, now, actor, id, from),
+          env.FINNBILGLASS_DB.prepare(
+            "INSERT INTO beta_inquiry_events (event_id,inquiry_id,event_type,previous_status,status,note,created_at,created_by,meta_json) " +
+            "SELECT ?, ?,'status', ?, ?, ?, ?, ?, ? WHERE changes() = 1"
+          ).bind(`status-${id}-${now}-${crypto.randomUUID()}`,id,from,to,reason.trim(),now,actor,meta),
+          ...(staffActor ? [env.FINNBILGLASS_DB.prepare(
+            "INSERT INTO ops_staff_activity (event_id,actor_email,action,subject_type,subject_id,created_at,details_json) " +
+            "SELECT ?,?,'INQUIRY_STATUS_CHANGED','INQUIRY',?,?,'{}' WHERE changes() = 1"
+          ).bind(`evt-${crypto.randomUUID()}`,staffActor.email,String(id),now)] : []),
+        ]);
+        if (Number(results[0]?.meta?.changes ?? 0) !== 1) {
+          return json({ ok: false, error: 'SAK_ENDRET_AV_ANNEN_BRUKER', currentStatusChanged: true }, 409);
+        }
+      } catch {
+        return json({ ok: false, error: 'STATUS_OG_HISTORIKK_IKKE_LAGRET' }, 503);
+      }
       return json({ ok: true, status: to });
     }
     const inquiryNoteMatch = /^\/api\/ops\/inquiries\/(\d+)\/notes$/.exec(path);
