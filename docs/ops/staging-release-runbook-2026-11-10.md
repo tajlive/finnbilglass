@@ -1,5 +1,8 @@
 # FinnBilGlass — fast stagingløyfe og første salg (10.11.2026)
 
+> **Sikkerhetsoverstyring 11.11.2026:** Denne historiske runbooken beskriver et eldre oppsett med `STAGING_CLOUDFLARE_API_TOKEN` og konto-bred `D1 Edit`. **IKKE FØLG disse eldre token-/migrasjonsinstruksjonene**: staging og produksjon deler konto, og Cloudflare D1 Edit er ikke isolert til stagingdatabasen. Migrasjon 0046 er allerede bekreftet PASS i reell staging-D1 med uavhengig read-only QA. Ikke migrer den på nytt. Bruk den oppdaterte, godkjenningspliktige **[eksakt-SHA Worker-deploy-runbooken](staging-exact-sha-worker-deploy.md)**. Ingen produksjonsruter, konto-bred D1-skrivetoken eller automatisk Kustom-betaling er tillatt.
+
+
 ## Faktisk status / grenser
 
 - Kode og QA finnes på draft PR #57, fra `staging/first-sale-20261110`; ikke slå sammen før portene nedenfor er bestått.
