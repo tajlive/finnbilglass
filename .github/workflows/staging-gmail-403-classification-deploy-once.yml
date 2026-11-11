@@ -1,0 +1,172 @@
+name: FinnBilGlass - deploy safe Gmail API 403 classification to isolated staging
+
+# Staging-only release candidate deployment after successful D1/Access setup.
+# Explicit, immutable release candidate. NEVER changes production routes or D1.
+# This emergency bootstrap uses the existing repo Cloudflare token once; remove
+# this workflow immediately after completion, and use a scoped staging secret later.
+on:
+  push:
+    branches: [staging/first-sale-20261110]
+    paths:
+      - .github/workflows/staging-gmail-403-classification-deploy-once.yml
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: fbg-one-time-staging-gmail-403-classification
+  cancel-in-progress: false
+
+jobs:
+  verify-exact-candidate:
+    if: github.repository == 'tajlive/finnbilglass' && github.actor == 'tajlive' && github.ref == 'refs/heads/staging/first-sale-20261110'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    outputs:
+      sha: ${{ steps.pin.outputs.sha }}
+    steps:
+      - name: Confirm exact owner-reviewed PR 57 commit
+        id: pin
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PINNED: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          p=$(gh api "repos/$GITHUB_REPOSITORY/pulls/57")
+          test "$(echo "$p" | jq -r .state)" = open
+          test "$(echo "$p" | jq -r .draft)" = true
+          test "$(echo "$p" | jq -r .base.ref)" = main
+          test "$(echo "$p" | jq -r .head.ref)" = staging/first-sale-20261110
+          test "$(echo "$p" | jq -r .head.repo.full_name)" = "$GITHUB_REPOSITORY"
+          test "$(echo "$p" | jq -r .head.sha)" = "$PINNED"
+          echo "sha=$PINNED" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pin.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Full tests, isolated schema rehearsal and bundled staging build
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ steps.pin.outputs.sha }}"
+          npm ci
+          npm run qa
+          python3 scripts/maintenance/staging-migration-rehearsal.py
+          npx wrangler deploy --config wrangler.staging.toml --dry-run --outdir /tmp/fbg-staging-release-dryrun
+
+  deploy-staging-only:
+    needs: verify-exact-candidate
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.verify-exact-candidate.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies before exposure to Cloudflare token
+        run: npm ci
+      - name: Confirm exact staging-only Worker config without credentials
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.verify-exact-candidate.outputs.sha }}"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const content=fs.readFileSync('wrangler.staging.toml','utf8');
+          const expected={
+            name:'finnbilglass-frontrute-staging',
+            account_id:'80d5b1d56a3e907150ba7348b6182894',
+            database_name:'finnbilglass-db-staging',
+            database_id:'78842e17-ab0b-47c1-acde-244044073466',
+            bucket_name:'finnbilglass-opplaering-staging'
+          };
+          for(const [key,val] of Object.entries(expected)){
+            const re=new RegExp('^'+key+'\\s*=\\s*"'+val+'"$','m');
+            if(!re.test(content))throw Error('WRONG_STAGING_RESOURCE_'+key);
+          }
+          if(!/^workers_dev = true$/m.test(content) ||
+             content.includes('[[routes]]') || content.includes('custom_domain = true') ||
+             !content.includes('OPS_STAFF_PORTAL_ENABLED = "true"') ||
+             !content.includes('GMAIL_SYNC_ENABLED = "false"') ||
+             !content.includes('OPS_WORKSPACE_OAUTH_ENABLED = "true"') ||
+             !content.includes('OPS_GMAIL_EXPECTED_MAILBOX = "tomarne@finnbilglass.no"'))
+            throw Error('UNSAFE_STAGING_DEPLOY_CONFIG');
+          console.log('Exact staging Worker, EU D1, R2 and no production routes verified');
+          NODE
+      - name: Verify actual Cloudflare EU D1 and staging Worker secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 80d5b1d56a3e907150ba7348b6182894
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          python3 - <<'PY'
+          import json,os,urllib.request
+          base='https://api.cloudflare.com/client/v4/accounts/80d5b1d56a3e907150ba7348b6182894'
+          headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN']}
+          def get(path):
+            req=urllib.request.Request(base+path,headers=headers,method='GET')
+            with urllib.request.urlopen(req,timeout=15) as res: data=json.loads(res.read(160000))
+            if not data.get('success'):raise SystemExit('Cloudflare API returned failure')
+            return data.get('result')
+          db=get('/d1/database/78842e17-ab0b-47c1-acde-244044073466')
+          if db.get('uuid')!='78842e17-ab0b-47c1-acde-244044073466' or db.get('name')!='finnbilglass-db-staging' or db.get('jurisdiction')!='eu':
+            raise SystemExit('EU staging D1 identity mismatch')
+          secrets=get('/workers/scripts/finnbilglass-frontrute-staging/secrets')
+          names={x.get('name') for x in secrets if isinstance(x,dict)}
+          required={'RESEND_API_KEY','OPS_ACCESS_TEAM_DOMAIN','OPS_ACCESS_AUD',
+                    'GOOGLE_OAUTH_CLIENT_ID','GOOGLE_OAUTH_CLIENT_SECRET',
+                    'OPS_GMAIL_TOKEN_ENCRYPTION_KEY'}
+          if not required<=names:
+            raise SystemExit('Missing Access / Resend staging Worker secrets')
+          # OAuth D1 table existence is mandatory before code deploy.
+          sql=json.dumps({'sql':"SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'ops_workspace_%'"}).encode()
+          req=urllib.request.Request(base+'/d1/database/78842e17-ab0b-47c1-acde-244044073466/query',
+              headers={**headers,'Content-Type':'application/json'},data=sql,method='POST')
+          with urllib.request.urlopen(req,timeout=18) as res: answer=json.loads(res.read(160000))
+          if not answer.get('success'):raise SystemExit('Workspace schema query failed')
+          items=answer.get('result') or []
+          existing={v.get('name') for item in items for v in item.get('results',[])}
+          required_tables={'ops_workspace_oauth_attempts','ops_workspace_gmail_tokens','ops_workspace_oauth_audit'}
+          if not required_tables<=existing:raise SystemExit('Workspace D1 tables not installed')
+          print('Verified EU staging D1, Workspace OAuth tables and Access/OAuth/Resend Worker secrets')
+          PY
+      - name: Deploy exactly verified SHA only to workers.dev STAGING
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 80d5b1d56a3e907150ba7348b6182894
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ needs.verify-exact-candidate.outputs.sha }}"
+          npx wrangler deploy --config wrangler.staging.toml
+      - name: Read-only staging smoke after deploy
+        run: |
+          set -euo pipefail
+          code=$(curl --silent --output /tmp/fbg-staging-health.json --write-out '%{http_code}' --max-time 20 \
+            'https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev/health')
+          echo "STAGING_HEALTH_HTTP=$code"
+          test "$code" = 200
+          # OAuth endpoints must reject requests without a signed Access JWT.
+          unauth_status=$(curl --silent --output /tmp/fbg-workspace-status.json --write-out '%{http_code}' --max-time 20 \
+            'https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev/api/ops/manual/workspace/oauth/status')
+          echo "WORKSPACE_STATUS_UNAUTHENTICATED_HTTP=$unauth_status"
+          test "$unauth_status" = 401
+          unauth_start=$(curl --silent --output /tmp/fbg-workspace-start.json --write-out '%{http_code}' --max-time 20 \
+            -X POST -H 'Content-Type: application/json' -d '{}' \
+            'https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev/api/ops/manual/workspace/oauth/start')
+          echo "WORKSPACE_START_UNAUTHENTICATED_HTTP=$unauth_start"
+          test "$unauth_start" = 401
+          {
+            echo '### Exact SHA deployed to isolated staging'
+            echo "PR 57 SHA: ${{ needs.verify-exact-candidate.outputs.sha }}"
+            echo 'Worker: finnbilglass-frontrute-staging'
+            echo 'D1: finnbilglass-db-staging / EU'
+            echo 'OAuth consent only, Gmail import disabled; no production routes, D1 migrations, email send or payment'
+            echo "Health HTTP: $code"
+          } >> "$GITHUB_STEP_SUMMARY"
