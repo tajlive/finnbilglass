@@ -56,7 +56,7 @@ export async function recordMessage(env: Env, message: GmailSafeMessage, mailbox
   const workspaceMailbox = String(env.OPS_GMAIL_EXPECTED_MAILBOX || '').trim().toLowerCase();
   const signedWorkspaceSender =
     env.OPS_WORKSPACE_OAUTH_ENABLED === 'true'
-    && /^[a-z0-9._%+-]+@finnbilglass\\.no$/.test(workspaceMailbox)
+    && /^[a-z0-9._%+-]+@finnbilglass\.no$/.test(workspaceMailbox)
     && mailbox.trim().toLowerCase() === workspaceMailbox;
   const allowedSent = signedWorkspaceSender ? [...allowed, workspaceMailbox] : allowed;
   const hasCompanySender = fromTokens.some(e => allowedSent.includes(e));
