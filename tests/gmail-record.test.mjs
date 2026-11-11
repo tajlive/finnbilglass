@@ -105,3 +105,19 @@ test('Manual Gmail SENT from the approved Workspace mailbox is mirrored without 
     assert.equal(raw.prepare('SELECT COUNT(*) AS n FROM ops_messages').get().n,1);
   } finally {raw.close()}
 });
+
+
+test('Norwegian UTF-8 Gmail text survives base64url decoding and D1 storage unchanged',async()=>{
+  const {raw,env}=dbFixture();
+  try {
+    const mail=message('utf8-norwegian','kunde@example.com','support@finnbilglass.no');
+    mail.payload.headers.find(h=>h.name==='Subject').value='Norsk bilglassforespørsel';
+    mail.payload.mimeType='text/plain';
+    const original='Hei! Jeg trenger ny frontrute på en blå bil. Pris på glass og frakt? Ønsker ærlig svar.';
+    mail.payload.body={data:Buffer.from(original,'utf8').toString('base64url'),size:Buffer.byteLength(original,'utf8')};
+    assert.equal(await recordMessage(env,mail,'tomarne@finnbilglass.no'),true);
+    const body=raw.prepare('SELECT body FROM ops_messages WHERE provider_id=?').get('gmail-utf8-norwegian').body;
+    assert.equal(body,original);
+    assert.doesNotMatch(body,/Ã|�/,'body must not contain mojibake or replacement characters');
+  }finally{raw.close()}
+});
