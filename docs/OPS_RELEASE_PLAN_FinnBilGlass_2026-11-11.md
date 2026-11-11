@@ -160,3 +160,28 @@ Gjennomgått direkte mot GitHub (ikke generert fra gammel samtaleminne). **10 å
 **Prod-baseline ved denne kontrollen:** \`main\` på \`04dd827f72094543df1c45553d2d3a571e79a4f0\`. GitHub Actions for \`main\` kan ha grønn «deploy»-workflow selv når den faktiske Worker-deployjobben er **skipped**; dokumenter derfor deployet Worker-versjon separat.
 
 **Status per 11.11.2026:** OPS **teknisk mergebar og kildekode-QA grønn**; produksjon **NO-GO** på grunn av uverifisert autentisert første-salg-E2E, D1-legacy-check på faktiske kontrollerte kopier og drifts-/Workspace-signoff.
+
+## 10. Astra-revisjon 11.11.2026 – P0-rettelser lagt i OPS-staging
+
+**Verifisert samlet kandidat:** [PR #57](https://github.com/tajlive/finnbilglass/pull/57), HEAD `d60478f6370b597fb1950439fa16492189b2b817`. [GitHub PR Verification #42990346372](https://github.com/tajlive/finnbilglass/actions/runs/42990346372) **SUCCESS** på nøyaktig SHA. PR er fortsatt **draft** og produksjon fortsatt **NO-GO**.
+
+### Fire kodeblokkeringer behandlet – alle merget til OPS-staging
+
+| Funn | Implementasjon og automatisk bevis | Gjenstående driftsbevis |
+|---|---|---|
+| 1. Uklare kundesvar kan sendes dobbelt | [#71](https://github.com/tajlive/finnbilglass/pull/71): varig atomisk sendeforsøk i `ops_reply_attempts`, komplett frosset mailpayload, `SENDING/SENT/REVIEW`, ingen automatisk resend ved timeout eller 25+ timer, idempotent journaling. Syntetiske SQLite-tester og CI grønne. | Kontrollert **additiv** `migrations/proposed/0046_ops_reply_attempts.sql.proposed` på rett isolert staging-D1. Ekte Workspace-/Resend-staging E2E og manuell avstemmingsrutine. **Ikke apply alle pending-migrasjoner.** |
+| 2. Eldre OPS-skriveruter uten CSRF-port | [#69](https://github.com/tajlive/finnbilglass/pull/69): felles Origin + application/json + `X-FBG-Manual-Intent` for status, notat, kundesvar og Gmail-synk; avvisninger uten DB/provider-effekt. | Autentisert Access/rolle-testing i virkelig staging inkludert REVIEWER, tilbakekalling og legacy-bearer. |
+| 3. Race og audit-hull | [#70](https://github.com/tajlive/finnbilglass/pull/70): CAS `WHERE status=?`, 409 ved tapt konkurranse, transaksjonell D1-batch med historikk og audit for status, tilbud, aksept, ordre og portalref.; SQLite race-/rollbacktester grønne. | Verifiser D1-batch-semantikk og to faktiske ansatte i kontrollert staging. |
+| 4. Historiske mail- og bildereferanser manglet fra data-gate | [#68](https://github.com/tajlive/finnbilglass/pull/68): omfattende historisk table-/event-diff, `ops_messages`, evidens og bilder samt R2-inventar før/etter; 12 syntetiske Python-tester grønne. | Privat, tidskonsistent offline før/etter-D1 + R2-inventar fra **rett** konto/bucket. Åpne gamle aktive/lukkede saker og tilbud/ordre i OPS. |
+
+Alle fire PR-ene er merget i **staginggrenen, ikke `main`**. Ingen produksjons-Worker, ekte betaling, Gmail-import eller kundedata ble endret av dette arbeidet.
+
+### P0 GO/NO-GO – neste operasjonelle steg
+
+1. **Staging D1 schema gate:** Verifiser faktisk schema- og migrasjonsledger, riktig EU-D1-binding og beskyttet Time Travel/backup. Kontroller og appliser **kun** den gjennomgåtte additive 0046-migrasjonen på staging etter driftssignoff. Dokumenter eksakt migrasjons-/Worker-SHA og rollback. Ingen produksjonsmigrasjon før staging verifisert.
+2. **Legacy og R2:** Kjør offline legacy-verktøy med `--r2-inventory-before` og `--r2-inventory-after` på to beskyttede, konsistente snapshots. Del bare aggregerte PASS/NO-GO og intern backupreferanse i [Issue #39](https://github.com/tajlive/finnbilglass/issues/39), aldri ekte kundedata.
+3. **Autentisert første-salg-E2E:** To inviterte ansatte gjennom kundeforespørsel, dokumentert fitment, Resend-tilbud/kundesvar, aksept → eksakt én ordre → manuell Kustom Portal-lenke (ingen autobetaling). Provoser samtidighet, feil, retry og revokasjon. Send ikke reelle kundemails i syntetisk QA. Logg resultat i [Issue #52](https://github.com/tajlive/finnbilglass/issues/52).
+4. **Workspace:** Verifiser riktig bedriftspostkasse og alias + leveringsvei. `GMAIL_SYNC_ENABLED=false` inntil samtykke, app-publishing/refresh-token og sikker import er etterprøvd. Alternativt avtal **manuell** mottaks-/journalføringskontroll for første salgsrelease. Se [Issue #38](https://github.com/tajlive/finnbilglass/issues/38).
+5. **Produksjonsbeslutning:** Når alle porter er bevist, dokumentér eksakt SHA, D1/R2-backup, Worker-rollback, observerbarhet og GO. Først da fjernes draft fra #57, merges til `main`, og en kontrollert produksjonsdeploy utføres. En grønn PR-CI er **ikke** bevis for deploy eller første salg.
+
+**Driftsrunbook for kundesvar:** [docs/ops/reply-send-reconciliation.md](ops/reply-send-reconciliation.md). **Runbook for gamle jobber:** [docs/ops/legacy-data-release-gate.md](ops/legacy-data-release-gate.md). 
