@@ -172,7 +172,7 @@ test('OPS staging release gate requires reviewed OAuth schema, disabled Gmail an
     assert.match(workflow, /environment: staging/);
     assert.match(workflow, /secrets\.STAGING_CLOUDFLARE_API_TOKEN/);
     assert.doesNotMatch(workflow, /secrets\.CLOUDFLARE_API_TOKEN(?![A-Z_])/);
-    assert.match(workflow, /GMAIL_SYNC_ENABLED = \\"false\\"/);
+    assert.match(workflow, /GMAIL_SYNC_ENABLED = "false"/);
     assert.match(workflow, /GMAIL_SYNC_MUST_REMAIN_DISABLED_UNTIL_WORKSPACE_OAUTH_VERIFIED/);
     assert.match(workflow, /test -f migrations\/proposed\/0045_ops_workspace_oauth\.sql\.proposed/);
     assert.match(workflow, /for n in [^\n]*0045_ops_workspace_oauth; do/);
