@@ -85,6 +85,17 @@ Kilder: [Google Manage App Audience](https://support.google.com/cloud/answer/155
 - **Neste kontroll:** En ny OAuth-godkjenning må startes fra `https://ops-staging.finnbilglass.no/ops/ansatte` siden forrige engangskode ble brukt. Velg *bedriftspostkassen* i Google, men behold OPS ADMIN-innlogget som den eksisterende brukeren. Les eventuelt `reason=...` på retursiden eller det norske feilsammendraget; utbedre først identifisert trinn. Del aldri `code`, `state` eller auth/token-URL.
 - **Ingen produksjonsdeploy** eller reell Gmail-synk før positiv Workspace-grant, mailbox-kontroll, Gmail API-kontroll og avklart 7-dagers testtokenbegrensning.
 
+## Oppdatering 11.11.2026 – Gmail API avviser profilkontroll med 403
+
+- Google OAuth-testbruker og riktig `tomarne@finnbilglass.no` kom gjennom samtykkeflyten, og staging returnerte **`workspace=failed&reason=gmail_http_403`**. Dette lokaliserer feilen til `GET https://gmail.googleapis.com/gmail/v1/users/me/profile`, **etter** vellykket OAuth-tokenutveksling, men **før** et kryptert refresh token kunne lagres. Ingen Gmail-import, ingen gyldig Workspace-grant registrert.
+- **Første kontroll i eksisterende Google Cloud-prosjekt** `gen-lang-client-0228405648`: åpne [Gmail API i prosjektets API Library](https://console.cloud.google.com/apis/library/gmail.googleapis.com?project=gen-lang-client-0228405648). Dersom knappen er **Enable**, aktiver Gmail API. **Manage** betyr at API-et er aktivert; da undersøk Workspace Admin API Controls/domenepolicy og Googles spesifikke `error.reason`. Ikke opprett ny Google Workspace, ny OAuth-klient eller nye kontoer.
+- Googles `users.getProfile` støtter eksisterende `gmail.readonly`-scope; det kreves **ikke** bredere lese-/skrive-/slettetillatelse.
+- For å skille 403-årsakene har PR #57 fått **allowlist-klassifisering** av Google API `error.details[].reason` eller `error.errors[].reason`: `gmail_service_disabled`, `gmail_domain_policy`, `gmail_quota`, `gmail_scope_denied`, ellers `gmail_http_403`. Provider-feiltekster, OAuth-koder og tokens skal **aldri** vises i UI, redirect, SQL eller CI-logger. Testene har syntetiske Google-feilsvar.
+- Nytt OAuth-samtykke blir nødvendig etter API-aktivering, siden tidligere callback-forsøk har brukt engangsstate og **ingen** godkjent Gmail-refresh-token er lagret. Staging `GMAIL_SYNC_ENABLED=false` forblir urørt frem til riktig postkasse er verifisert.
+- `tomarnejensen@gmail.com` er allerede `ADMIN/ACTIVE` i OPS, og `tomarne@finnbilglass.no` vises nå som **`ADMIN/INVITED`** etter en eksplisitt invitasjon i OPS. Denne invitasjonen er **ikke** årsaken til Gmail API 403 og er ikke nødvendig for en e-postkonto-OAuth-grant. Ikke aktiver eller fjern medlemskapet automatisk bare for å reparere Gmail.
+
+Kilder: [Google Gmail getProfile](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users/getProfile), [Gmail API 403 reasons](https://developers.google.com/workspace/gmail/api/guides/handle-errors), [Enable an API](https://docs.cloud.google.com/service-usage/docs/enable-disable).
+
 ## Eksternt kontrollpunkt som ikke kan automatiseres uten samtykke
 
 Bare **kontoens eier** kan gi den innloggede Workspace-postkassen Gmail `readonly` OAuth-rettigheter, og eksisterende OAuth-klient må ha riktig redirect URI i Google Cloud Console. Dette er ikke det samme som å opprette Google Workspace på nytt.
