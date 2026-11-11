@@ -154,7 +154,7 @@ test('valid Workspace consent persists encrypted refresh token, never plaintext'
     assert.equal(state.audit.length,1);
     assert.equal(calls.length,2);
     const retry=await finishWorkspaceOAuth(new Request(url),e,admin);
-    assert.equal(retry.headers.get('location'),'/ops/ansatte?workspace=failed');
+    assert.equal(retry.headers.get('location'),'/ops/ansatte?workspace=failed&reason=state_used');
     assert.equal(calls.length,2,'replayed authorization code must not trigger token exchange');
     assert.equal(state.audit.length,1);
   } finally {globalThis.fetch=oldFetch}
@@ -171,7 +171,7 @@ test('personal Gmail profile is denied before token storage',async()=>{
   try {
     const result=await finishWorkspaceOAuth(new Request(callbackUrl(start.authorizationUrl)),e,admin);
     assert.equal(result.status,303);
-    assert.equal(result.headers.get('location'),'/ops/ansatte?workspace=failed');
+    assert.equal(result.headers.get('location'),'/ops/ansatte?workspace=failed&reason=gmail_mailbox');
     assert.equal(state.tokens.size,0);
     assert.equal(state.audit.length,0);
   } finally {globalThis.fetch=oldFetch}
@@ -192,8 +192,38 @@ test('missing/rejected state, wrong staff and no Google refresh grant fail witho
   };
   try{
     const result=await finishWorkspaceOAuth(new Request(url),e,admin);
-    assert.equal(result.headers.get('location'),'/ops/ansatte?workspace=failed');
+    assert.equal(result.headers.get('location'),'/ops/ansatte?workspace=failed&reason=token_incomplete');
     assert.equal(fetches,1);
     assert.equal(state.tokens.size,0);
   }finally{globalThis.fetch=oldFetch}
+});
+
+test('OAuth callback reports safe field-level error stage without disclosing tokens',async()=>{
+  const state=testDb();const e=env(state);
+  const cases=[
+    {googleStatus:400,expected:'token_http_400'},
+    {googleStatus:503,expected:'token_http_other'}
+  ];
+  const original=globalThis.fetch;
+  try {
+    for(const kase of cases){
+      const started=await (await beginWorkspaceOAuth(e,admin)).json();
+      globalThis.fetch=async()=>new Response('provider details must not leak',{status:kase.googleStatus});
+      const result=await finishWorkspaceOAuth(new Request(callbackUrl(started.authorizationUrl)),e,admin);
+      assert.equal(result.status,303);
+      assert.equal(result.headers.get('location'),'/ops/ansatte?workspace=failed&reason='+kase.expected);
+      assert.ok(!result.headers.get('location').includes('provider details'));
+    }
+    const started=await (await beginWorkspaceOAuth(e,admin)).json();
+    globalThis.fetch=async(href)=>String(href).includes('oauth2.googleapis.com')
+      ? Response.json({access_token:'access-test',refresh_token:'refresh-test',
+          token_type:'Bearer',scope:'https://www.googleapis.com/auth/gmail.readonly'})
+      : new Response('Gmail disabled for project',{status:403});
+    const result=await finishWorkspaceOAuth(new Request(callbackUrl(started.authorizationUrl)),e,admin);
+    assert.equal(result.headers.get('location'),'/ops/ansatte?workspace=failed&reason=gmail_http_403');
+    assert.equal(state.tokens.size,0);
+    assert.equal(state.audit.length,0);
+  } finally {
+    globalThis.fetch=original;
+  }
 });
