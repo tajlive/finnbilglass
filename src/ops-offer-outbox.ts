@@ -9,6 +9,7 @@ export interface OfferForSend {
   inquiry_id: number;
   version: number;
   sku: string;
+  equipment_json?: string | null;
   total_minor: number;
   delivery_note: string;
   navn: string | null;
@@ -56,7 +57,20 @@ export async function sendQueuedOffer(env: Env, offer: OfferForSend, actor: stri
     return {ok:false,status:'REJECTED',error:syntheticDomain?'TESTADRESSE_KAN_IKKE_MOTTA_TILBUD':'TILBUD_ELLER_EPOST_UGYLDIG'};
   }
   const subject=`Tilbud på bilglass – sak ${offer.inquiry_id}, versjon ${offer.version}`;
-  const message=`Hei ${String(offer.navn||'')},\n\nTilbud ${offer.version}: ${offer.sku}\nTotalpris inkl. mva.: ${(Number(offer.total_minor)/100).toFixed(2)} NOK\nLevering: ${offer.delivery_note}\n\nSvar på denne e-posten for å godta tilbudet. Oppgi tilbudsversjon ${offer.version}.\n\nFinnBilglass`;
+  // Render the saved snapshot, never confuse an internal missing-SKU marker
+  // with a real catalogue part number. Legacy offers keep their prior format.
+  let product: {name?: string | null; partNumber?: string | null; description?: string | null} = {};
+  try {
+    const parsed = JSON.parse(offer.equipment_json || '{}') as {offerProduct?: typeof product};
+    if (parsed && parsed.offerProduct && typeof parsed.offerProduct === 'object') product = parsed.offerProduct;
+  } catch { /* Legacy rows may not have product metadata. */ }
+  const productName = typeof product.name === 'string' ? product.name : '';
+  const description = typeof product.description === 'string' ? product.description : '';
+  const partNumber = offer.sku === 'UTEN-VARENUMMER' ? '' : offer.sku;
+  const productLines = productName
+    ? `Vare: ${productName}\n${partNumber ? 'Varenummer: '+partNumber+'\n' : ''}${description ? 'Beskrivelse: '+description+'\n' : ''}`
+    : `Vare: ${partNumber || 'Varenummer ikke oppgitt'}\n${description ? 'Beskrivelse: '+description+'\n' : ''}`;
+  const message=`Hei ${String(offer.navn||'')},\n\nTilbud ${offer.version}:\n${productLines}Totalpris inkl. mva.: ${(Number(offer.total_minor)/100).toFixed(2)} NOK\nLevering: ${offer.delivery_note}\n\nSvar på denne e-posten for å godta tilbudet. Oppgi tilbudsversjon ${offer.version}.\n\nFinnBilglass`;
   const html=`<p>${escaped(message).replace(/\n/g,'<br>')}</p>`;
   const now=Date.now(), key='ops-offer-'+offer.offer_id;
   // Exactly one immutable payload and request key are persisted BEFORE calling Resend.
