@@ -124,9 +124,9 @@ export function extractEmailHeaders(message: GmailMessage): Record<string, strin
 function decodeGmailUtf8(data: string): string {
   const raw = data.replace(/-/g, '+').replace(/_/g, '/');
   const binary = atob(raw.padEnd(Math.ceil(raw.length / 4) * 4, '='));
-  return new TextDecoder('utf-8', {fatal: false}).decode(
-    Uint8Array.from(binary, character => character.charCodeAt(0))
-  );
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return new TextDecoder('utf-8', {fatal: false}).decode(bytes);
 }
 
 export function extractEmailBody(message: GmailMessage): { text: string; html: string } {
