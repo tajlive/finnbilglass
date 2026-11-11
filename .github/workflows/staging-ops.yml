@@ -1,47 +1,26 @@
 name: Staging OPS - manual release gate
 
-# Auto-check edits to this workflow (NO Cloudflare access); staging writes
-# remain manual and environment-gated.
+# One release lane. GitHub may deploy ONLY the existing staging Worker.
+# No D1 Edit credential, no D1 SQL writes, no customer mail and no payments.
+# Production deployments are intentionally not available here.
 on:
   push:
     branches: [main]
-    paths:
-      - .github/workflows/staging-ops.yml
+    paths: [.github/workflows/staging-ops.yml]
   workflow_dispatch:
     inputs:
       candidate_sha:
-        description: "Optional: leave blank to pin current PR #57 HEAD automatically"
-        required: false
-        default: ""
+        description: "Exact 40-char, reviewed HEAD SHA of draft PR #57"
+        required: true
         type: string
       authorization:
-        description: "Confirm staging-only run"
+        description: "Confirm existing staging Worker only; NO database operations"
         required: true
-        default: STAGING-ONLY
+        default: STAGING-WORKER-ONLY
         type: choice
-        options: [STAGING-ONLY]
-      inspect_staging:
-        description: "Read-only Cloudflare staging account / D1 identity and schema; no writes"
-        required: true
-        default: false
-        type: boolean
-      apply_migrations:
-        description: "Apply reviewed 0040-0045 on STAGING only, after verified Time Travel bookmark"
-        required: true
-        default: false
-        type: boolean
-      bootstrap_admin_email:
-        description: "Optional one-time STAGING admin email; requires apply_migrations=true and repo owner"
-        required: false
-        default: ""
-        type: string
-      apply_reply_guard:
-        description: "Apply ONLY reviewed additive 0046 reply-attempt migration to staging D1"
-        required: true
-        default: false
-        type: boolean
+        options: [STAGING-WORKER-ONLY]
       deploy:
-        description: "Deploy tested candidate to workers.dev staging ONLY"
+        description: "Explicitly deploy ONLY the existing staging Worker after QA"
         required: true
         default: false
         type: boolean
@@ -56,82 +35,72 @@ concurrency:
 
 jobs:
   verify-candidate:
-    # Never let a pull-request cache write into a job that checks release candidates.
-    cache-mode: read
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 50
     outputs:
       sha: ${{ steps.pin.outputs.sha }}
     steps:
-      - name: Verify manually entered SHA matches the exact open PR
+      - name: Pin exact reviewed PR #57 SHA (fail closed)
         id: pin
         env:
           GH_TOKEN: ${{ github.token }}
           EXPECTED: ${{ inputs.candidate_sha }}
-          AUTHORIZATION: ${{ github.event_name == 'workflow_dispatch' && inputs.authorization || 'STAGING-ONLY' }}
+          AUTHORIZATION: ${{ github.event_name == 'workflow_dispatch' && inputs.authorization || 'STAGING-WORKER-ONLY' }}
         run: |
           set -euo pipefail
-          test "$AUTHORIZATION" = "STAGING-ONLY"
+          test "$AUTHORIZATION" = "STAGING-WORKER-ONLY"
           PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/57")
           ACTUAL=$(echo "$PR" | jq -r .head.sha)
-          if [ -z "$EXPECTED" ]; then
-            EXPECTED="$ACTUAL"
-            echo "Auto-pinned current PR #57 HEAD for this run"
-          fi
-          [[ "$EXPECTED" =~ ^[0-9a-f]{40}$ ]]
           BASE=$(echo "$PR" | jq -r .base.ref)
           HEAD=$(echo "$PR" | jq -r .head.ref)
-          FORK=$(echo "$PR" | jq -r .head.repo.full_name)
+          OWNER=$(echo "$PR" | jq -r .head.repo.full_name)
           DRAFT=$(echo "$PR" | jq -r .draft)
+          STATE=$(echo "$PR" | jq -r .state)
+          if [ "${{ github.event_name }}" = "push" ]; then EXPECTED="$ACTUAL"; fi
+          [[ "$EXPECTED" =~ ^[a-f0-9]{40}$ ]]
           test "$EXPECTED" = "$ACTUAL"
           test "$BASE" = main
           test "$HEAD" = staging/first-sale-20261110
-          test "$FORK" = "$GITHUB_REPOSITORY"
+          test "$OWNER" = "$GITHUB_REPOSITORY"
           test "$DRAFT" = true
+          test "$STATE" = open
           echo "sha=$EXPECTED" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.pin.outputs.sha }}
           persist-credentials: false
-      - name: Verify checked-out commit
+      - name: Verify checkout is pinned
         env:
           EXPECTED: ${{ steps.pin.outputs.sha }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - run: npm ci
-      - run: npm run qa
-      - name: Rehearse current PR #57 EU D1 baseline and six OPS migrations without secrets
+      - name: Full QA, including TypeScript and OPS regression tests
+        run: npm run qa
+      - name: Rehearse staging migrations OFFLINE (never execute against D1)
         run: python3 scripts/maintenance/staging-migration-rehearsal.py
-      - name: Compile exact staging Worker without deploying or Cloudflare credentials
-        run: npx wrangler deploy --config wrangler.staging.toml --dry-run --outdir /tmp/fbg-staging-bundle
-      - name: Safe validation summary
-        if: ${{ github.event_name == 'push' || (!inputs.apply_migrations && !inputs.deploy) }}
+      - name: Exact-SHA staging config guard and Wrangler dry run
+        env:
+          EXPECTED: ${{ steps.pin.outputs.sha }}
+        run: node scripts/maintenance/ops-staging-preflight.mjs --expected-sha "$EXPECTED" --dry-run
+      - name: Report candidate verified but NOT deployed
         run: |
-          {
-            echo "### Staging preflight: PASS"
-            echo "Reviewed PR #57 commit: ${{ steps.pin.outputs.sha }}"
-            echo "No Cloudflare API access, D1 migration, Worker deploy, customer email, or payment was attempted."
-            echo "Next: configure a dedicated staging GitHub environment before any DB/deploy step."
-          } >> "$GITHUB_STEP_SUMMARY"
+          echo "### Candidate preflight PASSED; no Cloudflare write" >> "$GITHUB_STEP_SUMMARY"
+          echo "Reviewed commit: ${{ steps.pin.outputs.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "0046 schema previously verified separately; recheck runtime before release." >> "$GITHUB_STEP_SUMMARY"
 
-  staging:
-    # No cache restore from PR code into a job carrying Cloudflare credentials.
-    cache-mode: none
+  worker-only-staging:
+    # Never run on push, PR or scheduler. Requires GitHub staging environment approval.
     needs: verify-candidate
-    if: github.event_name == 'workflow_dispatch' && (inputs.inspect_staging || inputs.apply_migrations || inputs.apply_reply_guard || inputs.deploy)
-    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true
     environment: staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
-      # Different name from production; never fall back to the repo-level prod token.
-      # The Cloudflare token is NOT exposed to checkout/npm ci/QA steps.
-      # Account ID is non-secret and pinned to the reviewed staging account.
       CLOUDFLARE_ACCOUNT_ID: "80d5b1d56a3e907150ba7348b6182894"
-      STAGING_WORKER: finnbilglass-frontrute-staging
-      STAGING_DB: finnbilglass-db-staging
-      STAGING_DB_ID: 78842e17-ab0b-47c1-acde-244044073466
     steps:
       - uses: actions/checkout@v4
         with:
@@ -140,198 +109,67 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - run: npm ci
-      - name: Fail-closed account, Worker, D1 and config checks
+      - name: Exact-SHA and staging binding guard, no credentials
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
+          EXPECTED: ${{ needs.verify-candidate.outputs.sha }}
+        run: node scripts/maintenance/ops-staging-preflight.mjs --expected-sha "$EXPECTED" --dry-run
+      - name: Verify narrow staging Worker permission and secret NAMES
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_WORKER_API_TOKEN }}
         run: |
           set -euo pipefail
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::error::Add STAGING_CLOUDFLARE_API_TOKEN to GitHub environment staging; production token must not be reused"
+            echo "::error::One-time setup: Workers Editor token scoped ONLY to finnbilglass-frontrute-staging; do not use D1 Edit or production token"
             exit 1
           fi
-          test "$CLOUDFLARE_ACCOUNT_ID" = "80d5b1d56a3e907150ba7348b6182894"
+          npx wrangler secret list --config wrangler.staging.toml --format json > /tmp/fbg-stage-secret-names.json
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const content=fs.readFileSync('wrangler.staging.toml','utf8');
-          const expected={
-            name:'finnbilglass-frontrute-staging',
-            account_id:'80d5b1d56a3e907150ba7348b6182894',
-            database_name:'finnbilglass-db-staging',
-            database_id:'78842e17-ab0b-47c1-acde-244044073466',
-            bucket_name:'finnbilglass-opplaering-staging'
-          };
-          const lines=new Set(content.split(String.fromCharCode(10)).map(x=>x.trim()));
-          for(const [key,value] of Object.entries(expected)){
-            if(!lines.has(key+' = "'+value+'"'))throw Error('Wrong staging '+key);
+          const values=JSON.parse(fs.readFileSync('/tmp/fbg-stage-secret-names.json','utf8'));
+          const names=new Set((Array.isArray(values)?values:[]).map(x=>x.name));
+          for(const required of ['OPS_ACCESS_TEAM_DOMAIN','OPS_ACCESS_AUD','RESEND_API_KEY']){
+            if(!names.has(required)) throw Error('MISSING_STAGING_SECRET_'+required);
           }
-          if(!lines.has('ENVIRONMENT = "staging"')||!lines.has('workers_dev = true'))throw Error('STAGING_TARGET_NOT_PINNED');
-          if(!lines.has('GMAIL_SYNC_ENABLED = "false"'))throw Error('GMAIL_SYNC_MUST_REMAIN_DISABLED_UNTIL_WORKSPACE_OAUTH_VERIFIED');
-          if(content.includes('[[routes]]')||content.includes('custom_domain = true'))throw Error('STAGING_HAS_PRODUCTION_ROUTE');
+          console.log('Required staging Worker secret names exist; values not printed');
           NODE
-          test -f migrations/proposed/0040_ops_manual_offer_order.sql.proposed
-          test -f migrations/proposed/0041_ops_staff_invites_activity.sql.proposed
-          test -f migrations/proposed/0042_ops_reply_outbox.sql.proposed
-          test -f migrations/proposed/0043_ops_gmail_sync.sql.proposed
-          test -f migrations/proposed/0044_ops_offer_outbox.sql.proposed
-          test -f migrations/proposed/0045_ops_workspace_oauth.sql.proposed
-          test -f migrations/proposed/0046_ops_reply_attempts.sql.proposed
-      - name: Verify Cloudflare API account and actual staging DB
+      - name: Record currently deployed staging version for rollback
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_WORKER_API_TOKEN }}
         run: |
           set -euo pipefail
-          npx wrangler d1 info "$STAGING_DB" --config wrangler.staging.toml --json > /tmp/fbg-db-info.json
+          npx wrangler deployments list --config wrangler.staging.toml --name finnbilglass-frontrute-staging --json > /tmp/fbg-stage-before.json
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const x=JSON.parse(fs.readFileSync('/tmp/fbg-db-info.json','utf8'));
-          const db=Array.isArray(x)?x[0]:x;
-          if(String(db.uuid||db.id||'')!==process.env.STAGING_DB_ID)throw Error('D1_ID_MISMATCH');
-          if(db.name && db.name!==process.env.STAGING_DB)throw Error('D1_NAME_MISMATCH');
-          if(db.version && db.version!=='production')throw Error('STAGING_D1_TIME_TRAVEL_NOT_SUPPORTED');
-          console.log('Verified staging D1 identity, name, and backend');
+          const data=JSON.parse(fs.readFileSync('/tmp/fbg-stage-before.json','utf8'));
+          const list=Array.isArray(data)?data:(data.deployments||data.result?.deployments||[]);
+          if(!list.length)throw Error('NO_STAGING_DEPLOYMENT_OR_ROLLBACK_BASELINE');
+          const version=(list[0].versions||[]).find(x=>x.percentage===100||x.percentage===100.0)||list[0].versions?.[0];
+          if(!version?.version_id && !version?.id)throw Error('STAGING_ROLLBACK_VERSION_NOT_FOUND');
+          const id=version.version_id||version.id;
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Pre-deploy staging rollback version: '+id+'\n');
+          console.log('Pre-deploy staging rollback version recorded');
           NODE
-      - name: Inspect actual schema, without customer data
+      - name: Deploy exact verified commit to existing workers.dev STAGING Worker ONLY
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        run: |
-          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
-            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_manual_offers','ops_staff_memberships','ops_reply_outbox','ops_messages','ops_offer_outbox') ORDER BY name"
-      - name: Record Time Travel restore point before any write
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        if: inputs.apply_migrations || inputs.apply_reply_guard || inputs.deploy
+          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_WORKER_API_TOKEN }}
+          EXPECTED: ${{ needs.verify-candidate.outputs.sha }}
         run: |
           set -euo pipefail
-          npx wrangler d1 time-travel info "$STAGING_DB" --config wrangler.staging.toml --json > /tmp/fbg-bookmark.json
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const bookmark=JSON.parse(fs.readFileSync('/tmp/fbg-bookmark.json','utf8'));
-          const match=JSON.stringify(bookmark).match(/[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{8}-[0-9a-f]{32}/i);
-          if(!match)throw Error('D1_BOOKMARK_MISSING');
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
-            'Pre-write STAGING D1 restore bookmark: '+match[0]+String.fromCharCode(10));
-          console.log('Staging D1 recovery bookmark recorded in protected release summary');
-          NODE
-      - name: Apply reviewed OPS migrations on STAGING only
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        if: inputs.apply_migrations
-        run: |
-          set -euo pipefail
-          # Explicit list: NEVER run the project's general migrations folder.
-          # Idempotent CREATE IF NOT EXISTS; a partial failure stops before deploy.
-          # 0045 creates OAuth schema only. No OAuth consent, Gmail sync or tokens are enabled.
-          # 0046 remains a separate explicit one-time gate; NEVER include it here.
-          for n in 0040_ops_manual_offer_order 0041_ops_staff_invites_activity 0042_ops_reply_outbox 0043_ops_gmail_sync 0044_ops_offer_outbox 0045_ops_workspace_oauth; do
-            npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
-              --file "migrations/proposed/${n}.sql.proposed"
-          done
-      - name: Review actual reply prerequisites for 0046
-        if: inputs.apply_reply_guard
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        run: |
-          set -euo pipefail
-          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
-            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_reply_outbox') ORDER BY name" > /tmp/fbg-reply-prereq.json
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const raw=JSON.parse(fs.readFileSync('/tmp/fbg-reply-prereq.json','utf8'));
-          const rows=Array.isArray(raw)?raw.flatMap(x=>x.results||[]):raw.results||[];
-          const names=new Set(rows.map(x=>x.name));
-          for(const name of ['beta_inquiries','ops_reply_outbox']){
-            if(!names.has(name))throw Error('REPLY_0046_PREREQUISITE_MISSING_'+name);
-          }
-          console.log('Approved 0046 prerequisites present; only table names read');
-          NODE
-      - name: Apply reviewed additive reply migration 0046 on STAGING only
-        if: inputs.apply_reply_guard
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        run: |
-          set -euo pipefail
-          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
-            --file migrations/proposed/0046_ops_reply_attempts.sql.proposed
-          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
-            --command "SELECT name FROM sqlite_master WHERE type='table' AND name='ops_reply_attempts'" > /tmp/fbg-reply-result.json
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const raw=JSON.parse(fs.readFileSync('/tmp/fbg-reply-result.json','utf8'));
-          const rows=Array.isArray(raw)?raw.flatMap(x=>x.results||[]):raw.results||[];
-          if(!rows.some(x=>x.name==='ops_reply_attempts'))throw Error('REPLY_0046_NOT_PRESENT_AFTER_WRITE');
-          console.log('Additive 0046 staging table verified (no customer records printed)');
-          NODE
-      - name: Bootstrap first invited staging admin after verified migrations
-        if: inputs.apply_migrations && inputs.bootstrap_admin_email != ''
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-          BOOTSTRAP_EMAIL: ${{ inputs.bootstrap_admin_email }}
-        run: |
-          set -euo pipefail
-          # Only the repository owner can select the initial staging ADMIN.
-          test "$GITHUB_ACTOR" = 'tajlive'
-          EMAIL=$(printf '%s' "$BOOTSTRAP_EMAIL" | tr '[:upper:]' '[:lower:]')
-          [[ "$EMAIL" =~ ^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,20}$ ]]
-          # No SQL metacharacters are accepted; pre-existing memberships are never modified.
-          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
-            --command "INSERT OR IGNORE INTO ops_staff_memberships(email,role,status,invited_by,invited_at) VALUES('$EMAIL','ADMIN','INVITED','github:staging-bootstrap',CAST(strftime('%s','now') AS INTEGER)*1000)"
-          echo 'Initial staging ADMIN invitation seeded if the address was not already present.'
-      - name: Require all staging OPS tables before deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        if: inputs.deploy
-        run: |
-          set -euo pipefail
-          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
-            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox','ops_reply_attempts','ops_workspace_oauth_attempts','ops_workspace_gmail_tokens','ops_workspace_oauth_audit')" > /tmp/fbg-ops-schema.json
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const rows=JSON.parse(fs.readFileSync('/tmp/fbg-ops-schema.json','utf8'));
-          const names=new Set((Array.isArray(rows)?rows.flatMap(x=>x.results||[]):rows.results||[]).map(x=>x.name));
-          for(const name of ['beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox','ops_reply_attempts','ops_workspace_oauth_attempts','ops_workspace_gmail_tokens','ops_workspace_oauth_audit']){
-            if(!names.has(name))throw Error('MISSING_STAGING_TABLE_'+name);
-          }
-          console.log('Required staging OPS tables verified');
-          NODE
-      - name: Verify permanent Worker secrets exist before deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        if: inputs.deploy
-        run: |
-          set -euo pipefail
-          npx wrangler secret list --config wrangler.staging.toml --format json > /tmp/fbg-staging-secrets.json
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const secrets=JSON.parse(fs.readFileSync('/tmp/fbg-staging-secrets.json','utf8'));
-          const found=new Set((Array.isArray(secrets)?secrets:[]).map(x=>x.name));
-          for(const name of ['OPS_ACCESS_TEAM_DOMAIN','OPS_ACCESS_AUD','RESEND_API_KEY']){
-            if(!found.has(name))throw Error('MISSING_STAGING_WORKER_SECRET_'+name);
-          }
-          console.log('Cloudflare Access and Resend Worker secret names verified; values never printed');
-          NODE
-      - name: Deploy EXACT reviewed SHA to staging Worker (never prod)
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        if: inputs.deploy
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "${{ needs.verify-candidate.outputs.sha }}"
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
+          # Cloudflare token MUST have only Workers Editor for this one Worker.
+          # No D1 Edit grants, no routes or domains in wrangler.staging.toml.
           npx wrangler deploy --config wrangler.staging.toml
-      - name: Read-only staging health check
-        if: inputs.deploy
-        run: curl --fail --silent --show-error --max-time 20 "https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev/health"
-      - name: Release record
+      - name: Read-only post-deploy health and unauthenticated OPS guard
         run: |
-          {
-            echo "### FinnBilGlass staging-only release"
-            echo "Candidate SHA: ${{ needs.verify-candidate.outputs.sha }}"
-            echo 'D1: finnbilglass-db-staging'
-            echo "Base migrations 0040-0045 requested: ${{ inputs.apply_migrations }}"
-            echo "Reviewed additive reply 0046 requested: ${{ inputs.apply_reply_guard }}"
-            echo "Read-only inspection requested: ${{ inputs.inspect_staging }}"
-            echo "First admin invitation requested: ${{ inputs.apply_migrations && inputs.bootstrap_admin_email != '' }}"
-            echo "Deploy requested: ${{ inputs.deploy }}"
-            echo "This workflow does not create test sales, send email or initiate payments."
-          } >> "$GITHUB_STEP_SUMMARY"
+          set -euo pipefail
+          base="https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev"
+          curl --fail --silent --show-error --max-time 20 "$base/health" >/dev/null
+          status=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 20 "$base/api/ops/summary")
+          if [ "$status" != "401" ] && [ "$status" != "403" ]; then
+            echo "::error::Unauthenticated OPS unexpectedly returned HTTP $status"
+            exit 1
+          fi
+          echo "### Worker-only STAGING deploy completed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Reviewed candidate SHA: ${{ needs.verify-candidate.outputs.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "No D1 writes, Gmail sync, external mail, Kustom or Stripe calls were initiated by this workflow." >> "$GITHUB_STEP_SUMMARY"
