@@ -73,7 +73,7 @@ function fixture() {
 
 test('complete synthetic first sale: inquiry > offer > accept > one order > manual portal reference',async()=>{
   const f=fixture();
-  const savedHistory=structuredClone(f.historical());
+  const savedHistory=JSON.stringify(f.historical());
   const originalFetch=globalThis.fetch;
   let providerCalls=0;
   globalThis.fetch=async(url,options)=>{
@@ -138,7 +138,7 @@ test('complete synthetic first sale: inquiry > offer > accept > one order > manu
     assert.equal(f.count('ops_staff_activity'),4,'Send, accept, order and portal reference');
     assert.equal(f.count('beta_inquiry_events'),2,'Historic event and new offer');
     assert.equal(providerCalls,1);
-    assert.deepEqual(f.historical(),savedHistory,'Old case and history unchanged');
+    assert.equal(JSON.stringify(f.historical()),savedHistory,'Old case and history unchanged');
     assert.equal(f.sqlite.prepare('PRAGMA foreign_key_check').all().length,0);
   }finally{globalThis.fetch=originalFetch;f.close()}
 });
