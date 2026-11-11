@@ -3,8 +3,8 @@
  *  Never auto-sends mail, creates orders, or authorizes glass choices.
  */
 import type { Env } from '../types';
-import { workspaceConnectionStatus } from '../ops-workspace-oauth';
-import { getGmailTokens, extractEmailBody, startGmailPushWatch } from '../ops-workbench/gmail-sync';
+import { expectedWorkspaceMailbox, workspaceConnectionStatus } from '../ops-workspace-oauth';
+import { getGmailTokens, gmailApiFetch, extractEmailBody, startGmailPushWatch } from '../ops-workbench/gmail-sync';
 import { syncDb } from '../ops-workbench/mail-sync';
 import {
   loadGmailBatch, consumeGmailBatch, singleAddress, caseIdFromSubject,
@@ -112,6 +112,10 @@ export interface GmailSyncResult { synced: number; errors: string[]; mode?: 'inc
 export async function syncGmailEmails(env: Env): Promise<GmailSyncResult> {
   if (env.GMAIL_SYNC_ENABLED !== 'true') return { synced: 0, errors: ['Gmail sync is disabled'] };
   if (!singleAddress(env.OPS_INBOUND_ADDRESS)) return { synced: 0, errors: ['OPS_INBOUND_ADDRESS is required'] };
+  const expectedMailbox = expectedWorkspaceMailbox(env);
+  if (env.OPS_WORKSPACE_OAUTH_ENABLED === 'true' && !expectedMailbox) {
+    return { synced: 0, errors: ['GMAIL_EXPECTED_MAILBOX_REQUIRED'] };
+  }
   const tokens = await getGmailTokens(env);
   if (!tokens) return { synced: 0, errors: ['Gmail OAuth not configured'] };
   const db = syncDb(env);
@@ -119,7 +123,7 @@ export async function syncGmailEmails(env: Env): Promise<GmailSyncResult> {
     .bind(CHANNEL).first<{ history_id: string | null }>();
   const originalCursor = row?.history_id ?? null;
   try {
-    const batch = await loadGmailBatch(tokens.access_token, originalCursor);
+    const batch = await loadGmailBatch(tokens.access_token, originalCursor, gmailApiFetch, expectedMailbox);
     let imported = 0;
     await consumeGmailBatch(batch,
       async (message, mailbox) => { if (await recordMessage(env, message, mailbox)) imported++; },

@@ -63,11 +63,16 @@ async function allPages(
 export async function loadGmailBatch(
   accessToken: string, startHistoryId: string | null,
   request: Requester = gmailApiFetch,
+  expectedMailbox: string | null = null,
 ): Promise<GmailBatch> {
   const profile = await getJson<GmailProfile>(request, accessToken, '/users/me/profile');
   const mailboxAddress = String(profile.emailAddress || '').trim().toLowerCase();
   const profileHistoryId = requiredId(profile.historyId, 'PROFILE_HISTORY');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mailboxAddress)) throw new Error('GMAIL_MAILBOX_UNKNOWN');
+  // Verify the authorised Workspace identity BEFORE listing or reading any messages.
+  if (expectedMailbox && mailboxAddress !== expectedMailbox.trim().toLowerCase()) {
+    throw new Error('GMAIL_WRONG_MAILBOX');
+  }
   const ids = new Set<string>();
   let mode: GmailBatch['mode'] = 'full';
   let cursor = profileHistoryId;

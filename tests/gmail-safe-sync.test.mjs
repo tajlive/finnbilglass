@@ -10,6 +10,20 @@ function reply(data, status = 200) {
 }
 const msg = (id, labelIds = ['SENT']) => ({ id, labelIds, payload: { headers: [] } });
 
+test('Workspace mailbox mismatch stops before any Gmail message listing', async () => {
+  const paths = [];
+  const request = async (_token, path) => {
+    paths.push(path);
+    if (path === '/users/me/profile') return reply({ emailAddress: 'other@finnbilglass.no', historyId: '900' });
+    throw new Error('Message data must never be requested from the wrong mailbox');
+  };
+  await assert.rejects(
+    () => loadGmailBatch('synthetic', null, request, 'tomarne@finnbilglass.no'),
+    /GMAIL_WRONG_MAILBOX/,
+  );
+  assert.deepEqual(paths, ['/users/me/profile']);
+});
+
 test('History: exhausts every page, fetches each message once, advances to last historyId', async () => {
   const paths = [];
   const request = async (_token, path) => {
