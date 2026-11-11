@@ -111,3 +111,29 @@ Stans produksjonsdeploy. Rull eventuelt tilbake kode, men **ikke** rull blindt t
 - Gamle saker, tilbud, ordre og kundehistorikk skal ikke slettes eller nullstilles.
 - Produksjon ønskes **raskt**, men ikke ved å hoppe over validering av kundedata og betalingsstatus.
 - GitHub-planen, ikke samtaleminnet, skal fungere som varig fremdriftslogg.
+
+## 8. Issue-opprydding 11.11.2026 – aktivt arbeidsutvalg
+
+Gjennomgått direkte mot GitHub (ikke generert fra gammel samtaleminne). **10 åpne GitHub Issues før, 8 etter**. Ingen kode, kundedata eller produksjonsinnstillinger endret gjennom denne oppryddingen. Lukking bevarer historikk og commits; ingen hard deletion av Issues.
+
+### Arkivert og konsolidert
+- [#23](https://github.com/tajlive/finnbilglass/issues/23) **lukket som duplikat av #52**: samtlige relevante krav om åpne uforpliktende forespørsler, idempotens, botvern, rate limiting, postnummer, kill-switch og IDOR er lagt inn i hovedoppgaven #52. Foreldet Brevo-beskrivelse er erstattet av Resend. **Ingen produksjonsaktivering**.
+- [#19](https://github.com/tajlive/finnbilglass/issues/19) **arkivert som historisk hendelse**. Den synlige issue-beskrivelsen er renset for unødvendige logg-/lokasjonsdetaljer. Tidligere GitHub-revisjoner kan fortsatt finnes. Ingen produksjons-D1-rader er slettet; forebygging og utrullingskontroll spores i #20.
+- Eldre PR-er #15, #30, #50, #54, #55 og #56 er lukket med begrunnelser. **Ikke** bruk de gamle PR-ene som releasegrunnlag. #57 beholdes åpen for OPS.
+
+### Åpne saker, samlet prioritering
+
+| Prioritet | Issue | Hvorfor beholdt / avslutningsvilkår |
+|---|---|---|
+| P0 | [#39 Produksjonsgate](https://github.com/tajlive/finnbilglass/issues/39) | Eksakt Worker-SHA, Cloudflare/D1-backup/rollback, gammel-jobb-diff, skriftlig GO/NO-GO |
+| P0 | [#52 Første manuelle salg](https://github.com/tajlive/finnbilglass/issues/52) | Offentlig forespørsel → manuelt tilbud → dokumentert aksept → én ordre → Kustom Portal-lenke, korrekt e-post |
+| P0 | [#36 Auth/rolle](https://github.com/tajlive/finnbilglass/issues/36) | Atomiske rolleoppdateringer, bevar brukeren, avvis tilbakekalte sesjoner; separat tidligere PR #41 må vurderes, ikke blindmerges |
+| P0 | [#35 Produksjons-smoke](https://github.com/tajlive/finnbilglass/issues/35) | Kode for ikke-skrivende Chrome-salgssmoke er oppdatert på main, men faktisk prod/staging-E2E på riktig SHA gjenstår |
+| P0 | [#20 Regnr-/personvernkontroll](https://github.com/tajlive/finnbilglass/issues/20) | Kode og SQLite-test allerede grønne på main. Sist undersøkte main-Actions `42961324309`: test/security **success**, men deploy/smoke **skipped**. Først lukk etter faktisk produksjonsverifisering |
+| P1 | [#38 E-post/Gmail](https://github.com/tajlive/finnbilglass/issues/38) | Korrekt historikk, sikker Gmail profil-/aliasverifikasjon og opt-in import før reell kundedata |
+| P1 | [#37 Ansattinvitasjon](https://github.com/tajlive/finnbilglass/issues/37) | Invitasjon → tilgang → tilbakekalling etter autentisert staging-E2E |
+| P2 | [#22 Katalog/typekode](https://github.com/tajlive/finnbilglass/issues/22) | Reell datakilde/rettigheter, varianter og korrekt glassmatching; egen backlog, ikke blokkér enkel manuell salgsstart uten ny risiko |
+
+**Ikke lukket som «søppel»:** De åtte sakene representerer forskjellige arbeidspakker eller uavklarte tester. Stale beskrivelser kan oppdateres, men å lukke dem uten verifiserte resultater ville skjule release-risiko.
+
+**Produksjonsstatus:** Fortsatt **NO-GO** for ny OPS-flyt i PR #57 uten dokumentert E2E, legacy-data og rolle-/betalingstester. Eksisterende grønne `main`-Actions innebærer ikke automatisk prod-Worker-deploy.
