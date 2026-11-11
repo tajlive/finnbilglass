@@ -1,8 +1,8 @@
 name: Staging OPS - manual release gate
 
-# One release lane. GitHub may deploy ONLY the existing staging Worker.
+# One release lane. GitHub may upload a staging Worker version without activating it.
 # No D1 Edit credential, no D1 SQL writes, no customer mail and no payments.
-# Production deployments are intentionally not available here.
+# Production deployments and live staging promotion are intentionally not available here.
 on:
   push:
     branches: [main]
@@ -14,13 +14,13 @@ on:
         required: true
         type: string
       authorization:
-        description: "Confirm existing staging Worker only; NO database operations"
+        description: "Confirm upload-only staging Worker version; NO traffic switch or database operations"
         required: true
-        default: STAGING-WORKER-ONLY
+        default: STAGING-UPLOAD-ONLY
         type: choice
-        options: [STAGING-WORKER-ONLY]
-      deploy:
-        description: "Explicitly deploy ONLY the existing staging Worker after QA"
+        options: [STAGING-UPLOAD-ONLY]
+      upload:
+        description: "Explicitly upload a new staging Worker version WITHOUT deploying it"
         required: true
         default: false
         type: boolean
@@ -46,10 +46,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EXPECTED: ${{ inputs.candidate_sha }}
-          AUTHORIZATION: ${{ github.event_name == 'workflow_dispatch' && inputs.authorization || 'STAGING-WORKER-ONLY' }}
+          AUTHORIZATION: ${{ github.event_name == 'workflow_dispatch' && inputs.authorization || 'STAGING-UPLOAD-ONLY' }}
         run: |
           set -euo pipefail
-          test "$AUTHORIZATION" = "STAGING-WORKER-ONLY"
+          test "$AUTHORIZATION" = "STAGING-UPLOAD-ONLY"
           PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/57")
           ACTUAL=$(echo "$PR" | jq -r .head.sha)
           BASE=$(echo "$PR" | jq -r .base.ref)
@@ -86,16 +86,16 @@ jobs:
         env:
           EXPECTED: ${{ steps.pin.outputs.sha }}
         run: node scripts/maintenance/ops-staging-preflight.mjs --expected-sha "$EXPECTED" --dry-run
-      - name: Report candidate verified but NOT deployed
+      - name: Report candidate verified but NOT uploaded or deployed
         run: |
           echo "### Candidate preflight PASSED; no Cloudflare write" >> "$GITHUB_STEP_SUMMARY"
           echo "Reviewed commit: ${{ steps.pin.outputs.sha }}" >> "$GITHUB_STEP_SUMMARY"
           echo "0046 schema previously verified separately; recheck runtime before release." >> "$GITHUB_STEP_SUMMARY"
 
-  worker-only-staging:
+  upload-only-staging:
     # Never run on push, PR or scheduler. Requires GitHub staging environment approval.
     needs: verify-candidate
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true
+    if: github.event_name == 'workflow_dispatch' && inputs.upload == true
     environment: staging
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -133,7 +133,7 @@ jobs:
           }
           console.log('Required staging Worker secret names exist; values not printed');
           NODE
-      - name: Record currently deployed staging version for rollback
+      - name: Record active staging Worker version before non-deploying upload
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_WORKER_API_TOKEN }}
         run: |
@@ -150,7 +150,7 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Pre-deploy staging rollback version: '+id+'\n');
           console.log('Pre-deploy staging rollback version recorded');
           NODE
-      - name: Deploy exact verified commit to existing workers.dev STAGING Worker ONLY
+      - name: Upload exact reviewed commit as inactive staging Worker version ONLY
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_WORKER_API_TOKEN }}
           EXPECTED: ${{ needs.verify-candidate.outputs.sha }}
@@ -158,9 +158,33 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED"
           # Cloudflare token MUST have only Workers Editor for this one Worker.
-          # No D1 Edit grants, no routes or domains in wrangler.staging.toml.
-          npx wrangler deploy --config wrangler.staging.toml
-      - name: Read-only post-deploy health and unauthenticated OPS guard
+          # Upload does NOT activate runtime traffic. No D1 Edit permissions.
+          # Version URLs use the Worker D1 bindings: do not invoke a version URL yet.
+          npx wrangler versions upload --config wrangler.staging.toml --message "Reviewed PR57 $EXPECTED (inactive)"
+      - name: Confirm active Worker deployment is unchanged after upload
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_WORKER_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          npx wrangler deployments list --config wrangler.staging.toml --name finnbilglass-frontrute-staging --json > /tmp/fbg-stage-after.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          function active(file) {
+            const data=JSON.parse(fs.readFileSync(file,'utf8'));
+            const list=Array.isArray(data)?data:(data.deployments||data.result?.deployments||[]);
+            if(!list.length)throw Error('NO_ACTIVE_STAGING_DEPLOYMENT');
+            const versions=(list[0].versions||[]).map(v=>({id:v.version_id||v.id,pct:Number(v.percentage)}));
+            if(versions.length!==1||versions[0].pct!==100||!versions[0].id)
+              throw Error('STAGING_ACTIVE_DEPLOYMENT_NOT_SINGLE_VERSION');
+            return versions[0].id;
+          }
+          const oldId=active('/tmp/fbg-stage-before.json');
+          const newId=active('/tmp/fbg-stage-after.json');
+          if(oldId!==newId)throw Error('ACTIVE_STAGING_WORKER_CHANGED_DURING_UPLOAD');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Active Worker version unchanged: '+newId+'\\n');
+          console.log('Staging Worker active deployment unchanged');
+          NODE
+      - name: Read-only smoke of existing staging and report inactive version
         run: |
           set -euo pipefail
           base="https://finnbilglass-frontrute-staging.tomarnejensen.workers.dev"
@@ -170,6 +194,7 @@ jobs:
             echo "::error::Unauthenticated OPS unexpectedly returned HTTP $status"
             exit 1
           fi
-          echo "### Worker-only STAGING deploy completed" >> "$GITHUB_STEP_SUMMARY"
-          echo "Reviewed candidate SHA: ${{ needs.verify-candidate.outputs.sha }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "No D1 writes, Gmail sync, external mail, Kustom or Stripe calls were initiated by this workflow." >> "$GITHUB_STEP_SUMMARY"
+          echo "### Staging Worker version uploaded, NOT deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Candidate SHA: ${{ needs.verify-candidate.outputs.sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Before activation: confirm Worker domains/routes and previous-version rollback, then request separate approval." >> "$GITHUB_STEP_SUMMARY"
+          echo "No D1, email, Kustom, Stripe or production runtime writes were initiated by this workflow." >> "$GITHUB_STEP_SUMMARY"
