@@ -26,7 +26,7 @@ on:
         default: false
         type: boolean
       apply_migrations:
-        description: "Apply explicitly reviewed 0040-0044 to staging D1"
+        description: "Apply reviewed 0040-0045 on STAGING only, after verified Time Travel bookmark"
         required: true
         default: false
         type: boolean
@@ -166,6 +166,8 @@ jobs:
           for(const [key,value] of Object.entries(expected)){
             if(!lines.has(key+' = "'+value+'"'))throw Error('Wrong staging '+key);
           }
+          if(!lines.has('ENVIRONMENT = "staging"')||!lines.has('workers_dev = true'))throw Error('STAGING_TARGET_NOT_PINNED');
+          if(!lines.has('GMAIL_SYNC_ENABLED = "false"'))throw Error('GMAIL_SYNC_MUST_REMAIN_DISABLED_UNTIL_WORKSPACE_OAUTH_VERIFIED');
           if(content.includes('[[routes]]')||content.includes('custom_domain = true'))throw Error('STAGING_HAS_PRODUCTION_ROUTE');
           NODE
           test -f migrations/proposed/0040_ops_manual_offer_order.sql.proposed
@@ -173,6 +175,7 @@ jobs:
           test -f migrations/proposed/0042_ops_reply_outbox.sql.proposed
           test -f migrations/proposed/0043_ops_gmail_sync.sql.proposed
           test -f migrations/proposed/0044_ops_offer_outbox.sql.proposed
+          test -f migrations/proposed/0045_ops_workspace_oauth.sql.proposed
           test -f migrations/proposed/0046_ops_reply_attempts.sql.proposed
       - name: Verify Cloudflare API account and actual staging DB
         env:
@@ -219,7 +222,9 @@ jobs:
           set -euo pipefail
           # Explicit list: NEVER run the project's general migrations folder.
           # Idempotent CREATE IF NOT EXISTS; a partial failure stops before deploy.
-          for n in 0040_ops_manual_offer_order 0041_ops_staff_invites_activity 0042_ops_reply_outbox 0043_ops_gmail_sync 0044_ops_offer_outbox; do
+          # 0045 creates OAuth schema only. No OAuth consent, Gmail sync or tokens are enabled.
+          # 0046 remains a separate explicit one-time gate; NEVER include it here.
+          for n in 0040_ops_manual_offer_order 0041_ops_staff_invites_activity 0042_ops_reply_outbox 0043_ops_gmail_sync 0044_ops_offer_outbox 0045_ops_workspace_oauth; do
             npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
               --file "migrations/proposed/${n}.sql.proposed"
           done
@@ -280,12 +285,12 @@ jobs:
         run: |
           set -euo pipefail
           npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
-            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox','ops_reply_attempts')" > /tmp/fbg-ops-schema.json
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox','ops_reply_attempts','ops_workspace_oauth_attempts','ops_workspace_gmail_tokens','ops_workspace_oauth_audit')" > /tmp/fbg-ops-schema.json
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const rows=JSON.parse(fs.readFileSync('/tmp/fbg-ops-schema.json','utf8'));
           const names=new Set((Array.isArray(rows)?rows.flatMap(x=>x.results||[]):rows.results||[]).map(x=>x.name));
-          for(const name of ['beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox','ops_reply_attempts']){
+          for(const name of ['beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox','ops_reply_attempts','ops_workspace_oauth_attempts','ops_workspace_gmail_tokens','ops_workspace_oauth_audit']){
             if(!names.has(name))throw Error('MISSING_STAGING_TABLE_'+name);
           }
           console.log('Required staging OPS tables verified');
@@ -323,7 +328,7 @@ jobs:
             echo "### FinnBilGlass staging-only release"
             echo "Candidate SHA: ${{ needs.verify-candidate.outputs.sha }}"
             echo 'D1: finnbilglass-db-staging'
-            echo "Base migrations 0040-0044 requested: ${{ inputs.apply_migrations }}"
+            echo "Base migrations 0040-0045 requested: ${{ inputs.apply_migrations }}"
             echo "Reviewed additive reply 0046 requested: ${{ inputs.apply_reply_guard }}"
             echo "Read-only inspection requested: ${{ inputs.inspect_staging }}"
             echo "First admin invitation requested: ${{ inputs.apply_migrations && inputs.bootstrap_admin_email != '' }}"
