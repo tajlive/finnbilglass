@@ -196,4 +196,16 @@ def rehearsal() -> dict:
 
 
 if __name__ == "__main__":
+    # The rehearsal runs from both PR CI and the nightly candidate check.
+    # Keep the historical-case regression attached to this staging-only test,
+    # avoiding duplicate CI workflows and never requiring live D1 credentials.
+    import subprocess
+    import sys
+
+    subprocess.run(
+        [sys.executable, "-m", "unittest", "discover", "-s", "tests",
+         "-p", "test_legacy_release_guard.py", "-v"],
+        cwd=ROOT,
+        check=True,
+    )
     print(json.dumps(rehearsal(), sort_keys=True))
