@@ -16,8 +16,8 @@ export function validateManualOfferPayload(payload: Record<string, unknown>): Of
   const evidence = typeof payload.fitmentEvidenceRef === 'string' ? payload.fitmentEvidenceRef.trim() : '';
   const total = Number(payload.totalMinor);
   const delivery = typeof payload.deliveryNote === 'string' ? payload.deliveryNote.trim() : '';
-  const equipmentData = payload.equipment && typeof payload.equipment === 'object' &&
-    !Array.isArray(payload.equipment) ? { ...payload.equipment } : {};
+  const equipmentData: Record<string, unknown> = payload.equipment && typeof payload.equipment === 'object' &&
+    !Array.isArray(payload.equipment) ? { ...payload.equipment as Record<string, unknown> } : {};
 
   if ((!partNumber && !productName) || partNumber.length > 120)
     return { ok: false, field: 'sku', message: 'Oppgi varenummer (SKU) eller varenavn (maks 120 tegn for varenummer).' };
