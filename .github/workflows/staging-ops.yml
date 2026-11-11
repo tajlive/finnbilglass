@@ -35,6 +35,11 @@ on:
         required: false
         default: ""
         type: string
+      apply_reply_guard:
+        description: "Apply ONLY reviewed additive 0046 reply-attempt migration to staging D1"
+        required: true
+        default: false
+        type: boolean
       deploy:
         description: "Deploy tested candidate to workers.dev staging ONLY"
         required: true
@@ -98,7 +103,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run qa
-      - name: Rehearse current PR #57 EU D1 baseline and five OPS migrations without secrets
+      - name: Rehearse current PR #57 EU D1 baseline and six OPS migrations without secrets
         run: python3 scripts/maintenance/staging-migration-rehearsal.py
       - name: Compile exact staging Worker without deploying or Cloudflare credentials
         run: npx wrangler deploy --config wrangler.staging.toml --dry-run --outdir /tmp/fbg-staging-bundle
@@ -116,7 +121,7 @@ jobs:
     # No cache restore from PR code into a job carrying Cloudflare credentials.
     cache-mode: none
     needs: verify-candidate
-    if: github.event_name == 'workflow_dispatch' && (inputs.inspect_staging || inputs.apply_migrations || inputs.deploy)
+    if: github.event_name == 'workflow_dispatch' && (inputs.inspect_staging || inputs.apply_migrations || inputs.apply_reply_guard || inputs.deploy)
     runs-on: ubuntu-latest
     environment: staging
     env:
@@ -168,6 +173,7 @@ jobs:
           test -f migrations/proposed/0042_ops_reply_outbox.sql.proposed
           test -f migrations/proposed/0043_ops_gmail_sync.sql.proposed
           test -f migrations/proposed/0044_ops_offer_outbox.sql.proposed
+          test -f migrations/proposed/0046_ops_reply_attempts.sql.proposed
       - name: Verify Cloudflare API account and actual staging DB
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
@@ -192,7 +198,7 @@ jobs:
       - name: Record Time Travel restore point before any write
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
-        if: inputs.apply_migrations || inputs.deploy
+        if: inputs.apply_migrations || inputs.apply_reply_guard || inputs.deploy
         run: |
           set -euo pipefail
           npx wrangler d1 time-travel info "$STAGING_DB" --config wrangler.staging.toml --json > /tmp/fbg-bookmark.json
@@ -217,6 +223,41 @@ jobs:
             npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
               --file "migrations/proposed/${n}.sql.proposed"
           done
+      - name: Review actual reply prerequisites for 0046
+        if: inputs.apply_reply_guard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_reply_outbox') ORDER BY name" > /tmp/fbg-reply-prereq.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw=JSON.parse(fs.readFileSync('/tmp/fbg-reply-prereq.json','utf8'));
+          const rows=Array.isArray(raw)?raw.flatMap(x=>x.results||[]):raw.results||[];
+          const names=new Set(rows.map(x=>x.name));
+          for(const name of ['beta_inquiries','ops_reply_outbox']){
+            if(!names.has(name))throw Error('REPLY_0046_PREREQUISITE_MISSING_'+name);
+          }
+          console.log('Approved 0046 prerequisites present; only table names read');
+          NODE
+      - name: Apply reviewed additive reply migration 0046 on STAGING only
+        if: inputs.apply_reply_guard
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --yes \
+            --file migrations/proposed/0046_ops_reply_attempts.sql.proposed
+          npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name='ops_reply_attempts'" > /tmp/fbg-reply-result.json
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const raw=JSON.parse(fs.readFileSync('/tmp/fbg-reply-result.json','utf8'));
+          const rows=Array.isArray(raw)?raw.flatMap(x=>x.results||[]):raw.results||[];
+          if(!rows.some(x=>x.name==='ops_reply_attempts'))throw Error('REPLY_0046_NOT_PRESENT_AFTER_WRITE');
+          console.log('Additive 0046 staging table verified (no customer records printed)');
+          NODE
       - name: Bootstrap first invited staging admin after verified migrations
         if: inputs.apply_migrations && inputs.bootstrap_admin_email != ''
         env:
@@ -239,12 +280,12 @@ jobs:
         run: |
           set -euo pipefail
           npx wrangler d1 execute "$STAGING_DB" --config wrangler.staging.toml --remote --json \
-            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox')" > /tmp/fbg-ops-schema.json
+            --command "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox','ops_reply_attempts')" > /tmp/fbg-ops-schema.json
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           const rows=JSON.parse(fs.readFileSync('/tmp/fbg-ops-schema.json','utf8'));
           const names=new Set((Array.isArray(rows)?rows.flatMap(x=>x.results||[]):rows.results||[]).map(x=>x.name));
-          for(const name of ['beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox']){
+          for(const name of ['beta_inquiries','ops_manual_offers','ops_manual_orders','ops_staff_memberships','ops_staff_activity','ops_reply_outbox','ops_messages','ops_mail_sync_state','ops_offer_outbox','ops_reply_attempts']){
             if(!names.has(name))throw Error('MISSING_STAGING_TABLE_'+name);
           }
           console.log('Required staging OPS tables verified');
@@ -282,7 +323,8 @@ jobs:
             echo "### FinnBilGlass staging-only release"
             echo "Candidate SHA: ${{ needs.verify-candidate.outputs.sha }}"
             echo 'D1: finnbilglass-db-staging'
-            echo "Migrations requested: ${{ inputs.apply_migrations }}"
+            echo "Base migrations 0040-0044 requested: ${{ inputs.apply_migrations }}"
+            echo "Reviewed additive reply 0046 requested: ${{ inputs.apply_reply_guard }}"
             echo "Read-only inspection requested: ${{ inputs.inspect_staging }}"
             echo "First admin invitation requested: ${{ inputs.apply_migrations && inputs.bootstrap_admin_email != '' }}"
             echo "Deploy requested: ${{ inputs.deploy }}"
