@@ -8,6 +8,13 @@ export interface Env {
   IMAGE_RESOLVER_SECRET?: string;
   OPPLAERING_BUCKET?: R2Bucket;
   SUPPORT_EVIDENCE_TOKEN?: string;
+  /** Cloudflare Access staff sign-in for protected manual-order actions. Fail closed when unset. */
+  OPS_ACCESS_TEAM_DOMAIN?: string;
+  OPS_ACCESS_AUD?: string;
+  /** Enable invited-employee panel after staging Access/D1 are ready (default off). */
+  OPS_STAFF_PORTAL_ENABLED?: string;
+  /** Explicit switch; no order routes are active by default. */
+  OPS_MANUAL_ORDERS_ENABLED?: string;
   /** STAGING: konversasjonell assistent (fitment-v1/conversation-v1). Prod default: AV. */
   ASSISTANT_ENABLED?: string;
   MULTI_GLASS_ENABLED?: string;
@@ -15,9 +22,24 @@ export interface Env {
   EVIDENCE_UPLOAD_ENABLED?: string;
   EVIDENCE_REVIEW_ENABLED?: string;
   EVIDENCE_STATUS_CHANGE_ENABLED?: string;
-  /** Utgående e-post-svar til kunder (Brevo v3 SMTP). Uten nøkkel er /reply 503 «ikke konfigurert». */
-  BREVO_API_KEY?: string;
+  /** Utgående e-post via Resend. Uten nøkkel er /reply 503 «ikke konfigurert». */
+  RESEND_API_KEY?: string;
+  RESEND_WEBHOOK_SECRET?: string;
   SUPPORT_FROM_EMAIL?: string;
+  OPS_INBOUND_ADDRESS?: string;
+  SUPPORT_EPOST?: string;
+  OPS_WORKBENCH_ENABLED?: string;
+  GMAIL_SYNC_ENABLED?: string;
+  GMAIL_REFRESH_TOKEN?: string;
+  GOOGLE_OAUTH_CLIENT_ID?: string;
+  GOOGLE_OAUTH_CLIENT_SECRET?: string;
+  GMAIL_PUBSUB_TOPIC?: string;
+  /** One-time admin OAuth for the EXISTING FinnBilGlass Workspace, staging-only until approved. */
+  OPS_WORKSPACE_OAUTH_ENABLED?: string;
+  /** 32 random bytes base64url, installed as a Worker secret; never commit key. */
+  OPS_GMAIL_TOKEN_ENCRYPTION_KEY?: string;
+  /** Exact existing Workspace mailbox permitted for the Gmail readonly mirror. */
+  OPS_GMAIL_EXPECTED_MAILBOX?: string;
   /** Apify-katalog-import (staging). Uten APIFY_SYNC_TOKEN er admin-endepunktene 401. */
   APIFY_TOKEN?: string;
   APIFY_DATASET_ID?: string;

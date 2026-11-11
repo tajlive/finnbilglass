@@ -1,0 +1,112 @@
+-- PROPOSAL ONLY. NEVER applied by a deploy or Wrangler automatically.
+-- Approved product flow: inquiry -> staff-reviewed offer -> customer acceptance
+-- -> manual Ops order -> manually sent Kustom Portal payment link.
+-- Separate from Kustom API, auto-checkout, auto-capture, refund and polling.
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS ops_manual_offers (
+  offer_id TEXT PRIMARY KEY,
+  inquiry_id INTEGER NOT NULL REFERENCES beta_inquiries(id),
+  version INTEGER NOT NULL CHECK (version > 0),
+  sku TEXT NOT NULL CHECK (length(trim(sku)) > 1),
+  fitment_evidence_ref TEXT NOT NULL CHECK (length(trim(fitment_evidence_ref)) >= 8),
+  equipment_json TEXT NOT NULL DEFAULT '{}',
+  total_minor INTEGER NOT NULL CHECK (total_minor > 0),
+  currency TEXT NOT NULL DEFAULT 'NOK' CHECK (currency = 'NOK'),
+  delivery_note TEXT NOT NULL CHECK (length(trim(delivery_note)) > 0),
+  status TEXT NOT NULL DEFAULT 'DRAFT'
+    CHECK (status IN ('DRAFT','SENT','ACCEPTED','DECLINED')),
+  created_by TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  sent_at INTEGER,
+  accepted_at INTEGER,
+  accepted_channel TEXT CHECK (
+    accepted_channel IS NULL OR accepted_channel IN ('EMAIL','PHONE','WRITTEN')
+  ),
+  acceptance_ref TEXT,
+  UNIQUE (inquiry_id, version),
+  CHECK (status = 'DRAFT' OR sent_at IS NOT NULL),
+  CHECK (status != 'ACCEPTED' OR (
+    accepted_at IS NOT NULL AND accepted_at >= sent_at
+    AND accepted_channel IS NOT NULL
+    AND length(trim(acceptance_ref)) >= 8
+  )),
+  CHECK (status = 'ACCEPTED' OR accepted_at IS NULL)
+);
+CREATE INDEX IF NOT EXISTS idx_ops_manual_offers_inquiry
+  ON ops_manual_offers(inquiry_id, version DESC);
+
+CREATE TABLE IF NOT EXISTS ops_manual_orders (
+  order_id TEXT PRIMARY KEY,
+  inquiry_id INTEGER NOT NULL REFERENCES beta_inquiries(id),
+  offer_id TEXT NOT NULL UNIQUE REFERENCES ops_manual_offers(offer_id),
+  sku TEXT NOT NULL,
+  total_minor INTEGER NOT NULL CHECK (total_minor > 0),
+  currency TEXT NOT NULL DEFAULT 'NOK' CHECK (currency = 'NOK'),
+  created_at INTEGER NOT NULL,
+  created_by TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ORDER_CREATED'
+    CHECK (status IN ('ORDER_CREATED','PAYMENT_LINK_SENT','PAYMENT_VERIFIED_MANUALLY','CANCELLED')),
+  payment_link_reference TEXT,
+  payment_link_sent_at INTEGER,
+  payment_verified_at INTEGER,
+  payment_verified_by TEXT,
+  payment_verification_ref TEXT,
+  UNIQUE (inquiry_id),
+  CHECK ((payment_link_reference IS NULL) = (payment_link_sent_at IS NULL)),
+  CHECK (status NOT IN ('PAYMENT_LINK_SENT','PAYMENT_VERIFIED_MANUALLY')
+    OR (payment_link_reference IS NOT NULL AND payment_link_sent_at IS NOT NULL)),
+  CHECK (status != 'PAYMENT_VERIFIED_MANUALLY' OR (
+    payment_verified_at IS NOT NULL AND payment_verified_at >= payment_link_sent_at
+    AND length(trim(payment_verified_by)) >= 2
+    AND length(trim(payment_verification_ref)) >= 8
+  ))
+);
+
+-- Enforced even if an incorrect service or retry tries to insert directly.
+CREATE TRIGGER IF NOT EXISTS ops_manual_order_requires_accepted_offer
+BEFORE INSERT ON ops_manual_orders
+BEGIN
+  SELECT RAISE(ABORT,'OFFER_NOT_ACCEPTED_OR_MISMATCH')
+  WHERE NOT EXISTS (
+    SELECT 1 FROM ops_manual_offers o
+    WHERE o.offer_id = NEW.offer_id
+      AND o.inquiry_id = NEW.inquiry_id
+      AND o.status = 'ACCEPTED'
+      AND o.accepted_at IS NOT NULL
+      AND o.acceptance_ref IS NOT NULL
+      AND o.sku = NEW.sku
+      AND o.total_minor = NEW.total_minor
+      AND o.currency = NEW.currency
+  );
+END;
+
+-- An accepted offer is a frozen sale agreement, never silently repriced.
+CREATE TRIGGER IF NOT EXISTS ops_manual_accepted_offer_immutable
+BEFORE UPDATE ON ops_manual_offers
+WHEN OLD.status = 'ACCEPTED'
+BEGIN
+  SELECT RAISE(ABORT,'ACCEPTED_OFFER_IMMUTABLE');
+END;
+
+-- Prevent a later quote from changing an accepted customer's terms by mistake.
+CREATE TRIGGER IF NOT EXISTS ops_manual_order_immutable_terms
+BEFORE UPDATE ON ops_manual_orders
+WHEN OLD.sku != NEW.sku OR OLD.total_minor != NEW.total_minor
+     OR OLD.currency != NEW.currency OR OLD.offer_id != NEW.offer_id
+     OR OLD.inquiry_id != NEW.inquiry_id
+BEGIN
+  SELECT RAISE(ABORT,'ORDER_TERMS_IMMUTABLE');
+END;
+
+-- Administrative status only moves forwards. Verified/cancelled records remain
+-- immutable; reissue a new payment link through a separately audited action.
+CREATE TRIGGER IF NOT EXISTS ops_manual_order_no_status_regression
+BEFORE UPDATE ON ops_manual_orders
+WHEN
+  (OLD.status = 'ORDER_CREATED' AND NEW.status NOT IN ('ORDER_CREATED','PAYMENT_LINK_SENT','CANCELLED'))
+  OR (OLD.status = 'PAYMENT_LINK_SENT' AND NEW.status NOT IN ('PAYMENT_LINK_SENT','PAYMENT_VERIFIED_MANUALLY','CANCELLED'))
+  OR OLD.status IN ('PAYMENT_VERIFIED_MANUALLY','CANCELLED')
+BEGIN
+  SELECT RAISE(ABORT,'MANUAL_ORDER_STATUS_REGRESSION');
+END;
