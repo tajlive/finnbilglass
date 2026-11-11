@@ -3,6 +3,7 @@ on:
   push:
     branches: [main]
     paths: [.github/workflows/staging-workspace-readiness-once.yml]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -76,7 +77,11 @@ jobs:
           meta=api('/d1/database/'+db_id) or {}
           if meta.get('uuid')!=db_id or meta.get('name')!='finnbilglass-db-staging' or meta.get('jurisdiction')!='eu':
               raise SystemExit('NO_GO: staging database UUID/name/EU jurisdiction mismatch')
-          sql="SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_reply_outbox','ops_reply_attempts','ops_manual_offers','ops_manual_orders') ORDER BY name"
+          sql=("SELECT type,name FROM sqlite_master WHERE "
+               "(type='table' AND name IN ('beta_inquiries','ops_reply_outbox','ops_reply_attempts','ops_manual_offers','ops_manual_orders')) OR "
+               "(type='index' AND name='idx_ops_reply_attempts_review') OR "
+               "(type='trigger' AND name IN ('ops_reply_attempts_no_payload_rewrite','ops_reply_attempts_no_delete','ops_reply_attempts_no_status_regression')) "
+               "ORDER BY type,name")
           result=api('/d1/database/'+db_id+'/query', 'POST', {'sql':sql})
           checks=result if isinstance(result,list) else [result]
           if not checks or any(not isinstance(x,dict) or x.get('success') is False for x in checks):
@@ -85,14 +90,18 @@ jobs:
           required={'beta_inquiries','ops_reply_outbox','ops_manual_offers','ops_manual_orders'}
           missing=sorted(required-names)
           reply_ready='ops_reply_attempts' in names
+          expected_objects={'idx_ops_reply_attempts_review','ops_reply_attempts_no_payload_rewrite','ops_reply_attempts_no_delete','ops_reply_attempts_no_status_regression'}
+          missing_objects=sorted(expected_objects-names)
           # Only hard-coded SQL table names (never records or secret values).
           print('STAGING_BASE_TABLES_MISSING: '+(','.join(missing) if missing else 'NONE'))
           print('STAGING_REPLY_0046: '+('PRESENT' if reply_ready else 'MISSING'))
-          outcome='PASS' if not missing and reply_ready else 'NO_GO'
+          print('STAGING_0046_OBJECTS_MISSING: '+(','.join(missing_objects) if missing_objects else 'NONE'))
+          outcome='PASS' if not missing and reply_ready and not missing_objects else 'NO_GO'
           notes=['### Staging OPS reply schema (read-only)',
                  '- Correct EU D1 identity: PASS',
                  '- Base OPS tables: '+('PASS' if not missing else 'NO_GO, missing '+', '.join(missing)),
                  '- Additive 0046 ops_reply_attempts: '+('PRESENT' if reply_ready else 'MISSING'),
+                 '- Additive 0046 index and 3 immutable guards: '+('PASS' if not missing_objects else 'NO_GO, missing '+', '.join(missing_objects)),
                  '- No database writes, customer queries, secret values, email, or deploy']
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf8') as out:
               out.write(chr(10).join(notes)+chr(10))
