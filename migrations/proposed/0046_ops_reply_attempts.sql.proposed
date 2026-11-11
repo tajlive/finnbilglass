@@ -1,0 +1,56 @@
+-- PROPOSAL ONLY. Apply to the exact isolated OPS D1 only after verified backup.
+-- Additive durability shield for legacy customer reply outbox.
+-- Existing ambiguous QUEUED/FAILED rows become REVIEW, NEVER automatic retries.
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS ops_reply_attempts (
+  request_id TEXT PRIMARY KEY REFERENCES ops_reply_outbox(request_id),
+  inquiry_id INTEGER NOT NULL REFERENCES beta_inquiries(id),
+  actor_email TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  body TEXT NOT NULL,
+  sender TEXT,
+  subject TEXT,
+  text_body TEXT,
+  html_body TEXT,
+  status TEXT NOT NULL CHECK(status IN ('SENDING','SENT','REVIEW')),
+  provider_message_id TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  CHECK(status != 'SENT' OR provider_message_id IS NOT NULL),
+  CHECK(status = 'REVIEW' OR
+    (sender IS NOT NULL AND subject IS NOT NULL AND text_body IS NOT NULL AND html_body IS NOT NULL))
+);
+CREATE INDEX IF NOT EXISTS idx_ops_reply_attempts_review
+  ON ops_reply_attempts(status, updated_at);
+
+-- The old QUEUED state may already represent provider acceptance followed by
+-- a DB failure. Fail closed and require a human to reconcile these legacy rows.
+INSERT OR IGNORE INTO ops_reply_attempts
+ (request_id,inquiry_id,actor_email,recipient,body,status,created_at,updated_at)
+SELECT request_id,inquiry_id,actor_email,recipient,body,'REVIEW',created_at,updated_at
+FROM ops_reply_outbox WHERE status IN ('QUEUED','FAILED');
+
+CREATE TRIGGER IF NOT EXISTS ops_reply_attempts_no_payload_rewrite
+BEFORE UPDATE ON ops_reply_attempts
+WHEN OLD.request_id IS NOT NEW.request_id
+ OR OLD.inquiry_id IS NOT NEW.inquiry_id
+ OR OLD.actor_email IS NOT NEW.actor_email
+ OR OLD.recipient IS NOT NEW.recipient
+ OR OLD.body IS NOT NEW.body
+ OR OLD.sender IS NOT NEW.sender
+ OR OLD.subject IS NOT NEW.subject
+ OR OLD.text_body IS NOT NEW.text_body
+ OR OLD.html_body IS NOT NEW.html_body
+BEGIN SELECT RAISE(ABORT,'REPLY_PAYLOAD_IMMUTABLE'); END;
+
+CREATE TRIGGER IF NOT EXISTS ops_reply_attempts_no_delete
+BEFORE DELETE ON ops_reply_attempts
+BEGIN SELECT RAISE(ABORT,'REPLY_ATTEMPT_IMMUTABLE'); END;
+
+CREATE TRIGGER IF NOT EXISTS ops_reply_attempts_no_status_regression
+BEFORE UPDATE OF status ON ops_reply_attempts
+WHEN OLD.status = 'SENT'
+ OR (OLD.status = 'REVIEW' AND NEW.status NOT IN ('REVIEW','SENT'))
+ OR (OLD.status = 'SENDING' AND NEW.status NOT IN ('SENDING','REVIEW','SENT'))
+BEGIN SELECT RAISE(ABORT,'REPLY_STATUS_REGRESSION'); END;
