@@ -95,11 +95,14 @@ class HistoricalReleaseGuardTests(unittest.TestCase):
             code = guard.main(args)
         return code, json.loads(output.getvalue() or errors.getvalue())
 
-    def r2_inventories(self, *, after_keys="case-1/photo.jpg\\ncase-1/thumb.jpg\\n"):
+    def r2_inventories(self, *, after_keys=None):
+        valid_keys = ["case-1/photo.jpg", "case-1/thumb.jpg"]
         before_keys = Path(self.t.name) / "r2-before.txt"
         after_keys_file = Path(self.t.name) / "r2-after.txt"
-        before_keys.write_text("case-1/photo.jpg\\ncase-1/thumb.jpg\\n".replace("\\\\n", "\\n"), encoding="utf-8")
-        after_keys_file.write_text(after_keys.replace("\\\\n", "\\n"), encoding="utf-8")
+        before_keys.write_text(chr(10).join(valid_keys) + chr(10), encoding="utf-8")
+        after_keys_file.write_text(
+            chr(10).join(valid_keys if after_keys is None else after_keys) + chr(10),
+            encoding="utf-8")
         return ["--r2-inventory-before", str(before_keys),
                 "--r2-inventory-after", str(after_keys_file)]
 
@@ -165,7 +168,7 @@ class HistoricalReleaseGuardTests(unittest.TestCase):
         seed_extended(self.before)
         seed_extended(self.after)
         code, data = self.run_guard(
-            self.r2_inventories(after_keys="case-1/photo.jpg\\n"))
+            self.r2_inventories(after_keys=["case-1/photo.jpg"]))
         self.assertEqual(code, 1)
         self.assertTrue(any("R2_MISSING_OBJECT_REFERENCES" in x
                             for x in data["errors"]), data)
