@@ -1,0 +1,33 @@
+# Free: opens reviewable PRs, never auto-merges or deploys.
+# Protected main and existing PR verification remain the release gates.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "07:15"
+      timezone: "Europe/Oslo"
+    open-pull-requests-limit: 2
+    groups:
+      routine-dev-tools:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "08:15"
+      timezone: "Europe/Oslo"
+    open-pull-requests-limit: 1
+    groups:
+      routine-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
