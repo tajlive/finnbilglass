@@ -96,6 +96,14 @@ Kilder: [Google Manage App Audience](https://support.google.com/cloud/answer/155
 
 Kilder: [Google Gmail getProfile](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users/getProfile), [Gmail API 403 reasons](https://developers.google.com/workspace/gmail/api/guides/handle-errors), [Enable an API](https://docs.cloud.google.com/service-usage/docs/enable-disable).
 
+## Status 11.11.2026 – Gmail API aktivert av prosjektets eier
+
+- Brukeren bekrefter at **Gmail API er Enabled** i eksisterende Google Cloud-prosjekt `gen-lang-client-0228405648` / OAuth-klienten «FinnBilGlass Access». Dette er **rapportert av kontoeieren**, ikke uavhengig bekreftet med Google Service Usage API. Ingen ny Workspace, Google Cloud-klient eller ny OAuth-hemmelighet er nødvendig.
+- Staging-Gmail OAuth var tidligere blokkert med `gmail_http_403` ved `users/me/profile` etter Google-samtykke; det er derfor relevant å prøve på nytt nå som API-et er aktivert. Oppdatert klassifiserer f.eks. `SERVICE_DISABLED`, `domainPolicy`, kvoter og utilstrekkelig tillatelse; [stagingdeploy #42937047246](https://github.com/tajlive/finnbilglass/actions/runs/42937047246) har bestått.
+- Neste brukerhandling: Fra allerede autentisert `https://ops-staging.finnbilglass.no/ops/ansatte` velges «Godkjenn Gmail-lesetilgang én gang» og Workspace-konto `tomarne@finnbilglass.no`. **Start ny OAuth-flyt** – siste `state` og autorisasjonskode var engangsbruk og kan ikke gjenbrukes. Ingen kode/token sendes til chat eller GitHub.
+- Når callback har returnert, verifiser **status Connected** for kun godkjent Workspace-postkasse, kryptert refresh token og append-only audit i isolert EU-staging-D1 via read-only metadata. En gyldig grant betyr fortsatt **ikke** at Gmail-synk er testet; `GMAIL_SYNC_ENABLED=false` skal beholdes til autoriserte alias, kontobekreftelse, inbox-isolasjon og en kontrollert synktest er bestått.
+- Ekstern OAuth-app i `Testing` med Gmail `readonly` kan ha **7-dagers refresh-token-utløp**. Produksjonsdriftsmodell må håndtere dette før GO; ikke påstå at engangssamtykket i Testing gir varig produksjonstilgang.
+
 ## Eksternt kontrollpunkt som ikke kan automatiseres uten samtykke
 
 Bare **kontoens eier** kan gi den innloggede Workspace-postkassen Gmail `readonly` OAuth-rettigheter, og eksisterende OAuth-klient må ha riktig redirect URI i Google Cloud Console. Dette er ikke det samme som å opprette Google Workspace på nytt.
