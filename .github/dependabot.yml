@@ -10,6 +10,12 @@ updates:
       time: "07:15"
       timezone: "Europe/Oslo"
     open-pull-requests-limit: 2
+    # Prevent noisy, risky major-version PRs during first-sale release.
+    # Review major framework/tool changes separately in a planned issue.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       routine-dev-tools:
         dependency-type: "development"
@@ -24,6 +30,12 @@ updates:
       time: "08:15"
       timezone: "Europe/Oslo"
     open-pull-requests-limit: 1
+    # Prevent noisy, risky major-version PRs during first-sale release.
+    # Review major framework/tool changes separately in a planned issue.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
     groups:
       routine-actions:
         patterns:
