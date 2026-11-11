@@ -136,7 +136,7 @@ test('customer email shows manual product name, description and NOK price but no
     const text = f.outbox().text_body;
     assert.match(text,/Frontrute VW T6/);
     assert.match(text,/Med regnsensor/);
-    assert.match(text,/2490\\.00 NOK/);
+    assert.match(text,/2490\.00 NOK/);
     assert.doesNotMatch(text,/UTEN-VARENUMMER/);
     assert.doesNotMatch(text,/Varenummer: UTEN/);
   } finally {globalThis.fetch=original;f.close();}
