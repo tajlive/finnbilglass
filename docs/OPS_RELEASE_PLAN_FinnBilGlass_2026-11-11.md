@@ -203,3 +203,28 @@ Alle fire PR-ene er merget i **staginggrenen, ikke `main`**. Ingen produksjons-W
 5. Registrer godkjenningsbevis i [Issue #39](https://github.com/tajlive/finnbilglass/issues/39), [#52](https://github.com/tajlive/finnbilglass/issues/52) og [#38](https://github.com/tajlive/finnbilglass/issues/38). Først når **samme eksakte SHA** har grønne P0-porter, kan draft #57 vurderes for merge til main, og deretter kontrollert produksjonsdeploy.
 
 **Status: NO-GO for OPS-produksjonsrelease.** Offline E2E og migrasjonsøvelse er et fremdriftsbevis, ikke reell staginghandel eller gjenopprettingsbevis. Ingen live kundedata, Resend-sending, Kustom-betaling eller produksjonsdeploy ble utført i PR #72.
+
+## 12. Faktisk staging-D1 og kontrollert migrasjon 0046 – 11.11.2026
+
+**Verifisert read-only resultat:** [Actions #43007453493](https://github.com/tajlive/finnbilglass/actions/runs/43007453493) på main commit `1a9a07e2f5d757bc5253389eee01cac1b16be4ef` returnerte **NO-GO** for OPS-staging:
+
+- Cloudflare EU-staging-D1 identitet bekreftet, ingen kunde-/meldingsrader hentet.
+- `STAGING_BASE_TABLES_MISSING: NONE`: alle fire forventede grunn-tabeller er på plass (`beta_inquiries`, `ops_reply_outbox`, `ops_manual_offers`, `ops_manual_orders`).
+- `STAGING_REPLY_0046: MISSING`: tabellen `ops_reply_attempts` finnes **ikke** i aktuell staging-D1. Ikke gjett at andre migrasjoner mangler.
+- Worker har navnene til nødvendige Access- og Resend-secrets, men selve kommunikasjonen er ikke E2E-verifisert.
+- Ingen databaseendring, produksjonsdeploy, ekte e-post, Kustom-kall eller kundedataoperasjon er utført i denne kontrollen.
+
+### Rettet automatisering og bevis
+
+- [PR #73](https://github.com/tajlive/finnbilglass/pull/73) (main commit `2cc76cc`) innførte default-off `apply_reply_guard` for **kun** 0046 i `.github/workflows/staging-ops.yml`. Arbeidsflyten pinner aktuell PR #57 SHA, kontrollerer staging-account/D1, krever Time Travel-bokmerke før skriv, og **blokkerer stagingdeploy** hvis `ops_reply_attempts` mangler. [Read-only preflight #43005613521](https://github.com/tajlive/finnbilglass/actions/runs/43005613521) var grønn; selve stagingjobb ble SKIPPED.
+- [PR #74](https://github.com/tajlive/finnbilglass/pull/74) og [#75](https://github.com/tajlive/finnbilglass/pull/75) la til automatisk read-only Cloudflare D1-skjema kontroll med presise NO-GO-koder. Siste resultat er **grunn-tabeller PASS / 0046 MISSING**.
+
+### Neste handling – eksplisitt autorisert staging-only
+
+1. Verifiser at GitHub **environment `staging`** har en dedikert, minst-privilegert `STAGING_CLOUDFLARE_API_TOKEN` med riktig D1-tilgang. Tidligere run 10.11.2026 manglet denne, men nåværende tilstand er ikke undersøkt. **Bruk aldri repoets produksjonstoken som fallback for skriving.**
+2. Kjør [Staging OPS – manual release gate](https://github.com/tajlive/finnbilglass/actions/workflows/staging-ops.yml) fra `main` med input: `candidate_sha=49a23a9f8936177d5ab2cf931dbd19453e015fd8`, `authorization=STAGING-ONLY`, `inspect_staging=true`, `apply_migrations=false`, `apply_reply_guard=true`, `deploy=false`, og tom `bootstrap_admin_email`.
+3. Workflows må bekrefte eksakt PR #57 SHA, korrekt EU staging-D1, de eksisterende reply-tabellene og gyldig D1 Time Travel/rollbackpunkt før den **eneste** additive 0046-migrasjonen. Dersom kontroll eller migrasjon feiler: behold NO-GO, ikke gjenta ukritisk.
+4. Etterpå: kjør read-only readiness på nytt, kontroller `STAGING_REPLY_0046: PRESENT`, og gjennomfør privat D1/R2-legacy-kontroll samt autentisert OPS første-salg-E2E med to ansatte i staging. Se Issues #39/#52.
+5. Først etter dokumentert full staginghandel, bevarte historiske data, riktig Gmail/mottaksrutine, Access-revokasjon og Worker/D1 rollback: vurder om PR #57 kan tas ut av draft og merges til produksjon.
+
+**Status: NO-GO.** 0046 er nøyaktig isolert som et manglende stageskjema. Grunnmigrasjonene 0040–0044 må ikke blindkjøres på nytt. Ingen live migrasjon eller produksjonsendring er autorisert eller utført av read-only testene.
