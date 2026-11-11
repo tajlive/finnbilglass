@@ -65,6 +65,16 @@ Brukeren har oppdatert den **eksisterende** OAuth Web application-klienten «Fin
 
 **Status:** Redirect er lagret; faktisk OAuth-godkjenning og Gmail-synk er **ennå ikke verifisert**. Ikke hev produksjons-GO.
 
+## OAuth-status 11.11.2026 – Google Testing testbruker blokkert (403)
+
+**Faktisk Google OAuth-feil etter at redirect URI ble lagret:** `403 access_denied` med meldingen «finnbilglass.no has not completed the Google verification process; app is currently being tested and can only be accessed by developer-approved testers». Brukeren valgte korrekt Workspace-konto `tomarne@finnbilglass.no` denne gangen. Google-signering er stoppet før consent, så det finnes **ikke en verifisert OAuth-grant eller et refresh token**.
+
+**Løsning uten ny Workspace eller klient:** I [eksisterende Google Cloud-prosjekt → Google Auth Platform → Audience](https://console.cloud.google.com/auth/audience?project=gen-lang-client-0228405648) hold `Publishing status=Testing`, klikk **Add users** under **Test users**, legg til `tomarne@finnbilglass.no`, lagre. Start deretter en **ny** engangskobling fra `https://ops-staging.finnbilglass.no/ops/ansatte`. Samtykke gis bare til eksisterende Workspace-konto, ikke privat Gmail.
+
+**Viktig produksjonsforbehold:** Dette fjerner bare tilgangssperren under Testing. Ekstern OAuth-app i Testing med `gmail.readonly` gir normalt **7-dagers refresh-token-levetid**. Ikke markér Gmail som varig klart for produksjon på et slikt testtoken. Kontroller om eksisterende Google Cloud-prosjekt er/kan bli `Internal` under FinnBilGlass Workspace-organisasjon; hvis ikke, planlegg Google-verifisert External production-app / relevant Workspace-administrativ godkjenning. Ikke slå på `GMAIL_SYNC_ENABLED` før korrekt mailbox, scope, tokenlevetid og kontrollert testimport er verifisert. Unngå bredere OAuth-scope enn nødvendig.
+
+Kilder: [Google Manage App Audience](https://support.google.com/cloud/answer/15549945?hl=en) og [Google OAuth token-expiration rules](https://developers.google.com/identity/protocols/oauth2).
+
 ## Eksternt kontrollpunkt som ikke kan automatiseres uten samtykke
 
 Bare **kontoens eier** kan gi den innloggede Workspace-postkassen Gmail `readonly` OAuth-rettigheter, og eksisterende OAuth-klient må ha riktig redirect URI i Google Cloud Console. Dette er ikke det samme som å opprette Google Workspace på nytt.
