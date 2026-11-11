@@ -9,6 +9,8 @@ import type { Env } from './types';
 
 export interface Mail {
   to: string;
+  /** Frozen sender address for a durable outbox message. */
+  from?: string;
   subject: string;
   html: string;
   text: string;
@@ -34,7 +36,7 @@ export async function sendMail(env: Env, mail: Mail): Promise<{ ok: boolean; err
         ...(mail.idempotencyKey ? { 'Idempotency-Key': mail.idempotencyKey } : {}),
       },
       body: JSON.stringify({
-        from: `Finnbilglass <${avsenderEpost(env)}>`,
+        from: `Finnbilglass <${mail.from ?? avsenderEpost(env)}>`,
         to: [mail.to],
         ...(mail.replyTo ? { reply_to: mail.replyTo } : {}),
         subject: mail.subject,
@@ -57,9 +59,9 @@ export async function sendMail(env: Env, mail: Mail): Promise<{ ok: boolean; err
 
 
 /** Format a staff-approved case reply. Never makes an automatic glass/price decision. */
-export async function sendCaseReply(
-  env: Env, to: string, navn: string | null, regnr: string | null, message: string, idempotencyKey?: string,
-): Promise<{ ok: boolean; error?: string; id?: string }> {
+export function buildCaseReplyPayload(
+  env: Env, to: string, navn: string | null, regnr: string | null, message: string
+): Mail {
   const from = avsenderEpost(env);
   const esc = (s: string) => String(s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -70,11 +72,20 @@ export async function sendCaseReply(
     + '<p>— FinnBilglass</p>'
     + '<p style="color:#637286;font-size:12px">Svar på e-post til ' + esc(from)
     + '. Vi svarer gjerne på spørsmål om glasset eller leveransen.</p>';
-  return sendMail(env, {
-    to, subject, html, text: `Hei${navn ? ' ' + navn : ''}.
+  return {
+    to, from, subject, html,
+    text: `Hei${navn ? ' ' + navn : ''}.
 ${message}
 — FinnBilglass`,
     replyTo: from,
-    idempotencyKey,
-  });
+  };
+}
+
+/** Legacy callers keep the same rendering but durable replies persist the
+ * entire returned message before the provider is ever contacted.
+ */
+export async function sendCaseReply(
+  env: Env, to: string, navn: string | null, regnr: string | null, message: string, idempotencyKey?: string,
+): Promise<{ ok: boolean; error?: string; id?: string }> {
+  return sendMail(env, {...buildCaseReplyPayload(env,to,navn,regnr,message),idempotencyKey});
 }

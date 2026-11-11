@@ -4,7 +4,7 @@
  *  Alt annet (/, styles.css, app.js, index.html) → [assets] public/
  */
 import type { Env } from './types';
-import { sendCaseReply } from './mail';
+import { sendDurableOpsReply } from './ops-reply-outbox';
 import { matchFrontrute, tierPris, type BilInput } from './matcher';
 import { resolveFrontrute } from './vin-resolver';
 import { resolverModus, anvendResolverPolicy, henvendelserTillatt } from './kill-switch';
@@ -198,11 +198,6 @@ async function supportAuthorised(request: Request, env: Env): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-/** Svar fra OPS via samme Resend-transport som andre kundeutsendinger. */
-async function sendReplyEmail(env: Env, to: string, navn: string | null, regnr: string | null, message: string, idempotencyKey?: string): Promise<{ ok: boolean; error?: string; id?: string }> {
-  return sendCaseReply(env, to, navn, regnr, message, idempotencyKey);
 }
 
 function supportEvidenceUiLegacy(): Response {
@@ -908,23 +903,19 @@ export default {
       if (!row) return json({ ok: false, error: 'Henvendelsen finnes ikke.' }, 404);
       const epost = (row.kontakt || '').trim();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(epost)) return json({ ok: false, error: 'Kunden har ikke oppgitt e-post — e-post-svar krever en e-postadresse.' }, 409);
-      const now = Date.now();
-      const db=env.FINNBILGLASS_DB;
       try {
-        await db.prepare("INSERT OR IGNORE INTO ops_reply_outbox(request_id,inquiry_id,actor_email,recipient,body,status,created_at,updated_at) VALUES(?,?,?, ?,?,'QUEUED',?,?)").bind(requestId,id,actor,epost,message,now,now).run();
-        const prior=await db.prepare('SELECT inquiry_id,actor_email,recipient,body,status,provider_message_id FROM ops_reply_outbox WHERE request_id=?').bind(requestId).first<{inquiry_id:number;actor_email:string;recipient:string;body:string;status:string;provider_message_id:string|null}>();
-        if(!prior||prior.inquiry_id!==id||prior.recipient!==epost||prior.body!==message||prior.actor_email!==actor)return json({ok:false,error:'MELDINGSNOKKEL_BRUKT_MED_ANNET_INNHOLD'},409);
-        if(prior.status==='SENT')return json({ok:true,to:epost,alreadySent:true});
-        const sendt=await sendReplyEmail(env,epost,row.navn,row.regnr,message,`ops-reply-${requestId}`);
-        if(!sendt.ok){await db.prepare("UPDATE ops_reply_outbox SET status='FAILED',error=?,updated_at=? WHERE request_id=? AND status<>'SENT'").bind(sendt.error||'Uavklart sendestatus.',Date.now(),requestId).run();return json({ok:false,error:sendt.error||'Kunne ikke sende e-posten.'},502)}
-        const replyWrite=db.prepare("INSERT OR IGNORE INTO beta_inquiry_events(event_id,inquiry_id,event_type,note,created_at,created_by,meta_json) VALUES(?,?,'reply',?,?,?,?)").bind(`reply-${requestId}`,id,message,now,actor,JSON.stringify({to:epost,to_user:row.navn||null,provider:'resend',provider_message_id:sendt.id??null,request_id:requestId}));
-        const outboxWrite=db.prepare("UPDATE ops_reply_outbox SET status='SENT',provider_message_id=?,error=NULL,updated_at=? WHERE request_id=? AND status<>'SENT'").bind(sendt.id??null,Date.now(),requestId);
-        if(staffActor)await db.batch([outboxWrite,replyWrite,caseAuditStatement(env,staffActor,'INQUIRY_REPLY_SENT',id,now)]);else await db.batch([outboxWrite,replyWrite]);
-      } catch (e) {
-        // If Resend accepted but D1 failed, the persisted requestId is reused as the Resend idempotency key on retry.
-        return json({ok:false,error:'UTSENDT_ELLER_JOURNALFORING_MA_AVSTEMMES',requestId},503);
+        const result = await sendDurableOpsReply(env, {
+          requestId, inquiryId:id, actor, staffEmail:staffActor?.email,
+          recipient:epost, customerName:row.navn, regnr:row.regnr, body:message,
+          createdAt:Date.now()
+        });
+        return json({ ...result, to:epost },
+          result.ok ? 200 : result.requiresReview ? 409 : 400);
+      } catch {
+        // Missing migration or D1 failure: never fall back to unsafe direct mail.
+        return json({ ok:false, error:'UTSENDING_ELLER_LAGRING_MA_AVSTEMMES',
+          requiresReview:true, requestId },503);
       }
-      return json({ ok: true, to: epost });
     }
     if (method === 'GET' && path === '/api/ops/saker') {
       // Fase A: konsolidert saksliste — én rad per kundereise (inquiry + evidens

@@ -34,7 +34,8 @@
     "migrations/proposed/0041_ops_staff_invites_activity.sql.proposed",
     "migrations/proposed/0042_ops_reply_outbox.sql.proposed",
     "migrations/proposed/0043_ops_gmail_sync.sql.proposed",
-    "migrations/proposed/0044_ops_offer_outbox.sql.proposed"
+    "migrations/proposed/0044_ops_offer_outbox.sql.proposed",
+    "migrations/proposed/0046_ops_reply_attempts.sql.proposed"
   ],
   "required_tables": [
     "beta_inquiries",
@@ -54,6 +55,7 @@
     "ops_reply_outbox",
     "ops_messages",
     "ops_mail_sync_state",
-    "ops_offer_outbox"
+    "ops_offer_outbox",
+    "ops_reply_attempts"
   ]
 }

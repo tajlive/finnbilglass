@@ -19,7 +19,7 @@ REQUIRED = set(MANIFEST["required_tables"]) | {
 }
 assert MANIFEST["database_name"] == "finnbilglass-db-staging"
 assert MANIFEST["database_id"] == "78842e17-ab0b-47c1-acde-244044073466"
-assert len(MANIFEST["ops"]) == 5
+assert len(MANIFEST["ops"]) == 6
 
 
 def rejects(db: sqlite3.Connection, query: str, params: tuple = ()) -> None:
