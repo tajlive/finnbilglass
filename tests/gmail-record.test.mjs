@@ -66,3 +66,42 @@ test('Unrelated personal Gmail messages cannot be imported into the support ledg
     assert.equal(raw.prepare('SELECT COUNT(*) AS n FROM ops_messages').get().n, 0);
   } finally { raw.close(); }
 });
+
+
+test('Manual Gmail SENT from the approved Workspace mailbox is mirrored without broadening incoming aliases',async()=>{
+  const {raw,env}=dbFixture();
+  Object.assign(env,{
+    OPS_WORKSPACE_OAUTH_ENABLED:'true',
+    OPS_GMAIL_EXPECTED_MAILBOX:'tomarne@finnbilglass.no'
+  });
+  try {
+    const sent=message('sent-workspace-1','tomarne@finnbilglass.no','kunde@example.com');
+    sent.labelIds=['SENT'];
+    sent.payload.headers.find(h=>h.name==='Subject').value='Manuell e-post til kunde';
+    assert.equal(await recordMessage(env,sent,'tomarne@finnbilglass.no'),true);
+    const stored=raw.prepare('SELECT direction,recipient,actor,inquiry_id FROM ops_messages').all();
+    assert.equal(stored.length,1);
+    assert.equal(stored[0].direction,'OUT');
+    assert.equal(stored[0].recipient,'kunde@example.com');
+    assert.equal(stored[0].actor,'gmail-manual');
+    assert.equal(stored[0].inquiry_id,null);
+    assert.equal(await recordMessage(env,sent,'tomarne@finnbilglass.no'),false,
+      'same message must not be imported twice');
+
+    // A direct personal message to the Workspace mailbox is not an OPS
+    // incoming address unless an administrator explicitly configures it.
+    const personal=message('personal-1','venn@example.com','tomarne@finnbilglass.no');
+    personal.payload.headers.find(h=>h.name==='Subject').value='Privat melding';
+    assert.equal(await recordMessage(env,personal,'tomarne@finnbilglass.no'),false);
+
+    // The Gmail authenticated mailbox must match the approved OAuth mailbox.
+    const mismatched=message('sent-unverified-1','tomarne@finnbilglass.no','kunde2@example.com');
+    mismatched.labelIds=['SENT'];
+    assert.equal(await recordMessage(env,mismatched,'different@finnbilglass.no'),false);
+    const forged=message('sent-personal-1','personal@gmail.com','kunde3@example.com');
+    forged.labelIds=['SENT'];
+    assert.equal(await recordMessage(env,forged,'tomarne@finnbilglass.no'),false);
+
+    assert.equal(raw.prepare('SELECT COUNT(*) AS n FROM ops_messages').get().n,1);
+  } finally {raw.close()}
+});
