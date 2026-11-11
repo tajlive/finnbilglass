@@ -166,8 +166,59 @@ type WorkspaceOAuthFailure =
   | 'config' | 'callback' | 'state' | 'state_missing' | 'state_expired'
   | 'state_actor' | 'state_used' | 'state_consume' | 'authorization_code'
   | 'token_http_400' | 'token_http_other' | 'token_incomplete'
-  | 'token_scope' | 'gmail_http_403' | 'gmail_http_other'
+  | 'token_scope' | 'gmail_http_403' | 'gmail_service_disabled'
+  | 'gmail_domain_policy' | 'gmail_quota' | 'gmail_scope_denied'
+  | 'gmail_http_other'
   | 'gmail_mailbox' | 'database_save' | 'unexpected';
+
+
+/** Google Gmail uses either google.rpc.ErrorInfo details or legacy errors[].reason.
+ * Return only an allowlisted category: never expose provider text, tokens, scopes or
+ * customer data to browser URLs, errors, audit or CI logs.
+ * A 403 may be caused by an unenabled API, Workspace policy or API quota.
+ */
+async function gmailAccessFailure(response: Response): Promise<WorkspaceOAuthFailure> {
+  const fallback: WorkspaceOAuthFailure = response.status===403
+    ? 'gmail_http_403' : 'gmail_http_other';
+  if (response.status!==403) return fallback;
+  try {
+    const raw=await response.text();
+    if(raw.length>8192) return fallback;
+    const parsed:unknown=JSON.parse(raw);
+    if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))return fallback;
+    const err=(parsed as {error?:unknown}).error;
+    if(!err||typeof err!=='object'||Array.isArray(err))return fallback;
+    const data=err as {details?:unknown;errors?:unknown};
+    const reasons:string[]=[];
+    if(Array.isArray(data.details)){
+      for(const item of data.details.slice(0,12)){
+        if(item && typeof item==='object' && !Array.isArray(item)){
+          const r=(item as Record<string,unknown>).reason;
+          if(typeof r==='string' && r.length<90)reasons.push(r);
+        }
+      }
+    }
+    if(Array.isArray(data.errors)){
+      for(const item of data.errors.slice(0,12)){
+        if(item && typeof item==='object' && !Array.isArray(item)){
+          const r=(item as Record<string,unknown>).reason;
+          if(typeof r==='string' && r.length<90)reasons.push(r);
+        }
+      }
+    }
+    if(reasons.includes('SERVICE_DISABLED')||reasons.includes('accessNotConfigured'))
+      return 'gmail_service_disabled';
+    if(reasons.includes('domainPolicy')||reasons.includes('ORG_RESTRICTION_VIOLATION'))
+      return 'gmail_domain_policy';
+    if(reasons.includes('ACCESS_TOKEN_SCOPE_INSUFFICIENT')||reasons.includes('insufficientPermissions'))
+      return 'gmail_scope_denied';
+    if(['dailyLimitExceeded','rateLimitExceeded','userRateLimitExceeded','quotaExceeded','RESOURCE_EXHAUSTED'].some(r=>reasons.includes(r)))
+      return 'gmail_quota';
+  }catch{
+    // Google response body never becomes an exception message or public status.
+  }
+  return fallback;
+}
 
 function resultRedirect(
   status: 'connected' | 'denied' | 'failed',
@@ -235,7 +286,7 @@ export async function finishWorkspaceOAuth(request:Request,env:WorkspaceEnv,staf
       signal:AbortSignal.timeout(15000)
     });
     if(!profileResponse.ok)return resultRedirect('failed',
-      profileResponse.status===403?'gmail_http_403':'gmail_http_other');
+      await gmailAccessFailure(profileResponse));
     const profile=await profileResponse.json() as {emailAddress?:string};
     const mailbox=profile.emailAddress?.trim().toLowerCase()||'';
     if(!mailbox || mailbox!==expectedWorkspaceMailbox(env))return resultRedirect('failed','gmail_mailbox');
