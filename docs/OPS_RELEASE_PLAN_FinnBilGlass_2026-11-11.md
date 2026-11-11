@@ -1,11 +1,11 @@
 # FinnBilGlass — varig OPS-utviklings- og produksjonsplan
 
 **Oppdatert:** 11. november 2026  
-**Foreslått plassering i repo:** `docs/OPS_RELEASE_PLAN.md`  
-**Status:** Arbeidsplan. Dette dokumentet er laget uten direkte GitHub-tilgang og er **ikke** committet.  
+**Plassering i repo:** `docs/OPS_RELEASE_PLAN_FinnBilGlass_2026-11-11.md`  
+**Status:** Committet til `main` 11.11.2026 som `ccfc1ca55c4745af4403bb3fd439ed628735bd39`. OPS-produksjonsrelease fortsatt **NO-GO** inntil første-salg-E2E og kontroll av eksisterende jobber er dokumentert.  
 **Prinsipp:** Få første salg i produksjon så raskt som mulig, uten å miste gamle jobber eller kompromittere kunde-, e-post- eller betalingsdata.
 
-> **Kilde til sannhet:** Denne filen i GitHub når den er sjekket inn. Oppdater status ved hver PR og deploy. Ikke behandle en oppgave som fullført uten lenke til grønn QA/deploy eller tilsvarende konkret bevis.
+> **Kilde til sannhet:** Denne committede filen er beslutnings- og releaseplan. GitHub Issues (og eksisterende GitHub Project hvis aktivt) styrer oppgavene. Oppdater status ved hver PR og deploy. Grønn QA eller grønn deploy av `main` beviser **ikke** at draft OPS-kandidat #57 er lansert.
 
 ## 1. Hvor vi står (sist bekreftet i prosjektarbeidet 11.11.2026)
 
@@ -91,13 +91,18 @@ Stans produksjonsdeploy. Rull eventuelt tilbake kode, men **ikke** rull blindt t
 - Kunde-e-post inneholder faktiske varenavn/nummer, beskrivelse og total, ikke tekniske interne markører.
 - Rettigheter, auditering og skrive-opphavssjekk beholdes.
 
-## 7. Neste praktiske GitHub-steg
+## 7. Verifisert GitHub-status og neste steg (11.11.2026)
 
-1. Legg denne planen i **`docs/OPS_RELEASE_PLAN.md`** på en egen branch og åpne en liten PR mot `staging/first-sale-20261110`.
-2. Legg gjerne `legacy_jobs_release_guard.py` i `scripts/maintenance/` etter kodegjennomgang.
-3. Opprett ett GitHub Issue kalt **«OPS release: gammel data + første-salg-E2E + produksjon»**, lenk denne planen og bruk sjekklisten over.
-4. Oppdater dette dokumentet med dato, commit SHA, QA-run og produksjonsbevis hver gang noe er fullført.
-5. Etter gjenopprettet GitHub-tilgang: hent siste repo-status før neste kodeendring.
+1. **Hovedplan er allerede lagret:** [GitHub-commit `ccfc1ca`](https://github.com/tajlive/finnbilglass/commit/ccfc1ca55c4745af4403bb3fd439ed628735bd39). Ikke opprett en konkurrerende planfil.
+2. **Release og gamle jobber:** Fortsett i eksisterende [Issue #39](https://github.com/tajlive/finnbilglass/issues/39): staging-/prod-D1-backup, kontroll av eldre saker/tilbud/ordre, eksakt SHA, rollback og GO/NO-GO.
+3. **Første salg:** Fortsett i [Issue #52](https://github.com/tajlive/finnbilglass/issues/52): kundeforespørsel → kontrollert glassvalg → tilbud → dokumentert aksept → ordre → manuell Kustom-referanse. Reell betalingsstatus verifiseres manuelt.
+4. **Tilgang og e-post:** Gjenbruk eksisterende Issues [#38](https://github.com/tajlive/finnbilglass/issues/38), [#37](https://github.com/tajlive/finnbilglass/issues/37) og [#36](https://github.com/tajlive/finnbilglass/issues/36). Ikke dupliser arbeidsoppgaver.
+5. **OPS-kandidat:** [draft PR #57](https://github.com/tajlive/finnbilglass/pull/57) på `staging/first-sale-20261110`. Sist kontrollerte commit: `b55e8c2f825341bcefcd031c8575f02145ef0b08`. [QA #42945069626](https://github.com/tajlive/finnbilglass/actions/runs/42945069626) var grønn, men **full første-salg-E2E og live legacy-data er ikke dokumentert**.
+6. **Produksjon:** [Deploy #42958729574](https://github.com/tajlive/finnbilglass/actions/runs/42958729574) og [nightly #42959468766](https://github.com/tajlive/finnbilglass/actions/runs/42959468766) var grønne for `main` på `ccfc1ca`. Det betyr **ikke** at #57 er slått sammen i produksjon.
+7. **Legacy-kontrollscript:** Versjon 2 er testet lokalt med syntetiske SQLite-fixtures; tillater nye rader, men stopper slettede/endrede historiske rader. **Ikke lagt i repo, og ikke kjørt på ekte databasekopier**. Neste steg: legg scriptet i en liten egen PR, test på offline eksport før/etter, og bekreft visning i autentisert staging.
+8. **Gratis GitHub-fart/AI:** Se [docs/GITHUB_FREE_SETUP.md](GITHUB_FREE_SETUP.md) for eksisterende CI, Dependabot, Copilot Free og GitHub Settings. Hold AI-API-kostnad og produksjonsdeploy avskrudd som standard.
+9. **GitHub Projects:** Repo-metadata viser at `has_projects=true`, men dette er **ikke** bekreftelse på at et Projects V2-brett finnes. Gjenbruk ett eksisterende brett hvis funnet; legg eksisterende Issues og PR-er inn der. Prosjektbrettstatus må kontrolleres i GitHub-grensesnittet.
+10. Oppdater denne filen med eksakt status, commit, QA-run og produksjonsbevis når hver milepæl er dokumentert.
 
 ### Tydelige beslutninger tatt underveis
 
