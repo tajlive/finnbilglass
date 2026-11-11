@@ -673,7 +673,7 @@
       .finally(function () { knapp.disabled = false; knapp.textContent = 'Send bilder til Finnbilglass'; });
   });
 
-  // P2 (Beta1-funn): SVVs handelsbetegnelse inkluderer ofte merket («NISSAN
+  // P2 (katalogfunn): SVVs handelsbetegnelse inkluderer ofte merket («NISSAN
   // LEAF», «TOYOTA HILUX») — ikke prepender merket da. («NISSAN NISSAN LEAF»)
   function bilnavn() {
     var m = (state.merke || '').toUpperCase().trim();
@@ -1098,7 +1098,7 @@
     visRegnr();
     $('btn-inquiry').disabled = false;
     // P0.1: tilbehørsseksjonen vises ikke generisk — kun per kandidat/glass (nedenfor).
-    // Forhåndsutfyll henvendelsesskjema med skiltnummeret (låst) — beta-tilbudsflyt.
+    // Forhåndsutfyll henvendelsesskjema med skiltnummeret (låst) — ordinær tilbudsflyt.
     $('inquiry-regnr').value = state.regnr || '';
     var a = data && data.anbefaling;
     if (!a) {
@@ -1276,7 +1276,7 @@
 
   // Tilbehørsvalg bindes dynamisk i renderTilbehor (P0.1) — ingen statiske bokser.
 
-  // Beta-henvendelse: knapp → skjema → validering → POST → bekreftelse.
+  // Kundehenvendelse: knapp → skjema → validering → POST → bekreftelse.
   $('btn-inquiry').addEventListener('click', function () {
     $('inquiry-form').classList.remove('hidden');
     $('inquiry-bekreftet').classList.add('hidden');
@@ -1377,7 +1377,7 @@
     return { 'Content-Type': 'application/json', 'Idempotency-Key': inquiryIdemKey || nyInquiryNokkel() };
   }
 
-  // Produksjons-API-et svarer 503 når pilotstoppet er aktivt (inquiries_enabled=0),
+  // API-et svarer 503 når mottak av nye forespørsler er midlertidig deaktivert (inquiries_enabled=0),
   // og 429 ved abuse-rate-limit. 409 betyr at samme Idempotency-Key pågår eller
   // er brukt med annet innhold. Vis kundetekst i stedet for rå API-feil.
   function fortolkInquiryFeil(status, melding) {

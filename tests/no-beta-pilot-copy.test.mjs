@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const read = path => readFileSync(new URL('../'+path, import.meta.url), 'utf8');
-const publicPages = ['public/index.html', 'public/betaling.html', 'public/personvern.html'];
+const publicPages = ['public/404.html', 'public/index.html', 'public/betaling.html', 'public/bilglass-uten-forsikring.html', 'public/om-oss.html', 'public/personvern.html', 'public/vilkar.html'];
 function visible(text) {
   return text.replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<script\b[\s\S]*?<\/script>/gi,'')
@@ -13,6 +13,12 @@ test('customer-facing pages have no beta, pilot, preview or testphase labels',()
   for(const path of publicPages) {
     const v=visible(read(path));
     assert.doesNotMatch(v,/\b(?:beta|pilot|testfase|betaversjon|forhåndsvisning)\b/i,path);
+  }
+});
+test('production-facing frontend CSS and JavaScript have no legacy beta or pilot identifiers',()=> {
+  for (const path of ['public/styles.css', 'public/app.js']) {
+    const content=read(path);
+    assert.doesNotMatch(content, /\\bbeta(?:\\b|-)|\\bpilot(?:\\b|-)/i, path);
   }
 });
 test('manual quote safety language remains on the homepage and payment page',()=>{

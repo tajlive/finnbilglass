@@ -18,7 +18,7 @@ binding = "AI"
 [[d1_databases]]
 binding = "FINNBILGLASS_DB"
 database_name = "finnbilglass-db-staging"
-database_id = "6c8c3eeb-e4bb-41c7-831f-25e5a735717c"
+database_id = "78842e17-ab0b-47c1-acde-244044073466"
 
 [[r2_buckets]]
 binding = "OPPLAERING_BUCKET"
@@ -30,6 +30,20 @@ ENVIRONMENT = "staging"
 EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
 EVIDENCE_STATUS_CHANGE_ENABLED = "false"
+# Staging-only staff and manual sales. These routes still require signed
+# Cloudflare Access JWT + a D1 invitation and remain unavailable without both.
+OPS_STAFF_PORTAL_ENABLED = "true"
+OPS_MANUAL_ORDERS_ENABLED = "true"
+OPS_WORKBENCH_ENABLED = "true"
+# Reuse the EXISTING FinnBilGlass Google Workspace and Google OAuth client.
+# This enables only the admin-led CONSENT page, not message import.
+# A staging-only AES-GCM key + migrations/0045 + verified registered redirect
+# are required, otherwise the route fails closed.
+OPS_WORKSPACE_OAUTH_ENABLED = "true"
+OPS_GMAIL_EXPECTED_MAILBOX = "tomarne@finnbilglass.no"
+# Never begin Gmail import until Workspace owner consent, sender-alias control
+# and mailbox filtering have been checked against the real Workspace.
+GMAIL_SYNC_ENABLED = "false"
 
 # ── Observability: Workers Logs-lagring AV, invocation_logs PÅ (konsistens med prod) ──
 [observability.logs]
