@@ -1,4 +1,4 @@
-name: FinnBilGlass - Workspace staging readiness (read-only)
+name: FinnBilGlass - staging readiness (read-only)
 on:
   push:
     branches: [main]
@@ -48,4 +48,51 @@ jobs:
               notes.append('- '+msg)
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write(chr(10).join(notes)+chr(10))
+          PY
+
+      - name: Inspect actual staging reply schema (read-only; no customer data)
+        env:
+          STAGING_READ_TOKEN: ${{ secrets.STAGING_CLOUDFLARE_API_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, json, urllib.request, urllib.error
+          token=os.environ.get('STAGING_READ_TOKEN','')
+          if not token: raise SystemExit('NO_GO: staging read token not configured')
+          root='https://api.cloudflare.com/client/v4/accounts/80d5b1d56a3e907150ba7348b6182894'
+          db_id='78842e17-ab0b-47c1-acde-244044073466'
+          def api(path, method='GET', body=None):
+              payload=json.dumps(body).encode('utf-8') if body is not None else None
+              req=urllib.request.Request(root+path, data=payload, method=method, headers={
+                  'Authorization':'Bearer '+token, 'Content-Type':'application/json', 'Accept':'application/json'})
+              try:
+                  with urllib.request.urlopen(req, timeout=18) as rsp:
+                      data=json.loads(rsp.read(65536))
+              except urllib.error.HTTPError as err:
+                  raise SystemExit('NO_GO: staging D1 metadata API HTTP-'+str(err.code))
+              except Exception:
+                  raise SystemExit('NO_GO: staging D1 metadata API unavailable')
+              if data.get('success') is not True: raise SystemExit('NO_GO: Cloudflare API returned failure')
+              return data.get('result')
+          meta=api('/d1/database/'+db_id) or {}
+          if meta.get('uuid')!=db_id or meta.get('name')!='finnbilglass-db-staging' or meta.get('jurisdiction')!='eu':
+              raise SystemExit('NO_GO: staging database UUID/name/EU jurisdiction mismatch')
+          sql="SELECT name FROM sqlite_master WHERE type='table' AND name IN ('beta_inquiries','ops_reply_outbox','ops_reply_attempts','ops_manual_offers','ops_manual_orders') ORDER BY name"
+          result=api('/d1/database/'+db_id+'/query', 'POST', {'sql':sql})
+          checks=result if isinstance(result,list) else [result]
+          if not checks or any(not isinstance(x,dict) or x.get('success') is False for x in checks):
+              raise SystemExit('NO_GO: staging schema query not verified')
+          names={str(row.get('name','')) for x in checks for row in x.get('results',[]) if isinstance(row,dict)}
+          required={'beta_inquiries','ops_reply_outbox','ops_manual_offers','ops_manual_orders'}
+          missing=sorted(required-names)
+          reply_ready='ops_reply_attempts' in names
+          outcome='PASS' if not missing and reply_ready else 'NO_GO'
+          notes=['### Staging OPS reply schema (read-only)',
+                 '- Correct EU D1 identity: PASS',
+                 '- Base OPS tables: '+('PASS' if not missing else 'NO_GO, missing '+', '.join(missing)),
+                 '- Additive 0046 ops_reply_attempts: '+('PRESENT' if reply_ready else 'MISSING'),
+                 '- No database writes, customer queries, secret values, email, or deploy']
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf8') as out:
+              out.write(chr(10).join(notes)+chr(10))
+          print('Staging OPS schema readiness: '+outcome)
+          if outcome!='PASS': raise SystemExit('NO_GO: complete reviewed staging schema gate before deployment')
           PY
