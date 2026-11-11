@@ -34,6 +34,24 @@ PROTECTED_TABLES = (
     "ops_mail_details",
     "ops_staff_activity",
     "ops_work_events",
+    "ops_messages",
+    "ops_mail_sync_state",
+    "evidence_cases",
+    "evidence_case_images",
+    "evidence_case_review_events",
+    "evidence_case_status_events",
+    "evidence_case_candidate_snapshots",
+    "evidence_case_image_quality_events",
+    "evidence_events",
+    "case_sku_decisions",
+    "glass_search_snapshots",
+)
+# Cover future additions to the historical data model without a whitelist gap.
+# These prefixes refer to customer, audit and evidentiary data. Do not include
+# temporary rate-limit counters or migration bookkeeping.
+PROTECTED_PREFIXES = (
+    "beta_inquiry_", "ops_manual_", "ops_mail_", "ops_reply_",
+    "ops_work_", "ops_staff_", "evidence_case_", "case_sku_",
 )
 REQUIRED_TABLES = {"beta_inquiries"}
 
@@ -71,6 +89,15 @@ def tables(db: sqlite3.Connection) -> set[str]:
     }
 
 
+def protected_tables(db: sqlite3.Connection) -> list[str]:
+    existing = tables(db)
+    return sorted(
+        name for name in existing
+        if name in PROTECTED_TABLES
+        or name.startswith(PROTECTED_PREFIXES)
+    )
+
+
 def columns(db: sqlite3.Connection, table: str) -> list[str]:
     return [row["name"] for row in db.execute(f"PRAGMA table_info({quote_identifier(table)})")]
 
@@ -95,6 +122,43 @@ def table_fingerprint(
     return result
 
 
+def audit_r2_refs(db: sqlite3.Connection, inventory: Path | None) -> list[str]:
+    """Validate R2 object existence against a separately collected, offline inventory.
+
+    A D1 SQLite snapshot cannot prove an R2 object exists. Refuse PASS on any
+    snapshot containing image refs without an inventory for that same snapshot.
+    No network calls; never emit customer data or actual object names.
+    """
+    if "evidence_case_images" not in tables(db):
+        return []
+    present = set(columns(db, "evidence_case_images"))
+    if "r2_key" not in present:
+        return ["R2_IMAGE_COLUMN_MISSING"]
+    fields = ["r2_key"] + (["thumb_r2_key"] if "thumb_r2_key" in present else [])
+    if not db.execute("SELECT 1 FROM evidence_case_images LIMIT 1").fetchone():
+        return []
+    if inventory is None:
+        return ["R2_INVENTORY_REQUIRED"]
+    if not inventory.is_file() or inventory.stat().st_size > 50_000_000:
+        raise ValueError("R2 inventory must be an existing bounded offline file")
+    object_keys = {
+        line.strip() for line in inventory.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
+    missing = 0
+    for row in db.execute(
+        "SELECT " + ", ".join(quote_identifier(key) for key in fields)
+        + " FROM evidence_case_images"
+    ):
+        for idx, _field in enumerate(fields):
+            key = row[idx]
+            if idx == 0 and (not isinstance(key, str) or not key.strip()):
+                missing += 1
+            elif key is not None and key not in object_keys:
+                missing += 1
+    return [f"R2_MISSING_OBJECT_REFERENCES:{missing}"] if missing else []
+
+
 def audit(db: sqlite3.Connection, label: str) -> tuple[dict[str, Any], list[str]]:
     available = tables(db)
     errors: list[str] = []
@@ -106,9 +170,7 @@ def audit(db: sqlite3.Connection, label: str) -> tuple[dict[str, Any], list[str]
         errors.append("FOREIGN_KEY_VIOLATIONS")
         summary["foreign_keys"] = "failed"
 
-    for table in PROTECTED_TABLES:
-        if table not in available:
-            continue
+    for table in protected_tables(db):
         total = db.execute(f"SELECT COUNT(*) FROM {quote_identifier(table)}").fetchone()[0]
         summary["tables"][table] = total
 
@@ -184,9 +246,7 @@ def compare(before: sqlite3.Connection, after: sqlite3.Connection) -> tuple[dict
     previous, current = tables(before), tables(after)
     errors: list[str] = []
     shared_table_count = 0
-    for table in PROTECTED_TABLES:
-        if table not in previous:
-            continue
+    for table in protected_tables(before):
         if table not in current:
             errors.append("HISTORICAL_TABLE_REMOVED:" + table)
             continue
@@ -213,6 +273,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--before", required=True, type=Path, help="Offline pre-release SQLite export")
     parser.add_argument("--after", type=Path, help="Optional offline post-migration SQLite export")
+    parser.add_argument("--r2-inventory-before", type=Path,
+                        help="Offline newline-delimited R2 object keys for the before snapshot")
+    parser.add_argument("--r2-inventory-after", type=Path,
+                        help="Offline newline-delimited R2 object keys for the after snapshot")
     args = parser.parse_args(argv)
     if args.after and args.before.resolve() == args.after.resolve():
         print(json.dumps({"result": "NO_GO", "error_type": "ValueError",
@@ -222,7 +286,7 @@ def main(argv: list[str] | None = None) -> int:
         with open_read_only(args.before) as before:
             previous, previous_errors = audit(before, "before")
             result: dict[str, Any] = {"before": previous}
-            errors = previous_errors
+            errors = previous_errors + audit_r2_refs(before, args.r2_inventory_before)
             if args.after:
                 with open_read_only(args.after) as after:
                     current, current_errors = audit(after, "after")
@@ -230,6 +294,7 @@ def main(argv: list[str] | None = None) -> int:
                     result["after"] = current
                     result["retention"] = retention
                     errors += current_errors + retention_errors
+                    errors += audit_r2_refs(after, args.r2_inventory_after)
             result["result"] = "NO_GO" if errors else "PASS"
             result["errors"] = sorted(set(errors))
             print(json.dumps(result, ensure_ascii=False, sort_keys=True, indent=2))
