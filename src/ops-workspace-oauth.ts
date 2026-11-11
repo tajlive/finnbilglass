@@ -160,40 +160,56 @@ export async function beginWorkspaceOAuth(env: WorkspaceEnv, staff: OpsStaff): P
   return respond({ok:true,authorizationUrl:url.toString(),message:'Godkjenn kun Gmail lesetilgang for eksisterende Google Workspace.'});
 }
 
-function resultRedirect(status: 'connected' | 'denied' | 'failed'): Response {
+/** Fixed allowlist of non-sensitive failure categories. Never include Google codes or
+ * OAuth token response bodies in redirects, logs, the D1 audit or query parameters. */
+type WorkspaceOAuthFailure =
+  | 'config' | 'callback' | 'state' | 'state_missing' | 'state_expired'
+  | 'state_actor' | 'state_used' | 'state_consume' | 'authorization_code'
+  | 'token_http_400' | 'token_http_other' | 'token_incomplete'
+  | 'token_scope' | 'gmail_http_403' | 'gmail_http_other'
+  | 'gmail_mailbox' | 'database_save' | 'unexpected';
+
+function resultRedirect(
+  status: 'connected' | 'denied' | 'failed',
+  reason?: WorkspaceOAuthFailure
+): Response {
+  const location='/ops/ansatte?workspace='+status+
+    (status==='failed' && reason?'&reason='+reason:'');
   return new Response(null,{
     status:303,
-    headers:{'Location':'/ops/ansatte?workspace='+status,'Cache-Control':'no-store',
+    headers:{'Location':location,'Cache-Control':'no-store',
       'Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff'}
   });
 }
 
 export async function finishWorkspaceOAuth(request:Request,env:WorkspaceEnv,staff:OpsStaff):Promise<Response> {
-  if (staff.role!=='ADMIN' || !oauthReady(env))return resultRedirect('failed');
+  if (staff.role!=='ADMIN' || !oauthReady(env))return resultRedirect('failed','config');
   if (new URL(request.url).origin !== new URL(STAGING_CALLBACK).origin ||
       new URL(request.url).pathname !== new URL(STAGING_CALLBACK).pathname) {
-    return resultRedirect('failed');
+    return resultRedirect('failed','callback');
   }
   const url=new URL(request.url);
   const state=url.searchParams.get('state')||'';
-  if(!/^[0-9a-f]{64}$/.test(state))return resultRedirect('failed');
+  if(!/^[0-9a-f]{64}$/.test(state))return resultRedirect('failed','state');
   const denied=!!url.searchParams.get('error');
   const code=url.searchParams.get('code')||'';
-  if(!denied && (code.length<10||code.length>2048))return resultRedirect('failed');
+  if(!denied && (code.length<10||code.length>2048))return resultRedirect('failed','authorization_code');
   try {
     const attempt=await env.FINNBILGLASS_DB.prepare(
       'SELECT state,actor_email,verifier_ciphertext,expires_at,consumed_at '+
       'FROM ops_workspace_oauth_attempts WHERE state=?'
     ).bind(state).first<Attempt>();
     const now=Date.now();
-    if(!attempt || attempt.actor_email!==staff.email || attempt.consumed_at!==null ||
-       attempt.expires_at<now)return resultRedirect('failed');
+    if(!attempt)return resultRedirect('failed','state_missing');
+    if(attempt.actor_email!==staff.email)return resultRedirect('failed','state_actor');
+    if(attempt.consumed_at!==null)return resultRedirect('failed','state_used');
+    if(attempt.expires_at<now)return resultRedirect('failed','state_expired');
     // The state is one-use, even if Google refused consent or token exchange fails.
     const consume=await env.FINNBILGLASS_DB.prepare(
       'UPDATE ops_workspace_oauth_attempts SET consumed_at=? '+
       'WHERE state=? AND consumed_at IS NULL AND expires_at>=?'
     ).bind(now,state,now).run();
-    if(consume.meta.changes!==1)return resultRedirect('failed');
+    if(consume.meta.changes!==1)return resultRedirect('failed','state_consume');
     if(denied)return resultRedirect('denied');
 
     const verifier=await decrypt(env,attempt.verifier_ciphertext);
@@ -207,19 +223,22 @@ export async function finishWorkspaceOAuth(request:Request,env:WorkspaceEnv,staf
       }),
       signal:AbortSignal.timeout(15000)
     });
-    if(!exchange.ok)return resultRedirect('failed');
+    if(!exchange.ok)return resultRedirect('failed',exchange.status===400?'token_http_400':'token_http_other');
     const tokens=await exchange.json() as TokenReply;
     if(!tokens.access_token || !tokens.refresh_token ||
-       tokens.token_type?.toLowerCase()!=='bearer' ||
-       !tokens.scope?.split(' ').includes(GOOGLE_SCOPE))return resultRedirect('failed');
+       tokens.token_type?.toLowerCase()!=='bearer')
+      return resultRedirect('failed','token_incomplete');
+    if(!tokens.scope?.split(' ').includes(GOOGLE_SCOPE))
+      return resultRedirect('failed','token_scope');
     const profileResponse=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile',{
       headers:{Authorization:'Bearer '+tokens.access_token},
       signal:AbortSignal.timeout(15000)
     });
-    if(!profileResponse.ok)return resultRedirect('failed');
+    if(!profileResponse.ok)return resultRedirect('failed',
+      profileResponse.status===403?'gmail_http_403':'gmail_http_other');
     const profile=await profileResponse.json() as {emailAddress?:string};
     const mailbox=profile.emailAddress?.trim().toLowerCase()||'';
-    if(!mailbox || mailbox!==expectedWorkspaceMailbox(env))return resultRedirect('failed');
+    if(!mailbox || mailbox!==expectedWorkspaceMailbox(env))return resultRedirect('failed','gmail_mailbox');
 
     const cipher=await encrypt(env,tokens.refresh_token);
     const result=await env.FINNBILGLASS_DB.batch([
@@ -236,10 +255,10 @@ export async function finishWorkspaceOAuth(request:Request,env:WorkspaceEnv,staf
         "VALUES(?,?,'CONNECTED',?,?)"
       ).bind(crypto.randomUUID(),staff.email,mailbox,now)
     ]);
-    if(result[0]?.meta.changes!==1)return resultRedirect('failed');
+    if(result[0]?.meta.changes!==1)return resultRedirect('failed','database_save');
     return resultRedirect('connected');
   } catch {
     // NEVER log the Google code, refresh token, access token or API response body.
-    return resultRedirect('failed');
+    return resultRedirect('failed','unexpected');
   }
 }
