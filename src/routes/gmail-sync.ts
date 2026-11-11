@@ -86,6 +86,18 @@ export async function recordMessage(env: Env, message: GmailSafeMessage, mailbox
     if (crossProvider) return false;
   }
   const inquiryId = safeToAutoLink ? await findCase(db, headers, counterpart) : null;
+  if (sent) {
+    // A Workspace Sent folder can contain unrelated correspondence. Mirror mail
+    // only to an existing, exact customer address, including sent messages
+    // without an FBG reference (those remain in "Må fordeles").
+    // Never import an ambiguous multi-recipient Sent message.
+    if (!from || !to || fromTokens.length !== 1 || toTokens.length !== 1) return false;
+    const candidateRows = await db.prepare(
+      'SELECT id,kontakt FROM beta_inquiries WHERE instr(lower(kontakt), ?) > 0 LIMIT 50',
+    ).bind(to).all<{ id: number; kontakt: string }>();
+    const knownCustomer = (candidateRows.results || []).some(row => singleAddress(row.kontakt) === to);
+    if (!knownCustomer) return false;
+  }
   const parts = extractEmailBody(message as Parameters<typeof extractEmailBody>[0]);
   const plain = (parts.text || parts.html.replace(/<[^>]*>/g, ' ')).slice(0, 30000);
   const subject = String(headers.subject || '(uten emne)').slice(0, 250);
