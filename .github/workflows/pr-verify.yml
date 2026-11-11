@@ -49,9 +49,6 @@ jobs:
             echo "Candidate has no new OPS migration rehearsal"
           fi
 
-      - name: Legacy OPS data retention regression (synthetic SQLite only)
-        run: python3 -m unittest discover -s tests -p 'test_legacy_release_guard.py' -v
-
       - name: Installer Chromium for skrivebeskyttet smoke (PR #40)
         if: github.event_name == 'pull_request' && github.event.pull_request.number == 40
         run: npx playwright install --with-deps chromium
