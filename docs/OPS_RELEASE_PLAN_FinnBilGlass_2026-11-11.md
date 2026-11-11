@@ -271,3 +271,39 @@ Alle fire PR-ene er merget i **staginggrenen, ikke `main`**. Ingen produksjons-W
 4. Oppdater Issue #39 og #52 med eksakt kode-SHA, godkjenningsmetode og aggregert resultat. Første-salg-E2E med to inviterte ansatte og rollback er fortsatt påkrevd før GO.
 
 **Status: NO-GO for skrivetilgang og migrasjon inntil en av disse modellene er etablert og bekreftet.**
+
+## 15. Hurtigspor uten GitHub-D1-skrivetoken – prioritet nå (11.11.2026)
+
+**Dette er den raskeste autoriserte engangsveien, og overstyrer §14 sitt forslag om å bygge en ny migrasjonstjeneste først:** Cloudflares [offisielle D1 Getting Started](https://developers.cloudflare.com/d1/get-started/) dokumenterer SQL Console i det autentiserte dashboardet; [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/) oppgir automatisk tilgjengelige bokmerker og gjenoppretting for D1 på riktig backend. Cloudflare Console lar eieren velge **én bestemt database**, i stedet for å legge konto-bred D1 Edit i en langlivet GitHub-secret.
+
+**Streng datagrense:** Work-agenten kan bruke eierens allerede autentiserte Cloudflare-nettleser, men får bare skrive til `finnbilglass-db-staging` UUID `78842e17-ab0b-47c1-acde-244044073466`, Cloudflare-konto `80d5b1d56a3e907150ba7348b6182894`. Stopp hvis brukergrensesnittet eller databasens ID ikke kan bekreftes med sikkerhet. Ingen ny token, repo-secret, deploy eller produksjonsdatabase.
+
+### 1. Før migrasjon – obligatoriske lesekontroller
+
+1. Åpne Cloudflare Dashboard → D1 SQL Database → velg `finnbilglass-db-staging`. Kontroller navn, UUID, EU-jurisdiksjon og at dette **ikke er** `finnbilglass-db` (produksjon). Ikke stol bare på faneoverskrift eller et lagret bokmerke.
+2. Verifiser at basen støtter **Time Travel på production backend** (ikke legacy alpha), og hent et **konkret, gyldig gjenopprettingsbokmerke/tidspunkt** for den eksakte stagingdatabasen via dokumentert dashboard/API/CLI. Dersom Cloudflare-dashboardet ikke gir nødvendig bookmark/restorebevis, **stopp før SQL write**. Bekreft at restoreprosedyren faktisk kan brukes; restore er destruktiv og skal ikke utføres som del av prøven.
+3. I staging-D1 Console kjør kun lesende:
+
+   ```sql
+   SELECT name FROM sqlite_master
+   WHERE type='table'
+     AND name IN ('beta_inquiries','ops_reply_outbox','ops_reply_attempts','ops_manual_offers','ops_manual_orders')
+   ORDER BY name;
+   ```
+
+4. Forvent `beta_inquiries`, `ops_reply_outbox`, `ops_manual_offers`, `ops_manual_orders` til stede; `ops_reply_attempts` er siste gang dokumentert **MISSING**. Bekreft at **ingen annen aktør kjører samtidig migrasjon eller kundesvar-sending**.
+
+### 2. Gjennomfør bare gjennomgått 0046 (etter backup-bevis)
+
+Bruk **eksakt SQL fra** [migrations/proposed/0046_ops_reply_attempts.sql.proposed](https://github.com/tajlive/finnbilglass/blob/49a23a9f8936177d5ab2cf931dbd19453e015fd8/migrations/proposed/0046_ops_reply_attempts.sql.proposed), og ingen andre migrasjonsfiler. Åpne SQL-filen, kontroller innhold og SHA, kjør hele den additive migrasjonen i akkurat den valgte staging-D1 Console. Hvis UI ikke håndterer hele SQL-filen med sikker transaksjonssemantikk, **stopp**, ikke splitt og improviser. Ikke kjør `0040–0044` eller `migrations/pending`. Gammel `QUEUED/FAILED` svar-outbox skal legges i `REVIEW` uten ny Resend-sending.
+
+### 3. Etterkontroll og GitHub-bevis
+
+1. Kontroller `ops_reply_attempts`, indeks og alle tre beskyttende triggere gjennom `sqlite_master` i staging. Kjør `PRAGMA foreign_key_check;` dersom databasen tillater det; aldri publiser person-/meldingsdata.
+2. Kjør den eksisterende [staging readiness-workflowen](https://github.com/tajlive/finnbilglass/actions/workflows/staging-workspace-readiness-once.yml) eller en tilsvarende read-only D1-kontroll. Forvent `STAGING_BASE_TABLES_MISSING: NONE`, `STAGING_REPLY_0046: PRESENT`.
+3. Skriv bare bekreftet PASS/NO-GO, eksakt D1-ID, internt backup-bokmerke/referanse, migrasjons-SHA og tidspunkt til [Issue #39](https://github.com/tajlive/finnbilglass/issues/39). Ingen API-token, SQL-kundedata eller ekte epost i logger.
+4. Behold `deploy=false` og PR #57 som draft. Neste fase er beskyttet legacy-D1/R2-diff og autentisert OPS førstesalg-E2E med to ansatte. Ingen Kustom-kortbetalinger, capture eller refund.
+
+**Stopp straks** hvis D1-ID avviker, Time Travel ikke kan bekreftes, preflight er uventet, andre skriver samtidig, SQL-konsoll ikke kan kjøre hele migrasjonen korrekt, eller det er risiko for tap av historiske poster. En post hoc backup er ikke nok.
+
+**Status per planoppdateringen:** Ruten er klar for gjennomføring i **Work/nettleser med interaksjon**. Denne ChatGPT-samtalen kan kontrollere GitHub, men kan ikke selv klikke i Cloudflare Console via den tilkoblede nettleseren. Ingen migrasjon er utført av planoppdateringen.
