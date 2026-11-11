@@ -1,0 +1,54 @@
+name: FinnBilGlass - Workspace callback metadata diagnostic read-only
+on:
+  push:
+    branches: [staging/first-sale-20261110]
+    paths: [.github/workflows/staging-workspace-callback-diagnostics-once.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    if: github.repository == 'tajlive/finnbilglass' && github.ref == 'refs/heads/staging/first-sale-20261110' && github.actor == 'tajlive'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 5
+    steps:
+      - name: Read-only EU staging OAuth attempt and grant counts
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os,json,urllib.request
+          t=os.environ.get('CF_TOKEN','')
+          if not t:raise SystemExit('STOP: staging diagnostic access missing')
+          base='https://api.cloudflare.com/client/v4/accounts/80d5b1d56a3e907150ba7348b6182894'
+          h={'Authorization':'Bearer '+t,'Content-Type':'application/json','Accept':'application/json'}
+          def get(path):
+            with urllib.request.urlopen(urllib.request.Request(base+path,headers=h,method='GET'),timeout=20) as r:p=json.loads(r.read(100000))
+            if not p.get('success'):raise SystemExit('STOP: Cloudflare metadata failed')
+            return p['result']
+          db=get('/d1/database/78842e17-ab0b-47c1-acde-244044073466')
+          if not (db.get('uuid')=='78842e17-ab0b-47c1-acde-244044073466' and db.get('name')=='finnbilglass-db-staging' and db.get('jurisdiction')=='eu'):
+            raise SystemExit('STOP: not isolated EU staging')
+          def query(sql):
+            request=urllib.request.Request(base+'/d1/database/78842e17-ab0b-47c1-acde-244044073466/query',
+              headers=h,method='POST',data=json.dumps({'sql':sql}).encode())
+            with urllib.request.urlopen(request,timeout=20) as r:p=json.loads(r.read(160000))
+            if not p.get('success'):raise SystemExit('STOP: staging query failed')
+            parts=p.get('result') or []
+            rows=[row for item in parts for row in item.get('results',[])]
+            if len(rows)!=1:raise SystemExit('STOP: unexpected query shape')
+            return rows[0]
+          a=query("SELECT COUNT(*) AS total, SUM(CASE WHEN consumed_at IS NOT NULL THEN 1 ELSE 0 END) AS consumed, SUM(CASE WHEN consumed_at IS NULL THEN 1 ELSE 0 END) AS unused, MAX(created_at) AS last_started_ms, MAX(expires_at) AS last_expiry_ms, MAX(consumed_at) AS last_consumed_ms FROM ops_workspace_oauth_attempts")
+          g=query("SELECT COUNT(*) AS count FROM ops_workspace_gmail_tokens")
+          v=query("SELECT COUNT(*) AS count FROM ops_workspace_oauth_audit")
+          print('PASS: isolated EU staging D1 verified')
+          for k in ('total','consumed','unused','last_started_ms','last_expiry_ms','last_consumed_ms'):
+            print('OAUTH_ATTEMPTS_'+k.upper()+'='+str(a.get(k)))
+          print('WORKSPACE_GRANTS='+str(g.get('count')))
+          print('WORKSPACE_AUDIT='+str(v.get('count')))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+            out.write('### Workspace OAuth read-only diagnosis\n')
+            out.write('Verified EU staging only. No credential data or state values accessed.\n')
+            out.write(f"OAuth attempts: {a['total']}, consumed: {a['consumed']}, unused: {a['unused']}.\n")
+            out.write(f"Encrypted grant rows: {g['count']}, audit rows: {v['count']}.\n")
+          PY
