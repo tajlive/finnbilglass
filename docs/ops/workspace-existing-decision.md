@@ -57,6 +57,14 @@ Status oppdatert 2026-11-10. Beslutningen gjelder alle nye agenter, Codex-økter
 
 Google-kilder: [OAuth Web Server – redirect_uri_mismatch](https://developers.google.com/identity/protocols/oauth2/web-server#authorization-errors-redirect-uri-mismatch), [Manage OAuth Clients](https://support.google.com/cloud/answer/15549257?hl=en).
 
+## Oppdatering 11.11.2026 – redirect-adresse lagret i Google
+
+Brukeren har oppdatert den **eksisterende** OAuth Web application-klienten «FinnBilGlass Access» i Google Cloud-prosjektet `gen-lang-client-0228405648` («Default Gemini Project»). Chrome-konteksten bekreftet at Google Cloud viser **«OAuth client saved»** og at autorisert redirect URI nr. 4 er nøyaktig `https://ops-staging.finnbilglass.no/api/ops/manual/workspace/oauth/callback`. Eksisterende Cloudflare Access- og offentlig OAuth-redirect ble beholdt.
+
+**Neste kontroll:** Start en *ny* godkjenningsforespørsel fra `/ops/ansatte` etter eventuell Google-propagasjon. Velg bare `tomarne@finnbilglass.no`; ikke den private `tomarnejensen@gmail.com`. Verifiser at Google tillater samtykke, callback fullføres, riktig e-post blir lagret som kryptert autorisert Workspace-postkasse, og aktivert import fortsatt er `false` før sikker inbox-validering. Ved nytt `redirect_uri_mismatch`: bekreft klient-ID-en og vent på propagasjon, ikke opprett ny OAuth-app.
+
+**Status:** Redirect er lagret; faktisk OAuth-godkjenning og Gmail-synk er **ennå ikke verifisert**. Ikke hev produksjons-GO.
+
 ## Eksternt kontrollpunkt som ikke kan automatiseres uten samtykke
 
 Bare **kontoens eier** kan gi den innloggede Workspace-postkassen Gmail `readonly` OAuth-rettigheter, og eksisterende OAuth-klient må ha riktig redirect URI i Google Cloud Console. Dette er ikke det samme som å opprette Google Workspace på nytt.
