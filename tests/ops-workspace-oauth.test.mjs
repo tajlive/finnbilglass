@@ -227,3 +227,56 @@ test('OAuth callback reports safe field-level error stage without disclosing tok
     globalThis.fetch=original;
   }
 });
+
+
+test('Gmail 403 reports allowlisted Google reason without exposing provider data',async()=>{
+  const dbState=testDb();
+  const envConfig=env(dbState);
+  const cases=[
+    {name:'modern Google ErrorInfo service disabled',payload:{
+      error:{code:403,message:'API disabled for project with sensitive details',
+        status:'PERMISSION_DENIED',details:[{
+          '@type':'type.googleapis.com/google.rpc.ErrorInfo',
+          reason:'SERVICE_DISABLED',domain:'googleapis.com',
+          metadata:{consumer:'projects/123456789',service:'gmail.googleapis.com'}
+        }] }},reason:'gmail_service_disabled'},
+    {name:'legacy accessNotConfigured',payload:{error:{
+      errors:[{reason:'accessNotConfigured',message:'sensitive provider message'}]
+    }},reason:'gmail_service_disabled'},
+    {name:'Workspace domainPolicy',payload:{error:{
+      errors:[{reason:'domainPolicy',message:'Domain administrator blocked app'}]
+    }},reason:'gmail_domain_policy'},
+    {name:'Google Workspace organization restriction',payload:{error:{
+      details:[{reason:'ORG_RESTRICTION_VIOLATION'}]
+    }},reason:'gmail_domain_policy'},
+    {name:'rate limited',payload:{error:{errors:[{reason:'rateLimitExceeded'}]}},reason:'gmail_quota'},
+    {name:'insufficient OAuth scope',payload:{error:{
+      details:[{reason:'ACCESS_TOKEN_SCOPE_INSUFFICIENT'}]
+    }},reason:'gmail_scope_denied'},
+    {name:'generic forbidden',payload:{error:{message:'private provider error'}},reason:'gmail_http_403'}
+  ];
+  const originalFetch=globalThis.fetch;
+  try {
+    for(const kase of cases){
+      const started=await (await beginWorkspaceOAuth(envConfig,admin)).json();
+      const url=callbackUrl(started.authorizationUrl);
+      globalThis.fetch=async(href)=>{
+        if(String(href)==='https://oauth2.googleapis.com/token'){
+          return Response.json({access_token:'access-synthetic',refresh_token:'refresh-synthetic',
+            token_type:'Bearer',scope:'https://www.googleapis.com/auth/gmail.readonly'});
+        }
+        if(String(href)==='https://gmail.googleapis.com/gmail/v1/users/me/profile'){
+          return Response.json(kase.payload,{status:403});
+        }
+        throw Error('Unexpected test endpoint');
+      };
+      const returned=await finishWorkspaceOAuth(new Request(url),envConfig,admin);
+      assert.equal(returned.status,303,kase.name);
+      assert.equal(returned.headers.get('location'),
+        '/ops/ansatte?workspace=failed&reason='+kase.reason,kase.name);
+      assert.ok(!returned.headers.get('location').includes('sensitive'),kase.name);
+      assert.equal(dbState.tokens.size,0,kase.name);
+      assert.equal(dbState.audit.length,0,kase.name);
+    }
+  } finally {globalThis.fetch=originalFetch}
+});
