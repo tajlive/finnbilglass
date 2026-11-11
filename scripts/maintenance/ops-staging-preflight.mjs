@@ -97,8 +97,14 @@ function argsFromCli(argv) {
 export function runPreflight(expectedSha, dryRun, root = process.cwd()) {
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim();
   requireCandidateSha(head, expectedSha);
-  const dirty = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
-  if (dirty.trim()) throw Error('WORKTREE_DIRTY_NO_EXACT_COMMIT_BUILD');
+  // QA may create untracked reports outside the Worker bundle. Reject all tracked
+  // edits and any untracked files that Wrangler could ship as code or public assets.
+  const trackedChanges = execFileSync('git', ['diff', '--name-only', 'HEAD', '--'], { cwd: root, encoding: 'utf8' });
+  const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' })
+    .split(/\r?\n/).filter(Boolean);
+  const deployInputChanges = untracked.filter(file =>
+    file.startsWith('src/') || file.startsWith('public/') || file === 'wrangler.staging.toml');
+  if (trackedChanges.trim() || deployInputChanges.length) throw Error('WORKTREE_DIRTY_NO_EXACT_COMMIT_BUILD');
 
   const config = readFileSync(path.join(root, 'wrangler.staging.toml'), 'utf8');
   verifyStagingToml(config);
