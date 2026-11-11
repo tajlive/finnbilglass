@@ -184,4 +184,22 @@ Alle fire PR-ene er merget i **staginggrenen, ikke `main`**. Ingen produksjons-W
 4. **Workspace:** Verifiser riktig bedriftspostkasse og alias + leveringsvei. `GMAIL_SYNC_ENABLED=false` inntil samtykke, app-publishing/refresh-token og sikker import er etterprøvd. Alternativt avtal **manuell** mottaks-/journalføringskontroll for første salgsrelease. Se [Issue #38](https://github.com/tajlive/finnbilglass/issues/38).
 5. **Produksjonsbeslutning:** Når alle porter er bevist, dokumentér eksakt SHA, D1/R2-backup, Worker-rollback, observerbarhet og GO. Først da fjernes draft fra #57, merges til `main`, og en kontrollert produksjonsdeploy utføres. En grønn PR-CI er **ikke** bevis for deploy eller første salg.
 
-**Driftsrunbook for kundesvar:** [docs/ops/reply-send-reconciliation.md](ops/reply-send-reconciliation.md). **Runbook for gamle jobber:** [docs/ops/legacy-data-release-gate.md](ops/legacy-data-release-gate.md). 
+**Driftsrunbook for kundesvar:** [docs/ops/reply-send-reconciliation.md](ops/reply-send-reconciliation.md). **Runbook for gamle jobber:** [docs/ops/legacy-data-release-gate.md](ops/legacy-data-release-gate.md).
+
+## 11. Første-salg-akseptanse og migrasjonsøvelse – 11.11.2026
+
+**Nytt testbevis:** [PR #72](https://github.com/tajlive/finnbilglass/pull/72) er merget **til OPS-staging, ikke til main**. Squash-commit: `49a23a9f8936177d5ab2cf931dbd19453e015fd8`. Kilde-PR på SHA `7d4f2967faecb35ee54adc1b9cdc5d314845340b` fikk [grønn PR Verification #42992252674](https://github.com/tajlive/finnbilglass/actions/runs/42992252674). Oppfølgende QA for staging-mergecommit: [#42992437136](https://github.com/tajlive/finnbilglass/actions/runs/42992437136), **må bekreftes på eksakt SHA før den regnes som samlet staging-kandidat**.
+
+### Dokumentert automatisk, isolert
+1. `tests/ops-first-sale-integrated.test.mjs`: simulert henvendelse → manuelt utarbeidet tilbud DRAFT → én Resend-mock som gir SENT → sporbar kundeaksept → én ORDRE → registrert manuell Kustom Portal-referanse (PAYMENT_LINK_SENT, aldri PAID), med audit og ingen automatisk pengeoperasjon. Gammel lukket sak/hendelse forblir uendret.
+2. `tests/ops-reply-upgrade-regression.test.mjs`: oppgraderingsøvelse fra **eksisterende** `ops_reply_outbox` med QUEUED/FAILED/SENT; usikre gamle meldinger settes i REVIEW i ny tabell, andre rader beholdes, og reapply er idempotent. Endring av frosset innhold er blokkert.
+3. Begge testene er lagt i normal `npm run qa`. Sjekkliste: [docs/ops/first-sale-staging-acceptance.md](ops/first-sale-staging-acceptance.md).
+
+### Gjenstående P0 (ikke bevist av syntetisk QA)
+1. Kontroller korrekt staging-Worker / D1-binding / Cloudflare Access / R2 / Workspace-oppsett **lesende** mot levende miljø. Ingen kontoreferanser eller secrets i offentlig CI.
+2. Fullfør bakcup/Time Travel og **kun** sikker, gjennomgått additiv migrasjon `0046_ops_reply_attempts.sql.proposed` på rett staging-D1 dersom den ikke finnes. Kjør historikk-/R2-diff på beskyttede, tidskonsistente kopier og kontroller eldre saker i autentisert UI.
+3. Gjennomfør kontrollert, autentisert stagingreise med **to inviterte ansatte** og avgrenset testpostboks: tilgang/tilbakekalling, kundeforespørsel, kontrollert glassvalg, Resend-sending/svar, aksept, én ordre og manuell Kustom-lenkereferanse. Ingen ekte kundeutsending eller automatisk betalingsstatus.
+4. Godkjenn Workspace-alias/mottak og eventuelt Gmail read-only, eller dokumenter testet manuell journalføring med `GMAIL_SYNC_ENABLED=false`.
+5. Registrer godkjenningsbevis i [Issue #39](https://github.com/tajlive/finnbilglass/issues/39), [#52](https://github.com/tajlive/finnbilglass/issues/52) og [#38](https://github.com/tajlive/finnbilglass/issues/38). Først når **samme eksakte SHA** har grønne P0-porter, kan draft #57 vurderes for merge til main, og deretter kontrollert produksjonsdeploy.
+
+**Status: NO-GO for OPS-produksjonsrelease.** Offline E2E og migrasjonsøvelse er et fremdriftsbevis, ikke reell staginghandel eller gjenopprettingsbevis. Ingen live kundedata, Resend-sending, Kustom-betaling eller produksjonsdeploy ble utført i PR #72.
