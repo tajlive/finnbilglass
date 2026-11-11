@@ -3,7 +3,7 @@
  */
 import type { Env } from './types';
 import { verifyManualOpsStaff, validManualWriteOrigin } from './ops-manual-access';
-import { recogniseInvitedStaff, appendOpsAudit } from './ops-staff';
+import { recogniseInvitedStaff } from './ops-staff';
 import { recordCustomerAcceptance, createOrderFromAcceptedOffer, recordPortalPaymentLink } from './ops-manual-order';
 import { sendQueuedOffer, reconcileOfferSend, type OfferForSend } from './ops-offer-outbox';
 import { validateManualOfferPayload } from './ops-offer-validation';
@@ -43,8 +43,12 @@ export async function handleOpsManualRoute(request:Request,env:Env):Promise<Resp
     const offerId=id(),now=Date.now();
     try{
       const version=await env.FINNBILGLASS_DB.prepare('SELECT COALESCE(MAX(version),0)+1 AS version FROM ops_manual_offers WHERE inquiry_id=?').bind(inquiryId).first<{version:number}>();
-      await env.FINNBILGLASS_DB.prepare("INSERT INTO ops_manual_offers(offer_id,inquiry_id,version,sku,fitment_evidence_ref,equipment_json,total_minor,currency,delivery_note,status,created_by,created_at) VALUES(?,?,?,?,?,?,?,'NOK',?,'DRAFT',?,?)").bind(offerId,inquiryId,version?.version||1,sku,evidence,equipment,total,delivery,staff.email,now).run();
-      await appendOpsAudit(env.FINNBILGLASS_DB,staff.email,'OFFER_CREATED','OFFER',offerId,now);
+      const createOffer=env.FINNBILGLASS_DB.prepare("INSERT INTO ops_manual_offers(offer_id,inquiry_id,version,sku,fitment_evidence_ref,equipment_json,total_minor,currency,delivery_note,status,created_by,created_at) VALUES(?,?,?,?,?,?,?,'NOK',?,'DRAFT',?,?)").bind(offerId,inquiryId,version?.version||1,sku,evidence,equipment,total,delivery,staff.email,now);
+      const audit=env.FINNBILGLASS_DB.prepare(
+        "INSERT INTO ops_staff_activity(event_id,actor_email,action,subject_type,subject_id,created_at,details_json) " +
+        "SELECT ?,?,'OFFER_CREATED','OFFER',?,?,'{}' WHERE changes() = 1"
+      ).bind('audit-offer-created-'+offerId,staff.email,offerId,now);
+      await env.FINNBILGLASS_DB.batch([createOffer,audit]);
       return json({ok:true,offerId,version:version?.version||1,status:'DRAFT'},201);
     }catch{return json({ok:false,error:'TILBUD_KUNNE_IKKE_LAGRES'},503)}
   }
@@ -71,11 +75,11 @@ export async function handleOpsManualRoute(request:Request,env:Env):Promise<Resp
   const accept=/^\/api\/ops\/manual\/offers\/([A-Za-z0-9_-]{8,100})\/accept$/.exec(path);
   if(accept){
     const at=Number(payload.acceptedAt)||Date.now();
-    try{const result=await recordCustomerAcceptance(env.FINNBILGLASS_DB,{offerId:accept[1],actor:staff.email,acceptedAt:at,channel:payload.channel as 'EMAIL'|'PHONE'|'WRITTEN',evidenceReference:String(payload.evidenceReference||'')});if(result.recorded)await appendOpsAudit(env.FINNBILGLASS_DB,staff.email,'OFFER_ACCEPTED','OFFER',accept[1],at);return json({ok:true,...result})}catch(e){return json({ok:false,error:e instanceof Error?e.message:'AKSEPT_FEILET'},409)}
+    try{const result=await recordCustomerAcceptance(env.FINNBILGLASS_DB,{offerId:accept[1],actor:staff.email,acceptedAt:at,channel:payload.channel as 'EMAIL'|'PHONE'|'WRITTEN',evidenceReference:String(payload.evidenceReference||''),audit:true});return json({ok:true,...result})}catch(e){return json({ok:false,error:e instanceof Error?e.message:'AKSEPT_FEILET'},409)}
   }
   const order=/^\/api\/ops\/manual\/offers\/([A-Za-z0-9_-]{8,100})\/order$/.exec(path);
-  if(order){try{const result=await createOrderFromAcceptedOffer(env.FINNBILGLASS_DB,{offerId:order[1],orderId:String(payload.orderId||id()),actor:staff.email,createdAt:Date.now()});if(result.created)await appendOpsAudit(env.FINNBILGLASS_DB,staff.email,'ORDER_CREATED','ORDER',result.order.order_id);return json({ok:true,...result},result.created?201:200)}catch(e){return json({ok:false,error:e instanceof Error?e.message:'ORDRE_FEILET'},409)}}
+  if(order){try{const result=await createOrderFromAcceptedOffer(env.FINNBILGLASS_DB,{offerId:order[1],orderId:String(payload.orderId||id()),actor:staff.email,createdAt:Date.now(),audit:true});return json({ok:true,...result},result.created?201:200)}catch(e){return json({ok:false,error:e instanceof Error?e.message:'ORDRE_FEILET'},409)}}
   const link=/^\/api\/ops\/manual\/orders\/([A-Za-z0-9_-]{8,100})\/payment-link$/.exec(path);
-  if(link){try{const recorded=await recordPortalPaymentLink(env.FINNBILGLASS_DB,{orderId:link[1],reference:String(payload.reference||''),sentAt:Number(payload.sentAt)||Date.now()});if(recorded)await appendOpsAudit(env.FINNBILGLASS_DB,staff.email,'PAYMENT_LINK_RECORDED','ORDER',link[1]);return json({ok:recorded,recorded},recorded?200:409)}catch(e){return json({ok:false,error:e instanceof Error?e.message:'LENKE_FEILET'},409)}}
+  if(link){try{const recorded=await recordPortalPaymentLink(env.FINNBILGLASS_DB,{orderId:link[1],reference:String(payload.reference||''),sentAt:Number(payload.sentAt)||Date.now(),actor:staff.email,audit:true});return json({ok:recorded,recorded},recorded?200:409)}catch(e){return json({ok:false,error:e instanceof Error?e.message:'LENKE_FEILET'},409)}}
   return json({ok:false,error:'IKKE_FUNNET'},404);
 }
