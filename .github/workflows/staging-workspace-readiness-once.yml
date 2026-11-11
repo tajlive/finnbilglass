@@ -108,3 +108,68 @@ jobs:
           print('Staging OPS schema readiness: '+outcome)
           if outcome!='PASS': raise SystemExit('NO_GO: complete reviewed staging schema gate before deployment')
           PY
+
+      - name: Inventory exact staging Worker deployment versions (read-only)
+        env:
+          CF_WORKER_READ_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, urllib.error, urllib.request
+          token=os.environ.get('CF_WORKER_READ_TOKEN','')
+          if not token: raise SystemExit('NO_GO: existing read token unavailable')
+          account='80d5b1d56a3e907150ba7348b6182894'
+          script='finnbilglass-frontrute-staging'
+          base='https://api.cloudflare.com/client/v4/accounts/'+account+'/workers/scripts/'+script
+          def read(path):
+              request=urllib.request.Request(base+path,method='GET',headers={
+                  'Authorization':'Bearer '+token,'Accept':'application/json'})
+              try:
+                  with urllib.request.urlopen(request,timeout=18) as response:
+                      payload=json.loads(response.read(65536))
+              except urllib.error.HTTPError as error:
+                  raise SystemExit('NO_GO: worker deployments read HTTP-'+str(error.code))
+              except Exception:
+                  raise SystemExit('NO_GO: worker deployments metadata unavailable')
+              if payload.get('success') is not True:
+                  raise SystemExit('NO_GO: Cloudflare Worker API error')
+              return payload.get('result') or {}
+          result=read('/deployments?per_page=2')
+          deployments=result.get('deployments',[]) if isinstance(result,dict) else []
+          if not isinstance(deployments,list) or not deployments:
+              raise SystemExit('NO_GO: active staging Worker deployment not found')
+          active=deployments[0]
+          versions=active.get('versions') or []
+          if len(versions)!=1 or float(versions[0].get('percentage',0))!=100:
+              raise SystemExit('NO_GO: unexpected traffic split; review before deploy')
+          active_version=str(versions[0].get('version_id',''))
+          if not re.fullmatch(r'[a-f0-9-]{36}',active_version,re.IGNORECASE):
+              raise SystemExit('NO_GO: invalid active Worker version identifier')
+          details=read('/versions/'+active_version)
+          if details.get('id')!=active_version:
+              raise SystemExit('NO_GO: active Worker version metadata mismatch')
+          etag=((details.get('resources') or {}).get('script') or {}).get('etag')
+          creation=(details.get('metadata') or {}).get('created_on') or 'unknown'
+          source=(details.get('metadata') or {}).get('source') or 'unknown'
+          print('STAGING_WORKER_ACTIVE_VERSION: '+active_version)
+          print('STAGING_WORKER_ACTIVE_CREATED: '+str(creation))
+          print('STAGING_WORKER_ACTIVE_SOURCE: '+str(source))
+          print('STAGING_WORKER_SCRIPT_CONTENT_ETAG_PRESENT: '+str(bool(etag)))
+          # A Cloudflare Worker version ID and content ETag are NOT a Git commit SHA.
+          rollback='UNAVAILABLE'
+          if len(deployments)>1:
+              historical=deployments[1].get('versions') or []
+              if len(historical)==1 and float(historical[0].get('percentage',0))==100:
+                  candidate=str(historical[0].get('version_id',''))
+                  if re.fullmatch(r'[a-f0-9-]{36}',candidate,re.IGNORECASE):
+                      rollback=candidate
+          print('STAGING_WORKER_ROLLBACK_VERSION: '+rollback)
+          notes=['### Live staging Worker inventory (read-only)',
+                 '- Worker: '+script,
+                 '- Active Cloudflare version: '+active_version,
+                 '- Active version created: '+str(creation),
+                 '- Previous single-version deployment: '+rollback,
+                 '- A version ID does not prove it contains PR #57 SHA.',
+                 '- No production Worker or D1 data queried; no deploy.']
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf8') as out:
+              out.write(chr(10).join(notes)+chr(10))
+          PY
