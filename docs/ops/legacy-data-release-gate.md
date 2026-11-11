@@ -42,7 +42,19 @@ Utdata: \`result=PASS\` eller \`result=NO_GO\`, tellere per tabell og generiske 
 5. Ved NO-GO: **ikke deploy**, ikke slett eller nullstill kundedata. Ta vare på D1 Time Travel/backup-referanse og den generiske rapporten, og løs avviket i en smal PR. Sjekk også staging UI med en eldre åpen sak, en lukket sak og et tidligere tilbud/ordre.
 6. Ved PASS: legg inn i [Issue #39](https://github.com/tajlive/finnbilglass/issues/39) kun dato, eksakt commit SHA, antall kontrollerte tabeller, generiske PASS/NO-GO og en intern backup-/rollbackreferanse – ikke rå kunde-/databasedump.
 
-**Viktig:** Verktøyet er en *nødvendig, men ikke tilstrekkelig* kontroll. En grønn syntetisk CI-test er ikke det samme som full staginghandel, autentisert ansatt-E2E eller betalingsverifisering.
+**Viktig:** **R2-inventarer for begge snapshots:** D1 kan ikke bevise at et R2-objekt finnes. Dersom `evidence_case_images` har referanser, må en autorisert operatør samle en komplett, tidskonsistent liste av tilgjengelige R2-objektnøkler fra riktig bucket i to **separate beskyttede, lokale** UTF-8 filer (én nøkkel per linje, inkl. miniatyrnøkler). Disse filene skal aldri publiseres i GitHub/CI. Ved eksport/migrasjon uten R2-snapshot på samme tidspunkt kan resultatet ikke brukes til GO. Kjør:
+
+```sh
+python3 scripts/maintenance/legacy_jobs_release_guard.py \\
+  --before /secure/offline/before.sqlite \\
+  --after /secure/offline/after.sqlite \\
+  --r2-inventory-before /secure/offline/r2-before-keys.txt \\
+  --r2-inventory-after /secure/offline/r2-after-keys.txt
+```
+
+Verktøyet returnerer `R2_INVENTORY_REQUIRED` hvis bilder finnes uten tilhørende inventory, eller `R2_MISSING_OBJECT_REFERENCES` dersom objekter mangler. Ingen faktiske R2-kall utføres. Dette er en kontroll av **referert objekt-eksistens**, ikke en verifikasjon av bildekvalitet eller byteinnhold. Den utvidede verifiseringen inkluderer også `ops_messages`, `ops_mail_sync_state`, `evidence_cases`, `evidence_case_images`, `evidence_case_review_events` og andre historiske tabeller med beskyttede prefikser.
+
+Verktøyet er en *nødvendig, men ikke tilstrekkelig* kontroll. En grønn syntetisk CI-test er ikke det samme som full staginghandel, autentisert ansatt-E2E eller betalingsverifisering.
 
 ## Videre produksjonsgate
 - [ ] Godkjent rollback- og D1-backupstrategi; eksakt oppdatert kandidat-SHA.
