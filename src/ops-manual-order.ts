@@ -41,6 +41,31 @@ function assertTime(value: number): void {
   if (!Number.isSafeInteger(value) || value <= 0) throw new Error('OPS_MANUAL_INVALID_TIMESTAMP');
 }
 
+type AuditAction = 'OFFER_ACCEPTED' | 'ORDER_CREATED' | 'PAYMENT_LINK_RECORDED';
+type AuditInfo = {
+  eventId: string;
+  actor: string;
+  action: AuditAction;
+  subjectType: 'OFFER' | 'ORDER';
+  subjectId: string;
+  at: number;
+};
+
+/** Batch is a single D1 transaction. The audit INSERT only executes if the
+ * previous write changed one row. A failed audit rolls back the business write.
+ * Standalone service callers may omit audit; HTTP handlers MUST enable it.
+ */
+async function persistWithAudit(db: D1Database, mutation: D1PreparedStatement,
+    audit: AuditInfo | null) {
+  if (!audit) return mutation.run();
+  const event = db.prepare(
+    "INSERT INTO ops_staff_activity(event_id,actor_email,action,subject_type,subject_id,created_at,details_json) " +
+    "SELECT ?,?,?,?,?,?,'{}' WHERE changes() = 1"
+  ).bind(audit.eventId,audit.actor,audit.action,audit.subjectType,audit.subjectId,audit.at);
+  const results = await db.batch([mutation,event]);
+  return results[0];
+}
+
 /** A staff member records customer acceptance verified in an existing channel. */
 export async function recordCustomerAcceptance(
   db: D1Database,
@@ -50,6 +75,7 @@ export async function recordCustomerAcceptance(
     acceptedAt: number;
     channel: ValidChannel;
     evidenceReference: string;
+    audit?: boolean;
   }
 ): Promise<{ offerId: string; recorded: boolean }> {
   assertId(input.offerId);
@@ -63,11 +89,15 @@ export async function recordCustomerAcceptance(
     throw new Error('OPS_MANUAL_ACCEPTANCE_EVIDENCE_REQUIRED');
   }
   const evidence = input.evidenceReference.trim();
-  const result = await db.prepare(
+  const write = db.prepare(
     "UPDATE ops_manual_offers SET status='ACCEPTED',accepted_at=?," +
     'accepted_channel=?,acceptance_ref=? ' +
     "WHERE offer_id=? AND status='SENT' AND sent_at IS NOT NULL AND sent_at<=?"
-  ).bind(input.acceptedAt,input.channel,evidence,input.offerId,input.acceptedAt).run();
+  ).bind(input.acceptedAt,input.channel,evidence,input.offerId,input.acceptedAt);
+  const result = await persistWithAudit(db,write,input.audit?{
+    eventId:'audit-offer-accepted-'+input.offerId,actor:input.actor,
+    action:'OFFER_ACCEPTED',subjectType:'OFFER',subjectId:input.offerId,at:input.acceptedAt
+  }:null);
   if (result.meta.changes === 1) return { offerId: input.offerId, recorded: true };
   const prior = await db.prepare(
     'SELECT offer_id,inquiry_id,sku,total_minor,currency,status,accepted_at,' +
@@ -85,19 +115,23 @@ export async function recordCustomerAcceptance(
  */
 export async function createOrderFromAcceptedOffer(
   db: D1Database,
-  input: { offerId: string; orderId: string; actor: string; createdAt: number }
+  input: { offerId: string; orderId: string; actor: string; createdAt: number; audit?: boolean }
 ): Promise<{ order: ManualOrderRow; created: boolean }> {
   assertId(input.offerId);
   assertId(input.orderId);
   assertActor(input.actor);
   assertTime(input.createdAt);
-  const write = await db.prepare(
+  const statement = db.prepare(
     'INSERT INTO ops_manual_orders (order_id,inquiry_id,offer_id,sku,total_minor,' +
     'currency,created_at,created_by) ' +
     'SELECT ?,inquiry_id,offer_id,sku,total_minor,currency,?,? FROM ops_manual_offers ' +
     "WHERE offer_id=? AND status='ACCEPTED' AND accepted_at IS NOT NULL " +
     'ON CONFLICT(offer_id) DO NOTHING'
-  ).bind(input.orderId,input.createdAt,input.actor,input.offerId).run();
+  ).bind(input.orderId,input.createdAt,input.actor,input.offerId);
+  const write = await persistWithAudit(db,statement,input.audit?{
+    eventId:'audit-order-created-'+input.orderId,actor:input.actor,
+    action:'ORDER_CREATED',subjectType:'ORDER',subjectId:input.orderId,at:input.createdAt
+  }:null);
   const order = await db.prepare(
     'SELECT order_id,inquiry_id,offer_id,sku,total_minor,currency,status ' +
     'FROM ops_manual_orders WHERE offer_id=?'
@@ -111,17 +145,24 @@ export async function createOrderFromAcceptedOffer(
  */
 export async function recordPortalPaymentLink(
   db: D1Database,
-  input: { orderId: string; reference: string; sentAt: number }
+  input: { orderId: string; reference: string; sentAt: number; actor?: string; audit?: boolean }
 ): Promise<boolean> {
   assertId(input.orderId);
   assertTime(input.sentAt);
   if (typeof input.reference !== 'string' ||
       input.reference.trim().length < 8 || input.reference.length > 200 ||
       /[\r\n]/.test(input.reference)) throw new Error('OPS_MANUAL_LINK_REF_REQUIRED');
-  const update = await db.prepare(
+  if (input.audit && (!input.actor || !VALID_ACTOR.test(input.actor))) {
+    throw new Error('OPS_MANUAL_INVALID_ACTOR');
+  }
+  const statement = db.prepare(
     "UPDATE ops_manual_orders SET status='PAYMENT_LINK_SENT'," +
     'payment_link_reference=?,payment_link_sent_at=? ' +
     "WHERE order_id=? AND status='ORDER_CREATED'"
-  ).bind(input.reference.trim(),input.sentAt,input.orderId).run();
+  ).bind(input.reference.trim(),input.sentAt,input.orderId);
+  const update = await persistWithAudit(db,statement,input.audit?{
+    eventId:'audit-payment-link-'+input.orderId,actor:input.actor!,
+    action:'PAYMENT_LINK_RECORDED',subjectType:'ORDER',subjectId:input.orderId,at:input.sentAt
+  }:null);
   return Number(update.meta.changes ?? 0) === 1;
 }
