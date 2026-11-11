@@ -49,7 +49,17 @@ export async function recordMessage(env: Env, message: GmailSafeMessage, mailbox
   const emailTokens = (value: string) => [...new Set((value.match(/[A-Z0-9.!#$%&'*+/=?^_{}|~-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi) || []).map(e => e.toLowerCase()))];
   const fromTokens = emailTokens(headers.from || '');
   const toTokens = emailTokens(headers.to || '');
-  const hasCompanySender = fromTokens.some(e => allowed.includes(e));
+  // A manually sent Gmail message may use the authenticated Workspace mailbox
+  // as From, even when customer inbound mail uses a separate support alias.
+  // Only trust the exact previously approved company mailbox; never expand the
+  // allowed recipient aliases or import unrelated direct-to-mailbox messages.
+  const workspaceMailbox = String(env.OPS_GMAIL_EXPECTED_MAILBOX || '').trim().toLowerCase();
+  const signedWorkspaceSender =
+    env.OPS_WORKSPACE_OAUTH_ENABLED === 'true'
+    && /^[a-z0-9._%+-]+@finnbilglass\\.no$/.test(workspaceMailbox)
+    && mailbox.trim().toLowerCase() === workspaceMailbox;
+  const allowedSent = signedWorkspaceSender ? [...allowed, workspaceMailbox] : allowed;
+  const hasCompanySender = fromTokens.some(e => allowedSent.includes(e));
   const hasCompanyRecipient = toTokens.some(e => allowed.includes(e));
   const sent = message.labelIds?.includes('SENT') === true;
   const inbox = message.labelIds?.includes('INBOX') === true;
