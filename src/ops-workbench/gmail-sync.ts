@@ -119,19 +119,29 @@ export function extractEmailHeaders(message: GmailMessage): Record<string, strin
   return headers;
 }
 
+/** Gmail bodies are base64url-encoded UTF-8 bytes, not Latin-1 JS strings.
+ * Using atob() alone garbles Norwegian characters such as æ/ø/å. */
+function decodeGmailUtf8(data: string): string {
+  const raw = data.replace(/-/g, '+').replace(/_/g, '/');
+  const binary = atob(raw.padEnd(Math.ceil(raw.length / 4) * 4, '='));
+  return new TextDecoder('utf-8', {fatal: false}).decode(
+    Uint8Array.from(binary, character => character.charCodeAt(0))
+  );
+}
+
 export function extractEmailBody(message: GmailMessage): { text: string; html: string } {
   let text = '';
   let html = '';
 
   const decodePart = (part: { mimeType?: string; body: { data?: string }; parts?: Array<any> }): void => {
     if (!part.body.data) return;
-    const decoded = atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+    const decoded = decodeGmailUtf8(part.body.data);
     if (part.mimeType === 'text/plain') text = decoded;
     else if (part.mimeType === 'text/html') html = decoded;
   };
 
   if (message.payload.body?.data) {
-    const decoded = atob(message.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+    const decoded = decodeGmailUtf8(message.payload.body.data);
     if (message.payload.mimeType === 'text/plain') text = decoded;
     else if (message.payload.mimeType === 'text/html') html = decoded;
   }
