@@ -121,3 +121,23 @@ test('concurrent clicks can reserve at most one provider send',async()=>{
    assert.equal(f.outbox().status,'SENT');assert.equal(f.eventCount(),1);
  }finally{globalThis.fetch=original;f.close()}
 });
+
+test('customer email shows manual product name, description and NOK price but no internal SKU marker', async () => {
+  const f = fixture(), original = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({id:'resend_msg_manual_name'}),{status:200});
+  try {
+    const offer = {...f.offer, sku:'UTEN-VARENUMMER', total_minor:249000,
+      equipment_json:JSON.stringify({offerProduct:{
+        name:'Frontrute VW T6',partNumber:null,description:'Med regnsensor',source:'MANUAL'
+      }})
+    };
+    const result = await sendQueuedOffer(f.env,offer,'admin@example.com');
+    assert.equal(result.ok,true);
+    const text = f.outbox().text_body;
+    assert.match(text,/Frontrute VW T6/);
+    assert.match(text,/Med regnsensor/);
+    assert.match(text,/2490\.00 NOK/);
+    assert.doesNotMatch(text,/UTEN-VARENUMMER/);
+    assert.doesNotMatch(text,/Varenummer: UTEN/);
+  } finally {globalThis.fetch=original;f.close();}
+});

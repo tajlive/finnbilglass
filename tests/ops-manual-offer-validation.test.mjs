@@ -32,6 +32,8 @@ test('blank offer fields return the exact first field, before any database write
 test('field-by-field errors are actionable in Norwegian', () => {
   const cases = [
     [{ ...complete, sku: '  ' }, 'sku'],
+    [{ ...complete, productName: 'x'.repeat(161) }, 'productName'],
+    [{ ...complete, productDescription: 'x'.repeat(501) }, 'productDescription'],
     [{ ...complete, fitmentEvidenceRef: 'short' }, 'fitmentEvidenceRef'],
     [{ ...complete, totalMinor: '' }, 'totalMinor'],
     [{ ...complete, totalMinor: 10.5 }, 'totalMinor'],
@@ -49,11 +51,49 @@ test('field-by-field errors are actionable in Norwegian', () => {
 test('staging offer form has visible labels and an inline, accessible error', async () => {
   const response = operationsCenterUi();
   const html = await response.text();
-  for (const label of ['Kontrollert SKU', 'Fitment-bevisreferanse', 'Totalpris i øre', 'Frakt og levering']) {
+  for (const label of ['Varenummer (valgfritt)', 'Varenavn (valgfritt)', 'Beskrivelse (valgfritt)', 'Totalpris i kroner', 'Grunnlag for glassvalg', 'Frakt og levering']) {
     assert.match(html, new RegExp(label));
   }
   assert.match(html, /id="offer-form-error" role="alert"/);
   assert.match(html, /offerFieldError\(d\.field,d\.message/);
   assert.match(html, /offerFieldError\('sku'/);
   assert.match(html, /offerFieldError\('totalMinor'/);
+});
+
+test('manual name-only product creates a clear non-catalogue reference and keeps real product details', () => {
+  const result = validateManualOfferPayload({
+    sku: '',
+    productName: 'Frontrute VW Transporter T6',
+    productDescription: 'Med regnsensor, uten kamerafeste',
+    fitmentEvidenceRef: 'Manuell kontroll ved bestilling',
+    totalMinor: 249000,
+    deliveryNote: 'Frakt etter avtale',
+    equipment: { mounting: 'clamps' },
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.sku, 'UTEN-VARENUMMER');
+  const saved = JSON.parse(result.equipment);
+  assert.equal(saved.offerProduct.name, 'Frontrute VW Transporter T6');
+  assert.equal(saved.offerProduct.partNumber, null);
+  assert.equal(saved.offerProduct.description, 'Med regnsensor, uten kamerafeste');
+  assert.equal(saved.mounting, 'clamps');
+});
+
+test('number-only and name+number products can be entered without requiring a catalogue match', () => {
+  const number = validateManualOfferPayload({...complete, sku:'GL-1234'});
+  assert.equal(number.ok, true);
+  assert.equal(number.sku, 'GL-1234');
+  assert.equal(number.equipment, '{}');
+  const both = validateManualOfferPayload({...complete, sku:'GL-1234', productName:'Frontrute'});
+  assert.equal(both.ok,true);
+  assert.equal(JSON.parse(both.equipment).offerProduct.partNumber,'GL-1234');
+  assert.equal(JSON.parse(both.equipment).offerProduct.name,'Frontrute');
+});
+
+test('offer form requests NOK price, not an amount in øre, and supports both product fields', async () => {
+  const html = await operationsCenterUi().text();
+  assert.match(html, /id="offer-name"/);
+  assert.match(html, /id="offer-description"/);
+  assert.match(html, /price=Math\\.round\\(Number\\(normalisedPrice\\)\\*100\\)/);
+  assert.match(html, /productName:productName,productDescription:productDescription/);
 });
