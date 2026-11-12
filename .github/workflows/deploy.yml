@@ -85,6 +85,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OPS_ACCESS_AUD: ${{ secrets.OPS_ACCESS_AUD }}
         run: |
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
@@ -124,19 +125,46 @@ jobs:
           const secrets = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP+'/fbg-prod-secret-names.json','utf8'));
           if (!Array.isArray(secrets)) throw new Error('UNEXPECTED_WORKER_SECRET_LIST');
           const names = new Set(secrets.filter(s => s.type === 'secret_text').map(s => s.name));
-          for (const key of ['SVV_API_KEY','RESEND_API_KEY','OPS_ACCESS_AUD']) {
+          for (const key of ['SVV_API_KEY','RESEND_API_KEY']) {
             if (!names.has(key)) {
               console.error('REQUIRED_PRODUCTION_WORKER_SECRET_MISSING: '+key);
               process.exitCode=1;
             }
           }
+          // An existing Worker secret OR an environment secret supplied for atomic deploy.
+          const accessAud = (process.env.OPS_ACCESS_AUD||'').trim();
+          if (accessAud && accessAud.length < 20) {
+            console.error('PRODUCTION_ACCESS_AUD_INVALID_LENGTH');
+            process.exitCode=1;
+          }
+          if (!names.has('OPS_ACCESS_AUD') && !accessAud) {
+            console.error('REQUIRED_PRODUCTION_ACCESS_AUD_NOT_CONFIGURED');
+            process.exitCode=1;
+          }
           if (!process.exitCode) console.log('PASS: approved config and required secret names exist; no Worker writes');
           NODE
-      - name: Deploy Worker + assets
+      - name: Deploy Worker + assets (one authorized production deployment)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler deploy
+          OPS_ACCESS_AUD: ${{ secrets.OPS_ACCESS_AUD }}
+        run: |
+          set -euo pipefail
+          if [ -n "${OPS_ACCESS_AUD:-}" ]; then
+            # Secret provided by GitHub protected production environment.
+            # Never log it or put it into the repository; other secrets stay intact.
+            umask 077
+            node --input-type=module -e '
+              import fs from "node:fs";
+              const file = process.env.RUNNER_TEMP + "/fbg-access-secret.json";
+              fs.writeFileSync(file, JSON.stringify({OPS_ACCESS_AUD:process.env.OPS_ACCESS_AUD}), {mode:0o600});
+            '
+            trap 'rm -f "$RUNNER_TEMP/fbg-access-secret.json"' EXIT
+            npx wrangler deploy --secrets-file "$RUNNER_TEMP/fbg-access-secret.json"
+          else
+            # Existing deployed OPS_ACCESS_AUD secret verified in preflight.
+            npx wrangler deploy
+          fi
       - name: Krev godkjent forside på apex og www (regresjonsvakt)
         run: |
           for i in 1 2 3 4 5; do
