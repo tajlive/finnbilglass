@@ -58,7 +58,9 @@ invocation_logs = true
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/", "/support/evidence", "/ops"]
+# OPS must reach the Worker for both exact paths and nested employee/API routes.
+# Otherwise Static Assets navigation can bypass src/index.ts for subpaths.
+run_worker_first = ["/", "/support/evidence", "/ops", "/ops/*", "/api/ops", "/api/ops/*"]
 
 # ── Custom domains (opprettes av wrangler ved deploy) ──────────
 # apex + www serverer landingsside inntil Pages-frontenden tar over; api = matcher
