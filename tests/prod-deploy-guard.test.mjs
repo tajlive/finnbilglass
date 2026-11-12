@@ -30,6 +30,13 @@ test('all production writes are in manual gated deploy job, not on push',()=>{
   assert.doesNotMatch(job,/\bwrangler\s+d1\s+execute\b/);
 });
 
+test('production Access AUD can be provided atomically with code without separate secret deployment',()=>{
+  assert.match(job,/OPS_ACCESS_AUD: \$\{\{ secrets\.OPS_ACCESS_AUD \}\}/);
+  assert.match(job,/wrangler deploy --secrets-file "\$RUNNER_TEMP\/fbg-access-secret\.json"/);
+  assert.match(job,/REQUIRED_PRODUCTION_ACCESS_AUD_NOT_CONFIGURED/);
+  assert.match(job,/trap 'rm -f "\$RUNNER_TEMP\/fbg-access-secret\.json"' EXIT/);
+  assert.doesNotMatch(job,/\bwrangler\s+versions\s+secret\s+put\b/);
+});
 
 test('enabled production OPS routes must run Worker first for exact and nested paths',()=>{
   const toml = readFileSync(new URL('../wrangler.toml',import.meta.url),'utf8');
