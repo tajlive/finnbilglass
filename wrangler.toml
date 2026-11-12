@@ -34,6 +34,20 @@ EVIDENCE_UPLOAD_ENABLED = "true"
 EVIDENCE_REVIEW_ENABLED = "false"
 EVIDENCE_STATUS_CHANGE_ENABLED = "true"
 
+# First MANUAL sale in production. Fail closed unless Cloudflare Access
+# verifies a signed JWT for this app and the user has an ACTIVE D1 membership.
+# Do not merge this config until production D1 0040/0041/0042/0044 and
+# relevant supporting schema, prod Access audience and rollback are verified.
+OPS_STAFF_PORTAL_ENABLED = "true"
+OPS_MANUAL_ORDERS_ENABLED = "true"
+OPS_WORKBENCH_ENABLED = "true"
+OPS_ACCESS_TEAM_DOMAIN = "tomarnejensen.cloudflareaccess.com"
+# OPS_ACCESS_AUD is configured as a Worker secret for the verified
+# PRODUCTION Access application; no hardcoded/test audience is permitted.
+# Resend uses existing RESEND_API_KEY Worker secret; confirm sender before GO.
+GMAIL_SYNC_ENABLED = "false"
+OPS_WORKSPACE_OAUTH_ENABLED = "false"
+
 # ── Observability (Tom 2026-08-19): Workers Logs-lagring AV (kostnad),
 #    invocation_logs PÅ (wrangler tail / debugging) ──────────────────
 [observability.logs]
@@ -44,7 +58,9 @@ invocation_logs = true
 [assets]
 directory = "./public"
 binding = "ASSETS"
-run_worker_first = ["/", "/support/evidence", "/ops"]
+# OPS must reach the Worker for both exact paths and nested employee/API routes.
+# Otherwise Static Assets navigation can bypass src/index.ts for subpaths.
+run_worker_first = ["/", "/support/evidence", "/ops", "/ops/*", "/api/ops", "/api/ops/*"]
 
 # ── Custom domains (opprettes av wrangler ved deploy) ──────────
 # apex + www serverer landingsside inntil Pages-frontenden tar over; api = matcher

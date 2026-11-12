@@ -37,3 +37,18 @@ test('production Access AUD can be provided atomically with code without separat
   assert.match(job,/trap 'rm -f "\$RUNNER_TEMP\/fbg-access-secret\.json"' EXIT/);
   assert.doesNotMatch(job,/\bwrangler\s+versions\s+secret\s+put\b/);
 });
+
+test('enabled production OPS routes must run Worker first for exact and nested paths',()=>{
+  const toml = readFileSync(new URL('../wrangler.toml',import.meta.url),'utf8');
+  if (!/^\s*OPS_STAFF_PORTAL_ENABLED\s*=\s*"true"\s*$/m.test(toml)) return;
+  const line = toml.match(/^\s*run_worker_first\s*=\s*\[([^\r\n]+)\]\s*$/m)?.[1];
+  assert.ok(line,'run_worker_first routes must exist');
+  const routes = new Set([...line.matchAll(/"([^"]+)"/g)].map(match => match[1]));
+  for(const needed of ['/ops','/ops/*','/api/ops','/api/ops/*']){
+    assert.ok(routes.has(needed),'missing Worker-first path: '+needed);
+  }
+  assert.ok(routes.has('/'),'keep first-page Worker handling');
+  assert.ok(![...routes].some(route => route.startsWith('!') &&
+    (route.includes('/ops')||route.includes('/api/ops'))),
+  'cannot exclude OPS paths from Worker-first auth');
+});
