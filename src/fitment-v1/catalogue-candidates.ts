@@ -148,9 +148,17 @@ export function matchClassDCandidates(index: CatalogueCandidate[], make: string,
   // Kandidatkvalitet: ekskluder bak/side-ruter OG tilbehør (PY/GU/K-lister, klips-kit — kjent katalogfelle)
   const erBakSide = (c: CatalogueCandidate) => /BAKRUTE|SIDERUTE|DØRRUTE|DORRUTE|BAKRUT|SIDERUT/.test(c.varenavn);
   const erTilbehor = (c: CatalogueCandidate) => /(PYT|PYB|PYV|PYH|PYS|PYC|PYKIT|PY|GU|GUM)$/.test(c.varenr) || /^\d{3,5}K$/.test(c.varenr) || /PYNTELIST|GUMMILIST|KLIPS|PYNTELISTE/.test(c.varenavn);
+  // Position in a numeric Eurocode: A=front, B=rear, F=vent, L/R=door,
+  // S=side. A clear non-A position is structural negative evidence for a
+  // WINDSCREEN search, even when free-text 'varenavn' omits glass position.
+  // Codes without a recognised numeric prefix remain UNKNOWN: do not guess.
+  const erDokumentertAnnenPosisjon = (c: CatalogueCandidate) => {
+    const position = String(c.eurokode ?? '').trim().toUpperCase().match(/^\d{3,5}([ABFLRS])/);
+    return position != null && position[1] !== 'A';
+  };
   const familyKey = fam.merke + ' ' + fam.familie;
   // Exact family boundary: FIAT 500 must never include FIAT 500-ELECTRIC.
-  const hits = index.filter((c) => (c.matchReason === familyKey || c.matchReason.startsWith(familyKey + ' ')) && !erBakSide(c) && !erTilbehor(c));
+  const hits = index.filter((c) => (c.matchReason === familyKey || c.matchReason.startsWith(familyKey + ' ')) && !erBakSide(c) && !erTilbehor(c) && !erDokumentertAnnenPosisjon(c));
   if (year == null) return hits.slice(0, 6);
   return hits.filter((c) => {
     const y = year;
