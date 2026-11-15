@@ -12,9 +12,11 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
+import { createHash } from 'node:crypto';
 import { ApplicationResolver } from '../src/fitment-v1/application-resolver.js';
 import { buildDefaultGenerationRegistry } from '../src/fitment-v1/generation-registry.js';
-import { buildClassDCandidates, matchClassDCandidates } from '../src/fitment-v1/catalogue-candidates.js';
+import { buildClassDCandidates, matchClassDCandidates, FAMILIER } from '../src/fitment-v1/catalogue-candidates.js';
+import { parseEurocodePosition } from '../src/fitment-v1/normalization/eurocode-position.js';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const SAMPLE_COUNT = 100;
@@ -75,6 +77,20 @@ export function runOffline100Benchmark() {
     noNetworkOrGlavistaUsed: true,
     newFamiliesObserved: { ASX: 0, 'CX-5': 0, 'FIAT-500': 0, 'FIAT-500-ELECTRIC': 0, 'VW-UP': 0 },
     noCandidateBrands: {},
+    noCandidateReasons: {},
+    unclassifiedUniqueCodeHashes: {},
+  };
+  // Reason codes explain missing *candidates*, not why a specific glass is
+  // correct. Derived deterministically from the same frozen candidate index.
+  const classifyGap = (make, model, year) => {
+    const family = FAMILIER.find(f => f.merke === make && f.re.test(model));
+    if (!family) return FAMILIER.some(f => f.merke === make) ? 'MODEL_FAMILY_NOT_SUPPORTED' : 'BRAND_NOT_SUPPORTED';
+    const familyKey = family.merke + ' ' + family.familie;
+    const familyRows = index.filter(c => c.matchReason === familyKey || c.matchReason.startsWith(familyKey + ' '));
+    if (!familyRows.length) return 'CATALOGUE_HAS_NO_FAMILY_ROWS';
+    const anyYear = matchClassDCandidates(index, make, model, null);
+    if (!anyYear.length) return 'NO_WINDSCREEN_ROWS_AFTER_FILTER';
+    return 'YEAR_OUTSIDE_DOCUMENTED_CATALOGUE_WINDOW';
   };
   const seenEuro = new Set();
   for (const v of sampled) {
@@ -90,6 +106,8 @@ export function runOffline100Benchmark() {
     if (!matches.length) {
       stats.withoutGlassCandidates++;
       stats.noCandidateBrands[make] = (stats.noCandidateBrands[make] ?? 0) + 1;
+      const reason = classifyGap(make,model,year);
+      stats.noCandidateReasons[reason] = (stats.noCandidateReasons[reason] ?? 0) + 1;
       continue;
     }
     stats.withGlassCandidates++;
@@ -103,10 +121,14 @@ export function runOffline100Benchmark() {
       if (!c.eurokode) stats.missingEurocodeRows++;
       else {
         seenEuro.add(c.eurokode);
-        if (!/^\d{3,5}A[A-Z0-9]/i.test(c.eurokode)) stats.suspiciousNonWindshieldCodes++;
-        const position = c.eurokode.trim().toUpperCase().match(/^\d{3,5}([ABFLRS])/);
-        if (position && position[1] !== 'A') stats.knownOtherGlassPositionCodes++;
-        if (!position) stats.unclassifiedEurocodeFormats++;
+        const parsed = parseEurocodePosition(c.eurokode);
+        if (parsed.position !== 'WINDSCREEN') stats.suspiciousNonWindshieldCodes++;
+        if (parsed.position === 'OTHER') stats.knownOtherGlassPositionCodes++;
+        if (parsed.position === 'UNKNOWN') {
+          stats.unclassifiedEurocodeFormats++;
+          const digest = createHash('sha256').update(parsed.normalized ?? '').digest('hex').slice(0, 12);
+          stats.unclassifiedUniqueCodeHashes[digest] = (stats.unclassifiedUniqueCodeHashes[digest] ?? 0) + 1;
+        }
       }
       if (c.features.length) stats.candidateWithEquipmentEvidence++;
     }
@@ -119,6 +141,11 @@ export function runOffline100Benchmark() {
     if (make === 'VW' && /^UP!?\b/.test(model)) stats.newFamiliesObserved['VW-UP']++;
   }
   stats.uniqueCandidateEurocodes = seenEuro.size;
+  stats.noCandidateReasons = Object.fromEntries(Object.entries(stats.noCandidateReasons).sort());
+  stats.unclassifiedUniqueCodeHashes = Object.fromEntries(Object.entries(stats.unclassifiedUniqueCodeHashes).sort());
+  if (Object.values(stats.noCandidateReasons).reduce((sum, n) => sum + n, 0) !== stats.withoutGlassCandidates) {
+    throw new Error('Missing-reason accounting must explain every zero-candidate car');
+  }
   if (stats.inputCompleteness !== SAMPLE_COUNT) throw new Error('Missing make, model or year in sample');
   if (stats.withGlassCandidates + stats.withoutGlassCandidates !== SAMPLE_COUNT) {
     throw new Error('Coverage accounting does not equal 100');
