@@ -11,7 +11,7 @@ Tjenesten tar inn data som argumenter. Den henter ingenting selv. Formålet er b
 ## Levert kode
 
 - `src/fitment-v1/crossref/offline.ts`: ren `compareEurocodeCandidates(...)` med felter for bil, egne produktkandidater, kildeobservasjoner, proveniens og lisensstatus.
-- `tests/eurocode-crossref.test.mjs`: 12 avgrensede tester for identiske koder, prefikslikhet, 1B/1T, facelift/generasjon, elbilvariant, ufullstendig kode, null/ukjent og uten eksterne kataloger.
+- `tests/eurocode-crossref.test.mjs`: 13 avgrensede tester for identiske koder, prefikslikhet, 1B/1T, facelift/generasjon, elbilvariant, ufullstendig kode, null/ukjent, eksplisitte feature-konflikter og uten eksterne kataloger.
 - `package.json`: `npm run test:eurocode-crossref` er lagt inn i `npm run qa`.
 
 Testkommandoer:
