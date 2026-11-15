@@ -103,8 +103,8 @@ export function runOffline100Benchmark() {
       if (!c.eurokode) stats.missingEurocodeRows++;
       else {
         seenEuro.add(c.eurokode);
-        if (!/^\\d{3,5}A[A-Z0-9]/i.test(c.eurokode)) stats.suspiciousNonWindshieldCodes++;
-        const position = c.eurokode.trim().toUpperCase().match(/^\\d{3,5}([ABFLRS])/);
+        if (!/^\d{3,5}A[A-Z0-9]/i.test(c.eurokode)) stats.suspiciousNonWindshieldCodes++;
+        const position = c.eurokode.trim().toUpperCase().match(/^\d{3,5}([ABFLRS])/);
         if (position && position[1] !== 'A') stats.knownOtherGlassPositionCodes++;
         if (!position) stats.unclassifiedEurocodeFormats++;
       }
