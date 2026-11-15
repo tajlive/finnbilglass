@@ -1,4 +1,5 @@
 import { parseEurocodePosition } from './normalization/eurocode-position.js';
+import { parseCatalogueComment, type ParsedFeatureComment } from './normalization/catalogue-feature-comment.js';
 
 /**
  * fitment-v1/catalogue-candidates — CLASS_D-kandidatgenerator fra gt-auto-prislisten.
@@ -11,6 +12,9 @@ export interface CatalogueCandidate {
   varenr: string;
   varenavn: string;
   features: string[];
+  /** Weak tri-state product-description hints, never verified vehicle equipment. */
+  featureEvidence?: ParsedFeatureComment;
+  generationHint?: string | null;
   source: 'GT_AUTO_PRISLISTE';
   klassifisering: 'CLASS_D_CATALOGUE_CANDIDATE';
   matchReason: string;
@@ -101,24 +105,14 @@ function parseRow(r: { varenr: string; eurokode?: string | null; varenavn?: stri
     if (fam.merke === merke && fam.re.test(varenavn)) {
       const { fra, til } = aarIntervall(varenavn);
       // generasjons-hint: «GOLF II», «PASSAT B8», «T5»
-      const g = varenavn.match(/\b(?:GOLF|PASSAT|POLO)\s+([IVX]{1,3})\b/) ?? varenavn.match(/\bPASSAT\s+(B\d)\b/) ?? varenavn.match(/\b(T\d)\b/);
+      const g = varenavn.match(/\b(?:GOLF|PASSAT|POLO)\s+([IVX]{1,4})\b/) ??
+        varenavn.match(/\bPASSAT\s+(B\d)\b/) ??
+        varenavn.match(/\b(T\d(?:\.1)?)\b/) ??
+        varenavn.match(/\bCX[-\s]?5\s+(II|I)\b/);
       return { varenr: r.varenr, eurokode: r.eurokode ?? '', varenavn, merke, familie: fam.familie, aarFra: fra, aarTil: til, generasjon: g ? g[1] : null };
     }
   }
   return null;
-}
-
-function featuresFraKommentar(kommentar?: string | null): string[] {
-  const k = String(kommentar ?? '').toUpperCase();
-  const f: string[] = [];
-  if (/EMB=10\d/.test(k)) f.push('encapsulated');
-  if (/ANTENNEFESTE|ANTENNE/.test(k)) f.push('antenna');
-  if (/REGN|SENSOR|REGNSENSOR/.test(k)) f.push('rainSensor');
-  if (/CAMERA|KAMERA|LDW/.test(k)) f.push('camera');
-  if (/COATED|SOLAR|IR-/.test(k)) f.push('coated');
-  if (/HEATED|OPPVARMET/.test(k)) f.push('heated');
-  if (/ACOUSTIC|AKUSTISK|NOISE/.test(k)) f.push('acoustic');
-  return f;
 }
 
 /** CLASS_D-kandidatindeks bygget fra gt-auto-prisliste-radene. */
@@ -127,11 +121,14 @@ export function buildClassDCandidates(rows: { varenr: string; eurokode?: string 
   for (const r of rows) {
     const p = parseRow(r);
     if (!p) continue;
+    const featureEvidence = parseCatalogueComment(r.kommentar);
     out.push({
       eurokode: p.eurokode,
       varenr: p.varenr,
       varenavn: p.varenavn,
-      features: featuresFraKommentar(r.kommentar),
+      features: Object.entries(featureEvidence.states).filter(([, value]) => value === true).map(([key]) => key),
+      featureEvidence,
+      generationHint: p.generasjon,
       source: 'GT_AUTO_PRISLISTE',
       klassifisering: 'CLASS_D_CATALOGUE_CANDIDATE',
       matchReason: `${p.merke} ${p.familie}${p.generasjon ? ' ' + p.generasjon : ''}${p.aarFra ? ' ' + p.aarFra + '–' + (p.aarTil ?? '') : ''}`,
@@ -141,7 +138,10 @@ export function buildClassDCandidates(rows: { varenr: string; eurokode?: string 
 }
 
 /** Finner CLASS_D-kandidater for en bil (make, model, year). Aldri fasit. */
-export function matchClassDCandidates(index: CatalogueCandidate[], make: string, model: string, year: number | null): CatalogueCandidate[] {
+export function matchClassDCandidates(
+  index: CatalogueCandidate[], make: string, model: string, year: number | null,
+  options: { confirmedGeneration?: string | null } = {},
+): CatalogueCandidate[] {
   const rawMake = make.toUpperCase().trim();
   const mk = Object.entries(MERKE_ALIAS).find(([, aliases]) => aliases.includes(rawMake))?.[0] ?? rawMake;
   const mo = model.toUpperCase();
@@ -156,9 +156,19 @@ export function matchClassDCandidates(index: CatalogueCandidate[], make: string,
   // Codes without a recognised numeric prefix remain UNKNOWN: do not guess.
   const erDokumentertAnnenPosisjon = (c: CatalogueCandidate) =>
     parseEurocodePosition(c.eurokode).position === 'OTHER';
+  // Only explicitly confirmed generation may exclude a candidate. A generation
+  // guessed from model year is merely a possible application, not vehicle proof.
+  const normalizeGeneration = (g: string) => {
+    const upper = g.trim().toUpperCase();
+    return (upper.match(/\b(?:GOLF|POLO|PASSAT|CX[-\s]?5)\s+(B\d+|T\d+(?:\.1)?|[IVX]{1,4})\b/) ??
+      upper.match(/\b(T\d+(?:\.1)?)\b/))?.[1] ?? upper;
+  };
+  const confirmed = options.confirmedGeneration ? normalizeGeneration(options.confirmedGeneration) : null;
+  const generationCompatible = (c: CatalogueCandidate) =>
+    !confirmed || !c.generationHint || normalizeGeneration(c.generationHint) === confirmed;
   const familyKey = fam.merke + ' ' + fam.familie;
   // Exact family boundary: FIAT 500 must never include FIAT 500-ELECTRIC.
-  const hits = index.filter((c) => (c.matchReason === familyKey || c.matchReason.startsWith(familyKey + ' ')) && !erBakSide(c) && !erTilbehor(c) && !erDokumentertAnnenPosisjon(c));
+  const hits = index.filter((c) => (c.matchReason === familyKey || c.matchReason.startsWith(familyKey + ' ')) && !erBakSide(c) && !erTilbehor(c) && !erDokumentertAnnenPosisjon(c) && generationCompatible(c));
   if (year == null) return hits.slice(0, 6);
   return hits.filter((c) => {
     const y = year;
