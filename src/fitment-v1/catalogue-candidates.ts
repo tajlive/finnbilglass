@@ -53,11 +53,30 @@ const MERKE_ALIAS: Record<string, string[]> = {
 
 /** Familie-regler: (merke, regex på modell-token) → familie-nøkkel + generasjons-hint-fra-varenavn */
 export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
-  { merke: 'VW', re: /GOLF/, familie: 'GOLF' },
+  // Special Golf bodies before the generic hatchback family. Never silently
+  // equate Sportsvan/Plus/e-Golf to a Golf windscreen.
+  { merke: 'VW', re: /\bGOLF\s+SPORTSVAN\b/, familie: 'GOLF-SPORTSVAN' },
+  { merke: 'VW', re: /\bGOLF\s+PLUS\b/, familie: 'GOLF-PLUS' },
+  { merke: 'VW', re: /\bE[-\s]?GOLF\b/, familie: 'E-GOLF' },
+  { merke: 'VW', re: /\bGOLF\b/, familie: 'GOLF' },
   { merke: 'VW', re: /PASSAT/, familie: 'PASSAT' },
   { merke: 'VW', re: /POLO/, familie: 'POLO' },
   { merke: 'VW', re: /TRANSPORTER|TRANSPORT|MULTIVAN|CARAVELLE|T5|T6/, familie: 'TRANSPORTER' },
   { merke: 'VW', re: /\bUP!?(?:\s|$)/, familie: 'UP' },
+  // Explicit model identities present in the existing 2026 Autoglass SQL
+  // snapshot. These are CLASS_D candidates only; never vehicle fitment proof.
+  { merke: 'VW', re: /\bCADDY\b/, familie: 'CADDY' },
+  { merke: 'VW', re: /\bTOURAN\b/, familie: 'TOURAN' },
+  { merke: 'VW', re: /\bTIGUAN\b/, familie: 'TIGUAN' },
+  { merke: 'VW', re: /\bTOUAREG\b/, familie: 'TOUAREG' },
+  { merke: 'VW', re: /\bAMAROK\b/, familie: 'AMAROK' },
+  { merke: 'VW', re: /\bCRAFTER\b/, familie: 'CRAFTER' },
+  { merke: 'VW', re: /\bEOS\b/, familie: 'EOS' },
+  { merke: 'VW', re: /\bID[.\s-]?3\b/, familie: 'ID-3' },
+  { merke: 'VW', re: /\bID[.\s-]?4\b/, familie: 'ID-4' },
+  { merke: 'VW', re: /\bID[.\s-]?5\b/, familie: 'ID-5' },
+  { merke: 'VW', re: /\bID[.\s-]?7\b/, familie: 'ID-7' },
+  { merke: 'VW', re: /\bID[.\s-]?BUZZ\b/, familie: 'ID-BUZZ' },
   { merke: 'MERCEDES', re: /CLA/, familie: 'CLA' },
   { merke: 'MERCEDES', re: /SPRINTER/, familie: 'SPRINTER' },
   { merke: 'MERCEDES', re: /VITO|V-CLASS/, familie: 'VITO' },
