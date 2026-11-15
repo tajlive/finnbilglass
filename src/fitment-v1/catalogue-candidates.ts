@@ -76,7 +76,7 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'VW', re: /\bID[.\s-]?4\b/, familie: 'ID-4' },
   { merke: 'VW', re: /\bID[.\s-]?5\b/, familie: 'ID-5' },
   { merke: 'VW', re: /\bID[.\s-]?7\b/, familie: 'ID-7' },
-  { merke: 'VW', re: /\bID[.\s-]?BUZZ\b/, familie: 'ID-BUZZ' },
+  { merke: 'VW', re: /\bID[.\s-]*BUZZ\b/, familie: 'ID-BUZZ' },
   { merke: 'MERCEDES', re: /CLA/, familie: 'CLA' },
   { merke: 'MERCEDES', re: /SPRINTER/, familie: 'SPRINTER' },
   { merke: 'MERCEDES', re: /VITO|V-CLASS/, familie: 'VITO' },
