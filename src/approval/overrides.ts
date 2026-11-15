@@ -35,6 +35,9 @@ export function overrideMatcherBil(
 ): boolean {
   const merke = (bil.merke || '').toUpperCase();
   if (o.make !== merke) return false;
+  // Brand-only rules would match every vehicle of a manufacturer. Such a
+  // reusable rule cannot prove the installed glass on an individual vehicle.
+  if (!o.vinPrefix && !o.modelSeries) return false;
   if (o.vinPrefix) {
     if (!bil.vin) return false; // VIN-regel uten VIN → kan ikke bekrefte (aldri anta)
     if (!bil.vin.toUpperCase().startsWith(o.vinPrefix)) return false;
@@ -91,7 +94,10 @@ export async function lesOverrider(
         approvedAt: String(r.approved_at),
       };
       if (overrideMatcherBil(o, bil, idag)) {
-        return { hasVerifiedCatalogRule: true, override: o };
+        // Historical operator override is an advisory record, NOT a
+        // vehicle-specific independent OE/build/photo evidence edge.
+        // Keep it for audit/employee review but never authorize AUTO_APPROVED.
+        return { hasVerifiedCatalogRule: false, override: o };
       }
     }
   } catch {
