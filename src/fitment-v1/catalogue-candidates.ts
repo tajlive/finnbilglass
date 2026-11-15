@@ -148,7 +148,9 @@ export function matchClassDCandidates(index: CatalogueCandidate[], make: string,
   // Kandidatkvalitet: ekskluder bak/side-ruter OG tilbehør (PY/GU/K-lister, klips-kit — kjent katalogfelle)
   const erBakSide = (c: CatalogueCandidate) => /BAKRUTE|SIDERUTE|DØRRUTE|DORRUTE|BAKRUT|SIDERUT/.test(c.varenavn);
   const erTilbehor = (c: CatalogueCandidate) => /(PYT|PYB|PYV|PYH|PYS|PYC|PYKIT|PY|GU|GUM)$/.test(c.varenr) || /^\d{3,5}K$/.test(c.varenr) || /PYNTELIST|GUMMILIST|KLIPS|PYNTELISTE/.test(c.varenavn);
-  const hits = index.filter((c) => c.matchReason.startsWith(fam.merke + ' ' + fam.familie) && !erBakSide(c) && !erTilbehor(c));
+  const familyKey = fam.merke + ' ' + fam.familie;
+  // Exact family boundary: FIAT 500 must never include FIAT 500-ELECTRIC.
+  const hits = index.filter((c) => (c.matchReason === familyKey || c.matchReason.startsWith(familyKey + ' ')) && !erBakSide(c) && !erTilbehor(c));
   if (year == null) return hits.slice(0, 6);
   return hits.filter((c) => {
     const y = year;
