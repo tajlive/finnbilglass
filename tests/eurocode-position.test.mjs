@@ -33,7 +33,7 @@ test('Normalization keeps original input and full variant suffix', () => {
   assert.equal(parsed.normalized, '5689AGNV');
   assert.equal(parsed.variantSuffix, 'GNV');
   assert.ok(parsed.warnings.includes('WHITESPACE_NORMALIZED'));
-  assert.equal(parseEurocodePosition('5381AGACMVW1B').variantSuffix, 'GACMVW1B'.slice(1));
+  assert.equal(parseEurocodePosition('5381AGACMVW1B').variantSuffix, 'GACMVW1B');
   assert.notEqual(parseEurocodePosition('5381AGACMVW1B').normalized, parseEurocodePosition('5381AGACMVW1T').normalized);
 });
 
