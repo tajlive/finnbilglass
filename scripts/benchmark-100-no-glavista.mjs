@@ -66,6 +66,8 @@ export function runOffline100Benchmark() {
     uniqueCandidateEurocodes: 0,
     missingEurocodeRows: 0,
     suspiciousNonWindshieldCodes: 0,
+    knownOtherGlassPositionCodes: 0,
+    unclassifiedEurocodeFormats: 0,
     candidateWithEquipmentEvidence: 0,
     autoExactApproved: 0,
     independentVehicleToOEProof: 0,
@@ -101,7 +103,10 @@ export function runOffline100Benchmark() {
       if (!c.eurokode) stats.missingEurocodeRows++;
       else {
         seenEuro.add(c.eurokode);
-        if (!/^\d{3,5}A[A-Z0-9]/i.test(c.eurokode)) stats.suspiciousNonWindshieldCodes++;
+        if (!/^\\d{3,5}A[A-Z0-9]/i.test(c.eurokode)) stats.suspiciousNonWindshieldCodes++;
+        const position = c.eurokode.trim().toUpperCase().match(/^\\d{3,5}([ABFLRS])/);
+        if (position && position[1] !== 'A') stats.knownOtherGlassPositionCodes++;
+        if (!position) stats.unclassifiedEurocodeFormats++;
       }
       if (c.features.length) stats.candidateWithEquipmentEvidence++;
     }
@@ -119,6 +124,7 @@ export function runOffline100Benchmark() {
     throw new Error('Coverage accounting does not equal 100');
   }
   if (stats.autoExactApproved !== 0) throw new Error('Catalogue data must not auto-approve EXACT');
+  if (stats.knownOtherGlassPositionCodes !== 0) throw new Error('Side/rear/vent codes must not be returned as windscreens');
   return {
     baseline: '2026-11-15-finn-100-first100',
     evaluatedCommit: process.env.GITHUB_SHA ?? 'local',
