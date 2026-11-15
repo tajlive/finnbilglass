@@ -163,3 +163,19 @@ test('Missing feature does not become false, and one candidate is never auto-app
   assert.equal(result.candidates[0].catalogueOverlap, 'IDENTICAL_CODE');
   assert.equal(result.autoApproved, false);
 });
+
+test('Explicit feature conflicts are flagged while null does not become false', () => {
+  const result = compareEurocodeCandidates(
+    vehicle('MITSUBISHI', 'ASX', 2011),
+    [item('one', '5689AGNV', 'MITSUBISHI', 'ASX', {
+      features: { camera: true, rainSensor: null },
+    })],
+    [ref('one-ref', '5689AGNV', 'MITSUBISHI', 'ASX', {
+      features: { camera: false, rainSensor: true },
+    })],
+  );
+  assert.equal(result.candidates[0].catalogueOverlap, 'IDENTICAL_CODE');
+  assert.ok(result.candidates[0].warnings.includes('FEATURE_CONFLICT:camera'));
+  assert.ok(!result.candidates[0].warnings.includes('FEATURE_CONFLICT:rainSensor'));
+  assert.equal(result.autoApproved, false);
+});
