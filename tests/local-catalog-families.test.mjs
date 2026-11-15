@@ -56,3 +56,21 @@ test('Side glass and accessory rows are not emitted as windscreen candidates', (
   ]);
   assert.deepEqual(skus(matchClassDCandidates(extra, 'MITSUBISHI', 'ASX', 2011)), ['ASX-WINDSCREEN']);
 });
+
+test('Known Eurocode glass position excludes rear, door and vent glass even if item name is ambiguous', () => {
+  const extra = buildClassDCandidates([
+    { varenr: 'ASX-FRONT', eurokode: '5689AGNV', varenavn: 'MITSUBISHI ASX GLASS 10-' },
+    { varenr: 'ASX-REAR', eurokode: '5689BGNV', varenavn: 'MITSUBISHI ASX GLASS 10-' },
+    { varenr: 'ASX-LEFT', eurokode: '5689LGNV', varenavn: 'MITSUBISHI ASX GLASS 10-' },
+    { varenr: 'ASX-RIGHT', eurokode: '5689RGNV', varenavn: 'MITSUBISHI ASX GLASS 10-' },
+    { varenr: 'ASX-VENT', eurokode: '5689FGNV', varenavn: 'MITSUBISHI ASX GLASS 10-' },
+  ]);
+  assert.deepEqual(skus(matchClassDCandidates(extra, 'MITSUBISHI', 'ASX', 2011)), ['ASX-FRONT']);
+});
+
+test('Unknown/legacy code format is not blindly classified as a non-windscreen', () => {
+  const extra = buildClassDCandidates([
+    { varenr: 'ASX-UNKNOWN', eurokode: 'UNKNOWN-01', varenavn: 'MITSUBISHI ASX FRONTRUTE 10-' },
+  ]);
+  assert.deepEqual(skus(matchClassDCandidates(extra, 'MITSUBISHI', 'ASX', 2011)), ['ASX-UNKNOWN']);
+});
