@@ -40,6 +40,8 @@ const MERKE_ALIAS: Record<string, string[]> = {
   PEUGEOT: ['PEUGEOT'],
   HONDA: ['HONDA'],
   MAZDA: ['MAZDA'],
+  MITSUBISHI: ['MITSUBISHI'],
+  FIAT: ['FIAT'],
   MINI: ['MINI'],
 };
 
@@ -49,6 +51,7 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'VW', re: /PASSAT/, familie: 'PASSAT' },
   { merke: 'VW', re: /POLO/, familie: 'POLO' },
   { merke: 'VW', re: /TRANSPORTER|TRANSPORT|MULTIVAN|CARAVELLE|T5|T6/, familie: 'TRANSPORTER' },
+  { merke: 'VW', re: /\bUP!?(?:\s|$)/, familie: 'UP' },
   { merke: 'MERCEDES', re: /CLA/, familie: 'CLA' },
   { merke: 'MERCEDES', re: /SPRINTER/, familie: 'SPRINTER' },
   { merke: 'MERCEDES', re: /VITO|V-CLASS/, familie: 'VITO' },
@@ -61,6 +64,11 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'TESLA', re: /MODEL\s?3/, familie: 'MODEL-3' },
   { merke: 'TESLA', re: /MODEL\s?Y/, familie: 'MODEL-Y' },
   { merke: 'NISSAN', re: /LEAF/, familie: 'LEAF' },
+  { merke: 'MITSUBISHI', re: /\bASX\b/, familie: 'ASX' },
+  { merke: 'MAZDA', re: /\bCX[-\s]?5\b/, familie: 'CX-5' },
+  // Electric variant first: never pool the new 500 Electric with 500 (2007-).
+  { merke: 'FIAT', re: /\b500(?:E|\s+(?:ELECTRIC|EV))\b/, familie: '500-ELECTRIC' },
+  { merke: 'FIAT', re: /\b500\b/, familie: '500' },
   { merke: 'TOYOTA', re: /RAV4|RAV\s?4/, familie: 'RAV4' },
   { merke: 'TOYOTA', re: /COROLLA/, familie: 'COROLLA' },
   { merke: 'TOYOTA', re: /HILUX/, familie: 'HILUX' },
@@ -132,7 +140,8 @@ export function buildClassDCandidates(rows: { varenr: string; eurokode?: string 
 
 /** Finner CLASS_D-kandidater for en bil (make, model, year). Aldri fasit. */
 export function matchClassDCandidates(index: CatalogueCandidate[], make: string, model: string, year: number | null): CatalogueCandidate[] {
-  const mk = make.toUpperCase();
+  const rawMake = make.toUpperCase().trim();
+  const mk = Object.entries(MERKE_ALIAS).find(([, aliases]) => aliases.includes(rawMake))?.[0] ?? rawMake;
   const mo = model.toUpperCase();
   const fam = FAMILIER.find((f) => f.merke === mk && f.re.test(mo));
   if (!fam) return [];
