@@ -140,6 +140,16 @@ export function compareEurocodeCandidates(
       ref.eurocode!.trim().toUpperCase() !== code &&
       ref.eurocode!.trim().toUpperCase().slice(0, 4) === code.slice(0, 4),
     ) : [];
+    // Compare only explicitly known feature values. Unknown is not false.
+    for (const reference of same) {
+      for (const [feature, localValue] of Object.entries(candidate.features ?? {})) {
+        const referenceValue = reference.features?.[feature];
+        if (typeof localValue === 'boolean' && typeof referenceValue === 'boolean' &&
+            localValue !== referenceValue) {
+          warnings.push('FEATURE_CONFLICT:' + feature);
+        }
+      }
+    }
     if (same.some((ref) => ref.licenseState !== 'PERMITTED') ||
         family.some((ref) => ref.licenseState !== 'PERMITTED')) {
       warnings.push('REFERENCE_RESEARCH_ONLY_OR_UNLICENSED');
