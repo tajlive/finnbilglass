@@ -111,7 +111,9 @@ function aarIntervall(varenavn: string): { fra: number | null; til: number | nul
     const a = (y: string) => (parseInt(y, 10) <= 25 ? 2000 + parseInt(y, 10) : 1900 + parseInt(y, 10));
     return { fra: a(m[1]), til: a(m[2]) };
   }
-  const en = varenavn.match(/\b(\d{2})\s*[-–]\s*$/);
+  // Open interval can appear BEFORE equipment text, e.g. "VW ID.4 20- WS".
+  // Avoid turning a month fragment such as "05/11-" into a production year.
+  const en = varenavn.match(/(?<![\d/])\b(\d{2})\s*[-–](?!\s*\d{2}\b)/);
   if (en) return { fra: parseInt(en[1], 10) <= 25 ? 2000 + parseInt(en[1], 10) : 1900 + parseInt(en[1], 10), til: null };
   return { fra: null, til: null };
 }
