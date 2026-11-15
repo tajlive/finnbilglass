@@ -1,3 +1,5 @@
+import { parseEurocodePosition } from '../normalization/eurocode-position.js';
+
 /**
  * Offline Eurocode cross-reference research.
  *
@@ -72,12 +74,8 @@ const norm = (value: string): string => value.trim().toUpperCase().replace(/[^A-
  * Do not strip variant suffixes to force a match.
  */
 export function plausibleCompleteEurocode(raw: string | null | undefined): boolean {
-  if (!raw) return false;
-  const code = raw.trim().toUpperCase();
-  return code.length >= 7 && code.length <= 17 &&
-    /^[A-Z0-9]+$/.test(code) &&
-    /^[A-Z0-9]{4,5}[ABFLRS][A-Z0-9]{2,11}$/.test(code) &&
-    /[0-9]/.test(code.slice(0, 5));
+  const parsed = parseEurocodePosition(raw);
+  return parsed.position === 'WINDSCREEN' && (parsed.normalized?.length ?? 0) >= 7;
 }
 
 function applicationIssues(vehicle: VehicleForCrossref, glass: CatalogueGlass): string[] {
@@ -134,11 +132,12 @@ export function compareEurocodeCandidates(
     if (vehicle.powertrain && !candidate.powertrain) warnings.push('POWERTRAIN_UNCONFIRMED');
 
     const applicable = issues.length === 0 && plausibleCompleteEurocode(candidate.eurocode);
-    const code = candidate.eurocode?.trim().toUpperCase() ?? '';
-    const same = applicable ? eligible.filter((ref) => ref.eurocode!.trim().toUpperCase() === code) : [];
+    const code = parseEurocodePosition(candidate.eurocode).normalized ?? '';
+    const same = applicable ? eligible.filter((ref) => parseEurocodePosition(ref.eurocode).normalized === code) : [];
     const family = applicable ? eligible.filter((ref) =>
-      ref.eurocode!.trim().toUpperCase() !== code &&
-      ref.eurocode!.trim().toUpperCase().slice(0, 4) === code.slice(0, 4),
+      parseEurocodePosition(ref.eurocode).normalized !== code &&
+      parseEurocodePosition(ref.eurocode).familyPrefix != null &&
+      parseEurocodePosition(ref.eurocode).familyPrefix === parseEurocodePosition(code).familyPrefix,
     ) : [];
     // Compare only explicitly known feature values. Unknown is not false.
     for (const reference of same) {
