@@ -117,18 +117,18 @@ test('b1: uten override → 2 kandidater, needs_verification', async () => {
   assert.equal(res.approval.status, 'needs_verification');
 });
 
-test('b2: MED override → candidateCount=1, hasVerifiedCatalogRule=true, approved', async () => {
+test('b2: historisk override → rådgivende, aldri automatisk godkjent ny bil', async () => {
   const db = opprettDb();
   db.prepare(`INSERT INTO manual_review_overrides
     (vin_prefix, make, model_series, attributes_json, approved_sku, eurocode, source, approved_by)
     VALUES (NULL, 'VW', 'TRANSPORTER', '{"rainLightSensor":true}', '2525GYA', '8579AGSGYAVZ1B', 'manual_review', 'Tom')`).run();
   const env = d1Env(db);
   const res = await matchFrontrute(env, { merke: 'VW', modell: 'TRANSPORTER', aar: 2005 });
-  assert.equal(res.hasVerifiedCatalogRule, true);
-  assert.equal(res.candidateCount, 1);
-  assert.equal(res.candidateSkus[0].varenr, '2525GYA');
-  assert.equal(res.candidateSkus[0].status, 'verified');
-  assert.equal(res.approval.status, 'approved');
+  assert.equal(res.hasVerifiedCatalogRule, false);
+  assert.equal(res.candidateCount, 2); // no suppressing other variants
+  assert.ok(res.candidateSkus.every((x) => x.status === 'candidate'));
+  assert.equal(res.approval.status, 'needs_verification');
+  assert.equal(res.pinpoint, false);
 });
 
 test('b3: override med feil merke påvirker ikke andre biler', async () => {
@@ -140,4 +140,28 @@ test('b3: override med feil merke påvirker ikke andre biler', async () => {
   const res = await matchFrontrute(env, { merke: 'VW', modell: 'TRANSPORTER', aar: 2005 });
   assert.equal(res.hasVerifiedCatalogRule, false);
   assert.equal(res.candidateCount, 2);
+});
+
+test('b4: make-only override does not auto-verify a different vehicle', async () => {
+  const db = opprettDb();
+  db.prepare(`INSERT INTO manual_review_overrides
+    (vin_prefix, make, model_series, approved_sku, eurocode, source, approved_by)
+    VALUES (NULL, 'VW', NULL, '2525GYA', '8579AGSGYAVZ1B', 'manual_review', 'operator')`).run();
+  const res = await matchFrontrute(d1Env(db), { merke: 'VW', modell: 'TRANSPORTER', aar: 2005 });
+  assert.equal(res.hasVerifiedCatalogRule, false);
+  assert.equal(res.candidateCount, 2);
+  assert.equal(res.approval.status, 'needs_verification');
+  assert.equal(res.pinpoint, false);
+});
+
+test('b5: mismatching historical SKU/Eurocode cannot narrow a new candidate set', async () => {
+  const db = opprettDb();
+  db.prepare(`INSERT INTO manual_review_overrides
+    (vin_prefix, make, model_series, approved_sku, eurocode, source, approved_by)
+    VALUES (NULL, 'VW', 'TRANSPORTER', 'OTHER-SKU', '9999AGNV', 'manual_review', 'operator')`).run();
+  const res = await matchFrontrute(d1Env(db), { merke: 'VW', modell: 'TRANSPORTER', aar: 2005 });
+  assert.equal(res.hasVerifiedCatalogRule, false);
+  assert.equal(res.candidateCount, 2);
+  assert.equal(res.approval.status, 'needs_verification');
+  assert.equal(res.pinpoint, false);
 });
