@@ -71,3 +71,31 @@ test('Known generation excludes older Golf variant while unknown generation neve
     ['GolfVII','GolfUnknown']);
   assert.ok(c.every(x=>x.klassifisering==='CLASS_D_CATALOGUE_CANDIDATE'));
 });
+
+
+test('P0: Mercedes V-Class never enters CLA candidate family through substring', () => {
+  const products=buildClassDCandidates([
+    row('VITO','MERCEDES V-CLASS FRONTRUTE 14-'),
+    row('CLA','MERCEDES CLA 180 FRONTRUTE 14-'),
+  ]);
+  assert.equal(products.find(c=>c.varenr==='VITO')?.matchReason.startsWith('MERCEDES VITO'),true);
+  assert.equal(products.find(c=>c.varenr==='CLA')?.matchReason.startsWith('MERCEDES CLA'),true);
+  assert.deepEqual(matchClassDCandidates(products,'MERCEDES','V-CLASS',2018).map(c=>c.varenr),['VITO']);
+  assert.deepEqual(matchClassDCandidates(products,'MERCEDES','CLA 180',2018).map(c=>c.varenr),['CLA']);
+});
+
+test('P0: 26- and 26-30 cannot silently be interpreted as 1926 catalogue years', () => {
+  const products=buildClassDCandidates([
+    row('ambiguous-open','VW GOLF FRONTRUTE 26-'),
+    row('ambiguous-closed','VW GOLF FRONTRUTE 26-30'),
+    row('recent','VW GOLF FRONTRUTE 25-'),
+    row('historic','VW GOLF FRONTRUTE 99-'),
+  ]);
+  for (const c of products.filter(c=>c.varenr.startsWith('ambiguous'))) {
+    assert.ok(!c.matchReason.includes('1926'));
+    assert.ok(!matchClassDCandidates(products,'VW','GOLF',1926).some(x=>x.varenr===c.varenr));
+    assert.ok(!matchClassDCandidates(products,'VW','GOLF',2026).some(x=>x.varenr===c.varenr));
+  }
+  assert.ok(matchClassDCandidates(products,'VW','GOLF',2026).some(x=>x.varenr==='recent'));
+  assert.ok(matchClassDCandidates(products,'VW','GOLF',1999).some(x=>x.varenr==='historic'));
+});
