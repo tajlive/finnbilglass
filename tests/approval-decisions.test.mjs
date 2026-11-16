@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { godkjenningsGate, skrivOverride, skrivBeslutning, snapshotKandidatTilSku } from '../src/approval/decisions.ts';
+import { godkjenningsGate, skrivOverride, skrivBeslutning, snapshotKandidatTilSku, velgSnapshotKandidat } from '../src/approval/decisions.ts';
 import { matchFrontrute } from '../src/matcher.ts';
 
 /** Bygg D1-lignende env fra en node:sqlite-database. */
@@ -63,10 +63,11 @@ test('a4: godkjenningsGate blokkerer 2 kandidater (approve_sku kan ikke godkjenn
   assert.ok(v.grunn.some((g) => g.includes('candidateSkus.length=2')));
 });
 
-test('a5: godkjenningsGate godkjenner ÉN kandidat uten konflikt', () => {
+test('a5: én kandidat og samsvarende utstyr er ikke uavhengig glassbevis', () => {
   const en = [snapshotKandidatTilSku({ varenr: '2525GYA', eurokode: '8579AGSGYAVZ1B', attributter: { sensor: true } })];
   const v = godkjenningsGate(en, { rainLightSensor: true });
-  assert.equal(v.status, 'approved');
+  assert.equal(v.status, 'needs_verification');
+  assert.ok(v.grunn.some(x=>x.includes('hasVerifiedCatalogRule=false')));
 });
 
 test('a6: snapshotKandidatTilSku mapper resolver-attributter korrekt', () => {
