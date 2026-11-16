@@ -27,7 +27,7 @@ test('shared normalizer handles duplicate make and preserves physically distinct
   }
 });
 
-test('all twelve new families have actual numeric-A windscreen candidates in six checked-in SQL snapshots',()=>{
+test('eleven evidence-backed families have actual numeric-A windscreen candidates in six checked-in SQL snapshots',()=>{
   const db=new DatabaseSync(':memory:');
   let rows;
   try{
@@ -41,7 +41,7 @@ test('all twelve new families have actual numeric-A windscreen candidates in six
   const cases=[
     ['SKODA','OCTAVIA',2015],['SKODA','SUPERB',2015],
     ['MITSUBISHI','MITSUBISHI OUTLANDER',2013],
-    ['VOLVO','XC40',2020],['VOLVO','V70',1999],['VOLVO','C40 RECHARGE',2022],
+    ['VOLVO','XC40',2020],['VOLVO','C40 RECHARGE',2022],
     ['FORD','FOCUS',2012],['FORD','KUGA',2013],['FORD','MONDEO',2010],
     ['TOYOTA','TOYOTA AVENSIS',2010],['TOYOTA','AURIS',2013],['TOYOTA','YARIS',2013],
   ];
@@ -78,7 +78,7 @@ test('dangerous mixed catalogue models, body variants and unclear Eurocodes neve
   const ix=buildClassDCandidates(rows);
   const codes=(make,model,year)=>matchClassDCandidates(ix,make,model,year).map(x=>x.varenr);
   assert.deepEqual(codes('VOLVO','XC40',2020),['xc40']);
-  assert.deepEqual(codes('VOLVO','V70',1999),['v70']);
+  assert.deepEqual(codes('VOLVO','V70',1999),[], 'V70 source rows are cross-model labels requiring review');
   assert.deepEqual(codes('VOLVO','C40',2022),['c40']);
   assert.deepEqual(codes('FORD','FOCUS',2012),['focus']);
   assert.deepEqual(codes('FORD','FOCUS C-MAX',2012),[]);
