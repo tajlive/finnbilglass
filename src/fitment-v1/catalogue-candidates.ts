@@ -91,7 +91,7 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   // remain candidates, never proof of vehicle fitment.
   { merke: 'VOLVO', re: /\bXC40\b/, familie: 'XC40' },
   { merke: 'VOLVO', re: /\bC40\b/, familie: 'C40' },
-  { merke: 'VOLVO', re: /\bV70\b/, familie: 'V70' },
+
   { merke: 'VOLVO', re: /XC60/, familie: 'XC60' },
   { merke: 'VOLVO', re: /XC90/, familie: 'XC90' },
   { merke: 'TESLA', re: /MODEL\s?3/, familie: 'MODEL-3' },
@@ -142,7 +142,7 @@ export function isDistinctBodyVariant(make: string, family: string, modelOrProdu
 // The added families demand an explicitly parsed WINDSCREEN Eurocode.
 // Product text alone, unclassified numbers and rear/side positions are unsafe.
 const STRICT_WINDSCREEN_FAMILIES = new Set([
-  'VOLVO XC40','VOLVO C40','VOLVO V70',
+  'VOLVO XC40','VOLVO C40',
   'MITSUBISHI OUTLANDER','SKODA OCTAVIA','SKODA SUPERB',
   'FORD FOCUS','FORD KUGA','FORD MONDEO',
   'TOYOTA AVENSIS','TOYOTA AURIS','TOYOTA YARIS',
