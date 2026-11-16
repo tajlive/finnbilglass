@@ -131,17 +131,9 @@ jobs:
               process.exitCode=1;
             }
           }
-          // An existing Worker secret OR an environment secret supplied for atomic deploy.
-          const accessAud = (process.env.OPS_ACCESS_AUD||'').trim();
-          if (accessAud && accessAud.length < 20) {
-            console.error('PRODUCTION_ACCESS_AUD_INVALID_LENGTH');
-            process.exitCode=1;
-          }
-          if (!names.has('OPS_ACCESS_AUD') && !accessAud) {
-            console.error('REQUIRED_PRODUCTION_ACCESS_AUD_NOT_CONFIGURED');
-            process.exitCode=1;
-          }
-          if (!process.exitCode) console.log('PASS: approved config and required secret names exist; no Worker writes');
+          // The exact production AUD is discovered and staged automatically
+          // after the independent GET-only Access preflight succeeds.
+          if (!process.exitCode) console.log('PASS: approved config and existing Worker secret names; no Worker writes');
           NODE
       - name: Verify production Access and Worker-route protection (READ ONLY, blocking)
         env:
@@ -156,21 +148,13 @@ jobs:
           OPS_ACCESS_AUD: ${{ secrets.OPS_ACCESS_AUD }}
         run: |
           set -euo pipefail
-          if [ -n "${OPS_ACCESS_AUD:-}" ]; then
-            # Secret provided by GitHub protected production environment.
-            # Never log it or put it into the repository; other secrets stay intact.
-            umask 077
-            node --input-type=module -e '
-              import fs from "node:fs";
-              const file = process.env.RUNNER_TEMP + "/fbg-access-secret.json";
-              fs.writeFileSync(file, JSON.stringify({OPS_ACCESS_AUD:process.env.OPS_ACCESS_AUD}), {mode:0o600});
-            '
-            trap 'rm -f "$RUNNER_TEMP/fbg-access-secret.json"' EXIT
-            npx wrangler deploy --secrets-file "$RUNNER_TEMP/fbg-access-secret.json"
-          else
-            # Existing deployed OPS_ACCESS_AUD secret verified in preflight.
-            npx wrangler deploy
-          fi
+          # Obtain the already validated AUD from Cloudflare GET and stage it
+          # as a temporary mode-0600 file for THIS ONE approved deploy.
+          # Other existing Worker secrets are preserved by --secrets-file.
+          umask 077
+          trap 'rm -f "$RUNNER_TEMP/fbg-access-secret.json"' EXIT
+          node scripts/maintenance/write-ops-aud-secret.mjs
+          npx wrangler deploy --secrets-file "$RUNNER_TEMP/fbg-access-secret.json"
       - name: Krev godkjent forside på apex og www (regresjonsvakt)
         run: |
           for i in 1 2 3 4 5; do
