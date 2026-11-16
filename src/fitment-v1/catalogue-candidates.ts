@@ -79,7 +79,7 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'VW', re: /\bID[.\s-]?5\b/, familie: 'ID-5' },
   { merke: 'VW', re: /\bID[.\s-]?7\b/, familie: 'ID-7' },
   { merke: 'VW', re: /\bID[.\s-]*BUZZ\b/, familie: 'ID-BUZZ' },
-  { merke: 'MERCEDES', re: /CLA/, familie: 'CLA' },
+  { merke: 'MERCEDES', re: /\bCLA(?:\b|(?=\d))/, familie: 'CLA' },
   { merke: 'MERCEDES', re: /SPRINTER/, familie: 'SPRINTER' },
   { merke: 'MERCEDES', re: /VITO|V-CLASS/, familie: 'VITO' },
   { merke: 'MERCEDES', re: /A-CLASS|A KLASSE/, familie: 'A-CLASS' },
@@ -150,15 +150,22 @@ const STRICT_WINDSCREEN_FAMILIES = new Set([
 
 /** Trekker ut tosifret årsintervall («84-90», «03-08», «12-») fra varenavnet. */
 function aarIntervall(varenavn: string): { fra: number | null; til: number | null } {
-  const m = varenavn.match(/\b(\d{2})\s*[-–]\s*(\d{2})\b/);
-  if (m) {
-    const a = (y: string) => (parseInt(y, 10) <= 25 ? 2000 + parseInt(y, 10) : 1900 + parseInt(y, 10));
-    return { fra: a(m[1]), til: a(m[2]) };
+  // Bare katalogens tekst er ikke nok til å tolke 26–49 som 19xx eller 20xx.
+  // År som kan høre til to århundrer behandles som ukjent og krever kildebevis.
+  const parseYear = (raw: string): number | null => {
+    const n = Number(raw);
+    if (n >= 26 && n <= 49) return null;
+    return n <= 25 ? 2000 + n : 1900 + n;
+  };
+  const interval = varenavn.match(/\b(\d{2})\s*[-–]\s*(\d{2})\b/);
+  if (interval) {
+    const fra = parseYear(interval[1]), til = parseYear(interval[2]);
+    return fra === null || til === null ? { fra: null, til: null } : { fra, til };
   }
-  // Open interval can appear BEFORE equipment text, e.g. "VW ID.4 20- WS".
-  // Avoid turning a month fragment such as "05/11-" into a production year.
-  const en = varenavn.match(/(?<![\d/])\b(\d{2})\s*[-–](?!\s*\d{2}\b)/);
-  if (en) return { fra: parseInt(en[1], 10) <= 25 ? 2000 + parseInt(en[1], 10) : 1900 + parseInt(en[1], 10), til: null };
+  // Avoid month fragments such as 05/11-, but support open year ranges
+  // before option text: "VW ID.4 20- WS".
+  const open = varenavn.match(/(?<![\d/])\b(\d{2})\s*[-–](?!\s*\d{2}\b)/);
+  if (open) return { fra: parseYear(open[1]), til: null };
   return { fra: null, til: null };
 }
 
