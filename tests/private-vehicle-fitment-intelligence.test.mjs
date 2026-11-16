@@ -46,6 +46,9 @@ test('full pipeline analyses every vehicle with actual SQL matcher and keeps all
     assert.equal(report.cohort.holdout,10);
     assert.equal(report.cohort.development,20);
     assert.equal(report.totals.withCandidates+report.totals.withoutCandidates,36);
+    assert.equal(report.totals.missingVinVehicles,0);
+    assert.ok(queue.cases.every(c=>c.hasVin===true&&/^[a-f0-9]{32}$/.test(c.sourceFactsFingerprint)));
+    assert.ok(report.priorityFamilies.every(x=>x.family!=='ACME MOON CAR'));
     assert.ok(report.totals.withCandidates>0,'actual 6-part price list should produce candidates');
     assert.ok(report.totals.withoutCandidates>0,'unsupported make should remain unmatched');
     assert.ok(report.catalogue.indexedCandidateRows>3000);
