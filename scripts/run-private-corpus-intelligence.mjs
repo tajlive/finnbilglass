@@ -6,11 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const args=process.argv.slice(2),inputs=[];
-let outputDir=null;
+let outputDir=null,frozenSample=null;
 for(let i=0;i<args.length;i++){
   if(args[i]==='--input'&&args[i+1])inputs.push(resolve(args[++i]));
   else if(args[i]==='--output-dir'&&args[i+1])outputDir=resolve(args[++i]);
-  else throw Error('USAGE: --input PRIVATE.jsonl [--input SECOND.ndjson] --output-dir PRIVATE_DIRECTORY');
+  else if(args[i]==='--frozen-sample'&&args[i+1])frozenSample=resolve(args[++i]);
+  else throw Error('USAGE: --input PRIVATE.jsonl [--input SECOND.ndjson] --output-dir PRIVATE_DIRECTORY [--frozen-sample EXISTING_PRIVATE_30.json]');
 }
 if(!inputs.length||!outputDir)throw Error('INPUTS_AND_PRIVATE_OUTPUT_DIRECTORY_REQUIRED');
 const key=process.env.FBG_CORPUS_HMAC_KEY;
@@ -33,9 +34,9 @@ function run(argv){
 const a=[];
 for(const path of inputs)a.push('--input',path);
 run([join(root,'scripts/private-vehicle-corpus-audit.mjs'),...a,
-  '--report',outputs.audit,'--queue',outputs.queue,'--sample',outputs.sample]);
+  '--report',outputs.audit,'--queue',outputs.queue,...(frozenSample?[]:['--sample',outputs.sample])]);
 run(['--import','tsx',join(root,'scripts/private-vehicle-fitment-intelligence.mjs'),
-  '--queue',outputs.queue,'--sample',outputs.sample,
+  '--queue',outputs.queue,'--sample',frozenSample??outputs.sample,
   '--report',outputs.fitment,'--enriched-queue',outputs.enriched]);
 const audit=JSON.parse(readFileSync(outputs.audit,'utf8'));
 const fitment=JSON.parse(readFileSync(outputs.fitment,'utf8'));
