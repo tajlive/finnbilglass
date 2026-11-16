@@ -21,11 +21,15 @@ const load=(path)=>{
   for(const c of src.cases){
     if(!/^v_[a-f0-9]{32}$/.test(c.caseId)||m.has(c.caseId))
       throw Error('INVALID_OR_DUPLICATED_PSEUDONYM');
-    if(!Number.isInteger(c.candidateCount)||c.candidateCount<0 ||
+    if(!/^([a-f0-9]{32})$/.test(c.sourceFactsFingerprint??''))
+      throw Error('SOURCE_FACTS_FINGERPRINT_REQUIRED_REGENERATE_AUDIT');
+    if(!Number.isInteger(c.year)||!Number.isInteger(c.candidateCount)||c.candidateCount<0 ||
        c.evidenceStatus!=='NOT_VERIFIED'||c.autoExact!==false||c.confirmedGlass!==null)
       throw Error('CORPUS_EVIDENCE_GATE_VIOLATED');
     m.set(c.caseId,c);
   }
+  if(!/^[a-f0-9]{64}$/.test(src.catalogueSha256??''))
+    throw Error('CATALOGUE_MANIFEST_REQUIRED');
   return {cases:m,catalogueSha256:src.catalogueSha256};
 };
 const before=load(options.before),after=load(options.after);
@@ -36,6 +40,8 @@ const stableFingerprint=(items)=>{
 };
 if(stableFingerprint(before.cases)!==stableFingerprint(after.cases))
   throw Error('COHORT_CHANGED_COMPARE_NOT_VALID');
+if(before.catalogueSha256!==after.catalogueSha256)
+  throw Error('CATALOGUE_CHANGED_COMPARE_NOT_VALID');
 // Only fixed, source-reviewed model labels may appear in aggregate console
 // output. Arbitrary private 'model' values may otherwise contain identifiers.
 const SAFE_FAMILY_LABELS=new Set([
@@ -50,6 +56,8 @@ const newlyCoveredFamilies=new Map(),lostFamilies=new Map();
 for(const [id,b] of before.cases){
   const a=after.cases.get(id);
   if(!a)throw Error('COHORT_CHANGED_COMPARE_NOT_VALID');
+  if(b.sourceFactsFingerprint!==a.sourceFactsFingerprint||b.year!==a.year)
+    throw Error('SOURCE_VEHICLE_FACTS_CHANGED_COMPARE_NOT_VALID');
   const prev=b.candidateCount>0,next=a.candidateCount>0;
   beforeHits+=prev?1:0;afterHits+=next?1:0;
   if(!prev&&next){
@@ -72,7 +80,7 @@ const top=m=>[...m.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).s
 console.log('FBG_CANDIDATE_COMPARISON='+JSON.stringify({
   mode:'OFFLINE_PRIVATE_AGGREGATES_ONLY',cohortVehicles:before.cases.size,
   samePseudonymousCohort:true,
-  catalogueUnchanged:before.catalogueSha256===after.catalogueSha256,
+  catalogueUnchanged:true,sourceVehicleFactsUnchanged:true,
   beforeWithCandidates:beforeHits,afterWithCandidates:afterHits,
   beforeCoveragePercent:Number((100*beforeHits/before.cases.size||0).toFixed(2)),
   afterCoveragePercent:Number((100*afterHits/after.cases.size||0).toFixed(2)),

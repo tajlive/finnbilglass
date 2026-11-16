@@ -91,12 +91,19 @@ for(const [sourceIndex,input] of inputs.entries()){
       metrics.validRows++;
       const record={vin,reg,make,model,year};
       if(vin){
-        const target=vinEntities.get(vin);
+        // An invalid/placeholder VIN is NOT a unique physical-vehicle identity.
+        // Scope it to the registration when present, otherwise to the source
+        // row. Never coalesce unrelated cars all labelled "UNKNOWN".
+        const usableVin=vinFormatValid(vin);
+        const vinKey=usableVin?vin:`UNVERIFIED:${reg||sourceId+':'+sourceRows[sourceId]}:${vin}`;
+        const target=vinEntities.get(vinKey);
         if(target)absorb(target,record,sourceId);
-        else vinEntities.set(vin,makeEntity(hmac('VIN:'+vin),record,true,Boolean(reg),sourceId));
-        if(reg){
+        else vinEntities.set(vinKey,makeEntity(hmac('VIN:'+vinKey),record,true,Boolean(reg),sourceId));
+        // Only format-valid VINs can reconcile REG-only entries with a VIN
+        // observation. Format-valid is NOT equivalent to OEM verification.
+        if(reg&&usableVin){
           if(!regToVins.has(reg))regToVins.set(reg,new Set());
-          regToVins.get(reg).add(vin);
+          regToVins.get(reg).add(vinKey);
         }
       } else {
         const target=regOnlyEntities.get(reg);
@@ -137,7 +144,12 @@ const stratumCounts={};
 const makeCounts={};
 for(const v of vehicles){
   stratumCounts[v.stratum]=(stratumCounts[v.stratum]??0)+1;
-  makeCounts[v.make]=(makeCounts[v.make]??0)+1;
+  // Console aggregate must never echo arbitrary user-supplied make text.
+  const safeMakes=new Set(['VW','VOLKSWAGEN','MERCEDES','MERCEDES-BENZ','BMW',
+    'VOLVO','TESLA','NISSAN','TOYOTA','FORD','OPEL','AUDI','RENAULT',
+    'PEUGEOT','HONDA','MAZDA','MITSUBISHI','FIAT','MINI','SKODA']);
+  const publicMake=safeMakes.has(v.make)?v.make:'OTHER';
+  makeCounts[publicMake]=(makeCounts[publicMake]??0)+1;
 }
 const quotas={GENERATION_BOUNDARY:8,EV:6,EQUIPMENT_HINT:5,RECENT:5,OTHER:6};
 const sorted=vehicles.sort((a,b)=>a.caseId.localeCompare(b.caseId));
@@ -153,6 +165,15 @@ for(const v of sorted){if(selected.length>=30)break;if(!taken.has(v.caseId)){sel
 const selectedSplits=new Map(selected.map((v,i)=>[v.caseId,(i%3===2?'HOLDOUT':'DEVELOPMENT')]));
 const caseFor=(v)=>({
   caseId:v.caseId,make:v.make,model:v.model,year:v.year,stratum:v.stratum,
+  hasVin:Boolean(v.hasVin),hasReg:Boolean(v.hasReg),
+  // HMAC binds the original, unnormalized case facts across candidate runs.
+  // Full-corpus normalization may alter display model but not this fingerprint.
+  sourceFactsFingerprint:hmac(JSON.stringify({
+    caseId:v.caseId,make:v.make,model:v.model,year:v.year,
+    hasVin:Boolean(v.hasVin),hasReg:Boolean(v.hasReg),
+    vinFormatValid:v.vinFormatValid,identityStatus:v.identityStatus,
+    sources:[...v.sources].sort()
+  })),
   identityStatus:v.identityStatus,vinFormatValid:v.vinFormatValid,
   sourceRefs:[...v.sources].sort(),
   split:selectedSplits.get(v.caseId)??'UNASSIGNED',
