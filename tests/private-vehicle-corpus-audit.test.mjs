@@ -52,6 +52,8 @@ test('private audit queues all 36 cars, with 30 for validation and 10 holdout; e
     assert.equal(d.selection.selected,30);
     assert.equal(q.cases.length,36);
     assert.equal(new Set(q.cases.map(x=>x.caseId)).size,36);
+    assert.ok(q.cases.every(x=>x.hasVin===true),'VIN presence must survive queue export');
+    assert.ok(q.cases.every(x=>/^[a-f0-9]{32}$/.test(x.sourceFactsFingerprint)));
     assert.ok(q.cases.every(x=>x.evidenceStatus==='NOT_VERIFIED'&&x.confirmedGlass===null));
     assert.equal(d.selection.holdout,10);
     assert.equal(d.selection.development,20);
@@ -205,6 +207,8 @@ test('invalid VIN formats remain in private queue but are never called valid',()
     const q=JSON.parse(readFileSync(out,'utf8'));
     assert.equal(report.metrics.uniqueVehicles,3);
     assert.equal(report.metrics.invalidVinFormatVehicles,1);
+    assert.equal(q.cases.filter(c=>c.hasVin===false).length,1);
+    assert.equal(q.cases.filter(c=>c.hasVin===true).length,2);
     assert.deepEqual(q.cases.map(c=>c.vinFormatValid).sort((a,b)=>String(a).localeCompare(String(b))),[false,null,true].sort((a,b)=>String(a).localeCompare(String(b))));
     assert.ok(q.cases.every(c=>c.evidenceStatus==='NOT_VERIFIED'));
     assert.ok(!JSON.stringify(q).includes('ZZ10001'));
