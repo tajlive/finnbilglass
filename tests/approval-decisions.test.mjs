@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { godkjenningsGate, skrivOverride, skrivBeslutning, snapshotKandidatTilSku } from '../src/approval/decisions.ts';
+import { readFileSync } from 'node:fs';
+import { godkjenningsGate, skrivOverride, skrivBeslutning, snapshotKandidatTilSku, velgSnapshotKandidat } from '../src/approval/decisions.ts';
 import { matchFrontrute } from '../src/matcher.ts';
 
 /** Bygg D1-lignende env fra en node:sqlite-database. */
@@ -63,10 +64,11 @@ test('a4: godkjenningsGate blokkerer 2 kandidater (approve_sku kan ikke godkjenn
   assert.ok(v.grunn.some((g) => g.includes('candidateSkus.length=2')));
 });
 
-test('a5: godkjenningsGate godkjenner ÉN kandidat uten konflikt', () => {
+test('a5: én kandidat og samsvarende utstyr er ikke uavhengig glassbevis', () => {
   const en = [snapshotKandidatTilSku({ varenr: '2525GYA', eurokode: '8579AGSGYAVZ1B', attributter: { sensor: true } })];
   const v = godkjenningsGate(en, { rainLightSensor: true });
-  assert.equal(v.status, 'approved');
+  assert.equal(v.status, 'needs_verification');
+  assert.ok(v.grunn.some(x=>x.includes('hasVerifiedCatalogRule=false')));
 });
 
 test('a6: snapshotKandidatTilSku mapper resolver-attributter korrekt', () => {
@@ -164,4 +166,53 @@ test('b5: mismatching historical SKU/Eurocode cannot narrow a new candidate set'
   assert.equal(res.candidateCount, 2);
   assert.equal(res.approval.status, 'needs_verification');
   assert.equal(res.pinpoint, false);
+});
+
+
+test('P0: SKU and full Eurocode must describe one and the same snapshot candidate',()=>{
+  const candidates=[
+    {varenr:'A',eurokode:'1234AGSGYAVZ1B'},
+    {varenr:'B',eurokode:'1234AGSGYAVZ1T'},
+    {varenr:'C',eurokode:null}
+  ];
+  assert.equal(velgSnapshotKandidat(candidates,'A','1234AGSGYAVZ1B'),candidates[0]);
+  assert.equal(velgSnapshotKandidat(candidates,'B','1234AGSGYAVZ1T'),candidates[1]);
+  assert.equal(velgSnapshotKandidat(candidates,'A','1234AGSGYAVZ1T'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'NOT-IN-CASE'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'NOT-IN-CASE','1234AGSGYAVZ1B'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'NOT-IN-CASE',null),null);
+  assert.equal(velgSnapshotKandidat(candidates,'','1234AGSGYAVZ1B'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'C','1234AGSGYAVZ1B'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'1234AGSGYAVZ1B',null),null,
+    'Eurocode cannot be substituted for the unique SKU');
+  assert.equal(velgSnapshotKandidat([
+    {varenr:'DUP',eurokode:'1234AGSGYAVZ1B'},
+    {varenr:'DUP',eurokode:'1234AGSGYAVZ1T'},
+  ],'DUP',null),null,'ambiguous duplicate SKU without Eurocode must not select first row');
+  assert.equal(velgSnapshotKandidat([
+    {varenr:'DUP',eurokode:'1234AGSGYAVZ1B'},
+    {varenr:'DUP',eurokode:'1234AGSGYAVZ1T'},
+  ],'DUP','1234AGSGYAVZ1T')?.eurokode,'1234AGSGYAVZ1T');
+  assert.equal(velgSnapshotKandidat([
+    {varenr:'A',eurokode:'1234AGSGYAVZ1B'},
+    {varenr:'B',eurokode:'1234AGSGYAVZ1B'},
+  ],'1234AGSGYAVZ1B',null),null,
+  'one Eurocode for multiple SKUs is not a choice of product');
+});
+
+test('P0: legacy snapshot SKU GET and POST routes are disabled in production',()=>{
+  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+  for (const marker of [
+    "if (method === 'GET' && path === '/api/ops/sku-cases')",
+    "if (method === 'POST' && path === '/api/ops/decision')"
+  ]){
+    const index=source.indexOf(marker);
+    assert.ok(index>0,'legacy route exists');
+    const section=source.slice(index,index+650);
+    assert.match(section,/if \(env\.ENVIRONMENT === 'production'\) return json\(\{ ok: false/);
+    assert.match(section,/\}, 404\)/);
+    assert.ok(section.indexOf("env.ENVIRONMENT === 'production'") <
+      section.indexOf('supportAuthorised(request, env)') || !section.includes('supportAuthorised'),
+      'deny production before any legacy support token or database work');
+  }
 });
