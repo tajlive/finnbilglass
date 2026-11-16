@@ -26,6 +26,7 @@ Opprettholdte grensekontroller:
 - For **alle 11 nytilkomne familier** godtar matcher kun `parseEurocodePosition(...).position === 'WINDSCREEN'`. Ukjente formater og side-/bakruter blokkeres, uansett hva varenavnet ellers sier.
 - Dobbelt merke i modellnavnet (`MITSUBISHI MITSUBISHI OUTLANDER`, `TOYOTA TOYOTA RAV4`) normaliseres deterministisk i felles kjøretøynavnfunksjon, uten at karosseri, produksjonsdato eller utstyr blir oppfunnet.
 - Original klassifisering `CLASS_D_CATALOGUE_CANDIDATE` beholdes. Ingen skår eller antall kandidater alene gir `EXACT` eller fysisk fitment-sannhet.
+- Katalogår som `97-` kan ellers tolkes som gyldige for langt nyere modeller. Rapporten teller nå `OLD_OPEN_CATALOGUE_YEAR_WINDOW` når et åpent kildeintervall er over 8 år gammelt ved bilens modellår. Dette er en **heuristisk advarsel**, ikke et bevis på feil glass eller en automatisk årseksklusjon. Kontroller generasjon, karosseri og OE manuelt.
 
 ## Måling på nøyaktig samme private korpus
 
