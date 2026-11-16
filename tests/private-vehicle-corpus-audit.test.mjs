@@ -187,3 +187,27 @@ test('Same VIN with conflicting make/model facts is not treated as reliable iden
     assert.equal(q.cases[0].identityStatus,'CONFLICT');
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('invalid VIN formats remain in private queue but are never called valid',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'fbg-vin-format-'));
+  try{
+    const records=[
+      {vin:'WVWZZZ1KZ9P111111',regnr:'ZZ10001',merke:'VW',modell:'GOLF',aar:2018},
+      {vin:'INVALID',regnr:'ZZ10002',merke:'VW',modell:'GOLF',aar:2018},
+      {regnr:'ZZ10003',merke:'VW',modell:'GOLF',aar:2018},
+    ];
+    const input=join(dir,'input.jsonl'),out=join(dir,'queue.json');
+    writeFileSync(input,records.map(x=>JSON.stringify(x)).join('\n'));
+    const r=run(dir,['--input',input,'--queue',out]);
+    assert.equal(r.status,0,r.stderr);
+    const report=JSON.parse(r.stdout.split('\n').find(x=>x.startsWith('FBG_PRIVATE_CORPUS_REPORT=')).slice('FBG_PRIVATE_CORPUS_REPORT='.length));
+    const q=JSON.parse(readFileSync(out,'utf8'));
+    assert.equal(report.metrics.uniqueVehicles,3);
+    assert.equal(report.metrics.invalidVinFormatVehicles,1);
+    assert.deepEqual(q.cases.map(c=>c.vinFormatValid).sort((a,b)=>String(a).localeCompare(String(b))),[false,null,true].sort((a,b)=>String(a).localeCompare(String(b))));
+    assert.ok(q.cases.every(c=>c.evidenceStatus==='NOT_VERIFIED'));
+    assert.ok(!JSON.stringify(q).includes('ZZ10001'));
+    assert.ok(!JSON.stringify(q).includes('WVWZZZ1KZ9P111111'));
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
