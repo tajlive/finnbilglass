@@ -117,9 +117,9 @@ test('e3: feil merke → false', () => {
 });
 
 test('e4: gyldighetsperiode — år utenfor → false, innenfor → true', () => {
-  const o = override({ validFrom: '2015-01-01', validTo: '2019-12-31' });
-  assert.equal(overrideMatcherBil(o, { merke: 'VW', aar: 2016 }, '2026-08-19'), true);
-  assert.equal(overrideMatcherBil(o, { merke: 'VW', aar: 2022 }, '2026-08-19'), false);
+  const o = override({ modelSeries: 'TRANSPORTER', validFrom: '2015-01-01', validTo: '2019-12-31' });
+  assert.equal(overrideMatcherBil(o, { merke: 'VW', modell: 'TRANSPORTER', aar: 2016 }, '2026-08-19'), true);
+  assert.equal(overrideMatcherBil(o, { merke: 'VW', modell: 'TRANSPORTER', aar: 2022 }, '2026-08-19'), false);
 });
 
 test('e5: modellserie-treff (token-basert)', () => {
@@ -131,4 +131,10 @@ test('e5: modellserie-treff (token-basert)', () => {
 test('e6: overrideAttributter parser trygt (ugyldig JSON → {})', () => {
   assert.deepEqual(overrideAttributter(override({ attributesJson: '{"hud":false}' })), { hud: false });
   assert.deepEqual(overrideAttributter(override({ attributesJson: 'ikke-json' })), {});
+});
+
+test('e7: make-only override never selects all cars from one manufacturer', () => {
+  const o = override({ vinPrefix: null, modelSeries: null });
+  assert.equal(overrideMatcherBil(o, { merke: 'VW', modell: 'TRANSPORTER' }, '2026-11-15'), false);
+  assert.equal(overrideMatcherBil(o, { merke: 'VW', modell: 'GOLF' }, '2026-11-15'), false);
 });

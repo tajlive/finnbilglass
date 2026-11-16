@@ -322,18 +322,18 @@ export async function matchFrontrute(env: { FINNBILGLASS_DB: D1Database }, bil: 
   const topp = vurdert[0];
   const nest = vurdert[1];
   const margin = topp ? (nest ? topp.score - nest.score : 99) : 0;
-  const pinpoint = !!topp && topp.feil.length === 0 && margin >= 4;
+  // A high heuristic score is not an independently verified vehicle→OE edge.
+  // Public fallback matching must never claim exact glass fitment from a score.
+  const pinpoint = false;
 
   // Steg 8 (Oppgave 2): verifiserte regler (manual_review_overrides) → snevrer
   // kandidatlisten til den godkjente SKU-en og gir hasVerifiedCatalogRule=true.
   const overrideTreff = await lesOverrider(env, bil);
   const override = overrideTreff.override;
-  const overrideEuro = override?.eurocode ?? null;
+  // An old manual override can be surfaced to staff in its audit trail, but
+  // cannot silently suppress other possible glass variants on a NEW vehicle.
+  // Without a vehicle-specific evidence edge we keep the full candidate set.
   let vurdertFinale = vurdert;
-  if (overrideEuro) {
-    const matchet = vurdert.filter((v) => (v.vare.eurokode ?? '').toUpperCase() === overrideEuro.toUpperCase());
-    if (matchet.length === 1) vurdertFinale = matchet;
-  }
 
   // Steg 8b (Oppgave 6a-2): glavista-attributter (glass_sku_attributes) beriker
   // kandidatene og skiller mot bilens profil. KUN kjente motsigelser
