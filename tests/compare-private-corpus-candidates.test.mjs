@@ -7,13 +7,13 @@ import { spawnSync } from 'node:child_process';
 
 const CLI=new URL('../scripts/compare-private-corpus-candidates.mjs',import.meta.url).pathname;
 const caseFor=(id,count,extra={})=>({
-  caseId:'v_'+id.repeat(32),make:'FORD',model:'FOCUS',year:2013,
+  caseId:'v_'+id.repeat(32),sourceFactsFingerprint:id.repeat(32),make:'FORD',model:'FOCUS',year:2013,
   candidateCount:count,evidenceStatus:'NOT_VERIFIED',
   confirmedGlass:null,autoExact:false,...extra
 });
-const save=(path,cases)=>writeFileSync(path,JSON.stringify({
+const save=(path,cases,catalogueSha256='a'.repeat(64))=>writeFileSync(path,JSON.stringify({
   purpose:'FULL_FLEET_FITMENT_EVIDENCE_GAPS',
-  catalogueSha256:'a'.repeat(64),cases
+  catalogueSha256,cases
 }));
 const exec=(a,b)=>spawnSync(process.execPath,[CLI,'--before',a,'--after',b],{encoding:'utf8'});
 
@@ -29,6 +29,8 @@ test('same-cohort diff reports only aggregate gains, losses, and ambiguity',()=>
     assert.match(line,/^FBG_CANDIDATE_COMPARISON=/);
     const summary=JSON.parse(line.slice('FBG_CANDIDATE_COMPARISON='.length));
     assert.equal(summary.samePseudonymousCohort,true);
+    assert.equal(summary.catalogueUnchanged,true);
+    assert.equal(summary.sourceVehicleFactsUnchanged,true);
     assert.equal(summary.beforeWithCandidates,2);
     assert.equal(summary.afterWithCandidates,2);
     assert.equal(summary.candidateGain,1);
