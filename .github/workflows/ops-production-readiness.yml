@@ -61,7 +61,7 @@ jobs:
           for(const required of ['SVV_API_KEY','RESEND_API_KEY']){
             if(!names.has(required))throw Error('PROD_WORKER_REQUIRED_SECRET_MISSING');
           }
-          if(!names.has('OPS_ACCESS_AUD')&&!process.env.GITHUB_ACTIONS)
-            throw Error('PROD_ACCESS_AUD_NOT_CONFIGURED');
+          // Access AUD itself is checked against the actual Access app in the
+          // previous step; it may be supplied as a protected environment secret.
           console.log('PASS: required Worker secret names exist; no values accessed');
           NODE
