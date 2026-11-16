@@ -137,7 +137,12 @@ const stratumCounts={};
 const makeCounts={};
 for(const v of vehicles){
   stratumCounts[v.stratum]=(stratumCounts[v.stratum]??0)+1;
-  makeCounts[v.make]=(makeCounts[v.make]??0)+1;
+  // Console aggregate must never echo arbitrary user-supplied make text.
+  const safeMakes=new Set(['VW','VOLKSWAGEN','MERCEDES','MERCEDES-BENZ','BMW',
+    'VOLVO','TESLA','NISSAN','TOYOTA','FORD','OPEL','AUDI','RENAULT',
+    'PEUGEOT','HONDA','MAZDA','MITSUBISHI','FIAT','MINI','SKODA']);
+  const publicMake=safeMakes.has(v.make)?v.make:'OTHER';
+  makeCounts[publicMake]=(makeCounts[publicMake]??0)+1;
 }
 const quotas={GENERATION_BOUNDARY:8,EV:6,EQUIPMENT_HINT:5,RECENT:5,OTHER:6};
 const sorted=vehicles.sort((a,b)=>a.caseId.localeCompare(b.caseId));
@@ -153,6 +158,15 @@ for(const v of sorted){if(selected.length>=30)break;if(!taken.has(v.caseId)){sel
 const selectedSplits=new Map(selected.map((v,i)=>[v.caseId,(i%3===2?'HOLDOUT':'DEVELOPMENT')]));
 const caseFor=(v)=>({
   caseId:v.caseId,make:v.make,model:v.model,year:v.year,stratum:v.stratum,
+  hasVin:Boolean(v.hasVin),hasReg:Boolean(v.hasReg),
+  // HMAC binds the original, unnormalized case facts across candidate runs.
+  // Full-corpus normalization may alter display model but not this fingerprint.
+  sourceFactsFingerprint:hmac(JSON.stringify({
+    caseId:v.caseId,make:v.make,model:v.model,year:v.year,
+    hasVin:Boolean(v.hasVin),hasReg:Boolean(v.hasReg),
+    vinFormatValid:v.vinFormatValid,identityStatus:v.identityStatus,
+    sources:[...v.sources].sort()
+  })),
   identityStatus:v.identityStatus,vinFormatValid:v.vinFormatValid,
   sourceRefs:[...v.sources].sort(),
   split:selectedSplits.get(v.caseId)??'UNASSIGNED',
