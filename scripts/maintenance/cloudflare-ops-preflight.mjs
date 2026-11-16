@@ -17,7 +17,12 @@ const HOSTS=['finnbilglass.no','www.finnbilglass.no'];
 const PATHS=['/ops','/ops/*','/api/ops','/api/ops/*'];
 const WORKER='finnbilglass-frontrute';
 const WORKER_DOMAINS=[...HOSTS,'api.finnbilglass.no'];
-const REQUIRED=HOSTS.flatMap(host=>PATHS.map(path=>host+path));
+// Test both the exact OPS entry and a nested route; Cloudflare permits
+// protecting a whole path prefix with one Access destination.
+const REQUIRED=HOSTS.flatMap(host=>[
+  host+'/ops',host+'/ops/ansatte',
+  host+'/api/ops',host+'/api/ops/manual/session'
+]);
 
 function invariant(ok,reason){if(!ok)throw Error(reason)}
 function uriKey(value){
@@ -66,8 +71,8 @@ export function resolveProductionAudience(apps, explicitAud){
   const candidates=apps.filter(app=>{
     if(app?.type!=='self_hosted'||typeof app.aud!=='string'||
        app.aud.length<20||typeof app.id!=='string')return false;
-    const paths=new Set(accessDestinations(app).map(d=>uriKey(d.uri)));
-    return REQUIRED.every(uri=>paths.has(uri));
+    const destinations=accessDestinations(app);
+    return REQUIRED.every(uri=>destinations.some(d=>coversAccessPath(d.uri,[uri])));
   });
   invariant(candidates.length===1,'PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING');
   return {aud:candidates[0].aud,source:'cloudflare_account_read'};
@@ -81,19 +86,16 @@ export function validateAccess(apps,policies,aud){
   const app=matched[0];
   // Another more-specific app could bypass the intended protection. Inspect
   // all Access apps, not merely the one with our expected audience.
-  const samples=HOSTS.flatMap(host=>[
-    host+'/ops',host+'/ops/ansatte',
-    host+'/api/ops',host+'/api/ops/manual/session'
-  ]);
+  const samples=REQUIRED;
   for(const other of apps){
     if(other?.type!=='self_hosted'||other.aud===aud)continue;
     if(accessDestinations(other).some(d=>coversAccessPath(d.uri,samples)))
       throw Error('COMPETING_ACCESS_APP_ON_PROTECTED_OPS_PATH');
   }
   const destinations=accessDestinations(app);
-  const actual=new Set(destinations.map(d=>uriKey(d.uri)));
   for(const uri of REQUIRED)
-    invariant(actual.has(uri),'PROD_ACCESS_REQUIRED_PATH_MISSING');
+    invariant(destinations.some(d=>coversAccessPath(d.uri,[uri])),
+      'PROD_ACCESS_REQUIRED_PATH_MISSING');
   invariant(!destinations.some(d=>Array.isArray(d.overrides)&&
     d.overrides.some(o=>o.behavior==='public')),
     'PROD_ACCESS_PUBLIC_OVERRIDE_PRESENT');
