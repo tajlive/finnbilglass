@@ -1,0 +1,67 @@
+# Read-only production inventory. Deliberately separate from deploy.yml.
+# No Worker, Access, D1 or payment writes; never deploy based on this workflow.
+name: OPS production readiness (read-only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      authorization:
+        description: "Read-only diagnostics; no deploy"
+        required: true
+        type: choice
+        options:
+          - PREFLIGHT-ONLY
+      release_sha:
+        description: "Exact 40-character main commit SHA being evaluated"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/main' && inputs.authorization == 'PREFLIGHT-ONLY'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm branch and pinned source revision
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          AUTHORIZATION: ${{ inputs.authorization }}
+        run: |
+          set -euo pipefail
+          test "$AUTHORIZATION" = "PREFLIGHT-ONLY"
+          [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Cloudflare Access, Worker routes, Custom Domains (read only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OPS_ACCESS_AUD: ${{ secrets.OPS_ACCESS_AUD }}
+        run: node scripts/maintenance/cloudflare-ops-preflight.mjs
+      - name: Verify required existing Worker secret names (read only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          npx wrangler secret list --name finnbilglass-frontrute --format json > "$RUNNER_TEMP/ops-secret-names.json"
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          const secrets=JSON.parse(readFileSync(process.env.RUNNER_TEMP+'/ops-secret-names.json','utf8'));
+          if(!Array.isArray(secrets))throw Error('PROD_WORKER_SECRETS_NOT_READABLE');
+          const names=new Set(secrets.filter(s=>s.type==='secret_text').map(s=>s.name));
+          for(const required of ['SVV_API_KEY','RESEND_API_KEY']){
+            if(!names.has(required))throw Error('PROD_WORKER_REQUIRED_SECRET_MISSING');
+          }
+          // Access AUD itself is checked against the actual Access app in the
+          // previous step; it may be supplied as a protected environment secret.
+          console.log('PASS: required Worker secret names exist; no values accessed');
+          NODE
