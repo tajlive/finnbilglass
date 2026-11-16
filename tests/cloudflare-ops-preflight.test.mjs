@@ -73,6 +73,9 @@ test('production custom domains must all belong to approved Worker service',()=>
     .map(hostname=>({hostname,service:'finnbilglass-frontrute',environment:'production',
       enabled:true,zone_name:'finnbilglass.no'}));
   assert.deepEqual(validateWorkerDomains(domains),{workerCustomDomains:3});
+  // Both optional fields can be absent in valid Cloudflare API responses.
+  assert.deepEqual(validateWorkerDomains(domains.map(({enabled,environment,...other})=>other)),
+    {workerCustomDomains:3});
   for(let i=0;i<domains.length;i++){
     assert.throws(()=>validateWorkerDomains(domains.filter((_,j)=>j!==i)),
       /WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED/);
