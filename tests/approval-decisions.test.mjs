@@ -183,6 +183,21 @@ test('P0: SKU and full Eurocode must describe one and the same snapshot candidat
   assert.equal(velgSnapshotKandidat(candidates,'NOT-IN-CASE',null),null);
   assert.equal(velgSnapshotKandidat(candidates,'','1234AGSGYAVZ1B'),null);
   assert.equal(velgSnapshotKandidat(candidates,'C','1234AGSGYAVZ1B'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'1234AGSGYAVZ1B',null),null,
+    'Eurocode cannot be substituted for the unique SKU');
+  assert.equal(velgSnapshotKandidat([
+    {varenr:'DUP',eurokode:'1234AGSGYAVZ1B'},
+    {varenr:'DUP',eurokode:'1234AGSGYAVZ1T'},
+  ],'DUP',null),null,'ambiguous duplicate SKU without Eurocode must not select first row');
+  assert.equal(velgSnapshotKandidat([
+    {varenr:'DUP',eurokode:'1234AGSGYAVZ1B'},
+    {varenr:'DUP',eurokode:'1234AGSGYAVZ1T'},
+  ],'DUP','1234AGSGYAVZ1T')?.eurokode,'1234AGSGYAVZ1T');
+  assert.equal(velgSnapshotKandidat([
+    {varenr:'A',eurokode:'1234AGSGYAVZ1B'},
+    {varenr:'B',eurokode:'1234AGSGYAVZ1B'},
+  ],'1234AGSGYAVZ1B',null),null,
+  'one Eurocode for multiple SKUs is not a choice of product');
 });
 
 test('P0: legacy snapshot SKU GET and POST routes are disabled in production',()=>{
