@@ -152,12 +152,16 @@ export function velgSnapshotKandidat(
   const requestedSku = sku.trim().toUpperCase();
   const requestedEuro = eurocode?.trim().toUpperCase() || null;
   if (!requestedSku) return null;
-  return kandidater.find((k) => {
+  // Never accept a Eurocode in place of a product SKU: several SKUs may
+  // share the same Eurocode, and a catalogue join may duplicate a SKU.
+  // If a SKU is not unique in this case snapshot, return no selection.
+  const selected = kandidater.filter((k) => {
     const varenr = String(k.varenr ?? '').trim().toUpperCase();
     const kode = String(k.eurokode ?? '').trim().toUpperCase();
-    return (varenr === requestedSku || (kode !== '' && kode === requestedSku))
+    return varenr === requestedSku
       && (!requestedEuro || (kode !== '' && kode === requestedEuro));
-  }) ?? null;
+  });
+  return selected.length === 1 ? selected[0] : null;
 }
 
 /** Fail-closed OPS gate. A case snapshot and selected equipment attributes do
