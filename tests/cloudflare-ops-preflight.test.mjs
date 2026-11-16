@@ -118,3 +118,28 @@ test('unrelated Worker can serve assets but not OPS on apex/www',()=>{
     {pattern:'finnbilglass.no/*',script:'finnbilglass-frontrute'}
   ]));
 });
+
+
+test('a competing Access application cannot overlap the protected OPS paths',()=>{
+  const other=(destination)=>app({
+    id:'other-app',aud:'b'.repeat(64),
+    destinations:[{type:'public',uri:destination}]
+  });
+  for(const destination of [
+    'finnbilglass.no/ops',
+    'finnbilglass.no/ops/*',
+    'www.finnbilglass.no/api/ops',
+    'www.finnbilglass.no/api/ops/*',
+    'finnbilglass.no',
+    'www.finnbilglass.no/*'
+  ]){
+    assert.throws(()=>validateAccess([app(),other(destination)],policies(),AUD),
+      /COMPETING_ACCESS_APP_ON_PROTECTED_OPS_PATH/,destination);
+  }
+  assert.doesNotThrow(()=>validateAccess([
+    app(),other('ops-staging.finnbilglass.no/ops/*')
+  ],policies(),AUD));
+  assert.doesNotThrow(()=>validateAccess([
+    app(),other('finnbilglass.no/public-only/*')
+  ],policies(),AUD));
+});
