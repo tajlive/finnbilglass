@@ -166,3 +166,20 @@ test('b5: mismatching historical SKU/Eurocode cannot narrow a new candidate set'
   assert.equal(res.approval.status, 'needs_verification');
   assert.equal(res.pinpoint, false);
 });
+
+
+test('P0: SKU and full Eurocode must describe one and the same snapshot candidate',()=>{
+  const candidates=[
+    {varenr:'A',eurokode:'1234AGSGYAVZ1B'},
+    {varenr:'B',eurokode:'1234AGSGYAVZ1T'},
+    {varenr:'C',eurokode:null}
+  ];
+  assert.equal(velgSnapshotKandidat(candidates,'A','1234AGSGYAVZ1B'),candidates[0]);
+  assert.equal(velgSnapshotKandidat(candidates,'B','1234AGSGYAVZ1T'),candidates[1]);
+  assert.equal(velgSnapshotKandidat(candidates,'A','1234AGSGYAVZ1T'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'NOT-IN-CASE'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'NOT-IN-CASE','1234AGSGYAVZ1B'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'NOT-IN-CASE',null),null);
+  assert.equal(velgSnapshotKandidat(candidates,'','1234AGSGYAVZ1B'),null);
+  assert.equal(velgSnapshotKandidat(candidates,'C','1234AGSGYAVZ1B'),null);
+});
