@@ -4,7 +4,9 @@
  * Never outputs token, Access AUD, customer data, or raw API responses.
  * Requires a protected GitHub production environment with:
  *  CLOUDFLARE_API_TOKEN (Access Apps & Policies Read, Zones Read, Workers Routes Read, Workers Scripts Read),
- *  CLOUDFLARE_ACCOUNT_ID, OPS_ACCESS_AUD (actual production app audience).
+ *  CLOUDFLARE_ACCOUNT_ID. OPS_ACCESS_AUD is optional for this GET-only audit:
+ *  when absent, the unique full-path Access app supplies the live AUD.
+ *  An explicit AUD, when provided, must still match that production app.
  *
  * A successful static CI build does not demonstrate that Access protects www.
  * This script rejects missing scopes, missing paths and repair-Worker conflicts.
@@ -15,7 +17,12 @@ const HOSTS=['finnbilglass.no','www.finnbilglass.no'];
 const PATHS=['/ops','/ops/*','/api/ops','/api/ops/*'];
 const WORKER='finnbilglass-frontrute';
 const WORKER_DOMAINS=[...HOSTS,'api.finnbilglass.no'];
-const REQUIRED=HOSTS.flatMap(host=>PATHS.map(path=>host+path));
+// Test both the exact OPS entry and a nested route; Cloudflare permits
+// protecting a whole path prefix with one Access destination.
+const REQUIRED=HOSTS.flatMap(host=>[
+  host+'/ops',host+'/ops/ansatte',
+  host+'/api/ops',host+'/api/ops/manual/session'
+]);
 
 function invariant(ok,reason){if(!ok)throw Error(reason)}
 function uriKey(value){
@@ -47,6 +54,30 @@ function coversAccessPath(uri,samples){
   }
   return samples.some(sample=>sample===key||sample.startsWith(key+'/'));
 }
+/**
+ * The Cloudflare Access account is the source of truth for the production AUD.
+ * Never choose an app by display name alone, and never quietly switch away
+ * from an explicit protected-environment AUD if one is configured.
+ * The only auto-discovery candidate must own ALL required apex/www OPS paths.
+ * This helper is pure and never logs or returns the AUD in preflight output.
+ */
+export function resolveProductionAudience(apps, explicitAud){
+  invariant(Array.isArray(apps),'ACCESS_APP_LIST_INVALID');
+  const supplied=typeof explicitAud==='string'?explicitAud.trim():'';
+  if(supplied){
+    invariant(supplied.length>=20,'PROD_ACCESS_AUD_NOT_PROVIDED_FOR_VERIFICATION');
+    return {aud:supplied,source:'protected_environment'};
+  }
+  const candidates=apps.filter(app=>{
+    if(app?.type!=='self_hosted'||typeof app.aud!=='string'||
+       app.aud.length<20||typeof app.id!=='string')return false;
+    const destinations=accessDestinations(app);
+    return REQUIRED.every(uri=>destinations.some(d=>coversAccessPath(d.uri,[uri])));
+  });
+  invariant(candidates.length===1,'PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING');
+  return {aud:candidates[0].aud,source:'cloudflare_account_read'};
+}
+
 export function validateAccess(apps,policies,aud){
   invariant(typeof aud==='string' && aud.length>=20,'PROD_ACCESS_AUD_NOT_PROVIDED_FOR_VERIFICATION');
   invariant(Array.isArray(apps),'ACCESS_APP_LIST_INVALID');
@@ -55,19 +86,16 @@ export function validateAccess(apps,policies,aud){
   const app=matched[0];
   // Another more-specific app could bypass the intended protection. Inspect
   // all Access apps, not merely the one with our expected audience.
-  const samples=HOSTS.flatMap(host=>[
-    host+'/ops',host+'/ops/ansatte',
-    host+'/api/ops',host+'/api/ops/manual/session'
-  ]);
+  const samples=REQUIRED;
   for(const other of apps){
     if(other?.type!=='self_hosted'||other.aud===aud)continue;
     if(accessDestinations(other).some(d=>coversAccessPath(d.uri,samples)))
       throw Error('COMPETING_ACCESS_APP_ON_PROTECTED_OPS_PATH');
   }
   const destinations=accessDestinations(app);
-  const actual=new Set(destinations.map(d=>uriKey(d.uri)));
   for(const uri of REQUIRED)
-    invariant(actual.has(uri),'PROD_ACCESS_REQUIRED_PATH_MISSING');
+    invariant(destinations.some(d=>coversAccessPath(d.uri,[uri])),
+      'PROD_ACCESS_REQUIRED_PATH_MISSING');
   invariant(!destinations.some(d=>Array.isArray(d.overrides)&&
     d.overrides.some(o=>o.behavior==='public')),
     'PROD_ACCESS_PUBLIC_OVERRIDE_PRESENT');
@@ -147,13 +175,12 @@ export async function preflight(env=process.env){
   invariant(env.CLOUDFLARE_ACCOUNT_ID===ACCOUNT,'WRONG_PRODUCTION_CLOUDFLARE_ACCOUNT');
   const token=env.CLOUDFLARE_API_TOKEN;
   invariant(typeof token==='string'&&token.length>20,'CLOUDFLARE_API_TOKEN_MISSING');
-  invariant(typeof env.OPS_ACCESS_AUD==='string'&&env.OPS_ACCESS_AUD.length>=20,
-    'PROD_ACCESS_AUD_NOT_PROVIDED_FOR_VERIFICATION');
   const apps=await api('/accounts/'+ACCOUNT+'/access/apps?per_page=1000',token);
-  const app=apps.find(a=>a?.type==='self_hosted'&&a.aud===env.OPS_ACCESS_AUD);
+  const selected=resolveProductionAudience(apps,env.OPS_ACCESS_AUD);
+  const app=apps.find(a=>a?.type==='self_hosted'&&a.aud===selected.aud);
   invariant(app?.id,'EXACT_PROD_ACCESS_APP_NOT_FOUND');
   const policies=await api('/accounts/'+ACCOUNT+'/access/apps/'+encodeURIComponent(app.id)+'/policies?per_page=1000',token);
-  const checkedAccess=validateAccess(apps,policies,env.OPS_ACCESS_AUD);
+  const checkedAccess=validateAccess(apps,policies,selected.aud);
   const zones=await api('/zones?name=finnbilglass.no&per_page=50',token);
   invariant(zones.length===1 && typeof zones[0]?.id==='string','PROD_ZONE_NOT_UNAMBIGUOUS');
   const routes=await api('/zones/'+encodeURIComponent(zones[0].id)+'/workers/routes',token);
@@ -165,7 +192,7 @@ export async function preflight(env=process.env){
   ))).flat();
   const checkedDomains=validateWorkerDomains(domains);
   // Only sanitized counts and status. No raw app, policy, AUD, route or secret.
-  return {status:'PASS',readOnly:true,...checkedAccess,...checkedRoutes,...checkedDomains};
+  return {status:'PASS',readOnly:true,audienceSource:selected.source,...checkedAccess,...checkedRoutes,...checkedDomains};
 }
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
