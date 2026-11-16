@@ -36,6 +36,14 @@ const stableFingerprint=(items)=>{
 };
 if(stableFingerprint(before.cases)!==stableFingerprint(after.cases))
   throw Error('COHORT_CHANGED_COMPARE_NOT_VALID');
+// Only fixed, source-reviewed model labels may appear in aggregate console
+// output. Arbitrary private 'model' values may otherwise contain identifiers.
+const SAFE_FAMILY_LABELS=new Set([
+  'SKODA OCTAVIA','SKODA SUPERB','MITSUBISHI OUTLANDER',
+  'VOLVO XC40','VOLVO C40','FORD FOCUS','FORD KUGA','FORD MONDEO',
+  'TOYOTA AVENSIS','TOYOTA AURIS','TOYOTA YARIS',
+]);
+const safeLabel=c=>SAFE_FAMILY_LABELS.has(c.make+' '+c.model)?c.make+' '+c.model:'OTHER';
 let beforeHits=0,afterHits=0,gained=0,lost=0,continuedMultiple=0,
   newlyMultiple=0,normalized=0;
 const newlyCoveredFamilies=new Map(),lostFamilies=new Map();
@@ -46,12 +54,12 @@ for(const [id,b] of before.cases){
   beforeHits+=prev?1:0;afterHits+=next?1:0;
   if(!prev&&next){
     gained++;
-    const family=a.make+' '+a.model;
+    const family=safeLabel(a);
     newlyCoveredFamilies.set(family,(newlyCoveredFamilies.get(family)??0)+1);
   }
   if(prev&&!next){
     lost++;
-    const family=b.make+' '+b.model;
+    const family=safeLabel(b);
     lostFamilies.set(family,(lostFamilies.get(family)??0)+1);
   }
   continuedMultiple+=b.candidateCount>1&&a.candidateCount>1?1:0;
@@ -59,6 +67,7 @@ for(const [id,b] of before.cases){
   normalized+=a.modelNameNormalized===true?1:0;
 }
 const top=m=>[...m.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,15)
+  .filter(([,count])=>count>=5)
   .map(([family,count])=>({family,count}));
 console.log('FBG_CANDIDATE_COMPARISON='+JSON.stringify({
   mode:'OFFLINE_PRIVATE_AGGREGATES_ONLY',cohortVehicles:before.cases.size,
