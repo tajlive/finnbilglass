@@ -27,7 +27,7 @@ import { syncGmailEmails, gmailSyncStatus } from './routes/gmail-sync';
 import { unassignedMail, assignUnmatchedMail } from './routes/mail-allocation';
 import { getEpostHistorikk } from './routes/epost';
 import { skuDecisionUi } from './sku-decision-ui';
-import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, type BeslutningType } from './approval/decisions';
+import { godkjenningsGate, skrivBeslutning, skrivOverride, snapshotKandidatTilSku, velgSnapshotKandidat, type BeslutningType } from './approval/decisions';
 import type { GlassAttributes } from './fitment-v1/glass-sku';
 import { discoverFrontRute } from './discovery';
 import { AccessoryApplicabilityEngine } from './accessory-v1/engine.js';
@@ -1170,12 +1170,9 @@ export default {
       }
       // approve_sku / choose_alternative_sku: krever sku-valg som finnes i kandidatene.
       if (!sku) return json({ ok: false, error: 'SKU er påkrevd for godkjenning.' }, 400);
-      const valgt = snapshotKandidater.find((k) =>
-        String(k.varenr ?? '') === sku || String(k.eurokode ?? '') === (eurocode ?? '') ||
-        (eurocode && String(k.eurokode ?? '') === eurocode),
-      );
-      if (!valgt && !kandidater.length) return json({ ok: false, error: 'Saken har ingen kandidater å godkjenne.' }, 409);
-      const valgtEuro = String(valgt?.eurocode ?? eurocode ?? '') || null;
+      const valgt = velgSnapshotKandidat(snapshotKandidater, sku, eurocode);
+      if (!valgt) return json({ ok: false, error: 'Valgt SKU og Eurokode finnes ikke som én og samme kandidat i saken. Krever separat dokumentert kontroll.' }, 409);
+      const valgtEuro = String(valgt.eurocode ?? '') || null;
 
       if (decision === 'approve_sku') {
         const vurdering = godkjenningsGate(kandidater, bevis);
