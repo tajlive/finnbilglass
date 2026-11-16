@@ -10,6 +10,7 @@ import { ApplicationResolver } from '../src/fitment-v1/application-resolver.js';
 import { buildDefaultGenerationRegistry } from '../src/fitment-v1/generation-registry.js';
 import { FAMILIER, buildClassDCandidates, matchClassDCandidates } from '../src/fitment-v1/catalogue-candidates.js';
 import { parseEurocodePosition } from '../src/fitment-v1/normalization/eurocode-position.js';
+import { canonicalVehicleName } from '../src/fitment-v1/normalization/vehicle-model-name.js';
 
 const ROOT=resolve(fileURLToPath(new URL('..',import.meta.url)));
 const args=process.argv.slice(2),opt={};
@@ -75,13 +76,10 @@ for(const candidate of index){
   }
 }
 const resolver=new ApplicationResolver({families:buildDefaultGenerationRegistry()});
-const normalizeMake=mk=>({
-  'VOLKSWAGEN':'VW','VAG':'VW','MERCEDES-BENZ':'MERCEDES','MB':'MERCEDES'
-})[mk.trim().toUpperCase()]??mk.trim().toUpperCase();
 const family=(mk,mo)=>FAMILIER.find(x=>x.merke===mk&&x.re.test(mo));
 const frequency=new Map();
 for(const v of source.cases){
-  const mk=normalizeMake(v.make),mo=v.model.trim().toUpperCase(),f=family(mk,mo);
+  const {make:mk,model:mo}=canonicalVehicleName(v.make,v.model),f=family(mk,mo);
   const k=f?mk+' '+f.familie:mk+' '+mo;
   frequency.set(k,(frequency.get(k)??0)+1);
 }
@@ -89,10 +87,12 @@ const totals={eligibleVehicles:source.cases.length,withCandidates:0,withoutCandi
   oneCandidate:0,multipleCandidates:0,candidateRows:0,uniqueEurocodes:0,
   applicationCandidateVehicles:0,identityConflicts:0,generationAmbiguousVehicles:0,
   unknownEurocodePositionVehicles:0,discriminatingQuestionVehicles:0,
+  invalidVinFormatVehicles:0,missingVinVehicles:0,normalizedModelNames:0,
   independentOEProof:0,automaticExact:0};
 const allCodes=new Set(),noCandidateReasons={},riskReasons={},byFamily=new Map(),enriched=[];
 for(const v of source.cases){
-  const mk=normalizeMake(v.make),mo=v.model.trim().toUpperCase(),f=family(mk,mo);
+  const canonical=canonicalVehicleName(v.make,v.model);
+  const {make:mk,model:mo}=canonical,f=family(mk,mo);
   const familyKey=f?mk+' '+f.familie:null;
   const familyRows=familyKey?(buckets.get(familyKey)??[]):[];
   const found=matchClassDCandidates(familyRows,mk,mo,v.year);
@@ -115,6 +115,8 @@ for(const v of source.cases){
   }
   const reasonCodes=[];
   if(v.identityStatus==='CONFLICT')reasonCodes.push('IDENTITY_CONFLICT');
+  if(v.vinFormatValid===false)reasonCodes.push('VIN_FORMAT_INVALID');
+  if(v.hasVin===false)reasonCodes.push('VIN_MISSING');
   if(!app.length)reasonCodes.push('APPLICATION_UNRESOLVED');
   else if(app.length>1)reasonCodes.push('GENERATION_UNRESOLVED');
   if(found.length>1)reasonCodes.push('MULTIPLE_GLASS_CANDIDATES');
@@ -136,6 +138,9 @@ for(const v of source.cases){
     :app.length!==1?'VERIFY_GENERATION_AND_OE'
     :found.length>1?'COLLECT_VEHICLE_OE_AND_VARIANT_FEATURES'
     :'COLLECT_INDEPENDENT_VEHICLE_OE_TO_GLASS_EVIDENCE';
+  totals.normalizedModelNames+=canonical.changed?1:0;
+  totals.invalidVinFormatVehicles+=v.vinFormatValid===false?1:0;
+  totals.missingVinVehicles+=v.hasVin===false?1:0;
   totals.withCandidates+=found.length>0?1:0;
   totals.withoutCandidates+=found.length===0?1:0;
   totals.oneCandidate+=found.length===1?1:0;
@@ -147,7 +152,7 @@ for(const v of source.cases){
   totals.unknownEurocodePositionVehicles+=unknown>0?1:0;
   totals.discriminatingQuestionVehicles+=questions.length>0?1:0;
   for(const code of codes)allCodes.add(code);
-  enriched.push({...v,make:mk,model:mo,
+  enriched.push({...v,make:mk,model:mo,modelNameNormalized:canonical.changed,
     candidateCount:found.length,candidateDistinctEurocodes:codes.length,candidateEurocodes:codes,
     applicationCount:app.length,possibleGenerations:[...new Set(app.map(a=>a.generation).filter(Boolean))].sort(),
     unknownPositionCandidateCount:unknown,distinguishingQuestions:questions,
@@ -183,6 +188,7 @@ const report={
   safety:{automaticExactActivated:false,networkUsed:false,glavistaUsed:false,
     physicalFitmentPrecisionMeasured:false},
   limitations:['Every catalogue match is a candidate, not proof of installed glass.',
+    'VIN format is only a structural check (17 allowed characters), not cryptographic provenance or OEM VIN verification.',
     'Application generations are inferred; not confirmed by OE/build evidence.',
     'Catalogue usage rights need independent confirmation before live integration.',
     'This offline tool does NOT test production decision ports, auth, D1 or payments.']
