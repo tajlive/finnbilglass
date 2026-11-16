@@ -25,6 +25,9 @@ if(!key || Buffer.byteLength(key,'utf8')<32) throw Error('STRONG_PRIVATE_HMAC_KE
 
 const hmac=(v)=>createHmac('sha256',key).update(v).digest('hex').slice(0,32);
 const clean=(s)=>String(s??'').toUpperCase().trim().replace(/\s+/g,' ');
+// Character-format screening only: ISO VIN exceptions and manufacturer-specific checks
+// still require authoritative verification. Never interpret this as validated OE.
+const vinFormatValid=(vin)=>/^[A-HJ-NPR-Z0-9]{17}$/.test(vin);
 const get=(row,fields)=>fields.map(k=>row?.[k]).find(x=>x!==undefined&&x!==null&&x!=='');
 const classify=(make,model,year)=>{
   const m=make+' '+model;
@@ -44,12 +47,14 @@ const regOnlyEntities=new Map();
 const regToVins=new Map();
 const metrics={sourceFiles:inputs.length,linesRead:0,invalidJson:0,missingVehicleIdentifier:0,
   missingMakeModelYear:0,duplicateVehicleIds:0,uniqueVehicles:0,withVin:0,withReg:0,
-  regToVinJoined:0,ambiguousRegistrationLinks:0,conflictingVehicleRecords:0,validRows:0};
+  regToVinJoined:0,ambiguousRegistrationLinks:0,conflictingVehicleRecords:0,validRows:0,
+  invalidVinFormatVehicles:0};
 const sourceRows={};
 const makeEntity=(id,record,hasVin,hasReg,sourceId)=>({
   caseId:'v_'+id,make:record.make,model:record.model,year:record.year,
   hasVin,hasReg,stratum:classify(record.make,record.model,record.year),
-  identityStatus:'UNVERIFIED',sources:new Set([sourceId])
+  identityStatus:'UNVERIFIED',vinFormatValid:hasVin?vinFormatValid(record.vin):null,
+  sources:new Set([sourceId])
 });
 const absorb=(target,record,sourceId)=>{
   if(target.make!==record.make||target.model!==record.model||target.year!==record.year){
@@ -59,6 +64,7 @@ const absorb=(target,record,sourceId)=>{
   target.sources.add(sourceId);
   target.hasReg ||= Boolean(record.reg);
   target.hasVin ||= Boolean(record.vin);
+  if(record.vin && !vinFormatValid(record.vin))target.vinFormatValid=false;
 };
 for(const [sourceIndex,input] of inputs.entries()){
   const sourceId='INPUT_'+String(sourceIndex+1).padStart(2,'0');
@@ -125,6 +131,7 @@ metrics.duplicateVehicleIds=metrics.validRows-data.size;
 metrics.uniqueVehicles=data.size;
 const vehicles=[...data.values()];
 metrics.withVin=vehicles.filter(v=>v.hasVin).length;
+metrics.invalidVinFormatVehicles=vehicles.filter(v=>v.hasVin&&v.vinFormatValid===false).length;
 metrics.withReg=vehicles.filter(v=>v.hasReg).length;
 const stratumCounts={};
 const makeCounts={};
@@ -146,7 +153,8 @@ for(const v of sorted){if(selected.length>=30)break;if(!taken.has(v.caseId)){sel
 const selectedSplits=new Map(selected.map((v,i)=>[v.caseId,(i%3===2?'HOLDOUT':'DEVELOPMENT')]));
 const caseFor=(v)=>({
   caseId:v.caseId,make:v.make,model:v.model,year:v.year,stratum:v.stratum,
-  identityStatus:v.identityStatus,sourceRefs:[...v.sources].sort(),
+  identityStatus:v.identityStatus,vinFormatValid:v.vinFormatValid,
+  sourceRefs:[...v.sources].sort(),
   split:selectedSplits.get(v.caseId)??'UNASSIGNED',
   evidenceStatus:'NOT_VERIFIED',oeOrBuildEvidence:null,photoOrInstallationEvidence:null,
   confirmedGlass:null,staffVerification:null,
@@ -163,6 +171,7 @@ const report={
   limitations:['REG/VIN are pseudonymized with secret HMAC, not anonymized.',
     'Source provenance, original collection purpose and retention must be checked before use.',
     'Vehicle records are NOT verified OE-to-glass ground truth.',
+    'VIN format validation is only syntactic and cannot verify a real chassis identity.',
     'No network, SVV API, Glavista or customer lookup is performed.',
     'No actual fitment accuracy is inferred.']
 };
