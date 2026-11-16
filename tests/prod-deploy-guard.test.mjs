@@ -67,3 +67,18 @@ test('production deploy checks Cloudflare Access and repair Worker routes before
     assert.ok(code.includes(path),'must protect '+path);
   }
 });
+
+
+test('separate production readiness workflow is explicitly read-only, pinned and never deploys',()=>{
+  const audit=readFileSync(new URL('../.github/workflows/ops-production-readiness.yml',import.meta.url),'utf8');
+  assert.match(audit,/on:\n  workflow_dispatch:/);
+  assert.doesNotMatch(audit,/on:\n  push:/);
+  assert.match(audit,/github\.ref == 'refs\/heads\/main'/);
+  assert.match(audit,/PREFLIGHT-ONLY/);
+  assert.match(audit,/environment: production/);
+  assert.match(audit,/git rev-parse HEAD/);
+  assert.match(audit,/cloudflare-ops-preflight\.mjs/);
+  assert.match(audit,/wrangler secret list --name finnbilglass-frontrute --format json/);
+  assert.doesNotMatch(audit,/\bwrangler\s+(?:deploy|d1\s+execute|(?:versions\s+)?secret\s+(?:put|delete|bulk)|rollback)\b/);
+  assert.doesNotMatch(audit,/\b(?:curl|wget)\s+.*--request\s+(?:POST|PUT|PATCH|DELETE)/);
+});
