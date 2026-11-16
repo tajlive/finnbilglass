@@ -18,6 +18,49 @@ Kildene ble dokumentert som:
 
 Tallene over beskriver en historisk kjøring. **De tre første filene er ikke alle tilgjengelige i nåværende offentlige GitHub-main; den private filen er ikke montert her.** Man må verifisere faktisk plassering, kilde og oppdatert antall før ny kjøring. `finn-100.jsonl` i repo er kun et lite delsett.
 
+
+## 16.11.2026 – Hele korpuset gjennom den reelle kandidatmotoren (stacked PR)
+
+Sammenkoblet forskningsgren bygger på PR #89/#92/#93 og bruker **den faktiske** `buildClassDCandidates`/`matchClassDCandidates`, `ApplicationResolver` og den delte Eurokode-parseren. Ingen Glavista kreves. Alle gyldige, pseudonymiserte kjøretøy får:
+
+- kandidatantall, unike Eurokoder, antall applikasjonskandidater og mulige generasjoner (kun inferert)
+- faste nulltreffårsaker og advarsler om identitetskonflikt, uklassifisert posisjon, flerkandidat og utstyr
+- en prioritet begrunnet i **forekomst i korpuset**, avklaringsrisiko og manglende data; dette er ikke et målt markedstall
+- neste kontrollhandling (for eksempel modellnormalisering, kontrollert OE og utstyrsbekreftelse)
+- obligatorisk `NEEDS_INDEPENDENT_HUMAN_EVIDENCE`, `NOT_VERIFIED` og `autoExact=false`
+
+Bilens fakta alene er ikke et bevis på riktig rute. Felles produktkatalog kan inneholde flere like/ukjente varianter; ingen valgt Eurokode godkjennes. `C6`-korpuset fra 2026 er fortsatt historisk, ikke en verifisert aktiv database.
+
+### Én kommando med to private kontrolltrinn
+
+```bash
+# Gi prosessen en sterk, hemmelig FBG_CORPUS_HMAC_KEY fra godkjent hvelv.
+npm run corpus:full -- \
+  --input /sikker/lagring/svv-finn-broad-results.ndjson \
+  --input /sikker/lagring/andre-svv-kjoretoy.jsonl \
+  --output-dir /sikker/rapporter/korpus-2026-11-16
+```
+
+Output-mappen må være privat (0700); alle rapportfiler skrives med 0600 og overskrives aldri. Den inneholder `audit-aggregates.json`, `queue-all-vehicles.json`, `frozen-first30.json`, `fitment-aggregates.json` og `priority-evidence-queue.json`. Bare aggregerte tall skrives til konsollen; identifikatorer skal ikke skrives til offentlig GitHub eller sendes i chat.
+
+**Viktig:** Når flere biler kommer til i en senere kjøring, kan ny sampling velge andre kontrollbiler. Bruk derfor det opprinnelige holdout-settet igjen:
+
+```bash
+npm run corpus:full -- \
+  --input /sikker/lagring/oppdatert-korpus.ndjson \
+  --output-dir /sikker/rapporter/korpus-ny-versjon \
+  --frozen-sample /sikker/rapporter/korpus-2026-11-16/frozen-first30.json
+```
+
+Verktøyet nekter å bruke en holdout-ID som mangler eller er feil, fremfor å fylle inn et nytt og utestet sett. Deduplisering kobler sammen REG-only og VIN-poster bare når registreringsnummeret kan knyttes til **nøyaktig én** VIN i de tilgjengelige datakildene. Gjenbrukte kjennemerker eller metadata som strider mot samme VIN merkes **IDENTITY_CONFLICT**; det gis aldri automatisk autoritet.
+
+### GO/NO-GO
+
+- GO for **offline kandidatdekning og planlegging av OE/foto-/montørkontroll** etter syntetisk CI.
+- NO-GO for automatisk `EXACT`, pris/ordre, offentlig eksponering av koder, produksjons-D1 eller live-aktivering.
+- Dokumentert lisensgrunnlag og faktisk tilgang til den private basen kreves før reell kjøring og bruk av katalogresultatene.
+- En selvrapportert eller hypotetisk `noNetwork=true` er ikke en faktisk integrasjonstest av produksjonsporten. Test `matcher.ts`/`vin-resolver.ts` separat med sikre negative tilfeller og uavhengig OE/fotofasit.
+
 ## Hensikt
 
 Bruk registreringsnummer/VIN-korpuset til:
