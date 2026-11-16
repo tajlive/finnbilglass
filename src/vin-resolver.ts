@@ -2,7 +2,8 @@
  * OE/VIN-pinpoint-resolver (finnbilglass, Fase 2).
  *
  * Tre eksplisitte utfall:
- *   PINPOINT — nøyaktig ETT salgbart glass for kjøretøyet.
+ *   PINPOINT — reservert for fremtidig uavhengig, bilspesifikt glassbevis.
+ *   Ingen av dagens L0/L1/L2/L3-katalogkoblinger gir dette beviset alene.
  *   VERIFY   — 2+ kandidater (utstyrsvarianter) — kunden må verifisere.
  *   FALLBACK — ingen resolver-data — eksisterende tekstmatcher overtar.
  *
@@ -197,7 +198,8 @@ async function prisKandidat(env: Env, kode: string): Promise<ResolverKandidat | 
     const eg = dek.egenskaper;
     attributter.sensor  = eg.includes('sensor');
     attributter.antenne = eg.includes('antenne');
-    attributter.hud     = eg.includes('oppvarmet');
+    // Oppvarming er IKKE HUD. Eurokode-dekoderen dokumenterer ikke HUD på bilen.
+    attributter.hud     = null;
     attributter.coated  = eg.includes('coated');
   }
 
@@ -537,39 +539,33 @@ async function lagTecdocKtype(env: Env, vin: string | null | undefined): Promise
   }
 }
 
-/** Felles utfalls-logikk: 0 → FALLBACK, 1 → PINPOINT (med GT-gate), 2+ → VERIFY.
- *  GT-gate (G1-doktrine): PINPOINT krever at kandidaten bekreftes av ground_truth —
- *  unntak: L0 (manuell VIN-fasit) og L1 (GT er selv kilden). */
-function utfraKandidater(kandidater: ResolverKandidat[], lag: string, confidence: number, gtSett: Set<string> | null = null): ResolverResultat | null {
+/** Felles fail-closed utfall for eksisterende VIN/katalog/GT-lag.
+ * L0 (VIN-overstyring) og L1 (ground_truth) mangler i dette grensesnittet
+ * dokumentert uavhengig OE/build/fotobevis koblet til selve glassvarianten.
+ * Antall kandidater, GT-tilhørighet og tillits-score er derfor IKKE nok for
+ * PINPOINT. En fremtidig bilspesifikk bevisport må være separat og testet
+ * før noe lag kan returnere PINPOINT.
+ */
+export function utfraKandidater(
+  kandidater: ResolverKandidat[],
+  lag: string,
+  confidence: number,
+  _gtSett: Set<string> | null = null,
+): ResolverResultat | null {
   if (kandidater.length === 0) return null;
   if (kandidater.length === 1) {
     const k = kandidater[0];
-    const gtOk = lag.startsWith('0 ') || lag.startsWith('1 ') || (gtSett && k.eurokode && gtSett.has(k.eurokode.toUpperCase().replace(/[^A-Z0-9]/g, '')));
-    if (!gtOk) {
-      return {
-        utfall: 'VERIFY',
-        grunn: `L${lag}: 1 kandidat, men ikke bekreftet av ground_truth — utstyr må verifiseres`,
-        confidence: Math.min(confidence, 0.5),
-        kandidater: [k],
-        sporsmaal: skillendeSporsmaal([k]),
-      };
-    }
     return {
-      utfall: 'PINPOINT',
-      grunn: `L${lag}: entydig treff (${kandidater.length} kandidat)`,
-      confidence,
-      varenr: k.varenr,
-      varenavn: k.varenavn,
-      pris: k.pris,
-      listepris: k.listepris,
-      eurokode: k.eurokode,
+      utfall: 'VERIFY',
+      grunn: `L${lag}: 1 mulig glass, men uavhengig bilspesifikt OE-/foto-/buildbevis mangler`,
+      confidence: Math.min(confidence, 0.5),
       kandidater: [k],
-      sporsmaal: [],
+      sporsmaal: skillendeSporsmaal([k]),
     };
   }
   return {
     utfall: 'VERIFY',
-    grunn: `L${lag}: ${kandidater.length} varianter — utstyr må verifiseres`,
+    grunn: `L${lag}: ${kandidater.length} varianter — utstyr og uavhengig bevis må verifiseres`,
     confidence: Math.min(confidence, 0.5),
     kandidater: kandidater.slice(0, 6),
     sporsmaal: skillendeSporsmaal(kandidater.slice(0, 6)),

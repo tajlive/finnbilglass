@@ -140,15 +140,40 @@ export async function skrivBeslutning(
     .run();
 }
 
-/**
- * Policy-gate for «godkjenn SKU»: approved KUN når approvalPolicy gir approved.
- * Returnerer needs_verification med grunn — operatøren må da bruke
- * choose_alternative_sku (eksplisitt valg) eller be om bedre bevis.
+/** Select a snapshot candidate by its own SKU and, if supplied, its FULL
+ * Eurocode. A match on Eurocode alone must not authorize a different SKU.
+ * Unknown or mismatched candidates are rejected, never silently substituted.
+ */
+export function velgSnapshotKandidat(
+  kandidater: Array<Record<string, unknown>>,
+  sku: string,
+  eurocode?: string | null,
+): Record<string, unknown> | null {
+  const requestedSku = sku.trim().toUpperCase();
+  const requestedEuro = eurocode?.trim().toUpperCase() || null;
+  if (!requestedSku) return null;
+  // Never accept a Eurocode in place of a product SKU: several SKUs may
+  // share the same Eurocode, and a catalogue join may duplicate a SKU.
+  // If a SKU is not unique in this case snapshot, return no selection.
+  const selected = kandidater.filter((k) => {
+    const varenr = String(k.varenr ?? '').trim().toUpperCase();
+    const kode = String(k.eurokode ?? '').trim().toUpperCase();
+    return varenr === requestedSku
+      && (!requestedEuro || (kode !== '' && kode === requestedEuro));
+  });
+  return selected.length === 1 ? selected[0] : null;
+}
+
+/** Fail-closed OPS gate. A case snapshot and selected equipment attributes do
+ * not contain a source-verified, vehicle-specific OE/build/physical glass edge.
+ * Until server-side independent evidence can be loaded and checked for this
+ * exact candidate, automatic approve_sku is forbidden. Staff may instead
+ * request evidence or follow the explicitly audited manual decision workflow.
  */
 export function godkjenningsGate(
   kandidater: GlassSku[],
   bevis: Partial<GlassAttributes>,
 ): ApprovalVurdering {
   const konflikter = attributkonflikter(kandidater, bevis);
-  return approvalPolicy(kandidater, true, konflikter);
+  return approvalPolicy(kandidater, false, konflikter);
 }
