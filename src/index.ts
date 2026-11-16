@@ -1088,6 +1088,9 @@ export default {
       return json({ ok: true, decision, bildeId });
     }
     if (method === 'GET' && path === '/api/ops/sku-cases') {
+      // Older support-token SKU endpoints are NOT part of Access-backed
+      // production manual orders. Do not expose customer snapshots via them.
+      if (env.ENVIRONMENT === 'production') return json({ ok: false, error: 'Legacy SKU-endepunkt er deaktivert.' }, 404);
       // SKU-beslutningsflate (Oppgave 3): henvendelser med kundereise-snapshot
       // (resolver-kandidater) + siste beslutning. Token-beskyttet, lesing.
       if (env.ENVIRONMENT !== 'staging' && env.ENVIRONMENT !== 'production') return json({ ok: false, error: 'Ikke tilgjengelig i dette miljøet.' }, 404);
@@ -1118,6 +1121,10 @@ export default {
       return json({ ok: true, cases: result });
     }
     if (method === 'POST' && path === '/api/ops/decision') {
+      // Disable legacy snapshot-driven confirmation in production. The new
+      // Access-protected OPS manual-offer/order service is the supported path.
+      // A client-supplied SKU/attributes pair is not independent glass proof.
+      if (env.ENVIRONMENT === 'production') return json({ ok: false, error: 'Legacy SKU-beslutning er deaktivert.' }, 404);
       // Operatør-beslutning (Oppgave 3): godkjenn SKU / be om bedre bilde /
       // velg alternativ SKU / avslå. Append-only; overrides logges i
       // evidence_events. «godkjenn SKU» passerer godkjenningsGate (hard regel 1).
