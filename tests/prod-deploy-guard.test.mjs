@@ -33,7 +33,11 @@ test('all production writes are in manual gated deploy job, not on push',()=>{
 test('production Access AUD can be provided atomically with code without separate secret deployment',()=>{
   assert.match(job,/OPS_ACCESS_AUD: \$\{\{ secrets\.OPS_ACCESS_AUD \}\}/);
   assert.match(job,/wrangler deploy --secrets-file "\$RUNNER_TEMP\/fbg-access-secret\.json"/);
-  assert.match(job,/REQUIRED_PRODUCTION_ACCESS_AUD_NOT_CONFIGURED/);
+  assert.match(job,/node scripts\/maintenance\/write-ops-aud-secret\.mjs/);
+  assert.doesNotMatch(job,/REQUIRED_PRODUCTION_ACCESS_AUD_NOT_CONFIGURED/);
+  assert.ok(job.indexOf('node scripts/maintenance/write-ops-aud-secret.mjs') >
+            job.indexOf('node scripts/maintenance/cloudflare-ops-preflight.mjs'),
+    'stage secrets only after read-only Access preflight');
   assert.match(job,/trap 'rm -f "\$RUNNER_TEMP\/fbg-access-secret\.json"' EXIT/);
   assert.doesNotMatch(job,/\bwrangler\s+versions\s+secret\s+put\b/);
 });
