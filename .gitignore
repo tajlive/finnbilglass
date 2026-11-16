@@ -42,3 +42,7 @@ node_modules
 
 # Generert katalogdata (39 MB) — bygg med scripts/migrate-glass-skus.mjs
 data/glass-skus.json
+
+# Private identifiers and HMAC-pseudonymized vehicle queues
+data/private-vehicle-corpus/
+reports/private-corpus/
