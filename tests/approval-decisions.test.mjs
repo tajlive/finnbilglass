@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
+import { readFileSync } from 'node:fs';
 import { godkjenningsGate, skrivOverride, skrivBeslutning, snapshotKandidatTilSku, velgSnapshotKandidat } from '../src/approval/decisions.ts';
 import { matchFrontrute } from '../src/matcher.ts';
 
@@ -182,4 +183,21 @@ test('P0: SKU and full Eurocode must describe one and the same snapshot candidat
   assert.equal(velgSnapshotKandidat(candidates,'NOT-IN-CASE',null),null);
   assert.equal(velgSnapshotKandidat(candidates,'','1234AGSGYAVZ1B'),null);
   assert.equal(velgSnapshotKandidat(candidates,'C','1234AGSGYAVZ1B'),null);
+});
+
+test('P0: legacy snapshot SKU GET and POST routes are disabled in production',()=>{
+  const source=readFileSync(new URL('../src/index.ts',import.meta.url),'utf8');
+  for (const marker of [
+    "if (method === 'GET' && path === '/api/ops/sku-cases')",
+    "if (method === 'POST' && path === '/api/ops/decision')"
+  ]){
+    const index=source.indexOf(marker);
+    assert.ok(index>0,'legacy route exists');
+    const section=source.slice(index,index+650);
+    assert.match(section,/if \(env\.ENVIRONMENT === 'production'\) return json\(\{ ok: false/);
+    assert.match(section,/\}, 404\)/);
+    assert.ok(section.indexOf("env.ENVIRONMENT === 'production'") <
+      section.indexOf('supportAuthorised(request, env)') || !section.includes('supportAuthorised'),
+      'deny production before any legacy support token or database work');
+  }
 });
