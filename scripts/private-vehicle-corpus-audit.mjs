@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Private, offline corpus quality audit and 30-case EVIDENCE COLLECTION queue.
+ * Private, offline audit of ALL available vehicles and 30-case validation sample.
  *
  * INPUT: explicitly supplied JSONL/NDJSON, may contain REG/VIN. Files are read
  * locally only, never fetched, uploaded or embedded in reports.
@@ -16,8 +16,8 @@ const args=process.argv.slice(2);
 const inputs=[], options={};
 for(let i=0;i<args.length;i++){
   if(args[i]==='--input'&&args[i+1]) inputs.push(args[++i]);
-  else if(['--report','--sample'].includes(args[i])&&args[i+1]) options[args[i].slice(2)]=args[++i];
-  else throw Error('USAGE: --input LOCAL.jsonl [--input MORE.ndjson] [--report PRIVATE.json] [--sample PRIVATE.json]');
+  else if(['--report','--sample','--queue'].includes(args[i])&&args[i+1]) options[args[i].slice(2)]=args[++i];
+  else throw Error('USAGE: --input LOCAL.jsonl [--input MORE.ndjson] [--report PRIVATE.json] [--queue ALL_PRIVATE.json] [--sample FIRST30_PRIVATE.json]');
 }
 if(!inputs.length) throw Error('AT_LEAST_ONE_LOCAL_INPUT_REQUIRED');
 const key=process.env.FBG_CORPUS_HMAC_KEY;
@@ -88,18 +88,24 @@ for(const [stratum,n] of Object.entries(quotas)){
   }
 }
 for(const v of sorted){if(selected.length>=30)break;if(!taken.has(v.caseId)){selected.push(v);taken.add(v.caseId);}}
-const queue=selected.map((v,i)=>({
+// Every eligible vehicle is queued. The first 30 are a dedicated, frozen
+// evaluation sample, not a cap on the corpus or future evidence collection.
+const selectedSplits=new Map(selected.map((v,i)=>[v.caseId,(i%3===2?'HOLDOUT':'DEVELOPMENT')]));
+const caseFor=(v)=>({
   caseId:v.caseId,make:v.make,model:v.model,year:v.year,stratum:v.stratum,
-  split:(i%3===2?'HOLDOUT':'DEVELOPMENT'),
+  split:selectedSplits.get(v.caseId)??'UNASSIGNED',
   evidenceStatus:'NOT_VERIFIED',oeOrBuildEvidence:null,photoOrInstallationEvidence:null,
   confirmedGlass:null,staffVerification:null,
-}));
+});
+const allCases=sorted.map(caseFor);
+const sampleCases=selected.map(caseFor);
 const report={
   schemaVersion:'private-corpus-audit-v1',mode:'OFFLINE_RESEARCH_ONLY',
   metrics,stratumCounts,
   topMakes:Object.entries(makeCounts).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([make,count])=>({make,count})),
-  selection:{selected:queue.length,development:queue.filter(x=>x.split==='DEVELOPMENT').length,
-    holdout:queue.filter(x=>x.split==='HOLDOUT').length,verifiedExact:0},
+  processing:{eligibleVehicles:vehicles.length,queuedVehicles:allCases.length,pendingEvidence:allCases.length,verifiedExact:0},
+  selection:{selected:sampleCases.length,development:sampleCases.filter(x=>x.split==='DEVELOPMENT').length,
+    holdout:sampleCases.filter(x=>x.split==='HOLDOUT').length,verifiedExact:0},
   limitations:['REG/VIN are pseudonymized with secret HMAC, not anonymized.',
     'Source provenance, original collection purpose and retention must be checked before use.',
     'Vehicle records are NOT verified OE-to-glass ground truth.',
@@ -112,5 +118,6 @@ function privateWrite(file,object) {
   catch {throw Error('PRIVATE_OUTPUT_UNAVAILABLE_OR_ALREADY_EXISTS');}
 }
 if(options.report) privateWrite(options.report,report);
-if(options.sample) privateWrite(options.sample,{purpose:'EVIDENCE_COLLECTION_ONLY',cases:queue});
+if(options.queue) privateWrite(options.queue,{purpose:'ALL_VEHICLES_PENDING_INDEPENDENT_EVIDENCE',cases:allCases});
+if(options.sample) privateWrite(options.sample,{purpose:'FIRST_VALIDATION_SAMPLE_ONLY',cases:sampleCases});
 console.log('FBG_PRIVATE_CORPUS_REPORT='+JSON.stringify(report));
