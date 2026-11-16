@@ -1,4 +1,4 @@
-# Privat kjøretøykorpus → testkandidater (uten Glavista)
+# Privat kjøretøykorpus → full dokumentasjonskø og første kontrollsett (uten Glavista)
 
 Status: **offline forsknings- og datakvalitetsverktøy**. IKKE integrert i produksjons-Worker, og genererer **IKKE** `EXACT`-godkjenninger.
 
@@ -22,8 +22,8 @@ Tallene over beskriver en historisk kjøring. **De tre første filene er ikke al
 
 Bruk registreringsnummer/VIN-korpuset til:
 1. Å undersøke merke-/modellfordeling og kvalitetsfeil i bilidentitet
-2. Å velge **opptil 30** kandidater for innsamling av **uavhengig OE-/build-/foto-/montørbevis**
-3. Å få 20 utviklings- og 10 holdout-oppgaver *uten* å merke noen som VERIFIED
+2. Å opprette en dokumentasjonskø for **samtlige gyldige kjøretøy** – ingen vilkårlig 30-bilersgrense
+3. Å velge 20 utviklings- og 10 holdout-tilfeller som et **første evalueringsutvalg**, samtidig som alle andre kjøretøy beholder status `NOT_VERIFIED` i fullkøen
 4. Å sammenligne **kandidatdekning på identisk, fryst input** når #89/#92/#93 samordnes
 
 **Ikke:** Bruk antall registreringsnummer eller maskinelt SVV-oppslag som fasit for glassmontering. VIN bekrefter bilidentitet, ikke nødvendigvis montert frontrute og utstyr. 43R/DOT-merker er heller ikke bilspesifikk OE-evidens.
@@ -41,10 +41,11 @@ node scripts/private-vehicle-corpus-audit.mjs \
   --input /sikker/lagring/svv-finn-broad-results.ndjson \
   --input /sikker/lagring/andre-svv-kjoretoy.jsonl \
   --report /sikker/utdata/korpusrapport.json \
-  --sample /sikker/utdata/30-kandidater.json
+  --queue /sikker/utdata/alle-kjoretoy-til-beviskontroll.json \
+  --sample /sikker/utdata/30-testbiler.json
 ```
 
-Ingen fil lastes opp eller hentes fra internett. `--input` kan brukes flere ganger. Bare JSONL/NDJSON med minst ett REG/VIN-felt og merke, modell, år støttes. Verktøyet lager 0600-filer og **nekter å overskrive** gamle utdata. `--sample` inneholder pseudonym ID, modell/år, stratum, utvikling/holdout og `NOT_VERIFIED`; *ingen* rå reg/VIN.
+Ingen fil lastes opp eller hentes fra internett. `--input` kan brukes flere ganger. Bare JSONL/NDJSON med minst ett REG/VIN-felt og merke, modell, år støttes. Verktøyet lager 0600-filer og **nekter å overskrive** gamle utdata. `--queue` inneholder **alle gyldige og dedupliserte biler** med pseudonym ID, modell/år og `NOT_VERIFIED` – *ingen* rå reg/VIN. `--sample` inneholder bare det første 30-bilers evalueringsutvalget (20 utvikling, 10 holdout); dette begrenser ikke fullkøen.
 
 Det finnes **ikke** en offentlig koblingsnøkkel fra pseudonym ID tilbake til det rå registreringsnummeret. Finn faktisk bil og hent tillatt bevis **inne i et tilgangsbeskyttet privat miljø** med samme HMAC-nøkkel. Hold nøkkel og rådata adskilt fra PR, rapporter og logger.
 
@@ -56,7 +57,7 @@ Personvern: HMAC-pseudonymer er fremdeles **personopplysninger** når man kan kn
 - Automatiske rapporter inneholder kun aggregat. `--sample` er fortsatt privat data som må beskyttes.
 - Pseudonym deduplisering bruker VIN når til stede, ellers REG; det kan gi dobbeltregistrering hvis samme bil finnes på én kilde med bare reg og en annen med bare VIN. Ikke oppgi 100 % korrekt deduplisering.
 - Klassifiseringsgruppene er bare heuristikker for **utvelgelse til manuell kontroll**, aldri generasjon eller utstyrsfakta.
-- En «30-bilers kø» betyr **30 planlagte bevisinnsamlinger**, ikke 30 verifiserte fasiter.
+- **Alle** gyldige kjøretøy kan få egne bevisoppgaver; 30 er bare startsettet for målbar evaluering, ikke noen databegrensning. Før fysisk kontroll av hver bil er status `NOT_VERIFIED`.
 - Den statiske utviklingssalt-en i eldre `scripts/c6-vehicle-intelligence.mjs` er ikke egnet til hemmelig pseudonymisering; denne nye modulen krever separat hemmelig HMAC-nøkkel.
 
 ## Neste arbeidssteg (Issue #91)
