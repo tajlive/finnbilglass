@@ -21,9 +21,13 @@ export function canonicalVehicleName(make: string, model: string): CanonicalVehi
   // Remove repeated manufacturer at start only, preserving a standalone
   // manufacturer-as-model such as MINI. Never remove internal model tokens.
   const unique=[...new Set(leading.filter(Boolean))].sort((a,b)=>b.length-a.length);
-  for(const prefix of unique){
-    const rest=canonicalModel.startsWith(prefix+' ')?canonicalModel.slice(prefix.length+1):null;
-    if(rest && rest!==canonicalMake){canonicalModel=rest;break;}
+  for(let step=0;step<2;step++){
+    let stripped=false;
+    for(const prefix of unique){
+      const rest=canonicalModel.startsWith(prefix+' ')?canonicalModel.slice(prefix.length+1):null;
+      if(rest && rest!==canonicalMake){canonicalModel=rest;stripped=true;break;}
+    }
+    if(!stripped)break;
   }
   return {
     make:canonicalMake, model:canonicalModel,
