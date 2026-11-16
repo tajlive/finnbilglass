@@ -54,6 +54,12 @@ test('full pipeline analyses every vehicle with actual SQL matcher and keeps all
     assert.equal(report.safety.automaticExactActivated,false);
     assert.equal(report.safety.physicalFitmentPrecisionMeasured,false);
     assert.equal(report.totals.automaticExact,0);
+    // The year-range warning measures potentially stale open intervals; it
+    // never changes a candidate into vehicle fitment proof.
+    assert.equal(report.totals.oldOpenCatalogueWindowVehicles,
+      queue.cases.filter(c=>c.oldOpenCatalogueCandidateCount>0).length);
+    assert.equal(report.riskReasons.OLD_OPEN_CATALOGUE_YEAR_WINDOW??0,
+      report.totals.oldOpenCatalogueWindowVehicles);
     assert.equal(report.totals.independentOEProof,0);
     assert.ok(queue.cases.every(c=>c.evidenceStatus==='NOT_VERIFIED'&&c.autoExact===false));
     assert.ok(queue.cases.every(c=>c.decision==='NEEDS_INDEPENDENT_HUMAN_EVIDENCE'));
