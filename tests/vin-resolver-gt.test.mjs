@@ -5,6 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   gtRadMatch, gtRaderSett, gtRaderKandidater, filtrerPaaProfil, normBrand,
+  utfraKandidater, resolveFrontrute,
 } from '../src/vin-resolver.ts';
 import { dekodeEurokode, katalogKode } from '../src/eurokode-dekoder.ts';
 
@@ -210,4 +211,74 @@ test('katalogKode: crosswalk varenr/eurokode-regel (base-8-koder)', () => {
   // 2051AGAC ↔ 2051AGACHIMVZ = samme glass med ulik granularitet
   assert.equal(katalogKode('2051AGACHIMVZ'), '2051');
   assert.equal(katalogKode('2051AGAC'), '2051');
+});
+
+
+// P0: real L0/L1 resolver path, synthetic SQLite; no network or live D1.
+import { DatabaseSync } from 'node:sqlite';
+
+function independentProofTestEnv() {
+  const db = new DatabaseSync(':memory:');
+  db.exec(`
+    CREATE TABLE glass_prisliste (varenr TEXT, varenavn TEXT, pris REAL, eurokode TEXT, rad_type TEXT);
+    INSERT INTO glass_prisliste VALUES
+      ('TEST-GLASS','VW TRANSPORTER 2003- FRONTRUTE OPPVARMET',10000,'1234AGH','glass');
+    CREATE TABLE glass_catalog (eurocode TEXT, camera INTEGER, adas INTEGER);
+    CREATE TABLE vin_glass_overrides (vin TEXT, eurocode TEXT, confidence REAL);
+    CREATE TABLE ground_truth (make TEXT, model TEXT, year INTEGER, frontrute_eurocode TEXT, confidence REAL);
+  `);
+  const d1 = {
+    prepare(sql) {
+      return {
+        bind(...p) {
+          return {
+            async first() { return db.prepare(sql).get(...p) ?? null; },
+            async all() { return { results: db.prepare(sql).all(...p) }; },
+          };
+        },
+      };
+    },
+  };
+  return { db, env: { FINNBILGLASS_DB: d1 } };
+}
+
+test('P0: price-list-derived ground_truth on one vehicle cannot authorize PINPOINT', async () => {
+  const {db,env} = independentProofTestEnv();
+  try {
+    db.prepare('INSERT INTO ground_truth VALUES (?,?,?,?,?)')
+      .run('VW','TRANSPORTER',2005,'1234AGH',1);
+    const r = await resolveFrontrute(env, {merke:'VW',modell:'TRANSPORTER',aar:2005});
+    assert.equal(r.utfall,'VERIFY');
+    assert.equal(r.kandidater?.length,1);
+    assert.equal(r.varenr,undefined);
+    assert.ok(r.confidence<=0.5);
+    assert.match(r.grunn,/uavhengig/);
+    assert.equal(r.kandidater[0].attributter.hud,null,'oppvarmet cannot prove HUD');
+  } finally {db.close();}
+});
+
+test('P0: historical VIN override on one VIN cannot authorize PINPOINT without evidence edge', async () => {
+  const {db,env} = independentProofTestEnv();
+  try {
+    db.prepare('INSERT INTO vin_glass_overrides VALUES (?,?,?)')
+      .run('WV1ZZZ7HZGH132076','1234AGH',0.99);
+    const r = await resolveFrontrute(env, {merke:'VW',modell:'TRANSPORTER',aar:2005,vin:'WV1ZZZ7HZGH132076'});
+    assert.equal(r.utfall,'VERIFY');
+    assert.equal(r.kandidater?.length,1);
+    assert.equal(r.varenr,undefined);
+    assert.ok(r.confidence<=0.5);
+  } finally {db.close();}
+});
+
+test('P0: all resolver source labels remain unverified on catalogue-only evidence', () => {
+  const one = {varenr:'TEST',varenavn:'TEST',pris:null,listepris:null,eurokode:'1234AGH',
+    attributter:{sensor:null,antenne:null,hud:null,kamera:null,adas:null,coated:null}};
+  for (const lag of ['0 (vin_glass_overrides)','1 (ground_truth)','2 (glass_catalog)','3 (ktype)','3T (TecDoc VIN→KType)']) {
+    const r = utfraKandidater([one],lag,0.99,new Set(['1234AGH']));
+    assert.equal(r.utfall,'VERIFY',lag);
+    assert.equal(r.varenr,undefined,lag);
+    assert.equal(r.kandidater.length,1,lag);
+  }
+  assert.equal(utfraKandidater([], '1 (ground_truth)',0.99),null);
+  assert.equal(utfraKandidater([one,one],'1 (ground_truth)',0.99).utfall,'VERIFY');
 });
