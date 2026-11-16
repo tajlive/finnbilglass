@@ -143,6 +143,12 @@ jobs:
           }
           if (!process.exitCode) console.log('PASS: approved config and required secret names exist; no Worker writes');
           NODE
+      - name: Verify production Access and Worker-route protection (READ ONLY, blocking)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          OPS_ACCESS_AUD: ${{ secrets.OPS_ACCESS_AUD }}
+        run: node scripts/maintenance/cloudflare-ops-preflight.mjs
       - name: Deploy Worker + assets (one authorized production deployment)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
