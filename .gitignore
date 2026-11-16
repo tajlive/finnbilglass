@@ -42,3 +42,8 @@ node_modules
 
 # Generert katalogdata (39 MB) — bygg med scripts/migrate-glass-skus.mjs
 data/glass-skus.json
+
+# Identifiserbare kjøretøykorpus / HMAC-pseudonymiserte casekøer – private
+# Importeres aldri i offentlig repo eller Cloudflare-worker-build.
+data/private-vehicle-corpus/
+reports/private-corpus/
