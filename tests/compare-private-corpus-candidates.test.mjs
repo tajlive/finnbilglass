@@ -58,3 +58,20 @@ test('candidate diff rejects missing case and refuses an auto-EXACT case',()=>{
     assert.match(unsafe.stderr,/CORPUS_EVIDENCE_GATE_VIOLATED/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('candidate comparison refuses changed source facts or a different catalogue',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'fbg-private-integrity-'));
+  try{
+    const a=join(dir,'a.json'),b=join(dir,'b.json');
+    save(a,[caseFor('a',0),caseFor('b',1)]);
+    save(b,[caseFor('a',2,{sourceFactsFingerprint:'f'.repeat(32)}),caseFor('b',1)]);
+    assert.match(exec(a,b).stderr,/SOURCE_VEHICLE_FACTS_CHANGED_COMPARE_NOT_VALID/);
+    save(b,[caseFor('a',2,{year:2014}),caseFor('b',1)]);
+    assert.match(exec(a,b).stderr,/SOURCE_VEHICLE_FACTS_CHANGED_COMPARE_NOT_VALID/);
+    save(b,[caseFor('a',2),caseFor('b',1)],'b'.repeat(64));
+    assert.match(exec(a,b).stderr,/CATALOGUE_CHANGED_COMPARE_NOT_VALID/);
+    save(b,[caseFor('a',2,{sourceFactsFingerprint:null}),caseFor('b',1)]);
+    assert.match(exec(a,b).stderr,/SOURCE_FACTS_FINGERPRINT_REQUIRED_REGENERATE_AUDIT/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
