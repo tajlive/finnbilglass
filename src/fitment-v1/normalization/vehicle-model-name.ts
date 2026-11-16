@@ -7,6 +7,7 @@ export interface CanonicalVehicleName { make: string; model: string; changed: bo
 
 const MAKE_ALIASES: Record<string,string> = {
   VOLKSWAGEN: 'VW', VAG: 'VW',
+  'ŠKODA': 'SKODA',
   'MERCEDES-BENZ': 'MERCEDES', MB: 'MERCEDES', 'M-B': 'MERCEDES',
 };
 
