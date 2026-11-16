@@ -215,3 +215,28 @@ test('invalid VIN formats remain in private queue but are never called valid',()
     assert.ok(!JSON.stringify(q).includes('WVWZZZ1KZ9P111111'));
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('placeholder VIN UNKNOWN on different registrations never merges separate vehicles',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'fbg-placeholder-vin-'));
+  try{
+    const input=join(dir,'vehicles.jsonl'),output=join(dir,'queue.json');
+    const rows=[
+      {vin:'UNKNOWN',regnr:'AB11111',merke:'VW',modell:'GOLF',aar:2018},
+      {vin:'UNKNOWN',regnr:'CD22222',merke:'BMW',modell:'3-SERIE',aar:2017},
+      {vin:'INVALID',regnr:'EF33333',merke:'MAZDA',modell:'CX-5',aar:2016},
+      {vin:'INVALID',regnr:'GH44444',merke:'FORD',modell:'FOCUS',aar:2015},
+    ];
+    writeFileSync(input,rows.map(x=>JSON.stringify(x)).join('\n')+'\n');
+    const res=run(dir,['--input',input,'--queue',output]);
+    assert.equal(res.status,0,res.stderr);
+    const report=JSON.parse(res.stdout.split('\n').find(x=>x.startsWith('FBG_PRIVATE_CORPUS_REPORT=')).slice('FBG_PRIVATE_CORPUS_REPORT='.length));
+    const q=JSON.parse(readFileSync(output,'utf8'));
+    assert.equal(report.metrics.uniqueVehicles,4);
+    assert.equal(report.metrics.invalidVinFormatVehicles,4);
+    assert.equal(report.metrics.duplicateVehicleIds,0);
+    assert.equal(new Set(q.cases.map(c=>c.caseId)).size,4);
+    assert.ok(q.cases.every(c=>c.hasVin===true&&c.vinFormatValid===false));
+    for(const row of rows)assert.ok(!JSON.stringify(q).includes(row.vin)&&!JSON.stringify(q).includes(row.regnr));
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
