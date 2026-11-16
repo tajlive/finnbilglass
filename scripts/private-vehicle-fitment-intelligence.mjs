@@ -88,6 +88,7 @@ const totals={eligibleVehicles:source.cases.length,withCandidates:0,withoutCandi
   applicationCandidateVehicles:0,identityConflicts:0,generationAmbiguousVehicles:0,
   unknownEurocodePositionVehicles:0,discriminatingQuestionVehicles:0,
   invalidVinFormatVehicles:0,missingVinVehicles:0,normalizedModelNames:0,
+  oldOpenCatalogueWindowVehicles:0,
   independentOEProof:0,automaticExact:0};
 const allCodes=new Set(),noCandidateReasons={},riskReasons={},byFamily=new Map(),enriched=[];
 for(const v of source.cases){
@@ -96,6 +97,13 @@ for(const v of source.cases){
   const familyKey=f?mk+' '+f.familie:null;
   const familyRows=familyKey?(buckets.get(familyKey)??[]):[];
   const found=matchClassDCandidates(familyRows,mk,mo,v.year);
+  // OLD open-ended year ranges (e.g. 'OCTAVIA 97-') can still be
+  // candidate evidence for a 2018 car. Flag this for manual verification,
+  // never infer that the early product fits a newer vehicle generation.
+  const oldOpenCandidates=found.filter(c=>{
+    const m=/(\d{4})–$/.exec(c.matchReason);
+    return m && v.year-Number(m[1])>8;
+  }).length;
   const app=resolver.resolve({make:mk,model:mo,modelYear:v.year}).applications;
   const codes=[...new Set(found.map(x=>x.eurokode).filter(Boolean))].sort();
   const unknown=found.filter(x=>parseEurocodePosition(x.eurokode).position==='UNKNOWN').length;
@@ -120,6 +128,7 @@ for(const v of source.cases){
   if(!app.length)reasonCodes.push('APPLICATION_UNRESOLVED');
   else if(app.length>1)reasonCodes.push('GENERATION_UNRESOLVED');
   if(found.length>1)reasonCodes.push('MULTIPLE_GLASS_CANDIDATES');
+  if(oldOpenCandidates)reasonCodes.push('OLD_OPEN_CATALOGUE_YEAR_WINDOW');
   if(unknown)reasonCodes.push('UNKNOWN_GLASS_POSITION_FORMAT');
   if(contradicted)reasonCodes.push('CONTRADICTORY_CATALOGUE_FEATURES');
   if(questions.length)reasonCodes.push('DISTINGUISHING_EQUIPMENT_UNKNOWN');
@@ -139,6 +148,7 @@ for(const v of source.cases){
     :found.length>1?'COLLECT_VEHICLE_OE_AND_VARIANT_FEATURES'
     :'COLLECT_INDEPENDENT_VEHICLE_OE_TO_GLASS_EVIDENCE';
   totals.normalizedModelNames+=canonical.changed?1:0;
+  totals.oldOpenCatalogueWindowVehicles+=oldOpenCandidates>0?1:0;
   totals.invalidVinFormatVehicles+=v.vinFormatValid===false?1:0;
   totals.missingVinVehicles+=v.hasVin===false?1:0;
   totals.withCandidates+=found.length>0?1:0;
@@ -155,6 +165,7 @@ for(const v of source.cases){
   enriched.push({...v,make:mk,model:mo,modelNameNormalized:canonical.changed,
     split:sample?.get(v.caseId)??v.split??'UNASSIGNED',
     candidateCount:found.length,candidateDistinctEurocodes:codes.length,candidateEurocodes:codes,
+    oldOpenCatalogueCandidateCount:oldOpenCandidates,
     applicationCount:app.length,possibleGenerations:[...new Set(app.map(a=>a.generation).filter(Boolean))].sort(),
     unknownPositionCandidateCount:unknown,distinguishingQuestions:questions,
     noCandidateReason:noHit,reasonCodes,priorityScore,priorityBasis:'CORPUS_FREQUENCY_AND_FITMENT_RISK',
@@ -191,6 +202,7 @@ const report={
   limitations:['Every catalogue match is a candidate, not proof of installed glass.',
     'VIN format is only a structural check (17 allowed characters), not cryptographic provenance or OEM VIN verification.',
     'Application generations are inferred; not confirmed by OE/build evidence.',
+    'Open-ended catalogue year windows older than 8 years are flagged heuristically, NOT verified or automatically narrowed.',
     'Catalogue usage rights need independent confirmation before live integration.',
     'This offline tool does NOT test production decision ports, auth, D1 or payments.']
 };
