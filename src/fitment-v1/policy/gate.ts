@@ -24,6 +24,7 @@ export interface GateResult {
  *  B. autoritativ application/fitment-kobling → valgt OE eller glass
  *  C. autoritativ eller uavhengig korroborert OE→glass-identitet
  *  D. ingen uløst materiell konflikt
+ *  E. nøyaktig én gjenværende glassvariant
  */
 export function evaluateExactGate(input: ExactGateInput): GateResult {
   const checks = {
@@ -31,6 +32,7 @@ export function evaluateExactGate(input: ExactGateInput): GateResult {
     B_applicationLinkageAuthoritative: input.applicationEdgeAuthoritative,
     C_oeGlassAuthoritativeOrIndependent: input.oeGlassEdgeAuthoritativeOrIndependent,
     D_noUnresolvedMaterialConflict: input.materialConflicts.length === 0,
+    E_exactlyOneSelectedGlass: input.candidateCount === 1,
   };
   const passed = Object.values(checks).every(Boolean);
   const reasonCodes: string[] = [];
@@ -38,8 +40,10 @@ export function evaluateExactGate(input: ExactGateInput): GateResult {
   if (!checks.B_applicationLinkageAuthoritative) reasonCodes.push('APPLICATION_LINKAGE_NOT_AUTHORITATIVE');
   if (!checks.C_oeGlassAuthoritativeOrIndependent) reasonCodes.push('OE_GLASS_LINKAGE_NOT_AUTHORITATIVE');
   if (!checks.D_noUnresolvedMaterialConflict) reasonCodes.push('MATERIAL_CONFLICT_UNRESOLVED');
-  if (input.candidateCount === 1 && passed) reasonCodes.push('SINGLE_CANDIDATE_IS_NOT_PROOF_BY_ITSELF');
-  return { passed: passed && input.candidateCount >= 1, checks, reasonCodes, authoritativeDataExact: passed };
+  if (!checks.E_exactlyOneSelectedGlass) reasonCodes.push('EXACT_REQUIRES_UNIQUE_CANDIDATE');
+  // Consumers inspect both fields. They must have IDENTICAL, fail-closed
+  // semantics even for 0, 2+ and malformed candidate counts.
+  return { passed, checks, reasonCodes, authoritativeDataExact: passed };
 }
 
 export interface ObservationGateInput {
