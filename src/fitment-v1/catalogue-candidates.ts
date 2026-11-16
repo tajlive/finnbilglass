@@ -121,6 +121,24 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'SKODA', re: /\bSUPERB\b/, familie: 'SUPERB' },
 ];
 
+/**
+ * Never conflate a distinctive body derivative with the parent model.
+ * Historic catalogues sometimes join two model names in one product label;
+ * such a label is not evidence that their windscreens are interchangeable.
+ */
+export function isDistinctBodyVariant(make: string, family: string, modelOrProduct: string): boolean {
+  const text=modelOrProduct.toUpperCase();
+  if(make==='FORD' && family==='FOCUS' && /\bFOCUS\s+(?:C[- ]?MAX|GRAND\s+C[- ]?MAX)\b/.test(text))return true;
+  if(make==='TOYOTA' && family==='AVENSIS' && /\bAVENSIS\s+VERSO\b/.test(text))return true;
+  if(make==='TOYOTA' && family==='YARIS' && /\bYARIS\s+(?:VERSO|CROSS)\b/.test(text))return true;
+  if(make==='VOLVO' && family==='XC40' && /\bV40\s*\+\s*XC40\b/.test(text))return true;
+  if(make==='VOLVO' && family==='V70' && (
+      /\bS70\s*\+\s*V70\b/.test(text) ||
+      /\b(?:S80\s*[+\/]\s*V70|V70\s*[+\/]\s*(?:XC70|S80))\b/.test(text) ||
+      /\b850\s*\+\s*S\/?V70\b/.test(text)))return true;
+  return false;
+}
+
 // The added families demand an explicitly parsed WINDSCREEN Eurocode.
 // Product text alone, unclassified numbers and rear/side positions are unsafe.
 const STRICT_WINDSCREEN_FAMILIES = new Set([
@@ -153,10 +171,7 @@ function parseRow(r: { varenr: string; eurokode?: string | null; varenavn?: stri
       // Legacy joined names are not authoritative cross-model equivalence.
       // XC40 began later than V40; the old "V40+XC40 12-" row must NOT be
       // interpreted as a valid XC40 windscreen (or V70 from an S70+V70 row).
-      if (fam.merke === 'VOLVO' &&
-          (/\bV40\s*\+\s*XC40\b/.test(varenavn) ||
-           /\bS70\s*\+\s*V70\b/.test(varenavn) ||
-           /\bV70\s*\+\s*XC70\b/.test(varenavn))) continue;
+      if(isDistinctBodyVariant(fam.merke,fam.familie,varenavn))continue;
       const { fra, til } = aarIntervall(varenavn);
       // generasjons-hint: «GOLF II», «PASSAT B8», «T5»
       const g = varenavn.match(/\b(?:GOLF|PASSAT|POLO)\s+([IVX]{1,4})\b/) ??
@@ -199,6 +214,7 @@ export function matchClassDCandidates(
   const { make: mk, model: mo } = canonicalVehicleName(make, model);
   const fam = FAMILIER.find((f) => f.merke === mk && f.re.test(mo));
   if (!fam) return [];
+  if(isDistinctBodyVariant(fam.merke,fam.familie,mo))return [];
   // Kandidatkvalitet: ekskluder bak/side-ruter OG tilbehør (PY/GU/K-lister, klips-kit — kjent katalogfelle)
   const erBakSide = (c: CatalogueCandidate) => /BAKRUTE|SIDERUTE|DØRRUTE|DORRUTE|BAKRUT|SIDERUT/.test(c.varenavn);
   const erTilbehor = (c: CatalogueCandidate) => /(PYT|PYB|PYV|PYH|PYS|PYC|PYKIT|PY|GU|GUM)$/.test(c.varenr) || /^\d{3,5}K$/.test(c.varenr) || /PYNTELIST|GUMMILIST|KLIPS|PYNTELISTE/.test(c.varenavn);
