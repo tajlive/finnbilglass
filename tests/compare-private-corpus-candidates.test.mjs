@@ -22,7 +22,7 @@ test('same-cohort diff reports only aggregate gains, losses, and ambiguity',()=>
   try{
     const old=join(dir,'old.json'),now=join(dir,'now.json');
     save(old,[caseFor('a',0),caseFor('b',2),caseFor('c',1)]);
-    save(now,[caseFor('c',2),caseFor('b',0),caseFor('a',2,{modelNameNormalized:true})]);
+    save(now,[caseFor('c',2),caseFor('b',0),caseFor('a',2,{modelNameNormalized:true,model:'PRIVATEVINIDENTIFIERXYZ'})]);
     const r=exec(old,now);
     assert.equal(r.status,0,r.stderr);
     const line=r.stdout.trim();
@@ -37,6 +37,7 @@ test('same-cohort diff reports only aggregate gains, losses, and ambiguity',()=>
     assert.equal(summary.normalizedVehicleModelNames,1);
     assert.equal(summary.automaticExact,0);
     assert.ok(!line.includes('v_'+('a'.repeat(32))));
+    assert.ok(!line.includes('PRIVATEVINIDENTIFIERXYZ'), 'never echo arbitrary private model fields');
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
 
