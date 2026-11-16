@@ -124,3 +124,66 @@ test('large private corpus queues all 306 eligible vehicles, not only the 30-cas
     assert.ok(queue.cases.every(c=>c.confirmedGlass===null));
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('VIN and REG-only rows for the same vehicle reconcile across private inputs',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'fbg-reconcile-'));
+  try{
+    writeFileSync(join(dir,'s1.jsonl'),JSON.stringify({regnr:'AB98765',merke:'VW',modell:'GOLF',aar:2018})+'\n');
+    writeFileSync(join(dir,'s2.jsonl'),JSON.stringify({regnr:'AB98765',vin:'WVWZZZ1KZ9P999999',merke:'VW',modell:'GOLF',aar:2018})+'\n');
+    const output=join(dir,'queue.json');
+    const r=run(dir,['--input',join(dir,'s1.jsonl'),'--input',join(dir,'s2.jsonl'),'--queue',output]);
+    assert.equal(r.status,0,r.stderr);
+    const report=JSON.parse(r.stdout.split('\n').find(x=>x.startsWith('FBG_PRIVATE_CORPUS_REPORT=')).split('=')[1]);
+    const q=JSON.parse(readFileSync(output,'utf8'));
+    assert.equal(report.metrics.uniqueVehicles,1);
+    assert.equal(report.metrics.duplicateVehicleIds,1);
+    assert.equal(report.metrics.regToVinJoined,1);
+    assert.equal(q.cases.length,1);
+    assert.equal(q.cases[0].identityStatus,'UNVERIFIED');
+    assert.deepEqual(q.cases[0].sourceRefs,['INPUT_01','INPUT_02']);
+    assert.ok(!JSON.stringify(q).includes('AB98765'));
+    assert.ok(!JSON.stringify(q).includes('WVWZZZ1KZ9P999999'));
+  } finally {rmSync(dir,{recursive:true,force:true});}
+});
+
+test('Reused registration with two distinct VINs never merges different vehicles',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'fbg-collision-'));
+  try{
+    const records=[
+      {regnr:'AB98765',vin:'WVWZZZ1KZ9P111111',merke:'VW',modell:'GOLF',aar:2018},
+      {regnr:'AB98765',vin:'WVWZZZ1KZ9P222222',merke:'VW',modell:'PASSAT',aar:2018},
+      {regnr:'AB98765',merke:'VW',modell:'GOLF',aar:2018},
+    ];
+    writeFileSync(join(dir,'s.jsonl'),records.map(x=>JSON.stringify(x)).join('\n'));
+    const output=join(dir,'queue.json');
+    const r=run(dir,['--input',join(dir,'s.jsonl'),'--queue',output]);
+    assert.equal(r.status,0,r.stderr);
+    const report=JSON.parse(r.stdout.split('\n').find(x=>x.startsWith('FBG_PRIVATE_CORPUS_REPORT=')).split('=')[1]);
+    const q=JSON.parse(readFileSync(output,'utf8'));
+    assert.equal(report.metrics.ambiguousRegistrationLinks,1);
+    assert.equal(report.metrics.uniqueVehicles,3);
+    assert.equal(report.metrics.regToVinJoined,0);
+    assert.ok(q.cases.every(x=>x.identityStatus==='CONFLICT'));
+    assert.ok(q.cases.every(x=>x.evidenceStatus==='NOT_VERIFIED'));
+  } finally {rmSync(dir,{recursive:true,force:true});}
+});
+
+test('Same VIN with conflicting make/model facts is not treated as reliable identity',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'fbg-conflict-'));
+  try{
+    const rows=[
+      {regnr:'AB98765',vin:'WVWZZZ1KZ9P111111',merke:'VW',modell:'GOLF',aar:2018},
+      {regnr:'AB98765',vin:'WVWZZZ1KZ9P111111',merke:'VW',modell:'PASSAT',aar:2018},
+    ];
+    writeFileSync(join(dir,'s.jsonl'),rows.map(x=>JSON.stringify(x)).join('\n'));
+    const output=join(dir,'queue.json');
+    const r=run(dir,['--input',join(dir,'s.jsonl'),'--queue',output]);
+    assert.equal(r.status,0,r.stderr);
+    const report=JSON.parse(r.stdout.split('\n').find(x=>x.startsWith('FBG_PRIVATE_CORPUS_REPORT=')).split('=')[1]);
+    const q=JSON.parse(readFileSync(output,'utf8'));
+    assert.equal(report.metrics.uniqueVehicles,1);
+    assert.equal(report.metrics.conflictingVehicleRecords,1);
+    assert.equal(q.cases[0].identityStatus,'CONFLICT');
+  } finally {rmSync(dir,{recursive:true,force:true});}
+});
