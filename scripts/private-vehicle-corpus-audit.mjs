@@ -91,12 +91,19 @@ for(const [sourceIndex,input] of inputs.entries()){
       metrics.validRows++;
       const record={vin,reg,make,model,year};
       if(vin){
-        const target=vinEntities.get(vin);
+        // An invalid/placeholder VIN is NOT a unique physical-vehicle identity.
+        // Scope it to the registration when present, otherwise to the source
+        // row. Never coalesce unrelated cars all labelled "UNKNOWN".
+        const usableVin=vinFormatValid(vin);
+        const vinKey=usableVin?vin:`UNVERIFIED:${reg||sourceId+':'+sourceRows[sourceId]}:${vin}`;
+        const target=vinEntities.get(vinKey);
         if(target)absorb(target,record,sourceId);
-        else vinEntities.set(vin,makeEntity(hmac('VIN:'+vin),record,true,Boolean(reg),sourceId));
-        if(reg){
+        else vinEntities.set(vinKey,makeEntity(hmac('VIN:'+vinKey),record,true,Boolean(reg),sourceId));
+        // Only format-valid VINs can reconcile REG-only entries with a VIN
+        // observation. Format-valid is NOT equivalent to OEM verification.
+        if(reg&&usableVin){
           if(!regToVins.has(reg))regToVins.set(reg,new Set());
-          regToVins.get(reg).add(vin);
+          regToVins.get(reg).add(vinKey);
         }
       } else {
         const target=regOnlyEntities.get(reg);
