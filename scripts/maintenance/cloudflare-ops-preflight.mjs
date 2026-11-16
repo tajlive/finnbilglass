@@ -28,43 +28,48 @@ function includesEveryone(value){
   return Object.entries(value).some(([key,v])=>
     (key.toLowerCase()==='everyone' && v!==false && v!==null) || includesEveryone(v));
 }
+function accessDestinations(app){
+  // Cloudflare ignores legacy self_hosted_domains whenever destinations
+  // is present. A partial list must never be filled from legacy values.
+  if(Array.isArray(app.destinations)&&app.destinations.length)
+    return app.destinations.filter(d=>d?.type==='public'&&typeof d.uri==='string');
+  if(Array.isArray(app.self_hosted_domains)&&app.self_hosted_domains.length)
+    return app.self_hosted_domains.map(d=>({uri:d.domain,overrides:[]}));
+  return [{uri:app.domain,overrides:[]}];
+}
+function coversAccessPath(uri,samples){
+  const key=uriKey(uri);
+  if(!key)return false;
+  if(key.includes('*')){
+    const escaped=key.replace(/[|\\{}()[\]^$+?.]/g,'\\$&').replace(/\*/g,'.*');
+    const re=new RegExp('^'+escaped+'$','i');
+    return samples.some(sample=>re.test(sample));
+  }
+  return samples.some(sample=>sample===key||sample.startsWith(key+'/'));
+}
 export function validateAccess(apps,policies,aud){
   invariant(typeof aud==='string' && aud.length>=20,'PROD_ACCESS_AUD_NOT_PROVIDED_FOR_VERIFICATION');
   invariant(Array.isArray(apps),'ACCESS_APP_LIST_INVALID');
   const matched=apps.filter(app=>app?.type==='self_hosted'&&app.aud===aud);
-  // More specific Access applications can override the intended protection.
-  // Check ALL self-hosted Access apps returned by the account-wide API, not
-  // only the app with the expected audience. A second overlapping app could
-  // have a Bypass rule and expose an otherwise protected OPS endpoint.
-  const protectedSamples=HOSTS.flatMap(host=>[
-    host+'/ops',host+'/ops/ansatte',host+'/api/ops',host+'/api/ops/manual/session'
+  invariant(matched.length===1,'EXACTLY_ONE_PROD_ACCESS_APP_AUD_REQUIRED');
+  const app=matched[0];
+  // Another more-specific app could bypass the intended protection. Inspect
+  // all Access apps, not merely the one with our expected audience.
+  const samples=HOSTS.flatMap(host=>[
+    host+'/ops',host+'/ops/ansatte',
+    host+'/api/ops',host+'/api/ops/manual/session'
   ]);
   for(const other of apps){
     if(other?.type!=='self_hosted'||other.aud===aud)continue;
-    const otherDest=Array.isArray(other.destinations)&&other.destinations.length
-      ?other.destinations.filter(d=>d?.type==='public').map(d=>d.uri)
-      :Array.isArray(other.self_hosted_domains)&&other.self_hosted_domains.length
-        ?other.self_hosted_domains.map(d=>d.domain)
-        :[other.domain];
-    for(const destination of otherDest){
-      const uri=uriKey(destination);
-      if(!uri)continue;
-      let overlap=false;
-      if(uri.includes('*')){
-        const glob=uri.replace(/[|\\{}()[\]^$+?.]/g,'\\  const matched=apps.filter(app=>app?.type==='self_hosted'&&app.aud===aud);').replace(/\*/g,'.*');
-        overlap=protectedSamples.some(sample=>new RegExp('^'+glob+'
-  invariant(matched.length===1,'EXACTLY_ONE_PROD_ACCESS_APP_AUD_REQUIRED');
-  const app=matched[0];
-  // New destinations supersede deprecated self_hosted_domains. Never merge
-  // destinations with a stale legacy domain list to fabricate coverage.
-  const destinations=Array.isArray(app.destinations)&&app.destinations.length
-    ?app.destinations.filter(d=>d?.type==='public'&&typeof d.uri==='string')
-    :Array.isArray(app.self_hosted_domains)&&app.self_hosted_domains.length
-      ?app.self_hosted_domains.map(d=>({uri:d.domain,overrides:[]}))
-      :[{uri:app.domain,overrides:[]}];
+    if(accessDestinations(other).some(d=>coversAccessPath(d.uri,samples)))
+      throw Error('COMPETING_ACCESS_APP_ON_PROTECTED_OPS_PATH');
+  }
+  const destinations=accessDestinations(app);
   const actual=new Set(destinations.map(d=>uriKey(d.uri)));
-  for(const uri of REQUIRED)invariant(actual.has(uri),'PROD_ACCESS_REQUIRED_PATH_MISSING');
-  invariant(!destinations.some(d=>(d.overrides??[]).some(o=>o.behavior==='public')),
+  for(const uri of REQUIRED)
+    invariant(actual.has(uri),'PROD_ACCESS_REQUIRED_PATH_MISSING');
+  invariant(!destinations.some(d=>Array.isArray(d.overrides)&&
+    d.overrides.some(o=>o.behavior==='public')),
     'PROD_ACCESS_PUBLIC_OVERRIDE_PRESENT');
   invariant(Array.isArray(policies)&&policies.length>0,'PROD_ACCESS_POLICIES_NOT_READABLE');
   invariant(policies.some(p=>p?.decision==='allow'),'PROD_ACCESS_ALLOW_POLICY_MISSING');
@@ -72,8 +77,10 @@ export function validateAccess(apps,policies,aud){
     'PROD_ACCESS_UNSAFE_BYPASS_POLICY');
   invariant(!policies.some(p=>p?.decision==='allow'&&includesEveryone(p.include)),
     'PROD_ACCESS_ALLOW_EVERYONE_FORBIDDEN');
-  return {protectedPaths:REQUIRED.length,allowPolicies:policies.filter(p=>p.decision==='allow').length};
+  return {protectedPaths:REQUIRED.length,
+    allowPolicies:policies.filter(p=>p.decision==='allow').length};
 }
+
 /** Fail closed when a zone route can intercept protected OPS requests before
  * the correct Custom Domain Worker. A replacement Worker with a different name
  * is as unsafe as the historical ops-repair Worker.
