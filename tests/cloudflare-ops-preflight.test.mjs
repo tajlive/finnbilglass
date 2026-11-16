@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateAccess,validateWorkerRoutes,validateWorkerDomains} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
+import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,preflight} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
 
 const AUD='a'.repeat(64);
 const hosts=['finnbilglass.no','www.finnbilglass.no'];
@@ -20,12 +20,18 @@ test('prod Access gate accepts exact 8 paths, scoped allow, no bypass',()=>{
   assert.equal(ok.allowPolicies,1);
 });
 
-test('no www, no /api/ops or only wildcard without exact is NO-GO',()=>{
-  for(const i of [0,3,4,7]){
-    const missing=expected.filter((_,idx)=>idx!==i);
-    assert.throws(()=>validateAccess([app({destinations:missing})],policies(),AUD),
-      /PROD_ACCESS_REQUIRED_PATH_MISSING/);
-  }
+test('Access root paths may protect their subpaths without redundant wildcard destinations',()=>{
+  const concise=['/ops','/api/ops'].flatMap(path=>hosts.map(host=>({type:'public',uri:host+path})));
+  assert.equal(validateAccess([app({destinations:concise})],policies(),AUD).protectedPaths,8);
+  const wholeSites=hosts.map(host=>({type:'public',uri:host}));
+  assert.equal(validateAccess([app({destinations:wholeSites})],policies(),AUD).protectedPaths,8);
+  assert.throws(()=>validateAccess([app({destinations:wholeSites.slice(0,1)})],policies(),AUD),
+    /PROD_ACCESS_REQUIRED_PATH_MISSING/);
+  assert.throws(()=>validateAccess([app({destinations:concise.filter(d=>d.uri!=='www.finnbilglass.no/api/ops')})],policies(),AUD),
+    /PROD_ACCESS_REQUIRED_PATH_MISSING/);
+  // Wildcard on a child path does NOT cover its parent exact route.
+  assert.throws(()=>validateAccess([app({destinations:expected.filter(d=>d.uri!=='finnbilglass.no/ops')})],policies(),AUD),
+    /PROD_ACCESS_REQUIRED_PATH_MISSING/);
 });
 
 test('wrong AUD or unbound application must fail closed',()=>{
@@ -51,8 +57,8 @@ test('Access public override, bypass, Everyone and missing policy deny release',
 
 test('new destinations supersede stale legacy domains',()=>{
   assert.throws(()=>validateAccess([app({
-    destinations:expected.slice(0,4),
-    self_hosted_domains:expected.slice(4).map(d=>({domain:d.uri}))
+    destinations:expected.filter(d=>d.uri.startsWith('finnbilglass.no/')),
+    self_hosted_domains:expected.filter(d=>d.uri.startsWith('www.')).map(d=>({domain:d.uri}))
   })],policies(),AUD),/PROD_ACCESS_REQUIRED_PATH_MISSING/);
 });
 
@@ -142,4 +148,65 @@ test('a competing Access application cannot overlap the protected OPS paths',()=
   assert.doesNotThrow(()=>validateAccess([
     app(),other('finnbilglass.no/public-only/*')
   ],policies(),AUD));
+});
+
+
+test('AUD auto-discovery needs a unique production app, not a manually copied GitHub secret',()=>{
+  const concise=['/ops','/api/ops'].flatMap(path=>hosts.map(host=>({type:'public',uri:host+path})));
+  assert.deepEqual(resolveProductionAudience([app({destinations:concise})]),
+    {aud:AUD,source:'cloudflare_account_read'});
+  assert.deepEqual(resolveProductionAudience([app()],'b'.repeat(64)),
+    {aud:'b'.repeat(64),source:'protected_environment'});
+  assert.throws(()=>resolveProductionAudience([app()],'short'),
+    /PROD_ACCESS_AUD_NOT_PROVIDED_FOR_VERIFICATION/);
+  assert.throws(()=>resolveProductionAudience([],null),
+    /PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/);
+  assert.throws(()=>resolveProductionAudience(null,null),/ACCESS_APP_LIST_INVALID/);
+  assert.throws(()=>resolveProductionAudience([app({destinations:concise.slice(1)})],null),
+    /PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/);
+  assert.throws(()=>resolveProductionAudience([app(),app({id:'second',aud:'b'.repeat(64)})],null),
+    /PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/);
+});
+
+test('preflight reads production AUD from Cloudflare when secret is absent',async()=>{
+  const prior=globalThis.fetch;
+  const token='only-synthetic-token-abcdefghij12345';
+  const seen=[];
+  globalThis.fetch=async(url,options)=>{
+    const u=new URL(url);
+    assert.equal(options.method,'GET');
+    assert.equal(options.headers.Authorization,'Bearer '+token);
+    seen.push(u.pathname);
+    let result;
+    if(u.pathname.endsWith('/access/apps'))result=[app()];
+    else if(u.pathname.endsWith('/access/apps/test-app/policies'))result=policies();
+    else if(u.pathname==='/client/v4/zones')result=[{id:'zone-fixture'}];
+    else if(u.pathname.endsWith('/workers/routes'))result=[];
+    else if(u.pathname.endsWith('/workers/domains'))result=[{
+      hostname:u.searchParams.get('hostname'),service:'finnbilglass-frontrute',
+      zone_name:'finnbilglass.no',enabled:true,environment:'production'
+    }];
+    else throw Error('Unexpected GET fixture '+u.pathname);
+    return {ok:true,json:async()=>({success:true,result,result_info:{total_pages:1}})};
+  };
+  try{
+    const output=await preflight({
+      CLOUDFLARE_ACCOUNT_ID:'80d5b1d56a3e907150ba7348b6182894',
+      CLOUDFLARE_API_TOKEN:token
+    });
+    assert.deepEqual(output,{
+      status:'PASS',readOnly:true,audienceSource:'cloudflare_account_read',
+      protectedPaths:8,allowPolicies:1,routesChecked:0,
+      legacyRepairRoutes:0,workerCustomDomains:3
+    });
+    assert.ok(!JSON.stringify(output).includes(AUD),'AUD must not be logged/output');
+    assert.equal(seen.length,7);
+    await assert.rejects(preflight({
+      CLOUDFLARE_ACCOUNT_ID:'80d5b1d56a3e907150ba7348b6182894',
+      CLOUDFLARE_API_TOKEN:token,
+      OPS_ACCESS_AUD:'b'.repeat(64)
+    }),/EXACT_PROD_ACCESS_APP_NOT_FOUND/);
+  }finally{
+    globalThis.fetch=prior;
+  }
 });
