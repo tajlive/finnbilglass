@@ -153,6 +153,7 @@ for(const v of source.cases){
   totals.discriminatingQuestionVehicles+=questions.length>0?1:0;
   for(const code of codes)allCodes.add(code);
   enriched.push({...v,make:mk,model:mo,modelNameNormalized:canonical.changed,
+    split:sample?.get(v.caseId)??v.split??'UNASSIGNED',
     candidateCount:found.length,candidateDistinctEurocodes:codes.length,candidateEurocodes:codes,
     applicationCount:app.length,possibleGenerations:[...new Set(app.map(a=>a.generation).filter(Boolean))].sort(),
     unknownPositionCandidateCount:unknown,distinguishingQuestions:questions,
