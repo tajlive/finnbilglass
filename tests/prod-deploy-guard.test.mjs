@@ -52,3 +52,18 @@ test('enabled production OPS routes must run Worker first for exact and nested p
     (route.includes('/ops')||route.includes('/api/ops'))),
   'cannot exclude OPS paths from Worker-first auth');
 });
+
+test('production deploy checks Cloudflare Access and repair Worker routes before any write',()=>{
+  const check=job.indexOf('cloudflare-ops-preflight.mjs');
+  const deploy=job.indexOf('npx wrangler deploy');
+  assert.ok(check>0,'Cloudflare Access preflight required in production job');
+  assert.ok(deploy>check,'read-only Cloudflare preflight must run before Worker deploy');
+  const preflight=job.slice(check-350,check);
+  assert.match(preflight,/CLOUDFLARE_API_TOKEN/);
+  assert.match(preflight,/OPS_ACCESS_AUD/);
+  const code=readFileSync(new URL('../scripts/maintenance/cloudflare-ops-preflight.mjs',import.meta.url),'utf8');
+  assert.doesNotMatch(code,/method\s*:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/);
+  for(const path of ['/ops','/ops/*','/api/ops','/api/ops/*']){
+    assert.ok(code.includes(path),'must protect '+path);
+  }
+});
