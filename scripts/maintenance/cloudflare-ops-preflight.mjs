@@ -3,7 +3,7 @@
  * Read-only production Cloudflare Access and Worker-route release gate.
  * Never outputs token, Access AUD, customer data, or raw API responses.
  * Requires a protected GitHub production environment with:
- *  CLOUDFLARE_API_TOKEN (Access Apps & Policies Read, Zones Read, Workers Routes Read),
+ *  CLOUDFLARE_API_TOKEN (Access Apps & Policies Read, Zones Read, Workers Routes Read, Workers Scripts Read),
  *  CLOUDFLARE_ACCOUNT_ID, OPS_ACCESS_AUD (actual production app audience).
  *
  * A successful static CI build does not demonstrate that Access protects www.
@@ -13,6 +13,8 @@
 const ACCOUNT='80d5b1d56a3e907150ba7348b6182894';
 const HOSTS=['finnbilglass.no','www.finnbilglass.no'];
 const PATHS=['/ops','/ops/*','/api/ops','/api/ops/*'];
+const WORKER='finnbilglass-frontrute';
+const WORKER_DOMAINS=[...HOSTS,'api.finnbilglass.no'];
 const REQUIRED=HOSTS.flatMap(host=>PATHS.map(path=>host+path));
 
 function invariant(ok,reason){if(!ok)throw Error(reason)}
@@ -51,16 +53,50 @@ export function validateAccess(apps,policies,aud){
     'PROD_ACCESS_ALLOW_EVERYONE_FORBIDDEN');
   return {protectedPaths:REQUIRED.length,allowPolicies:policies.filter(p=>p.decision==='allow').length};
 }
+/** Fail closed when a zone route can intercept protected OPS requests before
+ * the correct Custom Domain Worker. A replacement Worker with a different name
+ * is as unsafe as the historical ops-repair Worker.
+ */
 export function validateWorkerRoutes(routes){
   invariant(Array.isArray(routes),'WORKER_ROUTES_NOT_READABLE');
-  // Any active legacy repair-Worker route for this zone is unsafe until
-  // verified removed/retargeted; custom domains might be caught by it.
-  const repair=routes.filter(r=>
-    /finnbilglass\.no/i.test(String(r.pattern??'')) &&
-    /ops[-_]repair/i.test(String(r.script??'')));
-  invariant(repair.length===0,'LEGACY_OPS_REPAIR_WORKER_ROUTE_MUST_BE_CLEARED');
+  const targets=HOSTS.flatMap(host=>[
+    host+'/ops',host+'/ops/ansatte',
+    host+'/api/ops',host+'/api/ops/manual/session'
+  ]);
+  for(const route of routes){
+    const pattern=String(route?.pattern??'').trim().toLowerCase().replace(/^https?:\/\//,'');
+    invariant(pattern && /^[a-z0-9*.-]+\.[a-z0-9*.-]+(?:\/.*)?$/.test(pattern),
+      'WORKER_ROUTE_PATTERN_INVALID');
+    // Route syntax: '*' is a glob. Do not treat route patterns as regex input.
+    const escaped=pattern.replace(/[|\\{}()[\]^$+?.]/g,'\\$&').replace(/\*/g,'.*');
+    const matches=new RegExp('^'+escaped+'$','i');
+    if(targets.some(path=>matches.test(path))&&route.script!==WORKER)
+      throw Error('OPS_PATH_INTERCEPTED_BY_OTHER_WORKER_ROUTE');
+    if(/ops[-_]repair/i.test(String(route.script??'')) &&
+       /finnbilglass\.no/i.test(pattern))
+      throw Error('LEGACY_OPS_REPAIR_WORKER_ROUTE_MUST_BE_CLEARED');
+  }
   return {routesChecked:routes.length,legacyRepairRoutes:0};
 }
+
+/** Custom Domains decide which Worker serves apex/www/api in production.
+ * DNS existence alone does not prove that the requests reach the right Worker.
+ */
+export function validateWorkerDomains(domains){
+  invariant(Array.isArray(domains),'WORKER_CUSTOM_DOMAINS_NOT_READABLE');
+  for(const host of WORKER_DOMAINS){
+    const entries=domains.filter(d=>String(d?.hostname??'').toLowerCase()===host);
+    invariant(entries.length===1,'WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED');
+    const domain=entries[0];
+    invariant(domain.enabled===true &&
+      domain.service===WORKER &&
+      domain.zone_name==='finnbilglass.no' &&
+      domain.environment==='production',
+      'WORKER_CUSTOM_DOMAIN_WRONG_SERVICE_OR_ENVIRONMENT');
+  }
+  return {workerCustomDomains:WORKER_DOMAINS.length};
+}
+
 async function api(path,token){
   const url='https://api.cloudflare.com/client/v4'+path;
   let response;
@@ -92,8 +128,10 @@ export async function preflight(env=process.env){
   invariant(zones.length===1 && typeof zones[0]?.id==='string','PROD_ZONE_NOT_UNAMBIGUOUS');
   const routes=await api('/zones/'+encodeURIComponent(zones[0].id)+'/workers/routes',token);
   const checkedRoutes=validateWorkerRoutes(routes);
+  const domains=await api('/accounts/'+ACCOUNT+'/workers/domains?per_page=1000',token);
+  const checkedDomains=validateWorkerDomains(domains);
   // Only sanitized counts and status. No raw app, policy, AUD, route or secret.
-  return {status:'PASS',readOnly:true,...checkedAccess,...checkedRoutes};
+  return {status:'PASS',readOnly:true,...checkedAccess,...checkedRoutes,...checkedDomains};
 }
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
