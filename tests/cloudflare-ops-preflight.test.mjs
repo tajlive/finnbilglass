@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateAccess,validateWorkerRoutes} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
+import {validateAccess,validateWorkerRoutes,validateWorkerDomains} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
 
 const AUD='a'.repeat(64);
 const hosts=['finnbilglass.no','www.finnbilglass.no'];
@@ -63,6 +63,55 @@ test('repair Worker route on production zone blocks live release',()=>{
   ]),{routesChecked:2,legacyRepairRoutes:0});
   assert.throws(()=>validateWorkerRoutes([
     {pattern:'www.finnbilglass.no/ops*',script:'finnbilglass-ops-repair'}
-  ]),/LEGACY_OPS_REPAIR_WORKER_ROUTE_MUST_BE_CLEARED/);
+  ]),/OPS_PATH_INTERCEPTED_BY_OTHER_WORKER_ROUTE|LEGACY_OPS_REPAIR_WORKER_ROUTE_MUST_BE_CLEARED/);
   assert.throws(()=>validateWorkerRoutes(null),/WORKER_ROUTES_NOT_READABLE/);
+});
+
+
+test('production custom domains must all belong to approved Worker service',()=>{
+  const domains=['finnbilglass.no','www.finnbilglass.no','api.finnbilglass.no']
+    .map(hostname=>({hostname,service:'finnbilglass-frontrute',environment:'production',
+      enabled:true,zone_name:'finnbilglass.no'}));
+  assert.deepEqual(validateWorkerDomains(domains),{workerCustomDomains:3});
+  for(let i=0;i<domains.length;i++){
+    assert.throws(()=>validateWorkerDomains(domains.filter((_,j)=>j!==i)),
+      /WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED/);
+    assert.throws(()=>validateWorkerDomains([...domains,domains[i]]),
+      /WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED/);
+    for(const changed of [
+      {service:'finnbilglass-ops-repair'},
+      {environment:'staging'},
+      {enabled:false},
+      {zone_name:'example.invalid'}
+    ]){
+      assert.throws(()=>validateWorkerDomains(
+        domains.map((d,j)=>j===i?{...d,...changed}:d)),
+        /WORKER_CUSTOM_DOMAIN_WRONG_SERVICE_OR_ENVIRONMENT/);
+    }
+  }
+  assert.throws(()=>validateWorkerDomains(null),/WORKER_CUSTOM_DOMAINS_NOT_READABLE/);
+});
+
+test('unrelated Worker can serve assets but not OPS on apex/www',()=>{
+  assert.doesNotThrow(()=>validateWorkerRoutes([
+    {pattern:'www.finnbilglass.no/assets/*',script:'assets'},
+    {pattern:'finnbilglass.no/styles/*',script:'styles'}
+  ]));
+  const overlapping=[
+    'finnbilglass.no/*',
+    'www.finnbilglass.no/*',
+    'finnbilglass.no/ops*',
+    'www.finnbilglass.no/ops/*',
+    'finnbilglass.no/api/ops*',
+    'www.finnbilglass.no/api/ops/*'
+  ];
+  for(const pattern of overlapping)assert.throws(()=>validateWorkerRoutes([
+    {pattern,script:'other-worker'}
+  ]),/OPS_PATH_INTERCEPTED_BY_OTHER_WORKER_ROUTE/,pattern);
+  assert.throws(()=>validateWorkerRoutes([
+    {pattern:'finnbilglass.no/api/ops/*',script:null}
+  ]),/OPS_PATH_INTERCEPTED_BY_OTHER_WORKER_ROUTE/);
+  assert.doesNotThrow(()=>validateWorkerRoutes([
+    {pattern:'finnbilglass.no/*',script:'finnbilglass-frontrute'}
+  ]));
 });
