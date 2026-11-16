@@ -88,10 +88,12 @@ export function validateWorkerDomains(domains){
     const entries=domains.filter(d=>String(d?.hostname??'').toLowerCase()===host);
     invariant(entries.length===1,'WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED');
     const domain=entries[0];
-    invariant(domain.enabled===true &&
+    // Cloudflare's domains/list API documents both enabled and environment as
+    // optional/deprecated response attributes. Missing != disabled or staging.
+    invariant(domain.enabled!==false &&
       domain.service===WORKER &&
       domain.zone_name==='finnbilglass.no' &&
-      domain.environment==='production',
+      (domain.environment==null || domain.environment==='production'),
       'WORKER_CUSTOM_DOMAIN_WRONG_SERVICE_OR_ENVIRONMENT');
   }
   return {workerCustomDomains:WORKER_DOMAINS.length};
@@ -128,7 +130,11 @@ export async function preflight(env=process.env){
   invariant(zones.length===1 && typeof zones[0]?.id==='string','PROD_ZONE_NOT_UNAMBIGUOUS');
   const routes=await api('/zones/'+encodeURIComponent(zones[0].id)+'/workers/routes',token);
   const checkedRoutes=validateWorkerRoutes(routes);
-  const domains=await api('/accounts/'+ACCOUNT+'/workers/domains?per_page=1000',token);
+  // Filter server-side by documented hostname selector instead of assuming
+  // the account-wide first page contains all three required Custom Domains.
+  const domains=(await Promise.all(WORKER_DOMAINS.map(host=>
+    api('/accounts/'+ACCOUNT+'/workers/domains?hostname='+encodeURIComponent(host),token)
+  ))).flat();
   const checkedDomains=validateWorkerDomains(domains);
   // Only sanitized counts and status. No raw app, policy, AUD, route or secret.
   return {status:'PASS',readOnly:true,...checkedAccess,...checkedRoutes,...checkedDomains};
