@@ -32,6 +32,8 @@ for(const v of source.cases){
   ids.add(v.caseId);
   if(typeof v.make!=='string'||typeof v.model!=='string'||!Number.isInteger(v.year))
     throw Error('MISSING_VEHICLE_FACTS');
+  if(typeof v.hasVin!=='boolean'||!/^([a-f0-9]{32})$/.test(v.sourceFactsFingerprint??''))
+    throw Error('QUEUE_SOURCE_FACTS_REQUIRED_REGENERATE_AUDIT');
   if(v.evidenceStatus!=='NOT_VERIFIED'||v.confirmedGlass!==null)
     throw Error('INDEPENDENT_EVIDENCE_CANNOT_BE_RESET');
 }
@@ -171,13 +173,15 @@ for(const v of source.cases){
     noCandidateReason:noHit,reasonCodes,priorityScore,priorityBasis:'CORPUS_FREQUENCY_AND_FITMENT_RISK',
     nextAction,evidenceStatus:'NOT_VERIFIED',confirmedGlass:null,
     decision:'NEEDS_INDEPENDENT_HUMAN_EVIDENCE',autoExact:false});
-  const row=byFamily.get(key)??{family:key,vehicles:0,withCandidates:0,noCandidates:0,multiVariants:0,priorityTotal:0};
+  // Do not copy arbitrary vehicle model text into aggregate reports or stdout.
+  const reportKey=familyKey??'UNMAPPED_MODEL';
+  const row=byFamily.get(reportKey)??{family:reportKey,vehicles:0,withCandidates:0,noCandidates:0,multiVariants:0,priorityTotal:0};
   row.vehicles++;
   row.withCandidates+=found.length>0?1:0;
   row.noCandidates+=found.length===0?1:0;
   row.multiVariants+=found.length>1?1:0;
   row.priorityTotal+=priorityScore;
-  byFamily.set(key,row);
+  byFamily.set(reportKey,row);
 }
 totals.uniqueEurocodes=allCodes.size;
 if(totals.withCandidates+totals.withoutCandidates!==totals.eligibleVehicles||
