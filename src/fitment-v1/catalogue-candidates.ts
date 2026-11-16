@@ -1,5 +1,6 @@
 import { parseEurocodePosition } from './normalization/eurocode-position.js';
 import { parseCatalogueComment, type ParsedFeatureComment } from './normalization/catalogue-feature-comment.js';
+import { canonicalVehicleName } from './normalization/vehicle-model-name.js';
 
 /**
  * fitment-v1/catalogue-candidates — CLASS_D-kandidatgenerator fra gt-auto-prislisten.
@@ -49,6 +50,7 @@ const MERKE_ALIAS: Record<string, string[]> = {
   MITSUBISHI: ['MITSUBISHI'],
   FIAT: ['FIAT'],
   MINI: ['MINI'],
+  SKODA: ['SKODA', 'ŠKODA'],
 };
 
 /** Familie-regler: (merke, regex på modell-token) → familie-nøkkel + generasjons-hint-fra-varenavn */
@@ -84,25 +86,49 @@ export const FAMILIER: { merke: string; re: RegExp; familie: string }[] = [
   { merke: 'MERCEDES', re: /GLA/, familie: 'GLA' },
   { merke: 'BMW', re: /1-SERIE|1 SERIE|1ER|116|118|120|125/, familie: '1-SERIE' },
   { merke: 'BMW', re: /3-SERIE|3 SERIE|3ER|316|318|320|325|330/, familie: '3-SERIE' },
+  // These families are present in the checked-in 2026 SQL catalogue with
+  // independently recognisable numeric-A windscreen position codes. They
+  // remain candidates, never proof of vehicle fitment.
+  { merke: 'VOLVO', re: /\bXC40\b/, familie: 'XC40' },
+  { merke: 'VOLVO', re: /\bC40\b/, familie: 'C40' },
+  { merke: 'VOLVO', re: /\bV70\b/, familie: 'V70' },
   { merke: 'VOLVO', re: /XC60/, familie: 'XC60' },
   { merke: 'VOLVO', re: /XC90/, familie: 'XC90' },
   { merke: 'TESLA', re: /MODEL\s?3/, familie: 'MODEL-3' },
   { merke: 'TESLA', re: /MODEL\s?Y/, familie: 'MODEL-Y' },
   { merke: 'NISSAN', re: /LEAF/, familie: 'LEAF' },
   { merke: 'MITSUBISHI', re: /\bASX\b/, familie: 'ASX' },
+  { merke: 'MITSUBISHI', re: /\bOUTLANDER\b/, familie: 'OUTLANDER' },
   { merke: 'MAZDA', re: /\bCX[-\s]?5\b/, familie: 'CX-5' },
   // Electric variant first: never pool the new 500 Electric with 500 (2007-).
   { merke: 'FIAT', re: /\b500(?:E|\s+(?:ELECTRIC|EV))\b/, familie: '500-ELECTRIC' },
   { merke: 'FIAT', re: /\b500\b/, familie: '500' },
   { merke: 'TOYOTA', re: /RAV4|RAV\s?4/, familie: 'RAV4' },
   { merke: 'TOYOTA', re: /COROLLA/, familie: 'COROLLA' },
+  { merke: 'TOYOTA', re: /\bAVENSIS\b/, familie: 'AVENSIS' },
+  { merke: 'TOYOTA', re: /\bAURIS\b/, familie: 'AURIS' },
+  { merke: 'TOYOTA', re: /\bYARIS\b/, familie: 'YARIS' },
   { merke: 'TOYOTA', re: /HILUX/, familie: 'HILUX' },
   { merke: 'FORD', re: /TRANSIT/, familie: 'TRANSIT' },
+  { merke: 'FORD', re: /\bFOCUS\b/, familie: 'FOCUS' },
+  { merke: 'FORD', re: /\bKUGA\b/, familie: 'KUGA' },
+  { merke: 'FORD', re: /\bMONDEO\b/, familie: 'MONDEO' },
   { merke: 'OPEL', re: /CORSA/, familie: 'CORSA' },
   { merke: 'OPEL', re: /ASTRA/, familie: 'ASTRA' },
   { merke: 'OPEL', re: /VECTRA/, familie: 'VECTRA' },
   { merke: 'MINI', re: /COOPER|MINI/, familie: 'MINI' },
+  { merke: 'SKODA', re: /\bOCTAVIA\b/, familie: 'OCTAVIA' },
+  { merke: 'SKODA', re: /\bSUPERB\b/, familie: 'SUPERB' },
 ];
+
+// The added families demand an explicitly parsed WINDSCREEN Eurocode.
+// Product text alone, unclassified numbers and rear/side positions are unsafe.
+const STRICT_WINDSCREEN_FAMILIES = new Set([
+  'VOLVO XC40','VOLVO C40','VOLVO V70',
+  'MITSUBISHI OUTLANDER','SKODA OCTAVIA','SKODA SUPERB',
+  'FORD FOCUS','FORD KUGA','FORD MONDEO',
+  'TOYOTA AVENSIS','TOYOTA AURIS','TOYOTA YARIS',
+]);
 
 /** Trekker ut tosifret årsintervall («84-90», «03-08», «12-») fra varenavnet. */
 function aarIntervall(varenavn: string): { fra: number | null; til: number | null } {
@@ -124,6 +150,13 @@ function parseRow(r: { varenr: string; eurokode?: string | null; varenavn?: stri
   if (!merke) return null;
   for (const fam of FAMILIER) {
     if (fam.merke === merke && fam.re.test(varenavn)) {
+      // Legacy joined names are not authoritative cross-model equivalence.
+      // XC40 began later than V40; the old "V40+XC40 12-" row must NOT be
+      // interpreted as a valid XC40 windscreen (or V70 from an S70+V70 row).
+      if (fam.merke === 'VOLVO' &&
+          (/\bV40\s*\+\s*XC40\b/.test(varenavn) ||
+           /\bS70\s*\+\s*V70\b/.test(varenavn) ||
+           /\bV70\s*\+\s*XC70\b/.test(varenavn))) continue;
       const { fra, til } = aarIntervall(varenavn);
       // generasjons-hint: «GOLF II», «PASSAT B8», «T5»
       const g = varenavn.match(/\b(?:GOLF|PASSAT|POLO)\s+([IVX]{1,4})\b/) ??
@@ -163,9 +196,7 @@ export function matchClassDCandidates(
   index: CatalogueCandidate[], make: string, model: string, year: number | null,
   options: { confirmedGeneration?: string | null } = {},
 ): CatalogueCandidate[] {
-  const rawMake = make.toUpperCase().trim();
-  const mk = Object.entries(MERKE_ALIAS).find(([, aliases]) => aliases.includes(rawMake))?.[0] ?? rawMake;
-  const mo = model.toUpperCase();
+  const { make: mk, model: mo } = canonicalVehicleName(make, model);
   const fam = FAMILIER.find((f) => f.merke === mk && f.re.test(mo));
   if (!fam) return [];
   // Kandidatkvalitet: ekskluder bak/side-ruter OG tilbehør (PY/GU/K-lister, klips-kit — kjent katalogfelle)
@@ -189,7 +220,12 @@ export function matchClassDCandidates(
     !confirmed || !c.generationHint || normalizeGeneration(c.generationHint) === confirmed;
   const familyKey = fam.merke + ' ' + fam.familie;
   // Exact family boundary: FIAT 500 must never include FIAT 500-ELECTRIC.
-  const hits = index.filter((c) => (c.matchReason === familyKey || c.matchReason.startsWith(familyKey + ' ')) && !erBakSide(c) && !erTilbehor(c) && !erDokumentertAnnenPosisjon(c) && generationCompatible(c));
+  const needsKnownFront = STRICT_WINDSCREEN_FAMILIES.has(familyKey);
+  const hits = index.filter((c) =>
+    (c.matchReason === familyKey || c.matchReason.startsWith(familyKey + ' ')) &&
+    !erBakSide(c) && !erTilbehor(c) && !erDokumentertAnnenPosisjon(c) &&
+    (!needsKnownFront || parseEurocodePosition(c.eurokode).position === 'WINDSCREEN') &&
+    generationCompatible(c));
   if (year == null) return hits.slice(0, 6);
   return hits.filter((c) => {
     const y = year;
