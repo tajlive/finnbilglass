@@ -36,8 +36,9 @@ EVIDENCE_STATUS_CHANGE_ENABLED = "true"
 
 # First MANUAL sale in production. Fail closed unless Cloudflare Access
 # verifies a signed JWT for this app and the user has an ACTIVE D1 membership.
-# Do not merge this config until production D1 0040/0041/0042/0044 and
-# relevant supporting schema, prod Access audience and rollback are verified.
+# Deploy ONLY after production D1 manual-sales 0040/0041/0044,
+# Access protection and rollback are verified. Customer reply outbox migrations
+# 0042/0046 are a separate email capability; never run them implicitly.
 OPS_STAFF_PORTAL_ENABLED = "true"
 OPS_MANUAL_ORDERS_ENABLED = "true"
 OPS_WORKBENCH_ENABLED = "true"
