@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,preflight} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
+import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,preflight,readCloudflareList} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
 
 const AUD='a'.repeat(64);
 const hosts=['finnbilglass.no','www.finnbilglass.no'];
@@ -209,4 +209,100 @@ test('preflight reads production AUD from Cloudflare when secret is absent',asyn
   }finally{
     globalThis.fetch=prior;
   }
+});
+
+
+test('Cloudflare list adapter traverses every page via GET and returns complete inventory',async()=>{
+  const urls=[];
+  const token='fixture-token-12345678901234567890';
+  const read=async(url,opt)=>{
+    assert.equal(opt.method,'GET');
+    assert.equal(opt.headers.Authorization,'Bearer '+token);
+    const u=new URL(url);
+    urls.push(url);
+    const page=Number(u.searchParams.get('page')||1);
+    const rows=page===1?[{id:'a'}]:[{id:'b'}];
+    return {ok:true,json:async()=>({
+      success:true,result:rows,
+      result_info:{page,per_page:1,count:1,total_pages:2,total_count:2}
+    })};
+  };
+  assert.deepEqual(await readCloudflareList('/accounts/test/access/apps?per_page=1',token,read),
+    [{id:'a'},{id:'b'}]);
+  assert.equal(urls.length,2);
+  assert.equal(new URL(urls[0]).searchParams.get('page'),null);
+  assert.equal(new URL(urls[1]).searchParams.get('page'),'2');
+});
+
+test('Cloudflare list adapter refuses partial or inconsistent pagination',async()=>{
+  const token='fixture-token-12345678901234567890';
+  const scenario=async(overrides)=>{
+    return readCloudflareList('/accounts/test/access/apps',token,
+      async(url)=>{
+        const page=Number(new URL(url).searchParams.get('page')||1);
+        const fixture={success:true,result:[{id:String(page)}],
+          result_info:{page,count:1,total_pages:2}};
+        const response={...fixture,...(overrides[page]?.body||{}),
+          result_info:{...fixture.result_info,...(overrides[page]?.info||{})}};
+        return {ok:overrides[page]?.ok??true,json:async()=>response};
+      });
+  };
+  for(const [overrides,reason] of [
+    [{2:{info:{page:1}}},/CLOUDFLARE_PAGINATION_INCONSISTENT/],
+    [{2:{info:{total_pages:3}}},/CLOUDFLARE_PAGINATION_INCONSISTENT/],
+    [{1:{info:{total_pages:201}}},/CLOUDFLARE_PAGINATION_INVALID/],
+    [{1:{info:{count:2}}},/CLOUDFLARE_PAGINATION_INCONSISTENT/],
+    [{1:{body:{result:[]},info:{count:0}}},/CLOUDFLARE_PAGINATION_INCOMPLETE/],
+    [{2:{ok:false}},/CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR/],
+    [{2:{body:{success:false}}},/CLOUDFLARE_READ_ONLY_API_FAILED/]
+  ]){
+    await assert.rejects(scenario(overrides),reason);
+  }
+  const noPageMetadata=await readCloudflareList('/zones/test/workers/routes',token,
+    async()=>({ok:true,json:async()=>({success:true,result:[{pattern:'example.invalid/*'}]})}));
+  assert.equal(noPageMetadata.length,1);
+});
+
+test('preflight succeeds when the correct Access app and allow policy are on later pages',async()=>{
+  const prior=globalThis.fetch;
+  const token='fixture-token-12345678901234567890';
+  const called=[];
+  globalThis.fetch=async(url,options)=>{
+    assert.equal(options.method,'GET');
+    assert.equal(options.headers.Authorization,'Bearer '+token);
+    const u=new URL(url),page=Number(u.searchParams.get('page')||1);
+    called.push(u.pathname+'?'+u.searchParams.toString());
+    let result,total_pages=1;
+    if(u.pathname.endsWith('/access/apps')){
+      total_pages=2;
+      result=page===1?[{type:'self_hosted',id:'irrelevant',aud:'b'.repeat(64),
+        destinations:[{type:'public',uri:'unrelated.invalid'}]}]:[app()];
+    }else if(u.pathname.endsWith('/access/apps/test-app/policies')){
+      total_pages=2;
+      result=page===1?[{decision:'deny'}]:policies();
+    }else if(u.pathname==='/client/v4/zones')result=[{id:'zone-fixture'}];
+    else if(u.pathname.endsWith('/workers/routes'))result=[];
+    else if(u.pathname.endsWith('/workers/domains'))result=[{
+      hostname:u.searchParams.get('hostname'),service:'finnbilglass-frontrute',
+      zone_name:'finnbilglass.no',enabled:true,environment:'production'
+    }];
+    else throw Error('Unexpected GET fixture '+u.pathname);
+    return {ok:true,json:async()=>({
+      success:true,result,
+      result_info:{page,count:result.length,total_pages}
+    })};
+  };
+  try{
+    const result=await preflight({
+      CLOUDFLARE_ACCOUNT_ID:'80d5b1d56a3e907150ba7348b6182894',
+      CLOUDFLARE_API_TOKEN:token
+    });
+    assert.equal(result.status,'PASS');
+    assert.equal(result.audienceSource,'cloudflare_account_read');
+    assert.equal(result.allowPolicies,1);
+    assert.ok(!JSON.stringify(result).includes(AUD),'never expose Access AUD');
+    assert.equal(called.filter(x=>x.includes('/access/apps?')).length,2);
+    assert.equal(called.filter(x=>x.includes('/policies?')).length,2);
+    assert.equal(called.length,9);
+  }finally{globalThis.fetch=prior}
 });
