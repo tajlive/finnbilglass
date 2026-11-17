@@ -7,7 +7,7 @@
  * Run AFTER cloudflare-ops-preflight.mjs passes in the protected, manually
  * authorized production job. No Cloudflare writes happen in this script.
  */
-import {resolveProductionAudience,readCloudflareList} from './cloudflare-ops-preflight.mjs';
+import {resolveProductionAudience,readCloudflareList,loadProductionAccessInventory} from './cloudflare-ops-preflight.mjs';
 import {writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -21,9 +21,11 @@ export async function stageAccessAudience(env=process.env,request=fetch){
     throw Error('CLOUDFLARE_API_TOKEN_MISSING');
   if(typeof env.RUNNER_TEMP!=='string'||!env.RUNNER_TEMP.startsWith('/'))
     throw Error('RUNNER_TEMP_REQUIRED');
-  const apps=await readCloudflareList(
-    '/accounts/'+ACCOUNT+'/access/apps?per_page=1000',env.CLOUDFLARE_API_TOKEN,request);
-  const chosen=resolveProductionAudience(apps);
+  // Derive the AUD from the same Cloudflare account/zone inventory that
+  // passed the protected read-only release gate, not a manually copied value.
+  const inventory=await loadProductionAccessInventory(env.CLOUDFLARE_API_TOKEN,
+    (path,token)=>readCloudflareList(path,token,request));
+  const chosen=resolveProductionAudience(inventory.apps);
   if(env.OPS_ACCESS_AUD && env.OPS_ACCESS_AUD.trim()!==chosen.aud)
     throw Error('PRODUCTION_AUD_ENV_MISMATCH');
   const output=join(env.RUNNER_TEMP,FILE);
