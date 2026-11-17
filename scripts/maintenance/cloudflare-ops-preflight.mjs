@@ -243,17 +243,36 @@ export async function readCloudflareList(path,token,request=fetch){
   throw Error('CLOUDFLARE_PAGINATION_LIMIT_EXCEEDED');
 }
 
+export async function loadProductionAccessInventory(token,read=readCloudflareList){
+  const accountApps=await read('/accounts/'+ACCOUNT+'/access/apps?per_page=1000',token);
+  invariant(Array.isArray(accountApps),'PROD_ACCESS_ACCOUNT_INVENTORY_INVALID');
+  if(accountApps.length>0)return {apps:accountApps,scope:'account',zoneId:null};
+  const zones=await read('/zones?name=finnbilglass.no&per_page=50',token);
+  invariant(Array.isArray(zones)&&zones.length===1&&
+    typeof zones[0]?.id==='string','PROD_ZONE_NOT_UNAMBIGUOUS');
+  const zoneId=zones[0].id;
+  const zoneApps=await read('/zones/'+encodeURIComponent(zoneId)+'/access/apps?per_page=1000',token);
+  invariant(Array.isArray(zoneApps),'PROD_ACCESS_ZONE_INVENTORY_INVALID');
+  invariant(zoneApps.length>0,'PROD_ACCESS_APPS_EMPTY_BOTH_SCOPES');
+  return {apps:zoneApps,scope:'zone',zoneId};
+}
+
 export async function preflight(env=process.env){
   invariant(env.CLOUDFLARE_ACCOUNT_ID===ACCOUNT,'WRONG_PRODUCTION_CLOUDFLARE_ACCOUNT');
   const token=env.CLOUDFLARE_API_TOKEN;
   invariant(typeof token==='string'&&token.length>20,'CLOUDFLARE_API_TOKEN_MISSING');
-  const apps=await readCloudflareList('/accounts/'+ACCOUNT+'/access/apps?per_page=1000',token);
+  const inventory=await loadProductionAccessInventory(token);
+  const apps=inventory.apps;
   const selected=resolveProductionAudience(apps,env.OPS_ACCESS_AUD);
   const app=apps.find(a=>a?.type==='self_hosted'&&a.aud===selected.aud);
   invariant(app?.id,'EXACT_PROD_ACCESS_APP_NOT_FOUND');
-  const policies=await readCloudflareList('/accounts/'+ACCOUNT+'/access/apps/'+encodeURIComponent(app.id)+'/policies?per_page=1000',token);
+  const policyRoot=inventory.scope==='zone'
+    ?'/zones/'+encodeURIComponent(inventory.zoneId)
+    :'/accounts/'+ACCOUNT;
+  const policies=await readCloudflareList(policyRoot+'/access/apps/'+encodeURIComponent(app.id)+'/policies?per_page=1000',token);
   const checkedAccess=validateAccess(apps,policies,selected.aud);
-  const zones=await readCloudflareList('/zones?name=finnbilglass.no&per_page=50',token);
+  const zones=inventory.zoneId?[{id:inventory.zoneId}]
+    :await readCloudflareList('/zones?name=finnbilglass.no&per_page=50',token);
   invariant(zones.length===1 && typeof zones[0]?.id==='string','PROD_ZONE_NOT_UNAMBIGUOUS');
   const routes=await readCloudflareList('/zones/'+encodeURIComponent(zones[0].id)+'/workers/routes',token);
   const checkedRoutes=validateWorkerRoutes(routes);
@@ -264,7 +283,10 @@ export async function preflight(env=process.env){
   ))).flat();
   const checkedDomains=validateWorkerDomains(domains);
   // Only sanitized counts and status. No raw app, policy, AUD, route or secret.
-  return {status:'PASS',readOnly:true,audienceSource:selected.source,...checkedAccess,...checkedRoutes,...checkedDomains};
+  return {status:'PASS',readOnly:true,
+    audienceSource:inventory.scope==='zone'&&selected.source==='cloudflare_account_read'
+      ?'cloudflare_zone_read':selected.source,
+    inventoryScope:inventory.scope,...checkedAccess,...checkedRoutes,...checkedDomains};
 }
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
