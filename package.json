@@ -90,7 +90,7 @@
     "test:ops-first-sale-integrated": "node --import tsx --test tests/ops-first-sale-integrated.test.mjs",
     "test:ops-reply-upgrade": "node --test tests/ops-reply-upgrade-regression.test.mjs",
     "test:ops-production-release": "node --test tests/ops-production-release-schema.test.mjs",
-    "test:prod-deploy-guard": "node --test tests/prod-deploy-guard.test.mjs",
+    "test:prod-deploy-guard": "node --test tests/prod-deploy-guard.test.mjs tests/ops-aud-staging.test.mjs",
     "test:ops-readiness": "node --test tests/cloudflare-ops-preflight.test.mjs tests/ops-readiness-workflow.test.mjs"
   },
   "devDependencies": {

@@ -74,17 +74,23 @@ test('repair Worker route on production zone blocks live release',()=>{
 });
 
 
-test('production custom domains must all belong to approved Worker service',()=>{
+test('OPS requires apex and www Worker domains; API domain is optional',()=>{
   const domains=['finnbilglass.no','www.finnbilglass.no','api.finnbilglass.no']
     .map(hostname=>({hostname,service:'finnbilglass-frontrute',environment:'production',
       enabled:true,zone_name:'finnbilglass.no'}));
-  assert.deepEqual(validateWorkerDomains(domains),{workerCustomDomains:3});
-  // Both optional fields can be absent in valid Cloudflare API responses.
-  assert.deepEqual(validateWorkerDomains(domains.map(({enabled,environment,...other})=>other)),
-    {workerCustomDomains:3});
+  assert.deepEqual(validateWorkerDomains(domains),
+    {workerCustomDomains:2,optionalWorkerCustomDomains:1});
+  const required=domains.slice(0,2);
+  assert.deepEqual(validateWorkerDomains(required),
+    {workerCustomDomains:2,optionalWorkerCustomDomains:0});
+  // Deprecated optional Cloudflare metadata can be absent.
+  assert.deepEqual(validateWorkerDomains(required.map(({enabled,environment,...other})=>other)),
+    {workerCustomDomains:2,optionalWorkerCustomDomains:0});
   for(let i=0;i<domains.length;i++){
-    assert.throws(()=>validateWorkerDomains(domains.filter((_,j)=>j!==i)),
+    if(i<2)assert.throws(()=>validateWorkerDomains(domains.filter((_,j)=>j!==i)),
       /WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED/);
+    else assert.deepEqual(validateWorkerDomains(domains.slice(0,2)),
+      {workerCustomDomains:2,optionalWorkerCustomDomains:0});
     assert.throws(()=>validateWorkerDomains([...domains,domains[i]]),
       /WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED/);
     for(const changed of [
@@ -197,7 +203,7 @@ test('preflight reads production AUD from Cloudflare when secret is absent',asyn
     assert.deepEqual(output,{
       status:'PASS',readOnly:true,audienceSource:'cloudflare_account_read',inventoryScope:'account',
       protectedPaths:8,allowPolicies:1,routesChecked:0,
-      legacyRepairRoutes:0,workerCustomDomains:3
+      legacyRepairRoutes:0,workerCustomDomains:2,optionalWorkerCustomDomains:1
     });
     assert.ok(!JSON.stringify(output).includes(AUD),'AUD must not be logged/output');
     assert.equal(seen.length,7);
@@ -210,7 +216,6 @@ test('preflight reads production AUD from Cloudflare when secret is absent',asyn
     globalThis.fetch=prior;
   }
 });
-
 
 test('Cloudflare list adapter traverses every page via GET and returns complete inventory',async()=>{
   const urls=[];
@@ -307,7 +312,6 @@ test('preflight succeeds when the correct Access app and allow policy are on lat
   }finally{globalThis.fetch=prior}
 });
 
-
 test('Cloudflare Access list public destination type is optional; explicit empty list never falls back',()=>{
   const missingTypes=expected.map(({type,...rest})=>rest);
   assert.equal(resolveProductionAudience([app({destinations:missingTypes})]).aud,AUD);
@@ -354,7 +358,6 @@ test('read-only Access failure differentiates incomplete setup from duplicate fu
     bestCovered:0,unionCovered:0,bestMask:'00000000',unionMask:'00000000'
   });
 });
-
 
 test('zero account apps checks real production zone rather than pretending there is no Access app',async()=>{
   const token='synthetic-token-12345678901234567890',urls=[];
@@ -431,7 +434,6 @@ test('live read-only preflight checks policies at zone scope for zone Access app
     assert.ok(paths.some(p=>p.includes('/zones/zone-fixture/access/apps/test-app/policies')));
   }finally{globalThis.fetch=previous}
 });
-
 
 test('read-only Cloudflare HTTP error reports only fixed phase and safe status',async()=>{
   const token='synthetic-token-secret';

@@ -33,7 +33,59 @@ test('all production writes are in manual gated deploy job, not on push',()=>{
 test('production Access AUD can be provided atomically with code without separate secret deployment',()=>{
   assert.match(job,/OPS_ACCESS_AUD: \$\{\{ secrets\.OPS_ACCESS_AUD \}\}/);
   assert.match(job,/wrangler deploy --secrets-file "\$RUNNER_TEMP\/fbg-access-secret\.json"/);
-  assert.match(job,/REQUIRED_PRODUCTION_ACCESS_AUD_NOT_CONFIGURED/);
+  assert.match(job,/node scripts\/maintenance\/write-ops-aud-secret\.mjs/);
+  assert.doesNotMatch(job,/REQUIRED_PRODUCTION_ACCESS_AUD_NOT_CONFIGURED/);
+  assert.ok(job.indexOf('node scripts/maintenance/write-ops-aud-secret.mjs') >
+            job.indexOf('node scripts/maintenance/cloudflare-ops-preflight.mjs'),
+    'stage secrets only after read-only Access preflight');
   assert.match(job,/trap 'rm -f "\$RUNNER_TEMP\/fbg-access-secret\.json"' EXIT/);
   assert.doesNotMatch(job,/\bwrangler\s+versions\s+secret\s+put\b/);
+});
+
+test('enabled production OPS routes must run Worker first for exact and nested paths',()=>{
+  const toml = readFileSync(new URL('../wrangler.toml',import.meta.url),'utf8');
+  if (!/^\s*OPS_STAFF_PORTAL_ENABLED\s*=\s*"true"\s*$/m.test(toml)) return;
+  const line = toml.match(/^\s*run_worker_first\s*=\s*\[([^\r\n]+)\]\s*$/m)?.[1];
+  assert.ok(line,'run_worker_first routes must exist');
+  const routes = new Set([...line.matchAll(/"([^"]+)"/g)].map(match => match[1]));
+  for(const needed of ['/ops','/ops/*','/api/ops','/api/ops/*']){
+    assert.ok(routes.has(needed),'missing Worker-first path: '+needed);
+  }
+  assert.ok(routes.has('/'),'keep first-page Worker handling');
+  assert.ok(![...routes].some(route => route.startsWith('!') &&
+    (route.includes('/ops')||route.includes('/api/ops'))),
+  'cannot exclude OPS paths from Worker-first auth');
+});
+
+test('production deploy checks Cloudflare Access and repair Worker routes before any write',()=>{
+  const check=job.indexOf('cloudflare-ops-preflight.mjs');
+  const deploy=job.indexOf('npx wrangler deploy');
+  assert.ok(check>0,'Cloudflare Access preflight required in production job');
+  assert.ok(deploy>check,'read-only Cloudflare preflight must run before Worker deploy');
+  const preflight=job.slice(check-350,check);
+  assert.match(preflight,/CLOUDFLARE_API_TOKEN/);
+  assert.match(preflight,/OPS_ACCESS_AUD/);
+  const code=readFileSync(new URL('../scripts/maintenance/cloudflare-ops-preflight.mjs',import.meta.url),'utf8');
+  assert.doesNotMatch(code,/method\s*:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/);
+  for(const path of ['/ops','/ops/*','/api/ops','/api/ops/*']){
+    assert.ok(code.includes(path),'must protect '+path);
+  }
+});
+
+
+test('separate production readiness workflow is explicitly read-only, pinned and never deploys',()=>{
+  const audit=readFileSync(new URL('../.github/workflows/ops-production-readiness.yml',import.meta.url),'utf8');
+  assert.match(audit,/on:\n  issue_comment:\n    types: \[created\]/);
+  assert.match(audit,/  workflow_dispatch:/);
+  assert.match(audit,/github\.event\.issue\.number == 39/);
+  assert.match(audit,/github\.actor == 'tajlive'/);
+  assert.doesNotMatch(audit,/on:\n  push:/);
+  assert.match(audit,/github\.ref == 'refs\/heads\/main'/);
+  assert.match(audit,/PREFLIGHT-ONLY/);
+  assert.match(audit,/environment: production/);
+  assert.match(audit,/git rev-parse HEAD/);
+  assert.match(audit,/cloudflare-ops-preflight\.mjs/);
+  assert.match(audit,/wrangler secret list --name finnbilglass-frontrute --format json/);
+  assert.doesNotMatch(audit,/\bwrangler\s+(?:deploy|d1\s+execute|(?:versions\s+)?secret\s+(?:put|delete|bulk)|rollback)\b/);
+  assert.doesNotMatch(audit,/\b(?:curl|wget)\s+.*--request\s+(?:POST|PUT|PATCH|DELETE)/);
 });
