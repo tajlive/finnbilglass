@@ -53,7 +53,7 @@ test('no secret file when Cloudflare identity, completeness or scoped audience d
       [{},fakeResponse([],{}),/PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/],
       [{},fakeResponse([APP,{...APP,id:'second',aud:'c'.repeat(64)}]),/PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/],
       [{},fakeResponse([APP],{pages:2,badSecondPage:true}),/CLOUDFLARE_PAGINATION_INCONSISTENT/],
-      [{},fakeResponse([APP],{status:false}),/CLOUDFLARE_AUD_READ_HTTP_ERROR/]
+      [{},fakeResponse([APP],{status:false}),/CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR/]
     ]){
       await assert.rejects(stageAccessAudience({...env,...over},request),reason);
       assert.equal((await import('node:fs')).existsSync(join(dir,'fbg-access-secret.json')),false);
