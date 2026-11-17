@@ -13,17 +13,27 @@ const APP={type:'self_hosted',id:'synthetic-production',aud:AUD,destinations:DES
 const token='synthetic-token-only-abcdef0123456789';
 
 function fakeResponse(apps=[APP],options={}){
-  const {status=true,pages=1,badSecondPage=false}=options;
+  const {status=true,pages=1,badSecondPage=false,zoneApps=[]}=options;
   return async(url,request)=>{
-    assert.match(url,/^https:\/\/api\.cloudflare\.com\/client\/v4\/accounts\/.*\/access\/apps\?per_page=1000(?:&page=\d+)?$/);
+    const u=new URL(url);
     assert.equal(request.method,'GET');
     assert.equal(request.headers.Authorization,'Bearer '+token);
-    const page=Number(new URL(url).searchParams.get('page')||1);
-    const result=pages>1&&page===1
-      ?[{id:'other-app',aud:'b'.repeat(64),type:'self_hosted',destinations:[{type:'public',uri:'other.invalid'}]}]
-      :apps;
+    const page=Number(u.searchParams.get('page')||1);
+    let result,totalPages=pages;
+    if(u.pathname.endsWith('/access/apps') && u.pathname.includes('/accounts/')){
+      result=pages>1&&page===1
+        ?[{id:'other-app',aud:'b'.repeat(64),type:'self_hosted',
+          destinations:[{type:'public',uri:'other.invalid'}]}]
+        :apps;
+    }else if(u.pathname==='/client/v4/zones'){
+      result=[{id:'fixture-zone'}];totalPages=1;
+    }else if(u.pathname==='/client/v4/zones/fixture-zone/access/apps'){
+      result=zoneApps;totalPages=1;
+    }else throw Error('Unexpected Cloudflare GET in staging fixture');
     return {ok:status,json:async()=>({
-      success:true,result,result_info:{page:badSecondPage&&page===2?1:page,count:result.length,total_pages:pages}
+      success:true,result,
+      result_info:{page:badSecondPage&&page===2?1:page,
+        count:result.length,total_pages:totalPages}
     })};
   };
 }
@@ -50,7 +60,7 @@ test('no secret file when Cloudflare identity, completeness or scoped audience d
       [{CLOUDFLARE_ACCOUNT_ID:'other'},fakeResponse(),/WRONG_PRODUCTION_CLOUDFLARE_ACCOUNT/],
       [{CLOUDFLARE_API_TOKEN:''},fakeResponse(),/CLOUDFLARE_API_TOKEN_MISSING/],
       [{OPS_ACCESS_AUD:'b'.repeat(64)},fakeResponse(),/PRODUCTION_AUD_ENV_MISMATCH/],
-      [{},fakeResponse([],{}),/PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/],
+      [{},fakeResponse([]),/PROD_ACCESS_APPS_EMPTY_BOTH_SCOPES/],
       [{},fakeResponse([APP,{...APP,id:'second',aud:'c'.repeat(64)}]),/PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/],
       [{},fakeResponse([APP],{pages:2,badSecondPage:true}),/CLOUDFLARE_PAGINATION_INCONSISTENT/],
       [{},fakeResponse([APP],{status:false}),/CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR/]
@@ -68,6 +78,19 @@ test('AUD staging supports valid Cloudflare multi-page app inventory without exp
     const env={RUNNER_TEMP:dir,CLOUDFLARE_ACCOUNT_ID:ACCOUNT,CLOUDFLARE_API_TOKEN:token};
     const out=await stageAccessAudience(env,fakeResponse([APP],{pages:2}));
     assert.equal(out.status,'PASS');
+    assert.deepEqual(JSON.parse(readFileSync(join(dir,'fbg-access-secret.json'),'utf8')),
+      {OPS_ACCESS_AUD:AUD});
+    assert.equal(statSync(join(dir,'fbg-access-secret.json')).mode & 0o777,0o600);
+  }finally{rmSync(dir,{recursive:true,force:true})}
+});
+
+
+test('atomic AUD staging uses zone-scoped production Access app when account inventory empty',async()=>{
+  const dir=mkdtempSync(join(tmpdir(),'fbg-aud-zone-'));
+  const env={RUNNER_TEMP:dir,CLOUDFLARE_ACCOUNT_ID:ACCOUNT,CLOUDFLARE_API_TOKEN:token};
+  try{
+    const done=await stageAccessAudience(env,fakeResponse([],{zoneApps:[APP]}));
+    assert.equal(done.staged,true);
     assert.deepEqual(JSON.parse(readFileSync(join(dir,'fbg-access-secret.json'),'utf8')),
       {OPS_ACCESS_AUD:AUD});
     assert.equal(statSync(join(dir,'fbg-access-secret.json')).mode & 0o777,0o600);
