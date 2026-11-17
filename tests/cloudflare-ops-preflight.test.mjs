@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,describeAccessCoverage,preflight,readCloudflareList} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
+import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,describeAccessCoverage,preflight,readCloudflareList,loadProductionAccessInventory} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
 
 const AUD='a'.repeat(64);
 const hosts=['finnbilglass.no','www.finnbilglass.no'];
@@ -201,7 +201,7 @@ test('preflight reads production AUD from Cloudflare when secret is absent',asyn
       CLOUDFLARE_API_TOKEN:token
     });
     assert.deepEqual(output,{
-      status:'PASS',readOnly:true,audienceSource:'cloudflare_account_read',
+      status:'PASS',readOnly:true,audienceSource:'cloudflare_account_read',inventoryScope:'account',
       protectedPaths:8,allowPolicies:1,routesChecked:0,
       legacyRepairRoutes:0,workerCustomDomains:2,optionalWorkerCustomDomains:1
     });
@@ -357,4 +357,80 @@ test('read-only Access failure differentiates incomplete setup from duplicate fu
     total:1,selfHosted:1,eligible:0,complete:0,
     bestCovered:0,unionCovered:0,bestMask:'00000000',unionMask:'00000000'
   });
+});
+
+test('zero account apps checks real production zone rather than pretending there is no Access app',async()=>{
+  const token='synthetic-token-12345678901234567890',urls=[];
+  const reader=async(path,value)=>{
+    assert.equal(value,token);
+    urls.push(path);
+    if(path.startsWith('/accounts/'))return [];
+    if(path==='/zones?name=finnbilglass.no&per_page=50')return [{id:'zone-fixture'}];
+    if(path==='/zones/zone-fixture/access/apps?per_page=1000')return [app()];
+    throw Error('Unexpected read '+path);
+  };
+  const found=await loadProductionAccessInventory(token,reader);
+  assert.equal(found.scope,'zone');
+  assert.equal(found.zoneId,'zone-fixture');
+  assert.equal(found.apps.length,1);
+  assert.equal(resolveProductionAudience(found.apps).aud,AUD);
+  assert.equal(urls.length,3);
+});
+test('account inventory wins without reading zone scope',async()=>{
+  const calls=[];
+  const got=await loadProductionAccessInventory('synthetic',(path)=>{
+    calls.push(path);return [app()];
+  });
+  assert.equal(got.scope,'account');
+  assert.equal(got.zoneId,null);
+  assert.equal(calls.length,1);
+});
+test('production Access inventory fails closed when both scopes are empty or zone access is denied',async()=>{
+  const token='synthetic';
+  const empty=async(path)=>{
+    if(path.startsWith('/accounts/'))return [];
+    if(path==='/zones?name=finnbilglass.no&per_page=50')return [{id:'zone-fixture'}];
+    return [];
+  };
+  await assert.rejects(loadProductionAccessInventory(token,empty),
+    /PROD_ACCESS_APPS_EMPTY_BOTH_SCOPES/);
+  await assert.rejects(loadProductionAccessInventory(token,async(path)=>{
+    if(path.startsWith('/accounts/'))return [];
+    if(path==='/zones?name=finnbilglass.no&per_page=50')return [{id:'zone-fixture'}];
+    throw Error('CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR');
+  }),/CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR/);
+  await assert.rejects(loadProductionAccessInventory(token,async(path)=>{
+    if(path.startsWith('/accounts/'))return [];
+    if(path==='/zones?name=finnbilglass.no&per_page=50')return [];
+    throw Error('should not be queried');
+  }),/PROD_ZONE_NOT_UNAMBIGUOUS/);
+});
+test('live read-only preflight checks policies at zone scope for zone Access app',async()=>{
+  const previous=globalThis.fetch;
+  const token='synthetic-token-12345678901234567890',paths=[];
+  globalThis.fetch=async(url,options)=>{
+    assert.equal(options.method,'GET');
+    assert.equal(options.headers.Authorization,'Bearer '+token);
+    const u=new URL(url);paths.push(u.pathname);
+    let result;
+    if(u.pathname.endsWith('/accounts/80d5b1d56a3e907150ba7348b6182894/access/apps'))result=[];
+    else if(u.pathname==='/client/v4/zones')result=[{id:'zone-fixture'}];
+    else if(u.pathname==='/client/v4/zones/zone-fixture/access/apps')result=[app()];
+    else if(u.pathname==='/client/v4/zones/zone-fixture/access/apps/test-app/policies')result=policies();
+    else if(u.pathname.endsWith('/workers/routes'))result=[];
+    else if(u.pathname.endsWith('/workers/domains'))result=[{
+      hostname:u.searchParams.get('hostname'),service:'finnbilglass-frontrute',
+      zone_name:'finnbilglass.no',enabled:true,environment:'production'
+    }];
+    else throw Error('unexpected GET '+u.pathname);
+    return {ok:true,json:async()=>({success:true,result,result_info:{page:1,count:result.length,total_pages:1}})};
+  };
+  try{
+    const result=await preflight({CLOUDFLARE_ACCOUNT_ID:'80d5b1d56a3e907150ba7348b6182894',CLOUDFLARE_API_TOKEN:token});
+    assert.equal(result.status,'PASS');
+    assert.equal(result.inventoryScope,'zone');
+    assert.equal(result.audienceSource,'cloudflare_zone_read');
+    assert.equal(paths.filter(p=>p==='/client/v4/zones').length,1);
+    assert.ok(paths.some(p=>p.includes('/zones/zone-fixture/access/apps/test-app/policies')));
+  }finally{globalThis.fetch=previous}
 });
