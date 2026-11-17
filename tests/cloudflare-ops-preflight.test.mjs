@@ -74,17 +74,23 @@ test('repair Worker route on production zone blocks live release',()=>{
 });
 
 
-test('production custom domains must all belong to approved Worker service',()=>{
+test('OPS requires apex and www Worker domains; API domain is optional',()=>{
   const domains=['finnbilglass.no','www.finnbilglass.no','api.finnbilglass.no']
     .map(hostname=>({hostname,service:'finnbilglass-frontrute',environment:'production',
       enabled:true,zone_name:'finnbilglass.no'}));
-  assert.deepEqual(validateWorkerDomains(domains),{workerCustomDomains:3});
-  // Both optional fields can be absent in valid Cloudflare API responses.
-  assert.deepEqual(validateWorkerDomains(domains.map(({enabled,environment,...other})=>other)),
-    {workerCustomDomains:3});
+  assert.deepEqual(validateWorkerDomains(domains),
+    {workerCustomDomains:2,optionalWorkerCustomDomains:1});
+  const required=domains.slice(0,2);
+  assert.deepEqual(validateWorkerDomains(required),
+    {workerCustomDomains:2,optionalWorkerCustomDomains:0});
+  // Deprecated optional Cloudflare metadata can be absent.
+  assert.deepEqual(validateWorkerDomains(required.map(({enabled,environment,...other})=>other)),
+    {workerCustomDomains:2,optionalWorkerCustomDomains:0});
   for(let i=0;i<domains.length;i++){
-    assert.throws(()=>validateWorkerDomains(domains.filter((_,j)=>j!==i)),
+    if(i<2)assert.throws(()=>validateWorkerDomains(domains.filter((_,j)=>j!==i)),
       /WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED/);
+    else assert.deepEqual(validateWorkerDomains(domains.slice(0,2)),
+      {workerCustomDomains:2,optionalWorkerCustomDomains:0});
     assert.throws(()=>validateWorkerDomains([...domains,domains[i]]),
       /WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED/);
     for(const changed of [
@@ -197,7 +203,7 @@ test('preflight reads production AUD from Cloudflare when secret is absent',asyn
     assert.deepEqual(output,{
       status:'PASS',readOnly:true,audienceSource:'cloudflare_account_read',
       protectedPaths:8,allowPolicies:1,routesChecked:0,
-      legacyRepairRoutes:0,workerCustomDomains:3
+      legacyRepairRoutes:0,workerCustomDomains:2,optionalWorkerCustomDomains:1
     });
     assert.ok(!JSON.stringify(output).includes(AUD),'AUD must not be logged/output');
     assert.equal(seen.length,7);
