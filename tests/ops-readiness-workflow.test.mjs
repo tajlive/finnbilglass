@@ -4,7 +4,13 @@ import {readFileSync} from 'node:fs';
 
 test('independent Cloudflare readiness is manual, pinned and has no production writes',()=>{
   const yml=readFileSync(new URL('../.github/workflows/ops-production-readiness.yml',import.meta.url),'utf8');
-  assert.match(yml,/on:\n  workflow_dispatch:/);
+  assert.match(yml,/on:\n  issue_comment:\n    types: \[created\]/);
+  assert.match(yml,/  workflow_dispatch:/);
+  assert.match(yml,/github\.event\.issue\.number == 39/);
+  assert.match(yml,/github\.event\.comment\.body == '\/ops-readonly-audit'/);
+  assert.match(yml,/github\.actor == 'tajlive'/);
+  assert.match(yml,/github\.event\.comment\.author_association == 'OWNER'/);
+  assert.match(yml,/github\.sha/);
   assert.doesNotMatch(yml,/\bon:\n  push:/);
   assert.match(yml,/permissions:\n  contents: read/);
   assert.match(yml,/github\.ref == 'refs\/heads\/main'/);
