@@ -16,7 +16,10 @@ const ACCOUNT='80d5b1d56a3e907150ba7348b6182894';
 const HOSTS=['finnbilglass.no','www.finnbilglass.no'];
 const PATHS=['/ops','/ops/*','/api/ops','/api/ops/*'];
 const WORKER='finnbilglass-frontrute';
-const WORKER_DOMAINS=[...HOSTS,'api.finnbilglass.no'];
+// Only these hostnames carry employee OPS. API Custom Domain is optional for
+// this launch, but must point to the approved Worker when it exists.
+const WORKER_DOMAINS=HOSTS;
+const OPTIONAL_WORKER_DOMAINS=['api.finnbilglass.no'];
 // Test both the exact OPS entry and a nested route; Cloudflare permits
 // protecting a whole path prefix with one Access destination.
 const REQUIRED=HOSTS.flatMap(host=>[
@@ -140,19 +143,24 @@ export function validateWorkerRoutes(routes){
  */
 export function validateWorkerDomains(domains){
   invariant(Array.isArray(domains),'WORKER_CUSTOM_DOMAINS_NOT_READABLE');
-  for(const host of WORKER_DOMAINS){
+  function verifyDomain(host,required){
     const entries=domains.filter(d=>String(d?.hostname??'').toLowerCase()===host);
+    if(!required&&entries.length===0)return false;
     invariant(entries.length===1,'WORKER_CUSTOM_DOMAIN_MISSING_OR_DUPLICATED');
     const domain=entries[0];
-    // Cloudflare's domains/list API documents both enabled and environment as
-    // optional/deprecated response attributes. Missing != disabled or staging.
+    // Cloudflare may omit deprecated optional enabled/environment fields.
     invariant(domain.enabled!==false &&
       domain.service===WORKER &&
       domain.zone_name==='finnbilglass.no' &&
       (domain.environment==null || domain.environment==='production'),
       'WORKER_CUSTOM_DOMAIN_WRONG_SERVICE_OR_ENVIRONMENT');
+    return true;
   }
-  return {workerCustomDomains:WORKER_DOMAINS.length};
+  for(const host of WORKER_DOMAINS)verifyDomain(host,true);
+  const optionalWorkerCustomDomains=OPTIONAL_WORKER_DOMAINS
+    .filter(host=>verifyDomain(host,false)).length;
+  return {workerCustomDomains:WORKER_DOMAINS.length,
+    optionalWorkerCustomDomains};
 }
 
 async function api(path,token){
@@ -187,7 +195,7 @@ export async function preflight(env=process.env){
   const checkedRoutes=validateWorkerRoutes(routes);
   // Filter server-side by documented hostname selector instead of assuming
   // the account-wide first page contains all three required Custom Domains.
-  const domains=(await Promise.all(WORKER_DOMAINS.map(host=>
+  const domains=(await Promise.all([...WORKER_DOMAINS,...OPTIONAL_WORKER_DOMAINS].map(host=>
     api('/accounts/'+ACCOUNT+'/workers/domains?hostname='+encodeURIComponent(host),token)
   ))).flat();
   const checkedDomains=validateWorkerDomains(domains);
