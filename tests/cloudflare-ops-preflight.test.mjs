@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,preflight,readCloudflareList} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
+import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,describeAccessCoverage,preflight,readCloudflareList} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
 
 const AUD='a'.repeat(64);
 const hosts=['finnbilglass.no','www.finnbilglass.no'];
@@ -310,4 +310,51 @@ test('preflight succeeds when the correct Access app and allow policy are on lat
     assert.equal(called.filter(x=>x.includes('/policies?')).length,2);
     assert.equal(called.length,9);
   }finally{globalThis.fetch=prior}
+});
+
+test('Cloudflare Access list public destination type is optional; explicit empty list never falls back',()=>{
+  const missingTypes=expected.map(({type,...rest})=>rest);
+  assert.equal(resolveProductionAudience([app({destinations:missingTypes})]).aud,AUD);
+  assert.equal(validateAccess([app({destinations:missingTypes})],policies(),AUD).protectedPaths,8);
+  assert.throws(()=>resolveProductionAudience([app({
+    destinations:[],
+    self_hosted_domains:expected.map(d=>({domain:d.uri})),
+    domain:'finnbilglass.no'
+  })]),/PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/);
+  assert.throws(()=>resolveProductionAudience([app({
+    destinations:[{type:'private',uri:'finnbilglass.no'},
+      ...expected.filter(d=>d.uri.startsWith('finnbilglass.no/'))]
+  })]),/PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING/);
+});
+
+test('read-only Access failure reports safe coverage mask when OPS is split between apps',()=>{
+  const apex=app({id:'apex-app',destinations:expected.slice(0,4)});
+  const www=app({id:'www-app',aud:'b'.repeat(64),destinations:expected.slice(4)});
+  const summary=describeAccessCoverage([apex,www]);
+  assert.deepEqual(summary,{
+    total:2,selfHosted:2,eligible:2,complete:0,
+    bestCovered:4,unionCovered:8,bestMask:'11110000',unionMask:'11111111'
+  });
+  assert.throws(()=>resolveProductionAudience([apex,www]),err=>{
+    assert.match(err.message,/full=0 best=4\/8 union=8\/8/);
+    assert.match(err.message,/bestMask=11110000 unionMask=11111111/);
+    for(const sensitive of [AUD,'b'.repeat(64),'apex-app','www-app'])
+      assert.equal(err.message.includes(sensitive),false,'must never reveal identifier');
+    return true;
+  });
+});
+
+test('read-only Access failure differentiates incomplete setup from duplicate full app candidates',()=>{
+  const none=describeAccessCoverage([app({destinations:[expected[0]]})]);
+  assert.equal(none.bestCovered,2);
+  assert.equal(none.unionCovered,2);
+  const duplicate=[app(),app({id:'other',aud:'b'.repeat(64)})];
+  const summary=describeAccessCoverage(duplicate);
+  assert.equal(summary.complete,2);
+  assert.throws(()=>resolveProductionAudience(duplicate),/full=2 best=8\/8/);
+  const invalidApp={type:'self_hosted',id:'no-aud',destinations:expected};
+  assert.deepEqual(describeAccessCoverage([invalidApp]),{
+    total:1,selfHosted:1,eligible:0,complete:0,
+    bestCovered:0,unionCovered:0,bestMask:'00000000',unionMask:'00000000'
+  });
 });
