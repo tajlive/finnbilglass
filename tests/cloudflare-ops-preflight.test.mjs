@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,describeAccessCoverage,preflight,readCloudflareList,loadProductionAccessInventory} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
+import {validateAccess,validateWorkerRoutes,validateWorkerDomains,resolveProductionAudience,describeAccessCoverage,preflight,readCloudflareList,loadProductionAccessInventory,cloudflareReadCategory} from '../scripts/maintenance/cloudflare-ops-preflight.mjs';
 
 const AUD='a'.repeat(64);
 const hosts=['finnbilglass.no','www.finnbilglass.no'];
@@ -433,4 +433,44 @@ test('live read-only preflight checks policies at zone scope for zone Access app
     assert.equal(paths.filter(p=>p==='/client/v4/zones').length,1);
     assert.ok(paths.some(p=>p.includes('/zones/zone-fixture/access/apps/test-app/policies')));
   }finally{globalThis.fetch=previous}
+});
+
+test('read-only Cloudflare HTTP error reports only fixed phase and safe status',async()=>{
+  const token='synthetic-token-secret';
+  const ids='private-zone-and-app-identifier';
+  const examples=[
+    ['/zones/'+ids+'/access/apps?per_page=1000','ZONE_ACCESS_APPS'],
+    ['/zones/'+ids+'/access/apps/'+ids+'/policies','ZONE_ACCESS_POLICIES'],
+    ['/accounts/'+ids+'/access/apps','ACCOUNT_ACCESS_APPS'],
+    ['/accounts/'+ids+'/access/apps/'+ids+'/policies','ACCOUNT_ACCESS_POLICIES'],
+    ['/zones?name=finnbilglass.no','ZONE_DISCOVERY'],
+    ['/zones/'+ids+'/workers/routes','ZONE_WORKER_ROUTES'],
+    ['/accounts/'+ids+'/workers/domains?hostname=finnbilglass.no','ACCOUNT_WORKER_DOMAINS']
+  ];
+  for(const [path,category] of examples){
+    assert.equal(cloudflareReadCategory(path),category);
+    await assert.rejects(
+      readCloudflareList(path,token,async(url,opts)=>{
+        assert.equal(opts.method,'GET');
+        assert.equal(opts.headers.Authorization,'Bearer '+token);
+        return {ok:false,status:403,json:async()=>({errors:[{message:'secret'}]})};
+      }),
+      err=>{
+        assert.match(err.message,/CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR/);
+        assert.ok(err.message.includes('phase='+category+' http=403'));
+        assert.ok(!err.message.includes(token));
+        assert.ok(!err.message.includes(ids));
+        assert.ok(!err.message.includes('secret'));
+        return true;
+      });
+  }
+  await assert.rejects(readCloudflareList('/zones/'+ids+'/access/apps',token,
+    async()=>({ok:false,status:404})),/phase=ZONE_ACCESS_APPS http=404/);
+  await assert.rejects(readCloudflareList('/zones/'+ids+'/access/apps',token,
+    async()=>{throw Error('upstream secret '+token)}),
+    err=>{
+      assert.match(err.message,/CLOUDFLARE_READ_ONLY_API_UNAVAILABLE phase=ZONE_ACCESS_APPS/);
+      assert.ok(!err.message.includes(token));
+      return true;
+    });
 });
