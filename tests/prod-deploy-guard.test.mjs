@@ -75,7 +75,10 @@ test('production deploy checks Cloudflare Access and repair Worker routes before
 
 test('separate production readiness workflow is explicitly read-only, pinned and never deploys',()=>{
   const audit=readFileSync(new URL('../.github/workflows/ops-production-readiness.yml',import.meta.url),'utf8');
-  assert.match(audit,/on:\n  workflow_dispatch:/);
+  assert.match(audit,/on:\n  issue_comment:\n    types: \[created\]/);
+  assert.match(audit,/  workflow_dispatch:/);
+  assert.match(audit,/github\.event\.issue\.number == 39/);
+  assert.match(audit,/github\.actor == 'tajlive'/);
   assert.doesNotMatch(audit,/on:\n  push:/);
   assert.match(audit,/github\.ref == 'refs\/heads\/main'/);
   assert.match(audit,/PREFLIGHT-ONLY/);
