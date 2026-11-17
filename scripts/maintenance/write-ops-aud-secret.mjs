@@ -7,7 +7,7 @@
  * Run AFTER cloudflare-ops-preflight.mjs passes in the protected, manually
  * authorized production job. No Cloudflare writes happen in this script.
  */
-import {resolveProductionAudience} from './cloudflare-ops-preflight.mjs';
+import {resolveProductionAudience,readCloudflareList} from './cloudflare-ops-preflight.mjs';
 import {writeFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -21,24 +21,9 @@ export async function stageAccessAudience(env=process.env,request=fetch){
     throw Error('CLOUDFLARE_API_TOKEN_MISSING');
   if(typeof env.RUNNER_TEMP!=='string'||!env.RUNNER_TEMP.startsWith('/'))
     throw Error('RUNNER_TEMP_REQUIRED');
-  let response;
-  try{
-    response=await request(
-      'https://api.cloudflare.com/client/v4/accounts/'+ACCOUNT+'/access/apps?per_page=1000',{
-        method:'GET',
-        headers:{Authorization:'Bearer '+env.CLOUDFLARE_API_TOKEN,Accept:'application/json'},
-        signal:AbortSignal.timeout(12000)
-      });
-  }catch{
-    throw Error('CLOUDFLARE_AUD_READ_UNAVAILABLE');
-  }
-  if(!response?.ok)throw Error('CLOUDFLARE_AUD_READ_HTTP_ERROR');
-  let body;
-  try{body=await response.json()}catch{throw Error('CLOUDFLARE_AUD_READ_INVALID_JSON')}
-  if(body?.success!==true||!Array.isArray(body.result)||
-     (body.result_info?.total_pages??1)!==1)
-    throw Error('CLOUDFLARE_AUD_READ_NOT_EXHAUSTIVE');
-  const chosen=resolveProductionAudience(body.result);
+  const apps=await readCloudflareList(
+    '/accounts/'+ACCOUNT+'/access/apps?per_page=1000',env.CLOUDFLARE_API_TOKEN,request);
+  const chosen=resolveProductionAudience(apps);
   if(env.OPS_ACCESS_AUD && env.OPS_ACCESS_AUD.trim()!==chosen.aud)
     throw Error('PRODUCTION_AUD_ENV_MISMATCH');
   const output=join(env.RUNNER_TEMP,FILE);
