@@ -28,7 +28,9 @@ test('read-only Cloudflare script never issues API write or logs raw secrets',()
   assert.match(source,/method:'GET'/);
   assert.doesNotMatch(source,/method\s*:\s*['"](?:POST|PUT|PATCH|DELETE)['"]/);
   assert.doesNotMatch(source,/console\.(?:log|error)\([^)]*(?:Authorization|Bearer|token\b|aud\b)/);
-  assert.match(source,/CLOUDFLARE_PAGINATION_NOT_EXHAUSTIVE/);
+  assert.match(source,/CLOUDFLARE_PAGINATION_INCOMPLETE/);
+  assert.match(source,/CLOUDFLARE_PAGINATION_INCONSISTENT/);
+  assert.match(source,/page>1/);
   assert.match(source,/COMPETING_ACCESS_APP_ON_PROTECTED_OPS_PATH/);
   assert.match(source,/OPS_PATH_INTERCEPTED_BY_OTHER_WORKER_ROUTE/);
   assert.match(source,/WORKER_CUSTOM_DOMAIN_WRONG_SERVICE_OR_ENVIRONMENT/);
