@@ -155,40 +155,73 @@ export function validateWorkerDomains(domains){
   return {workerCustomDomains:WORKER_DOMAINS.length};
 }
 
-async function api(path,token){
-  const url='https://api.cloudflare.com/client/v4'+path;
-  let response;
-  try{
-    response=await fetch(url,{method:'GET',headers:{
-      Authorization:'Bearer '+token,Accept:'application/json'
-    },signal:AbortSignal.timeout(12000)});
-  }catch{throw Error('CLOUDFLARE_READ_ONLY_API_UNAVAILABLE')}
-  if(!response.ok)throw Error('CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR');
-  let body;
-  try{body=await response.json()}catch{throw Error('CLOUDFLARE_READ_ONLY_API_INVALID_JSON')}
-  invariant(body?.success===true && Array.isArray(body.result),
-    'CLOUDFLARE_READ_ONLY_API_FAILED');
-  invariant((body.result_info?.total_pages??1)===1,'CLOUDFLARE_PAGINATION_NOT_EXHAUSTIVE');
-  return body.result;
+/**
+ * Read ALL Cloudflare v4 pages before making any security decision.
+ * Access apps/policies, zones and Worker domains can legitimately span pages.
+ * An incomplete or inconsistent API inventory fails closed, never PASS.
+ *
+ * The request dependency is injectable solely for synthetic tests; production
+ * uses native fetch. No API token, AUD or raw payload is logged.
+ */
+export async function readCloudflareList(path,token,request=fetch){
+  const MAX_PAGES=200;
+  const MAX_ITEMS=20000;
+  const records=[];
+  let totalPages=null;
+  for(let page=1;page<=MAX_PAGES;page++){
+    const url=new URL('https://api.cloudflare.com/client/v4'+path);
+    if(page>1)url.searchParams.set('page',String(page));
+    let response;
+    try{
+      response=await request(url.toString(),{method:'GET',headers:{
+        Authorization:'Bearer '+token,Accept:'application/json'
+      },signal:AbortSignal.timeout(12000)});
+    }catch{throw Error('CLOUDFLARE_READ_ONLY_API_UNAVAILABLE')}
+    if(!response?.ok)throw Error('CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR');
+    let body;
+    try{body=await response.json()}
+    catch{throw Error('CLOUDFLARE_READ_ONLY_API_INVALID_JSON')}
+    invariant(body?.success===true && Array.isArray(body.result),
+      'CLOUDFLARE_READ_ONLY_API_FAILED');
+    const info=body.result_info;
+    if(info?.page!=null)invariant(info.page===page,'CLOUDFLARE_PAGINATION_INCONSISTENT');
+    if(info?.count!=null)invariant(info.count===body.result.length,'CLOUDFLARE_PAGINATION_INCONSISTENT');
+    let pages=info?.total_pages??1;
+    invariant(Number.isInteger(pages)&&pages>=0&&pages<=MAX_PAGES,
+      'CLOUDFLARE_PAGINATION_INVALID');
+    if(pages===0){
+      invariant(page===1&&body.result.length===0,
+        'CLOUDFLARE_PAGINATION_INCONSISTENT');
+      pages=1;
+    }
+    if(totalPages===null)totalPages=pages;
+    else invariant(pages===totalPages,'CLOUDFLARE_PAGINATION_INCONSISTENT');
+    records.push(...body.result);
+    invariant(records.length<=MAX_ITEMS,'CLOUDFLARE_PAGINATION_LIMIT_EXCEEDED');
+    if(page===totalPages)return records;
+    invariant(body.result.length>0,'CLOUDFLARE_PAGINATION_INCOMPLETE');
+  }
+  throw Error('CLOUDFLARE_PAGINATION_LIMIT_EXCEEDED');
 }
+
 export async function preflight(env=process.env){
   invariant(env.CLOUDFLARE_ACCOUNT_ID===ACCOUNT,'WRONG_PRODUCTION_CLOUDFLARE_ACCOUNT');
   const token=env.CLOUDFLARE_API_TOKEN;
   invariant(typeof token==='string'&&token.length>20,'CLOUDFLARE_API_TOKEN_MISSING');
-  const apps=await api('/accounts/'+ACCOUNT+'/access/apps?per_page=1000',token);
+  const apps=await readCloudflareList('/accounts/'+ACCOUNT+'/access/apps?per_page=1000',token);
   const selected=resolveProductionAudience(apps,env.OPS_ACCESS_AUD);
   const app=apps.find(a=>a?.type==='self_hosted'&&a.aud===selected.aud);
   invariant(app?.id,'EXACT_PROD_ACCESS_APP_NOT_FOUND');
-  const policies=await api('/accounts/'+ACCOUNT+'/access/apps/'+encodeURIComponent(app.id)+'/policies?per_page=1000',token);
+  const policies=await readCloudflareList('/accounts/'+ACCOUNT+'/access/apps/'+encodeURIComponent(app.id)+'/policies?per_page=1000',token);
   const checkedAccess=validateAccess(apps,policies,selected.aud);
-  const zones=await api('/zones?name=finnbilglass.no&per_page=50',token);
+  const zones=await readCloudflareList('/zones?name=finnbilglass.no&per_page=50',token);
   invariant(zones.length===1 && typeof zones[0]?.id==='string','PROD_ZONE_NOT_UNAMBIGUOUS');
-  const routes=await api('/zones/'+encodeURIComponent(zones[0].id)+'/workers/routes',token);
+  const routes=await readCloudflareList('/zones/'+encodeURIComponent(zones[0].id)+'/workers/routes',token);
   const checkedRoutes=validateWorkerRoutes(routes);
   // Filter server-side by documented hostname selector instead of assuming
   // the account-wide first page contains all three required Custom Domains.
   const domains=(await Promise.all(WORKER_DOMAINS.map(host=>
-    api('/accounts/'+ACCOUNT+'/workers/domains?hostname='+encodeURIComponent(host),token)
+    readCloudflareList('/accounts/'+ACCOUNT+'/workers/domains?hostname='+encodeURIComponent(host),token)
   ))).flat();
   const checkedDomains=validateWorkerDomains(domains);
   // Only sanitized counts and status. No raw app, policy, AUD, route or secret.
