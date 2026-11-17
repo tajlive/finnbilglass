@@ -41,8 +41,12 @@ function includesEveryone(value){
 function accessDestinations(app){
   // Cloudflare ignores legacy self_hosted_domains whenever destinations
   // is present. A partial list must never be filled from legacy values.
-  if(Array.isArray(app.destinations)&&app.destinations.length)
-    return app.destinations.filter(d=>d?.type==='public'&&typeof d.uri==='string');
+  // Cloudflare marks the public destination "type" field optional in its
+  // list response. A destination with URI and absent type is still public.
+  // A supplied empty destinations list takes precedence over legacy fields.
+  if(Array.isArray(app.destinations))
+    return app.destinations.filter(d=>
+      (d?.type===undefined||d?.type==='public')&&typeof d.uri==='string');
   if(Array.isArray(app.self_hosted_domains)&&app.self_hosted_domains.length)
     return app.self_hosted_domains.map(d=>({uri:d.domain,overrides:[]}));
   return [{uri:app.domain,overrides:[]}];
@@ -64,6 +68,33 @@ function coversAccessPath(uri,samples){
  * The only auto-discovery candidate must own ALL required apex/www OPS paths.
  * This helper is pure and never logs or returns the AUD in preflight output.
  */
+/**
+ * Sanitized diagnosis for a read-only production inventory. It contains only
+ * counts and coverage bitmasks for our EIGHT known OPS URLs, never names, URLs
+ * discovered from Cloudflare, application ids, AUDs or API credentials.
+ * Bit order: apex OPS exact/subpath/API exact/subpath, then www same four.
+ */
+export function describeAccessCoverage(apps){
+  invariant(Array.isArray(apps),'ACCESS_APP_LIST_INVALID');
+  const selfHosted=apps.filter(a=>a?.type==='self_hosted');
+  const eligible=selfHosted.filter(a=>typeof a.aud==='string'&&
+    a.aud.length>=20&&typeof a.id==='string');
+  const cover=(app)=>REQUIRED.map(uri=>accessDestinations(app)
+    .some(d=>coversAccessPath(d.uri,[uri])));
+  const masks=eligible.map(a=>cover(a).map(v=>v?'1':'0').join(''));
+  const best=masks.reduce((a,b)=>
+    [...b].filter(c=>c==='1').length>[...a].filter(c=>c==='1').length?b:a,
+    '00000000');
+  const combined=REQUIRED.map((_,i)=>masks.some(m=>m[i]==='1')?'1':'0').join('');
+  return {
+    total:apps.length,selfHosted:selfHosted.length,eligible:eligible.length,
+    complete:masks.filter(m=>m==='11111111').length,
+    bestCovered:[...best].filter(c=>c==='1').length,
+    unionCovered:[...combined].filter(c=>c==='1').length,
+    bestMask:best,unionMask:combined
+  };
+}
+
 export function resolveProductionAudience(apps, explicitAud){
   invariant(Array.isArray(apps),'ACCESS_APP_LIST_INVALID');
   const supplied=typeof explicitAud==='string'?explicitAud.trim():'';
@@ -77,7 +108,15 @@ export function resolveProductionAudience(apps, explicitAud){
     const destinations=accessDestinations(app);
     return REQUIRED.every(uri=>destinations.some(d=>coversAccessPath(d.uri,[uri])));
   });
-  invariant(candidates.length===1,'PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING');
+  if(candidates.length!==1){
+    const diagnosis=describeAccessCoverage(apps);
+    // Error is deliberately safe to emit to a protected GitHub Actions log.
+    throw Error('PROD_ACCESS_AUD_AUTODISCOVERY_NOT_UNIQUE_OR_MISSING '+
+      'total='+diagnosis.total+' selfHosted='+diagnosis.selfHosted+
+      ' eligible='+diagnosis.eligible+' full='+diagnosis.complete+
+      ' best='+diagnosis.bestCovered+'/8 union='+diagnosis.unionCovered+'/8'+
+      ' bestMask='+diagnosis.bestMask+' unionMask='+diagnosis.unionMask);
+  }
   return {aud:candidates[0].aud,source:'cloudflare_account_read'};
 }
 
