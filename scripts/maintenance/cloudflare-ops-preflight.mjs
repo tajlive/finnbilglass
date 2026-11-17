@@ -202,6 +202,24 @@ export function validateWorkerDomains(domains){
  * The request dependency is injectable solely for synthetic tests; production
  * uses native fetch. No API token, AUD or raw payload is logged.
  */
+/**
+ * Classify API failures using a fixed allowlist. Never include the actual
+ * request URI, account/zone/app identifiers, response body or API token in
+ * CI logs. HTTP status + operation category is enough to distinguish a
+ * permission issue from a missing or unsupported endpoint.
+ */
+export function cloudflareReadCategory(path){
+  const p=new URL(path,'https://api.cloudflare.com').pathname;
+  if(/^\/accounts\/[^/]+\/access\/apps\/?$/.test(p))return 'ACCOUNT_ACCESS_APPS';
+  if(/^\/zones\/[^/]+\/access\/apps\/?$/.test(p))return 'ZONE_ACCESS_APPS';
+  if(/^\/accounts\/[^/]+\/access\/apps\/[^/]+\/policies\/?$/.test(p))return 'ACCOUNT_ACCESS_POLICIES';
+  if(/^\/zones\/[^/]+\/access\/apps\/[^/]+\/policies\/?$/.test(p))return 'ZONE_ACCESS_POLICIES';
+  if(p==='/zones')return 'ZONE_DISCOVERY';
+  if(/^\/zones\/[^/]+\/workers\/routes\/?$/.test(p))return 'ZONE_WORKER_ROUTES';
+  if(/^\/accounts\/[^/]+\/workers\/domains\/?$/.test(p))return 'ACCOUNT_WORKER_DOMAINS';
+  return 'OTHER_READ';
+}
+
 export async function readCloudflareList(path,token,request=fetch){
   const MAX_PAGES=200;
   const MAX_ITEMS=20000;
@@ -215,8 +233,15 @@ export async function readCloudflareList(path,token,request=fetch){
       response=await request(url.toString(),{method:'GET',headers:{
         Authorization:'Bearer '+token,Accept:'application/json'
       },signal:AbortSignal.timeout(12000)});
-    }catch{throw Error('CLOUDFLARE_READ_ONLY_API_UNAVAILABLE')}
-    if(!response?.ok)throw Error('CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR');
+    }catch{
+      throw Error('CLOUDFLARE_READ_ONLY_API_UNAVAILABLE phase='+cloudflareReadCategory(path));
+    }
+    if(!response?.ok){
+      const http=Number.isInteger(response?.status)&&response.status>=100&&response.status<=599
+        ?response.status:'UNKNOWN';
+      throw Error('CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR phase='+
+        cloudflareReadCategory(path)+' http='+http);
+    }
     let body;
     try{body=await response.json()}
     catch{throw Error('CLOUDFLARE_READ_ONLY_API_INVALID_JSON')}
