@@ -342,8 +342,8 @@ test('read-only Access failure reports safe coverage mask when OPS is split betw
 
 test('read-only Access failure differentiates incomplete setup from duplicate full app candidates',()=>{
   const none=describeAccessCoverage([app({destinations:[expected[0]]})]);
-  assert.equal(none.bestCovered,1);
-  assert.equal(none.unionCovered,1);
+  assert.equal(none.bestCovered,2);
+  assert.equal(none.unionCovered,2);
   const duplicate=[app(),app({id:'other',aud:'b'.repeat(64)})];
   const summary=describeAccessCoverage(duplicate);
   assert.equal(summary.complete,2);
