@@ -202,6 +202,18 @@ export function validateWorkerDomains(domains){
     optionalWorkerCustomDomains};
 }
 
+export function cloudflareReadCategory(path){
+  const p=new URL(path,'https://api.cloudflare.com').pathname;
+  if(/^\/accounts\/[^/]+\/access\/apps\/?$/.test(p))return 'ACCOUNT_ACCESS_APPS';
+  if(/^\/zones\/[^/]+\/access\/apps\/?$/.test(p))return 'ZONE_ACCESS_APPS';
+  if(/^\/accounts\/[^/]+\/access\/apps\/[^/]+\/policies\/?$/.test(p))return 'ACCOUNT_ACCESS_POLICIES';
+  if(/^\/zones\/[^/]+\/access\/apps\/[^/]+\/policies\/?$/.test(p))return 'ZONE_ACCESS_POLICIES';
+  if(p==='/zones')return 'ZONE_DISCOVERY';
+  if(/^\/zones\/[^/]+\/workers\/routes\/?$/.test(p))return 'ZONE_WORKER_ROUTES';
+  if(/^\/accounts\/[^/]+\/workers\/domains\/?$/.test(p))return 'ACCOUNT_WORKER_DOMAINS';
+  return 'OTHER_READ';
+}
+
 export async function readCloudflareList(path,token,request=fetch){
   const MAX_PAGES=200;
   const MAX_ITEMS=20000;
@@ -215,8 +227,15 @@ export async function readCloudflareList(path,token,request=fetch){
       response=await request(url.toString(),{method:'GET',headers:{
         Authorization:'Bearer '+token,Accept:'application/json'
       },signal:AbortSignal.timeout(12000)});
-    }catch{throw Error('CLOUDFLARE_READ_ONLY_API_UNAVAILABLE')}
-    if(!response?.ok)throw Error('CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR');
+    }catch{
+      throw Error('CLOUDFLARE_READ_ONLY_API_UNAVAILABLE phase='+cloudflareReadCategory(path));
+    }
+    if(!response?.ok){
+      const http=Number.isInteger(response?.status)&&response.status>=100&&response.status<=599
+        ?response.status:'UNKNOWN';
+      throw Error('CLOUDFLARE_READ_ONLY_API_PERMISSION_OR_HTTP_ERROR phase='+
+        cloudflareReadCategory(path)+' http='+http);
+    }
     let body;
     try{body=await response.json()}
     catch{throw Error('CLOUDFLARE_READ_ONLY_API_INVALID_JSON')}
@@ -243,6 +262,12 @@ export async function readCloudflareList(path,token,request=fetch){
   throw Error('CLOUDFLARE_PAGINATION_LIMIT_EXCEEDED');
 }
 
+/**
+ * Cloudflare supports both account-scoped and legacy zone-scoped Access apps.
+ * When the account inventory is EMPTY, check the one verified production
+ * zone. Never accept a guessed AUD or silently ignore a read permission error.
+ * No app identifiers, policies, AUDs or customer details enter logs.
+ */
 export async function loadProductionAccessInventory(token,read=readCloudflareList){
   const accountApps=await read('/accounts/'+ACCOUNT+'/access/apps?per_page=1000',token);
   invariant(Array.isArray(accountApps),'PROD_ACCESS_ACCOUNT_INVENTORY_INVALID');
